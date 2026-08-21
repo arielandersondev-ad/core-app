@@ -14,14 +14,26 @@ El objetivo es establecer una base que permita:
 * Facilitar la incorporación de nuevas verticales de negocio.
 * Mantener los límites entre dominio, aplicación, infraestructura y presentación.
 
-La arquitectura está basada en:
+## Arquitectura del proyecto
 
-* **DDD (Domain-Driven Design)** para organizar el backend alrededor de dominios y módulos.
+| Capa | Arquitectura |
+| --- | --- |
+| **Backend** | **DDD (Domain-Driven Design)** |
+| **Frontend** | **Feature-Based Architecture** |
+
+### Backend: DDD
+
+El backend se organiza bajo **Domain-Driven Design**, complementado con:
+
 * **Arquitectura Hexagonal / Ports & Adapters** para separar la lógica de negocio de detalles técnicos.
-* **Modular Monolith** como estrategia inicial del backend.
-* **Feature/Domain-oriented architecture** para el frontend.
-* **Next.js** para frontend.
-* **NestJS** para backend.
+* **Modular Monolith** como estrategia inicial.
+* **NestJS** como framework.
+
+Cada módulo de negocio se estructura en capas: `domain`, `application`, `infrastructure` y `presentation`.
+
+### Frontend: Feature-Based
+
+El frontend se organiza bajo una **arquitectura basada en features (Feature-Based Architecture)**, donde cada funcionalidad de negocio vive en su propio módulo autónomo, utilizando **Next.js** como framework.
 
 ---
 
@@ -101,9 +113,10 @@ Cada módulo contiene sus propias responsabilidades.
 
 # 4. Backend
 
-El backend utiliza una combinación de:
+La arquitectura del backend es **DDD (Domain-Driven Design)**.
 
-* DDD
+El backend se complementa con:
+
 * Arquitectura Hexagonal
 * Modular Monolith
 * NestJS
@@ -500,7 +513,9 @@ El dominio no debe importar Prisma.
 
 # 16. Frontend
 
-El frontend utiliza Next.js y una organización orientada a módulos/features.
+La arquitectura del frontend es **Feature-Based Architecture**: el código se organiza por funcionalidades de negocio (features), no por tipos técnicos.
+
+El frontend utiliza Next.js como framework.
 
 ```text
 front/
