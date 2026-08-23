@@ -2,55 +2,116 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Brand palette ─────────────────────────────────── */
 :root {
-  --background: #f3efe6;
-  --surface: #faf8f3;
+  --background:       #f3efe6;
+  --surface:          #faf8f3;
   --surface-elevated: #ffffff;
-  --primary: #3d7a46;
-  --primary-accent: #62a84f;
-  --primary-subtle: #e6ede3;
-  --secondary: #9a744f;
-  --hazelnut: #9a744f;
-  --gold-accent: #c5a46d;
-  --foreground: #171a17;
-  --muted: #65685f;
-  --border: #ddd7ca;
+  --primary:          #3d7a46;
+  --primary-accent:   #62a84f;
+  --primary-subtle:   #e6ede3;
+  --secondary:        #9a744f;
+  --hazelnut:         #9a744f;
+  --gold-accent:      #c5a46d;
+  --foreground:       #171a17;
+  --muted:            #65685f;
+  --border:           #ddd7ca;
+
+  /* Semantic aliases */
+  --card:                var(--surface);
+  --card-foreground:     var(--foreground);
+  --muted-foreground:    var(--muted);
+  --primary-foreground:  #ffffff;
+  --secondary-foreground: var(--foreground);
+  --accent:              var(--primary);
+  --accent-foreground:   #ffffff;
+  --ring:                var(--primary);
+  --danger:              #9e2a2a;
+  --danger-foreground:   #ffffff;
+  --radius:              3px;
 }
 
 .dark {
-  --background: #0b0e0c;
-  --surface: #111512;
+  --background:       #0b0e0c;
+  --surface:          #111512;
   --surface-elevated: #181d19;
-  --primary: #62a84f;
-  --primary-accent: #79c165;
-  --primary-subtle: #315d39;
-  --secondary: #a88762;
-  --hazelnut: #a88762;
-  --gold-accent: #c5a46d;
-  --foreground: #f1f3ee;
-  --muted: #a6ada4;
-  --border: #293029;
+  --primary:          #62a84f;
+  --primary-accent:   #79c165;
+  --primary-subtle:   #315d39;
+  --secondary:        #a88762;
+  --hazelnut:         #a88762;
+  --gold-accent:      #c5a46d;
+  --foreground:       #f1f3ee;
+  --muted:            #a6ada4;
+  --border:           #293029;
+
+  --card:                var(--surface);
+  --card-foreground:     var(--foreground);
+  --muted-foreground:    var(--muted);
+  --primary-foreground:  #0b0e0c;
+  --secondary-foreground: var(--foreground);
+  --accent:              var(--primary);
+  --accent-foreground:   #0b0e0c;
+  --ring:                var(--primary);
+  --danger:              #c0362b;
+  --danger-foreground:   #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
+  /* Colores */
+  --color-background:       var(--background);
+  --color-surface:          var(--surface);
   --color-surface-elevated: var(--surface-elevated);
-  --color-primary: var(--primary);
-  --color-primary-accent: var(--primary-accent);
-  --color-primary-subtle: var(--primary-subtle);
-  --color-secondary: var(--secondary);
-  --color-hazelnut: var(--hazelnut);
-  --color-gold-accent: var(--gold-accent);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary:          var(--primary);
+  --color-primary-accent:   var(--primary-accent);
+  --color-primary-subtle:   var(--primary-subtle);
+  --color-secondary:        var(--secondary);
+  --color-hazelnut:         var(--hazelnut);
+  --color-gold-accent:      var(--gold-accent);
+  --color-foreground:       var(--foreground);
+  --color-muted:            var(--muted);
+  --color-border:           var(--border);
+
+  /* Semantic aliases para Tailwind */
+  --color-card:              var(--surface);
+  --color-card-foreground:   var(--foreground);
+  --color-muted-foreground:  var(--muted);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent:            var(--primary);
+  --color-border-color:      var(--border);
+  --color-ring:              var(--primary);
+  --color-danger:            var(--danger);
+
+  /* Fuentes (se mapean a las variables CSS en layout) */
+  --font-sans:    var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-dm-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}
+
+/* ── Base ─────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  width: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Scrollbar personalizada (opcional) */
+::-webkit-scrollbar { width: 0; }
+::-webkit-scrollbar:hover { width: 4px; }
+
+input, textarea, select { font-family: inherit; }
+
+.font-display { font-family: var(--font-display); }
+.font-mono    { font-family: var(--font-mono); }
