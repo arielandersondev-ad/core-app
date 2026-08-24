@@ -265,14 +265,18 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
           from: 'userId',
           to: 'id',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [constraints.foreignKey(cols.userId, User.refs.id)],
+      })),
 
       Session: Session.relations({
         user: rel.belongsTo(User, {
           from: 'userId',
           to: 'id',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [constraints.foreignKey(cols.userId, User.refs.id)],
+      })),
 
       Organization: Organization.relations({
         branches: rel.hasMany(Branch, {
@@ -305,7 +309,11 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
         auditLogs: rel.hasMany(AuditLog, {
           by: 'branchId',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.organizationId, Organization.refs.id),
+        ],
+      })),
 
       Membership: Membership.relations({
         user: rel.belongsTo(User, {
@@ -325,7 +333,12 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
         roles: rel.hasMany(MembershipRole, {
           by: 'membershipId',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.userId, User.refs.id),
+          constraints.foreignKey(cols.organizationId, Organization.refs.id),
+        ],
+      })),
 
       MembershipBranch: MembershipBranch.relations({
         membership: rel.belongsTo(Membership, {
@@ -337,7 +350,12 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
           from: 'branchId',
           to: 'id',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.membershipId, Membership.refs.id),
+          constraints.foreignKey(cols.branchId, Branch.refs.id),
+        ],
+      })),
 
       Role: Role.relations({
         organization: rel.belongsTo(Organization, {
@@ -348,7 +366,11 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
         membershipRoles: rel.hasMany(MembershipRole, {
           by: 'roleId',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.organizationId, Organization.refs.id),
+        ],
+      })),
 
       MembershipRole: MembershipRole.relations({
         membership: rel.belongsTo(Membership, {
@@ -360,7 +382,12 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
           from: 'roleId',
           to: 'id',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.membershipId, Membership.refs.id),
+          constraints.foreignKey(cols.roleId, Role.refs.id),
+        ],
+      })),
 
       AuditLog: AuditLog.relations({
         organization: rel.belongsTo(Organization, {
@@ -377,7 +404,13 @@ export const contract = defineContract({}, ({ field, model, rel }) => {
           from: 'userId',
           to: 'id',
         }),
-      }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.organizationId, Organization.refs.id),
+          constraints.foreignKey(cols.branchId, Branch.refs.id),
+          constraints.foreignKey(cols.userId, User.refs.id),
+        ],
+      })),
     },
   };
 });
