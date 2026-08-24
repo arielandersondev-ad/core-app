@@ -1,7 +1,6 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { PrismaOrganizationUseCase } from "../../application/use-case/create-organization.use-case.js";
 import { CreateOrganizationDto } from "../dto/create-organization.dto.js";
-import { PrismaOrganizationRepository } from "../../infrastructure/prisma-organization.repository.js";
 
 @Controller('organizations')
 //@UseGuards(JwtAuthGuard) PARA UNA FUTURA IMPLEMENTACION DE AUTENTICACION
