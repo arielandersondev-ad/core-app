@@ -56,7 +56,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
     input: CreateOrganizationWithBranches,
   ): Promise<OrganizationWithBranches> {
     return this.prisma.transaction(async (tx) => {
-      const organizationRow = await tx.orm.public.Organization.create({
+      const organizationRow = await tx.orm.core.Organization.create({
         name: input.organization.name,
         legalName: input.organization.legalName,
         taxId: input.organization.taxId,
@@ -69,7 +69,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
 
       const branchRows: BranchRow[] = [];
       for (const branch of input.branches) {
-        const branchRow = await tx.orm.public.Branch.create({
+        const branchRow = await tx.orm.core.Branch.create({
           organizationId: organizationRow.id,
           name: branch.name,
           code: branch.code,
@@ -107,7 +107,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
   }
 
   async findAll(): Promise<Organization[]> {
-    const rows = await this.prisma.orm.public.Organization
+    const rows = await this.prisma.orm.core.Organization
       .where({ deleted: false })
       .all();
 
@@ -115,7 +115,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
   }
 
   async findById(id: string): Promise<Organization | null> {
-    const row = await this.prisma.orm.public.Organization.first({ id: toUuid36(id) });
+    const row = await this.prisma.orm.core.Organization.first({ id: toUuid36(id) });
 
     if (!row || row.deleted) {
       return null;

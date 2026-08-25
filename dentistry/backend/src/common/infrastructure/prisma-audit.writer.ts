@@ -15,7 +15,7 @@ export async function writeAuditLog(
   tx: TransactionContext,
   entry: AuditLogEntry,
 ): Promise<void> {
-  await tx.orm.public.AuditLog.create({
+  await tx.orm.core.AuditLog.create({
     organizationId: toUuid36(entry.organizationId),
     branchId: toUuid36(entry.branchId),
     userId: toUuid36(entry.userId),

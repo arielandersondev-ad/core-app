@@ -13,18 +13,10 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"src/**/*.ts\" --fix",
-    "contract:emit": "prisma-cli contract emit",
-    "db:init": "prisma-cli db init",
-    "db:update": "prisma-cli db update",
-    "db:verify": "prisma-cli db verify",
-    "db:schema": "prisma-cli db schema",
-    "migration:plan": "prisma-cli migration plan",
-    "migration:status": "prisma-cli migration status",
-    "migrate": "prisma-cli migrate",
-    "studio": "prisma studio --config ./prisma.studio.config.ts"
+    "lint": "eslint \"src/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@app/db": "file:../../packages/db",
     "@nestjs/common": "11.0.1",
     "@nestjs/core": "11.0.1",
     "@nestjs/platform-express": "11.0.1",

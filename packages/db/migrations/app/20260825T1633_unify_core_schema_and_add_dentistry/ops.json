@@ -1,5 +1,252 @@
 [
   {
+    "id": "schema.core",
+    "label": "Create schema \"core\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"core\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"core\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-auditlog",
+    "label": "Move public.\"AuditLog\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "AuditLog",
+        "table": "AuditLog"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"AuditLog\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"AuditLog\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-authorization",
+    "label": "Move public.\"Authorization\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Authorization",
+        "table": "Authorization"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Authorization\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Authorization\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-branch",
+    "label": "Move public.\"Branch\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Branch",
+        "table": "Branch"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Branch\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Branch\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membership",
+    "label": "Move public.\"Membership\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Membership",
+        "table": "Membership"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Membership\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Membership\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membershipbranch",
+    "label": "Move public.\"MembershipBranch\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "MembershipBranch",
+        "table": "MembershipBranch"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"MembershipBranch\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"MembershipBranch\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membershiprole",
+    "label": "Move public.\"MembershipRole\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "MembershipRole",
+        "table": "MembershipRole"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"MembershipRole\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"MembershipRole\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-organization",
+    "label": "Move public.\"Organization\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Organization",
+        "table": "Organization"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Organization\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Organization\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-role",
+    "label": "Move public.\"Role\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Role",
+        "table": "Role"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Role\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Role\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-session",
+    "label": "Move public.\"Session\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Session",
+        "table": "Session"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Session\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Session\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-user",
+    "label": "Move public.\"User\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "User",
+        "table": "User"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"User\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"User\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
     "id": "schema.dentistry",
     "label": "Create schema \"dentistry\"",
     "operationClass": "additive",
@@ -11,23 +258,6 @@
       {
         "description": "Create schema \"dentistry\"",
         "sql": "CREATE SCHEMA IF NOT EXISTS \"dentistry\"",
-        "params": []
-      }
-    ],
-    "postcheck": []
-  },
-  {
-    "id": "schema.public",
-    "label": "Create schema \"public\"",
-    "operationClass": "additive",
-    "target": {
-      "id": "postgres"
-    },
-    "precheck": [],
-    "execute": [
-      {
-        "description": "Create schema \"public\"",
-        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
         "params": []
       }
     ],

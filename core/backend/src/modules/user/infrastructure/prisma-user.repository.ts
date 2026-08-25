@@ -51,7 +51,7 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async emailExists(email: string): Promise<boolean> {
-    const row = await this.prisma.orm.public.User
+    const row = await this.prisma.orm.core.User
       .where({ email })
       .first();
 
@@ -66,7 +66,7 @@ export class PrismaUserRepository extends UserRepository {
     const passwordHash = await this.passwordHasher.hash(input.password);
 
     return this.prisma.transaction(async (tx) => {
-      const organization = await tx.orm.public.Organization.first({
+      const organization = await tx.orm.core.Organization.first({
         id: toUuid36(input.organizationId),
       });
       if (!organization || organization.deleted) {
@@ -76,7 +76,7 @@ export class PrismaUserRepository extends UserRepository {
       }
 
       for (const branchId of input.branchIds) {
-        const branch = await tx.orm.public.Branch.first({ id: toUuid36(branchId) });
+        const branch = await tx.orm.core.Branch.first({ id: toUuid36(branchId) });
         if (
           !branch ||
           branch.deleted ||
@@ -89,7 +89,7 @@ export class PrismaUserRepository extends UserRepository {
       }
 
       for (const roleId of input.roleIds) {
-        const role = await tx.orm.public.Role.first({ id: toUuid36(roleId) });
+        const role = await tx.orm.core.Role.first({ id: toUuid36(roleId) });
         if (
           !role ||
           role.deleted ||
@@ -102,19 +102,19 @@ export class PrismaUserRepository extends UserRepository {
         }
       }
 
-      const userRow = await tx.orm.public.User.create({
+      const userRow = await tx.orm.core.User.create({
         email: input.email,
         firstName: input.firstName,
         lastName: input.lastName,
         phone: input.phone,
       });
 
-      await tx.orm.public.Authorization.create({
+      await tx.orm.core.Authorization.create({
         userId: userRow.id,
         passwordHash,
       });
 
-      const membershipRow = await tx.orm.public.Membership.create({
+      const membershipRow = await tx.orm.core.Membership.create({
         userId: userRow.id,
         organizationId: toUuid36(input.organizationId),
         status: "ACTIVE",
@@ -124,7 +124,7 @@ export class PrismaUserRepository extends UserRepository {
       const membershipBranchRows: { id: string; branchId: string }[] = [];
       for (const branchId of input.branchIds) {
         membershipBranchRows.push(
-          await tx.orm.public.MembershipBranch.create({
+          await tx.orm.core.MembershipBranch.create({
             membershipId: membershipRow.id,
             branchId: toUuid36(branchId),
           }),
@@ -134,7 +134,7 @@ export class PrismaUserRepository extends UserRepository {
       const membershipRoleRows: { id: string; roleId: string }[] = [];
       for (const roleId of input.roleIds) {
         membershipRoleRows.push(
-          await tx.orm.public.MembershipRole.create({
+          await tx.orm.core.MembershipRole.create({
             membershipId: membershipRow.id,
             roleId: toUuid36(roleId),
           }),

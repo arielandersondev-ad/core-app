@@ -10,7 +10,7 @@ export class PrismaRoleRepository extends RoleRepository {
   }
 
   async listByOrganizationScope(organizationId: string): Promise<Role[]> {
-    const rows = await this.prisma.orm.public.Role.all();
+    const rows = await this.prisma.orm.core.Role.all();
 
     return rows
       .filter(

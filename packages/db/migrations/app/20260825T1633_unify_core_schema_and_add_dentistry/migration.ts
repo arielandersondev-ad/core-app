@@ -1,15 +1,198 @@
 #!/usr/bin/env -S node
-import type { Contract as End } from '../../snapshots/88664fc7048e9d5ea85e51cf75dbfbe5a9691d6e8d9822cc520aca8ab899f9ec/contract';
-import endContract from '../../snapshots/88664fc7048e9d5ea85e51cf75dbfbe5a9691d6e8d9822cc520aca8ab899f9ec/contract.json' with { type: 'json' };
-import { Migration, MigrationCLI, col, fn, lit, primaryKey } from '@prisma/orm-postgres/migration';
+import type { Contract as End } from '../../snapshots/473c58e3346c99c9fe6f0dd342bb42ec8dbfbe7b2f23d37cef0405400b9c6315/contract';
+import endContract from '../../snapshots/473c58e3346c99c9fe6f0dd342bb42ec8dbfbe7b2f23d37cef0405400b9c6315/contract.json' with { type: 'json' };
+import type { Contract as Start } from '../../snapshots/e895710bb8af14d332edc7b921da8bccdf0a24bec3aee590d47ff063fc4d2598/contract';
+import startContract from '../../snapshots/e895710bb8af14d332edc7b921da8bccdf0a24bec3aee590d47ff063fc4d2598/contract.json' with { type: 'json' };
+import { Migration, MigrationCLI, col, fn, lit, primaryKey, rawSql } from '@prisma/orm-postgres/migration';
 
-export default class M extends Migration<never, End> {
+export default class M extends Migration<Start, End> {
+  override readonly startContractJson = startContract;
   override readonly endContractJson = endContract;
 
   override get operations() {
     return [
+      this.createSchema({ schema: 'core' }),
+      rawSql({
+        id: 'move-core-table-auditlog',
+        label: 'Move public."AuditLog" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'AuditLog', table: 'AuditLog' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."AuditLog" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."AuditLog" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-authorization',
+        label: 'Move public."Authorization" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Authorization', table: 'Authorization' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Authorization" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Authorization" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-branch',
+        label: 'Move public."Branch" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Branch', table: 'Branch' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Branch" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Branch" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-membership',
+        label: 'Move public."Membership" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Membership', table: 'Membership' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Membership" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Membership" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-membershipbranch',
+        label: 'Move public."MembershipBranch" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'MembershipBranch', table: 'MembershipBranch' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."MembershipBranch" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."MembershipBranch" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-membershiprole',
+        label: 'Move public."MembershipRole" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'MembershipRole', table: 'MembershipRole' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."MembershipRole" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."MembershipRole" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-organization',
+        label: 'Move public."Organization" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Organization', table: 'Organization' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Organization" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Organization" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-role',
+        label: 'Move public."Role" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Role', table: 'Role' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Role" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Role" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-session',
+        label: 'Move public."Session" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'Session', table: 'Session' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."Session" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."Session" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
+      rawSql({
+        id: 'move-core-table-user',
+        label: 'Move public."User" SET SCHEMA core',
+        operationClass: 'widening',
+        summary: 'Data-preserving namespace move',
+        target: {
+          id: 'postgres',
+          details: { schema: 'core', objectType: 'table', name: 'User', table: 'User' },
+        },
+        precheck: [],
+        execute: [
+          {
+            description: 'ALTER TABLE public."User" SET SCHEMA core',
+            sql: 'ALTER TABLE "public"."User" SET SCHEMA "core";',
+          },
+        ],
+        postcheck: [],
+      }),
       this.createSchema({ schema: 'dentistry' }),
-      this.createSchema({ schema: 'public' }),
       this.createTable({
         schema: 'dentistry',
         table: 'appointments',
@@ -468,7 +651,7 @@ export default class M extends Migration<never, End> {
         ],
         constraints: [primaryKey(['id'])],
       }),
-      this.addUnique({
+                  this.addUnique({
         schema: 'dentistry',
         table: 'clinical_encounters',
         constraint: 'clinical_encounters_appointmentId_key',
@@ -486,7 +669,7 @@ export default class M extends Migration<never, End> {
         constraint: 'radiographs_clinicalFileId_key',
         columns: ['clinicalFileId'],
       }),
-      this.createIndex({
+                                                                              this.createIndex({
         schema: 'dentistry',
         table: 'appointments',
         index: 'appointments_patientId_idx_e5f07e88',
@@ -698,7 +881,7 @@ export default class M extends Migration<never, End> {
         index: 'trt_org_status_idx_21af5e82',
         columns: ['organizationId', 'status'],
       }),
-      this.addForeignKey({
+                                                                                    this.addForeignKey({
         schema: 'dentistry',
         table: 'appointments',
         foreignKey: {

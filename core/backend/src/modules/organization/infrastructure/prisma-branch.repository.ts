@@ -12,7 +12,7 @@ export class PrismaBranchRepository extends BranchRepository {
   }
 
   async listByOrganization(organizationId: string): Promise<Branch[]> {
-    const rows = await this.prisma.orm.public.Branch
+    const rows = await this.prisma.orm.core.Branch
       .where({ organizationId: toUuid36(organizationId) })
       .all();
 
