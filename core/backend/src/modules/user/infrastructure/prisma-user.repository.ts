@@ -94,7 +94,7 @@ export class PrismaUserRepository extends UserRepository {
           !role ||
           role.deleted ||
           (role.organizationId !== null &&
-            role.organizationId !== input.organizationId)
+            role.organizationId !== toUuid36(input.organizationId))
         ) {
           throw new BadRequestException(
             `El rol ${roleId} no es válido para la organización indicada`,
@@ -110,12 +110,12 @@ export class PrismaUserRepository extends UserRepository {
       });
 
       await tx.orm.core.Authorization.create({
-        userId: userRow.id,
+        userId: toUuid36(userRow.id),
         passwordHash,
       });
 
       const membershipRow = await tx.orm.core.Membership.create({
-        userId: userRow.id,
+        userId: toUuid36(userRow.id),
         organizationId: toUuid36(input.organizationId),
         status: "ACTIVE",
         joinedAt: new Date(),

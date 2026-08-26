@@ -22,6 +22,15 @@
   "dependencies": {
     "@prisma/orm-postgres": "8.0.0-rc.4"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts"
+    },
+    "./src/prisma/generated/contract.js": {
+      "types": "./dist/prisma/generated/contract.d.ts"
+    },
+    "./src/prisma/generated/contract.json": "./dist/prisma/generated/contract.json"
+  },
   "devDependencies": {
     "@prisma/cli": "8.0.0-rc.6",
     "@prisma/cli-engine": "0.2.0",

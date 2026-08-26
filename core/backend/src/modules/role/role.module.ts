@@ -3,6 +3,7 @@ import { PrismaRoleRepository } from "./infrastructure/prisma-role.repository.js
 import { RoleController } from "./presentation/http/role.controller.js";
 import { ListRolesByOrganizationScopeUseCase } from "./application/use-case/list-roles.use-case.js";
 import { RoleRepository } from "./domain/repositories/role.repository.js";
+import { CreateRoleUseCase } from "./application/use-case/create-role.use-case.js";
 
 @Module({
   imports: [],
@@ -15,6 +16,7 @@ import { RoleRepository } from "./domain/repositories/role.repository.js";
       useClass: PrismaRoleRepository,
     },
     ListRolesByOrganizationScopeUseCase,
+    CreateRoleUseCase
   ],
   exports: [],
 })

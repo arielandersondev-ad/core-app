@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../common/infrastructure/prisma.service.js";
-import { Role } from "../domain/entities/role.entity.js";
+import { CreateRole, Role } from "../domain/entities/role.entity.js";
 import { RoleRepository } from "../domain/repositories/role.repository.js";
+import { toUuid36 } from "../../../common/infrastructure/prisma-uuid.js";
 
 @Injectable()
 export class PrismaRoleRepository extends RoleRepository {
@@ -29,5 +30,15 @@ export class PrismaRoleRepository extends RoleRepository {
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       }));
+  }
+
+  async create(role: CreateRole): Promise<any> {
+    const row = await this.prisma.orm.core.Role.create({
+        code: role.code,
+        description: role.description,
+        name: role.name,
+        organizationId: toUuid36(role.organizationId)
+      });
+    return row
   }
 }
