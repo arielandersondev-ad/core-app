@@ -1,0 +1,2864 @@
+[
+  {
+    "id": "schema.core",
+    "label": "Create schema \"core\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"core\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"core\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-auditlog",
+    "label": "Move public.\"AuditLog\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "AuditLog",
+        "table": "AuditLog"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"AuditLog\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"AuditLog\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-authorization",
+    "label": "Move public.\"Authorization\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Authorization",
+        "table": "Authorization"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Authorization\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Authorization\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-branch",
+    "label": "Move public.\"Branch\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Branch",
+        "table": "Branch"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Branch\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Branch\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membership",
+    "label": "Move public.\"Membership\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Membership",
+        "table": "Membership"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Membership\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Membership\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membershipbranch",
+    "label": "Move public.\"MembershipBranch\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "MembershipBranch",
+        "table": "MembershipBranch"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"MembershipBranch\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"MembershipBranch\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-membershiprole",
+    "label": "Move public.\"MembershipRole\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "MembershipRole",
+        "table": "MembershipRole"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"MembershipRole\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"MembershipRole\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-organization",
+    "label": "Move public.\"Organization\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Organization",
+        "table": "Organization"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Organization\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Organization\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-role",
+    "label": "Move public.\"Role\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Role",
+        "table": "Role"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Role\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Role\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-session",
+    "label": "Move public.\"Session\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "Session",
+        "table": "Session"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"Session\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"Session\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "move-core-table-user",
+    "label": "Move public.\"User\" SET SCHEMA core",
+    "operationClass": "widening",
+    "summary": "Data-preserving namespace move",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "core",
+        "objectType": "table",
+        "name": "User",
+        "table": "User"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "ALTER TABLE public.\"User\" SET SCHEMA core",
+        "sql": "ALTER TABLE \"public\".\"User\" SET SCHEMA \"core\";"
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "schema.dentistry",
+    "label": "Create schema \"dentistry\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"dentistry\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"dentistry\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.appointments",
+    "label": "Create table \"appointments\"",
+    "summary": "Creates table \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"appointments\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"appointments\"",
+        "sql": "CREATE TABLE \"dentistry\".\"appointments\" (\n  \"branchId\" character(36) NOT NULL,\n  \"cancellationReason\" text,\n  \"cancelledAt\" timestamp,\n  \"cancelledByMembershipId\" character(36),\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"endsAt\" timestamp NOT NULL,\n  \"id\" character(36) NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"professionalMembershipId\" character(36) NOT NULL,\n  \"reason\" text,\n  \"serviceId\" character(36) NOT NULL,\n  \"startsAt\" timestamp NOT NULL,\n  \"status\" text DEFAULT 'SCHEDULED' NOT NULL,\n  \"treatmentId\" character(36),\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"appointments\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.clinical_encounters",
+    "label": "Create table \"clinical_encounters\"",
+    "summary": "Creates table \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"clinical_encounters\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"clinical_encounters\"",
+        "sql": "CREATE TABLE \"dentistry\".\"clinical_encounters\" (\n  \"appointmentId\" character(36),\n  \"branchId\" character(36) NOT NULL,\n  \"chiefComplaint\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"diagnosis\" text,\n  \"endedAt\" timestamp,\n  \"evolution\" text,\n  \"id\" character(36) NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"procedurePerformed\" text,\n  \"professionalMembershipId\" character(36) NOT NULL,\n  \"recommendations\" text,\n  \"startedAt\" timestamp NOT NULL,\n  \"treatmentId\" character(36),\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"clinical_encounters\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.clinical_files",
+    "label": "Create table \"clinical_files\"",
+    "summary": "Creates table \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"clinical_files\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"clinical_files\"",
+        "sql": "CREATE TABLE \"dentistry\".\"clinical_files\" (\n  \"appointmentId\" character(36),\n  \"bucket\" text NOT NULL,\n  \"capturedAt\" timestamp,\n  \"category\" text NOT NULL,\n  \"checksumSha256\" text,\n  \"clinicalEncounterId\" character(36),\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deleted\" bool DEFAULT false NOT NULL,\n  \"deletedAt\" timestamp,\n  \"description\" text,\n  \"id\" character(36) NOT NULL,\n  \"mimeType\" text NOT NULL,\n  \"objectKey\" text NOT NULL,\n  \"organizationId\" character(36) NOT NULL,\n  \"originalFilename\" text NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"sizeBytes\" int4 NOT NULL,\n  \"storageProvider\" text NOT NULL,\n  \"treatmentId\" character(36),\n  \"updatedAt\" timestamptz NOT NULL,\n  \"uploadedByMembershipId\" character(36) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"clinical_files\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.clinical_histories",
+    "label": "Create table \"clinical_histories\"",
+    "summary": "Creates table \"clinical_histories\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "clinical_histories"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"clinical_histories\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"clinical_histories\"",
+        "sql": "CREATE TABLE \"dentistry\".\"clinical_histories\" (\n  \"allergies\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"currentMedications\" text,\n  \"dentalHistory\" text,\n  \"id\" character(36) NOT NULL,\n  \"medicalHistory\" text,\n  \"observations\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"relevantConditions\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"clinical_histories\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.dental_services",
+    "label": "Create table \"dental_services\"",
+    "summary": "Creates table \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"dental_services\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_services\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"dental_services\"",
+        "sql": "CREATE TABLE \"dentistry\".\"dental_services\" (\n  \"active\" bool DEFAULT true NOT NULL,\n  \"basePriceMinor\" int4,\n  \"code\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"currency\" text,\n  \"description\" text,\n  \"durationMinutes\" int4,\n  \"id\" character(36) NOT NULL,\n  \"name\" text NOT NULL,\n  \"organizationId\" character(36) NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"dental_services\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_services\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.patients",
+    "label": "Create table \"patients\"",
+    "summary": "Creates table \"patients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "patients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"patients\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"patients\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"patients\"",
+        "sql": "CREATE TABLE \"dentistry\".\"patients\" (\n  \"address\" text,\n  \"birthDate\" timestamp,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"deleted\" bool DEFAULT false NOT NULL,\n  \"deletedAt\" timestamp,\n  \"documentNumber\" text,\n  \"documentType\" text,\n  \"email\" text,\n  \"firstName\" text NOT NULL,\n  \"id\" character(36) NOT NULL,\n  \"lastName\" text NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"phone\" text,\n  \"sex\" text,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"patients\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"patients\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.payments",
+    "label": "Create table \"payments\"",
+    "summary": "Creates table \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"payments\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"payments\"",
+        "sql": "CREATE TABLE \"dentistry\".\"payments\" (\n  \"amountMinor\" int4 NOT NULL,\n  \"appointmentId\" character(36),\n  \"branchId\" character(36) NOT NULL,\n  \"clinicalEncounterId\" character(36),\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currency\" text NOT NULL,\n  \"id\" character(36) NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"paidAt\" timestamp NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"paymentMethod\" text NOT NULL,\n  \"receivedByMembershipId\" character(36) NOT NULL,\n  \"reference\" text,\n  \"status\" text DEFAULT 'COMPLETED' NOT NULL,\n  \"treatmentId\" character(36),\n  \"updatedAt\" timestamptz NOT NULL,\n  \"voidedAt\" timestamp,\n  \"voidedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"payments\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.radiographs",
+    "label": "Create table \"radiographs\"",
+    "summary": "Creates table \"radiographs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "radiographs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"radiographs\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"radiographs\"",
+        "sql": "CREATE TABLE \"dentistry\".\"radiographs\" (\n  \"clinicalFileId\" character(36) NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" character(36) NOT NULL,\n  \"laterality\" text,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"radiographType\" text NOT NULL,\n  \"region\" text,\n  \"takenAt\" timestamp,\n  \"toothNumber\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"radiographs\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.treatments",
+    "label": "Create table \"treatments\"",
+    "summary": "Creates table \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"treatments\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"treatments\"",
+        "sql": "CREATE TABLE \"dentistry\".\"treatments\" (\n  \"agreedPriceMinor\" int4,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" character(36) NOT NULL,\n  \"currency\" text,\n  \"diagnosis\" text,\n  \"endedAt\" timestamp,\n  \"estimatedSessions\" int4,\n  \"id\" character(36) NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"patientId\" character(36) NOT NULL,\n  \"responsibleMembershipId\" character(36),\n  \"serviceId\" character(36) NOT NULL,\n  \"startedAt\" timestamp NOT NULL,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" character(36),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"treatments\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.clinical_encounters.clinical_encounters_appointmentId_key",
+    "label": "Add unique constraint on \"clinical_encounters\" (appointmentId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "unique",
+        "name": "clinical_encounters_appointmentId_key",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"clinical_encounters_appointmentId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_appointmentId_key",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"clinical_encounters_appointmentId_key\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_encounters\" ADD CONSTRAINT \"clinical_encounters_appointmentId_key\" UNIQUE (\"appointmentId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"clinical_encounters_appointmentId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_appointmentId_key",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.clinical_histories.clinical_histories_patientId_key",
+    "label": "Add unique constraint on \"clinical_histories\" (patientId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "unique",
+        "name": "clinical_histories_patientId_key",
+        "table": "clinical_histories"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"clinical_histories_patientId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_histories_patientId_key",
+          "dentistry",
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"clinical_histories_patientId_key\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_histories\" ADD CONSTRAINT \"clinical_histories_patientId_key\" UNIQUE (\"patientId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"clinical_histories_patientId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_histories_patientId_key",
+          "dentistry",
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.radiographs.radiographs_clinicalFileId_key",
+    "label": "Add unique constraint on \"radiographs\" (clinicalFileId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "unique",
+        "name": "radiographs_clinicalFileId_key",
+        "table": "radiographs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"radiographs_clinicalFileId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "radiographs_clinicalFileId_key",
+          "dentistry",
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"radiographs_clinicalFileId_key\"",
+        "sql": "ALTER TABLE \"dentistry\".\"radiographs\" ADD CONSTRAINT \"radiographs_clinicalFileId_key\" UNIQUE (\"clinicalFileId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"radiographs_clinicalFileId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "radiographs_clinicalFileId_key",
+          "dentistry",
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appointments_patientId_idx_e5f07e88",
+    "label": "Create index \"appointments_patientId_idx_e5f07e88\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appointments_patientId_idx_e5f07e88",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointments_patientId_idx_e5f07e88\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointments_patientId_idx_e5f07e88\"",
+        "sql": "CREATE INDEX \"appointments_patientId_idx_e5f07e88\" ON \"dentistry\".\"appointments\" (\"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointments_patientId_idx_e5f07e88\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appointments_serviceId_idx_b5d9acbf",
+    "label": "Create index \"appointments_serviceId_idx_b5d9acbf\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appointments_serviceId_idx_b5d9acbf",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointments_serviceId_idx_b5d9acbf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointments_serviceId_idx_b5d9acbf\"",
+        "sql": "CREATE INDEX \"appointments_serviceId_idx_b5d9acbf\" ON \"dentistry\".\"appointments\" (\"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointments_serviceId_idx_b5d9acbf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appointments_treatmentId_idx_18e96195",
+    "label": "Create index \"appointments_treatmentId_idx_18e96195\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appointments_treatmentId_idx_18e96195",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointments_treatmentId_idx_18e96195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_treatmentId_idx_18e96195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointments_treatmentId_idx_18e96195\"",
+        "sql": "CREATE INDEX \"appointments_treatmentId_idx_18e96195\" ON \"dentistry\".\"appointments\" (\"treatmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointments_treatmentId_idx_18e96195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointments_treatmentId_idx_18e96195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appt_org_branch_start_idx_dd7b9f0f",
+    "label": "Create index \"appt_org_branch_start_idx_dd7b9f0f\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appt_org_branch_start_idx_dd7b9f0f",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appt_org_branch_start_idx_dd7b9f0f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_branch_start_idx_dd7b9f0f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appt_org_branch_start_idx_dd7b9f0f\"",
+        "sql": "CREATE INDEX \"appt_org_branch_start_idx_dd7b9f0f\" ON \"dentistry\".\"appointments\" (\"organizationId\", \"branchId\", \"startsAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appt_org_branch_start_idx_dd7b9f0f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_branch_start_idx_dd7b9f0f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appt_org_prof_start_idx_9d9d088f",
+    "label": "Create index \"appt_org_prof_start_idx_9d9d088f\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appt_org_prof_start_idx_9d9d088f",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appt_org_prof_start_idx_9d9d088f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_prof_start_idx_9d9d088f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appt_org_prof_start_idx_9d9d088f\"",
+        "sql": "CREATE INDEX \"appt_org_prof_start_idx_9d9d088f\" ON \"dentistry\".\"appointments\" (\"organizationId\", \"professionalMembershipId\", \"startsAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appt_org_prof_start_idx_9d9d088f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_prof_start_idx_9d9d088f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appt_org_start_idx_4d98ff60",
+    "label": "Create index \"appt_org_start_idx_4d98ff60\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appt_org_start_idx_4d98ff60",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appt_org_start_idx_4d98ff60\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_start_idx_4d98ff60\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appt_org_start_idx_4d98ff60\"",
+        "sql": "CREATE INDEX \"appt_org_start_idx_4d98ff60\" ON \"dentistry\".\"appointments\" (\"organizationId\", \"startsAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appt_org_start_idx_4d98ff60\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_org_start_idx_4d98ff60\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointments.appt_patient_start_idx_e7cd3706",
+    "label": "Create index \"appt_patient_start_idx_e7cd3706\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appt_patient_start_idx_e7cd3706",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appt_patient_start_idx_e7cd3706\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_patient_start_idx_e7cd3706\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appt_patient_start_idx_e7cd3706\"",
+        "sql": "CREATE INDEX \"appt_patient_start_idx_e7cd3706\" ON \"dentistry\".\"appointments\" (\"patientId\", \"startsAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appt_patient_start_idx_e7cd3706\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appt_patient_start_idx_e7cd3706\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_encounters.clinical_encounters_patientId_idx_e5f07e88",
+    "label": "Create index \"clinical_encounters_patientId_idx_e5f07e88\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "clinical_encounters_patientId_idx_e5f07e88",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"clinical_encounters_patientId_idx_e5f07e88\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters_patientId_idx_e5f07e88\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"clinical_encounters_patientId_idx_e5f07e88\"",
+        "sql": "CREATE INDEX \"clinical_encounters_patientId_idx_e5f07e88\" ON \"dentistry\".\"clinical_encounters\" (\"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"clinical_encounters_patientId_idx_e5f07e88\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters_patientId_idx_e5f07e88\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_encounters.clinical_encounters_treatmentId_idx_18e96195",
+    "label": "Create index \"clinical_encounters_treatmentId_idx_18e96195\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "clinical_encounters_treatmentId_idx_18e96195",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"clinical_encounters_treatmentId_idx_18e96195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters_treatmentId_idx_18e96195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"clinical_encounters_treatmentId_idx_18e96195\"",
+        "sql": "CREATE INDEX \"clinical_encounters_treatmentId_idx_18e96195\" ON \"dentistry\".\"clinical_encounters\" (\"treatmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"clinical_encounters_treatmentId_idx_18e96195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_encounters_treatmentId_idx_18e96195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_encounters.enc_org_patient_start_idx_8434fd72",
+    "label": "Create index \"enc_org_patient_start_idx_8434fd72\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "enc_org_patient_start_idx_8434fd72",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"enc_org_patient_start_idx_8434fd72\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"enc_org_patient_start_idx_8434fd72\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"enc_org_patient_start_idx_8434fd72\"",
+        "sql": "CREATE INDEX \"enc_org_patient_start_idx_8434fd72\" ON \"dentistry\".\"clinical_encounters\" (\"organizationId\", \"patientId\", \"startedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"enc_org_patient_start_idx_8434fd72\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"enc_org_patient_start_idx_8434fd72\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_encounters.enc_org_prof_start_idx_ccff3a92",
+    "label": "Create index \"enc_org_prof_start_idx_ccff3a92\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "enc_org_prof_start_idx_ccff3a92",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"enc_org_prof_start_idx_ccff3a92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"enc_org_prof_start_idx_ccff3a92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"enc_org_prof_start_idx_ccff3a92\"",
+        "sql": "CREATE INDEX \"enc_org_prof_start_idx_ccff3a92\" ON \"dentistry\".\"clinical_encounters\" (\"organizationId\", \"professionalMembershipId\", \"startedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"enc_org_prof_start_idx_ccff3a92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"enc_org_prof_start_idx_ccff3a92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.cf_bucket_object_uidx_fe606a9b",
+    "label": "Create index \"cf_bucket_object_uidx_fe606a9b\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "cf_bucket_object_uidx_fe606a9b",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"cf_bucket_object_uidx_fe606a9b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_bucket_object_uidx_fe606a9b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"cf_bucket_object_uidx_fe606a9b\"",
+        "sql": "CREATE UNIQUE INDEX \"cf_bucket_object_uidx_fe606a9b\" ON \"dentistry\".\"clinical_files\" (\"bucket\", \"objectKey\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"cf_bucket_object_uidx_fe606a9b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_bucket_object_uidx_fe606a9b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.cf_encounter_idx_2139e386",
+    "label": "Create index \"cf_encounter_idx_2139e386\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "cf_encounter_idx_2139e386",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"cf_encounter_idx_2139e386\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_encounter_idx_2139e386\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"cf_encounter_idx_2139e386\"",
+        "sql": "CREATE INDEX \"cf_encounter_idx_2139e386\" ON \"dentistry\".\"clinical_files\" (\"clinicalEncounterId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"cf_encounter_idx_2139e386\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_encounter_idx_2139e386\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.cf_org_patient_idx_7c150195",
+    "label": "Create index \"cf_org_patient_idx_7c150195\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "cf_org_patient_idx_7c150195",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"cf_org_patient_idx_7c150195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_org_patient_idx_7c150195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"cf_org_patient_idx_7c150195\"",
+        "sql": "CREATE INDEX \"cf_org_patient_idx_7c150195\" ON \"dentistry\".\"clinical_files\" (\"organizationId\", \"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"cf_org_patient_idx_7c150195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"cf_org_patient_idx_7c150195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.clinical_files_appointmentId_idx_682a8b58",
+    "label": "Create index \"clinical_files_appointmentId_idx_682a8b58\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "clinical_files_appointmentId_idx_682a8b58",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"clinical_files_appointmentId_idx_682a8b58\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"clinical_files_appointmentId_idx_682a8b58\"",
+        "sql": "CREATE INDEX \"clinical_files_appointmentId_idx_682a8b58\" ON \"dentistry\".\"clinical_files\" (\"appointmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"clinical_files_appointmentId_idx_682a8b58\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.clinical_files_patientId_idx_e5f07e88",
+    "label": "Create index \"clinical_files_patientId_idx_e5f07e88\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "clinical_files_patientId_idx_e5f07e88",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"clinical_files_patientId_idx_e5f07e88\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_patientId_idx_e5f07e88\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"clinical_files_patientId_idx_e5f07e88\"",
+        "sql": "CREATE INDEX \"clinical_files_patientId_idx_e5f07e88\" ON \"dentistry\".\"clinical_files\" (\"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"clinical_files_patientId_idx_e5f07e88\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_patientId_idx_e5f07e88\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_files.clinical_files_treatmentId_idx_18e96195",
+    "label": "Create index \"clinical_files_treatmentId_idx_18e96195\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "clinical_files_treatmentId_idx_18e96195",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"clinical_files_treatmentId_idx_18e96195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_treatmentId_idx_18e96195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"clinical_files_treatmentId_idx_18e96195\"",
+        "sql": "CREATE INDEX \"clinical_files_treatmentId_idx_18e96195\" ON \"dentistry\".\"clinical_files\" (\"treatmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"clinical_files_treatmentId_idx_18e96195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"clinical_files_treatmentId_idx_18e96195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.clinical_histories.ch_org_idx_2e17ef41",
+    "label": "Create index \"ch_org_idx_2e17ef41\" on \"clinical_histories\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "ch_org_idx_2e17ef41",
+        "table": "clinical_histories"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"ch_org_idx_2e17ef41\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"ch_org_idx_2e17ef41\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"ch_org_idx_2e17ef41\"",
+        "sql": "CREATE INDEX \"ch_org_idx_2e17ef41\" ON \"dentistry\".\"clinical_histories\" (\"organizationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"ch_org_idx_2e17ef41\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"ch_org_idx_2e17ef41\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.dental_services.svc_org_active_idx_0c9a1852",
+    "label": "Create index \"svc_org_active_idx_0c9a1852\" on \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "svc_org_active_idx_0c9a1852",
+        "table": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"svc_org_active_idx_0c9a1852\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_active_idx_0c9a1852\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"svc_org_active_idx_0c9a1852\"",
+        "sql": "CREATE INDEX \"svc_org_active_idx_0c9a1852\" ON \"dentistry\".\"dental_services\" (\"organizationId\", \"active\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"svc_org_active_idx_0c9a1852\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_active_idx_0c9a1852\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.dental_services.svc_org_code_uidx_e11c0273",
+    "label": "Create index \"svc_org_code_uidx_e11c0273\" on \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "svc_org_code_uidx_e11c0273",
+        "table": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"svc_org_code_uidx_e11c0273\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_code_uidx_e11c0273\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"svc_org_code_uidx_e11c0273\"",
+        "sql": "CREATE UNIQUE INDEX \"svc_org_code_uidx_e11c0273\" ON \"dentistry\".\"dental_services\" (\"organizationId\", \"code\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"svc_org_code_uidx_e11c0273\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_code_uidx_e11c0273\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.patients.pat_org_idx_2e17ef41",
+    "label": "Create index \"pat_org_idx_2e17ef41\" on \"patients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pat_org_idx_2e17ef41",
+        "table": "patients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pat_org_idx_2e17ef41\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_idx_2e17ef41\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pat_org_idx_2e17ef41\"",
+        "sql": "CREATE INDEX \"pat_org_idx_2e17ef41\" ON \"dentistry\".\"patients\" (\"organizationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pat_org_idx_2e17ef41\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_idx_2e17ef41\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.patients.pat_org_name_idx_a92c3560",
+    "label": "Create index \"pat_org_name_idx_a92c3560\" on \"patients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pat_org_name_idx_a92c3560",
+        "table": "patients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pat_org_name_idx_a92c3560\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_name_idx_a92c3560\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pat_org_name_idx_a92c3560\"",
+        "sql": "CREATE INDEX \"pat_org_name_idx_a92c3560\" ON \"dentistry\".\"patients\" (\"organizationId\", \"lastName\", \"firstName\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pat_org_name_idx_a92c3560\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_name_idx_a92c3560\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.patients.pat_org_phone_idx_9ebe94ad",
+    "label": "Create index \"pat_org_phone_idx_9ebe94ad\" on \"patients\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pat_org_phone_idx_9ebe94ad",
+        "table": "patients"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pat_org_phone_idx_9ebe94ad\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_phone_idx_9ebe94ad\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pat_org_phone_idx_9ebe94ad\"",
+        "sql": "CREATE INDEX \"pat_org_phone_idx_9ebe94ad\" ON \"dentistry\".\"patients\" (\"organizationId\", \"phone\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pat_org_phone_idx_9ebe94ad\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pat_org_phone_idx_9ebe94ad\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.pay_org_branch_paid_idx_7bfda1be",
+    "label": "Create index \"pay_org_branch_paid_idx_7bfda1be\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pay_org_branch_paid_idx_7bfda1be",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pay_org_branch_paid_idx_7bfda1be\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_org_branch_paid_idx_7bfda1be\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pay_org_branch_paid_idx_7bfda1be\"",
+        "sql": "CREATE INDEX \"pay_org_branch_paid_idx_7bfda1be\" ON \"dentistry\".\"payments\" (\"organizationId\", \"branchId\", \"paidAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pay_org_branch_paid_idx_7bfda1be\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_org_branch_paid_idx_7bfda1be\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.pay_org_paid_idx_b952dcb9",
+    "label": "Create index \"pay_org_paid_idx_b952dcb9\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pay_org_paid_idx_b952dcb9",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pay_org_paid_idx_b952dcb9\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_org_paid_idx_b952dcb9\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pay_org_paid_idx_b952dcb9\"",
+        "sql": "CREATE INDEX \"pay_org_paid_idx_b952dcb9\" ON \"dentistry\".\"payments\" (\"organizationId\", \"paidAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pay_org_paid_idx_b952dcb9\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_org_paid_idx_b952dcb9\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.pay_patient_paid_idx_c631bb8a",
+    "label": "Create index \"pay_patient_paid_idx_c631bb8a\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "pay_patient_paid_idx_c631bb8a",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pay_patient_paid_idx_c631bb8a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_patient_paid_idx_c631bb8a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pay_patient_paid_idx_c631bb8a\"",
+        "sql": "CREATE INDEX \"pay_patient_paid_idx_c631bb8a\" ON \"dentistry\".\"payments\" (\"patientId\", \"paidAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pay_patient_paid_idx_c631bb8a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"pay_patient_paid_idx_c631bb8a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.payments_appointmentId_idx_682a8b58",
+    "label": "Create index \"payments_appointmentId_idx_682a8b58\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "payments_appointmentId_idx_682a8b58",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payments_appointmentId_idx_682a8b58\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payments_appointmentId_idx_682a8b58\"",
+        "sql": "CREATE INDEX \"payments_appointmentId_idx_682a8b58\" ON \"dentistry\".\"payments\" (\"appointmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payments_appointmentId_idx_682a8b58\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.payments_clinicalEncounterId_idx_2139e386",
+    "label": "Create index \"payments_clinicalEncounterId_idx_2139e386\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "payments_clinicalEncounterId_idx_2139e386",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payments_clinicalEncounterId_idx_2139e386\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_clinicalEncounterId_idx_2139e386\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payments_clinicalEncounterId_idx_2139e386\"",
+        "sql": "CREATE INDEX \"payments_clinicalEncounterId_idx_2139e386\" ON \"dentistry\".\"payments\" (\"clinicalEncounterId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payments_clinicalEncounterId_idx_2139e386\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_clinicalEncounterId_idx_2139e386\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.payments_patientId_idx_e5f07e88",
+    "label": "Create index \"payments_patientId_idx_e5f07e88\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "payments_patientId_idx_e5f07e88",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payments_patientId_idx_e5f07e88\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payments_patientId_idx_e5f07e88\"",
+        "sql": "CREATE INDEX \"payments_patientId_idx_e5f07e88\" ON \"dentistry\".\"payments\" (\"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payments_patientId_idx_e5f07e88\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.payments.payments_treatmentId_idx_18e96195",
+    "label": "Create index \"payments_treatmentId_idx_18e96195\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "payments_treatmentId_idx_18e96195",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payments_treatmentId_idx_18e96195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_treatmentId_idx_18e96195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payments_treatmentId_idx_18e96195\"",
+        "sql": "CREATE INDEX \"payments_treatmentId_idx_18e96195\" ON \"dentistry\".\"payments\" (\"treatmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payments_treatmentId_idx_18e96195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payments_treatmentId_idx_18e96195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.radiographs.rad_org_taken_idx_7edfcbb7",
+    "label": "Create index \"rad_org_taken_idx_7edfcbb7\" on \"radiographs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "rad_org_taken_idx_7edfcbb7",
+        "table": "radiographs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rad_org_taken_idx_7edfcbb7\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"rad_org_taken_idx_7edfcbb7\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rad_org_taken_idx_7edfcbb7\"",
+        "sql": "CREATE INDEX \"rad_org_taken_idx_7edfcbb7\" ON \"dentistry\".\"radiographs\" (\"organizationId\", \"takenAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rad_org_taken_idx_7edfcbb7\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"rad_org_taken_idx_7edfcbb7\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.treatments.treatments_patientId_idx_e5f07e88",
+    "label": "Create index \"treatments_patientId_idx_e5f07e88\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "treatments_patientId_idx_e5f07e88",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"treatments_patientId_idx_e5f07e88\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"treatments_patientId_idx_e5f07e88\"",
+        "sql": "CREATE INDEX \"treatments_patientId_idx_e5f07e88\" ON \"dentistry\".\"treatments\" (\"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"treatments_patientId_idx_e5f07e88\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments_patientId_idx_e5f07e88\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.treatments.treatments_serviceId_idx_b5d9acbf",
+    "label": "Create index \"treatments_serviceId_idx_b5d9acbf\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "treatments_serviceId_idx_b5d9acbf",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"treatments_serviceId_idx_b5d9acbf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"treatments_serviceId_idx_b5d9acbf\"",
+        "sql": "CREATE INDEX \"treatments_serviceId_idx_b5d9acbf\" ON \"dentistry\".\"treatments\" (\"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"treatments_serviceId_idx_b5d9acbf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"treatments_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.treatments.trt_org_patient_idx_7c150195",
+    "label": "Create index \"trt_org_patient_idx_7c150195\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "trt_org_patient_idx_7c150195",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"trt_org_patient_idx_7c150195\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"trt_org_patient_idx_7c150195\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"trt_org_patient_idx_7c150195\"",
+        "sql": "CREATE INDEX \"trt_org_patient_idx_7c150195\" ON \"dentistry\".\"treatments\" (\"organizationId\", \"patientId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"trt_org_patient_idx_7c150195\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"trt_org_patient_idx_7c150195\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.treatments.trt_org_status_idx_21af5e82",
+    "label": "Create index \"trt_org_status_idx_21af5e82\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "trt_org_status_idx_21af5e82",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"trt_org_status_idx_21af5e82\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"trt_org_status_idx_21af5e82\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"trt_org_status_idx_21af5e82\"",
+        "sql": "CREATE INDEX \"trt_org_status_idx_21af5e82\" ON \"dentistry\".\"treatments\" (\"organizationId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"trt_org_status_idx_21af5e82\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"trt_org_status_idx_21af5e82\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointments.appointments_patientId_fkey",
+    "label": "Add foreign key \"appointments_patientId_fkey\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "appointments_patientId_fkey",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointments_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointments_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"appointments\"\nADD CONSTRAINT \"appointments_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointments_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointments.appointments_serviceId_fkey",
+    "label": "Add foreign key \"appointments_serviceId_fkey\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "appointments_serviceId_fkey",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointments_serviceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointments_serviceId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"appointments\"\nADD CONSTRAINT \"appointments_serviceId_fkey\"\nFOREIGN KEY (\"serviceId\")\nREFERENCES \"dentistry\".\"dental_services\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointments_serviceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointments.appointments_treatmentId_fkey",
+    "label": "Add foreign key \"appointments_treatmentId_fkey\" on \"appointments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "appointments_treatmentId_fkey",
+        "table": "appointments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointments_treatmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointments_treatmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"appointments\"\nADD CONSTRAINT \"appointments_treatmentId_fkey\"\nFOREIGN KEY (\"treatmentId\")\nREFERENCES \"dentistry\".\"treatments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointments_treatmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointments_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_encounters.clinical_encounters_patientId_fkey",
+    "label": "Add foreign key \"clinical_encounters_patientId_fkey\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_encounters_patientId_fkey",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_encounters_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_encounters_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_encounters\"\nADD CONSTRAINT \"clinical_encounters_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_encounters_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_encounters.clinical_encounters_appointmentId_fkey",
+    "label": "Add foreign key \"clinical_encounters_appointmentId_fkey\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_encounters_appointmentId_fkey",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_encounters_appointmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_encounters_appointmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_encounters\"\nADD CONSTRAINT \"clinical_encounters_appointmentId_fkey\"\nFOREIGN KEY (\"appointmentId\")\nREFERENCES \"dentistry\".\"appointments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_encounters_appointmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_encounters.clinical_encounters_treatmentId_fkey",
+    "label": "Add foreign key \"clinical_encounters_treatmentId_fkey\" on \"clinical_encounters\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_encounters_treatmentId_fkey",
+        "table": "clinical_encounters"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_encounters_treatmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_encounters_treatmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_encounters\"\nADD CONSTRAINT \"clinical_encounters_treatmentId_fkey\"\nFOREIGN KEY (\"treatmentId\")\nREFERENCES \"dentistry\".\"treatments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_encounters_treatmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_encounters_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_encounters\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_files.clinical_files_patientId_fkey",
+    "label": "Add foreign key \"clinical_files_patientId_fkey\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_files_patientId_fkey",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_files_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_files_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_files\"\nADD CONSTRAINT \"clinical_files_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_files_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_files.clinical_files_clinicalEncounterId_fkey",
+    "label": "Add foreign key \"clinical_files_clinicalEncounterId_fkey\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_files_clinicalEncounterId_fkey",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_files_clinicalEncounterId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_clinicalEncounterId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_files_clinicalEncounterId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_files\"\nADD CONSTRAINT \"clinical_files_clinicalEncounterId_fkey\"\nFOREIGN KEY (\"clinicalEncounterId\")\nREFERENCES \"dentistry\".\"clinical_encounters\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_files_clinicalEncounterId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_clinicalEncounterId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_files.clinical_files_treatmentId_fkey",
+    "label": "Add foreign key \"clinical_files_treatmentId_fkey\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_files_treatmentId_fkey",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_files_treatmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_files_treatmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_files\"\nADD CONSTRAINT \"clinical_files_treatmentId_fkey\"\nFOREIGN KEY (\"treatmentId\")\nREFERENCES \"dentistry\".\"treatments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_files_treatmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_files.clinical_files_appointmentId_fkey",
+    "label": "Add foreign key \"clinical_files_appointmentId_fkey\" on \"clinical_files\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_files_appointmentId_fkey",
+        "table": "clinical_files"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_files_appointmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_files_appointmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_files\"\nADD CONSTRAINT \"clinical_files_appointmentId_fkey\"\nFOREIGN KEY (\"appointmentId\")\nREFERENCES \"dentistry\".\"appointments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_files_appointmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_files_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_files\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.clinical_histories.clinical_histories_patientId_fkey",
+    "label": "Add foreign key \"clinical_histories_patientId_fkey\" on \"clinical_histories\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "clinical_histories_patientId_fkey",
+        "table": "clinical_histories"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"clinical_histories_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_histories_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"clinical_histories_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"clinical_histories\"\nADD CONSTRAINT \"clinical_histories_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"clinical_histories_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clinical_histories_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"clinical_histories\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.payments.payments_patientId_fkey",
+    "label": "Add foreign key \"payments_patientId_fkey\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "payments_patientId_fkey",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"payments_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"payments_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"payments\"\nADD CONSTRAINT \"payments_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"payments_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.payments.payments_treatmentId_fkey",
+    "label": "Add foreign key \"payments_treatmentId_fkey\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "payments_treatmentId_fkey",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"payments_treatmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"payments_treatmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"payments\"\nADD CONSTRAINT \"payments_treatmentId_fkey\"\nFOREIGN KEY (\"treatmentId\")\nREFERENCES \"dentistry\".\"treatments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"payments_treatmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_treatmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.payments.payments_appointmentId_fkey",
+    "label": "Add foreign key \"payments_appointmentId_fkey\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "payments_appointmentId_fkey",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"payments_appointmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"payments_appointmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"payments\"\nADD CONSTRAINT \"payments_appointmentId_fkey\"\nFOREIGN KEY (\"appointmentId\")\nREFERENCES \"dentistry\".\"appointments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"payments_appointmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.payments.payments_clinicalEncounterId_fkey",
+    "label": "Add foreign key \"payments_clinicalEncounterId_fkey\" on \"payments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "payments_clinicalEncounterId_fkey",
+        "table": "payments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"payments_clinicalEncounterId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_clinicalEncounterId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"payments_clinicalEncounterId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"payments\"\nADD CONSTRAINT \"payments_clinicalEncounterId_fkey\"\nFOREIGN KEY (\"clinicalEncounterId\")\nREFERENCES \"dentistry\".\"clinical_encounters\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"payments_clinicalEncounterId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "payments_clinicalEncounterId_fkey",
+          "dentistry",
+          "\"dentistry\".\"payments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.radiographs.radiographs_clinicalFileId_fkey",
+    "label": "Add foreign key \"radiographs_clinicalFileId_fkey\" on \"radiographs\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "radiographs_clinicalFileId_fkey",
+        "table": "radiographs"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"radiographs_clinicalFileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "radiographs_clinicalFileId_fkey",
+          "dentistry",
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"radiographs_clinicalFileId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"radiographs\"\nADD CONSTRAINT \"radiographs_clinicalFileId_fkey\"\nFOREIGN KEY (\"clinicalFileId\")\nREFERENCES \"dentistry\".\"clinical_files\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"radiographs_clinicalFileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "radiographs_clinicalFileId_fkey",
+          "dentistry",
+          "\"dentistry\".\"radiographs\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.treatments.treatments_patientId_fkey",
+    "label": "Add foreign key \"treatments_patientId_fkey\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "treatments_patientId_fkey",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"treatments_patientId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"treatments_patientId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"treatments\"\nADD CONSTRAINT \"treatments_patientId_fkey\"\nFOREIGN KEY (\"patientId\")\nREFERENCES \"dentistry\".\"patients\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"treatments_patientId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatments_patientId_fkey",
+          "dentistry",
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.treatments.treatments_serviceId_fkey",
+    "label": "Add foreign key \"treatments_serviceId_fkey\" on \"treatments\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "treatments_serviceId_fkey",
+        "table": "treatments"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"treatments_serviceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatments_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"treatments_serviceId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"treatments\"\nADD CONSTRAINT \"treatments_serviceId_fkey\"\nFOREIGN KEY (\"serviceId\")\nREFERENCES \"dentistry\".\"dental_services\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"treatments_serviceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatments_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"treatments\""
+        ]
+      }
+    ]
+  }
+]
