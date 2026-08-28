@@ -2,56 +2,121 @@
 
 import { useEffect, useState } from "react";
 
-type ThemePreference = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 
 const STORAGE_KEY = "theme";
 
-const OPTIONS: readonly ThemePreference[] = ["light", "dark", "system"];
+function SunIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+      className="size-[18px]"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.42 1.42" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.35 17.65-1.42 1.42" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  );
+}
 
-const LABELS: Record<ThemePreference, string> = {
-  light: "Claro",
-  dark: "Oscuro",
-  system: "Sistema",
-};
-
-function applyTheme(preference: ThemePreference) {
-  const isDark =
-    preference === "dark" ||
-    (preference === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", isDark);
+function MoonIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="size-[18px]"
+    >
+      <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />
+    </svg>
+  );
 }
 
 export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>("system");
+  const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    const initial =
-      stored && OPTIONS.includes(stored) ? stored : "system";
-    setPreference(initial);
-    applyTheme(initial);
+    const currentTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    setTheme(currentTheme);
   }, []);
 
-  function cycleTheme() {
-    const next = OPTIONS[(OPTIONS.indexOf(preference) + 1) % OPTIONS.length];
-    if (next === "system") {
-      localStorage.removeItem(STORAGE_KEY);
-    } else {
-      localStorage.setItem(STORAGE_KEY, next);
-    }
-    applyTheme(next);
-    setPreference(next);
+  function toggleTheme() {
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+
+    document.documentElement.classList.toggle( "dark", nextTheme === "dark",);
+
+    localStorage.setItem(STORAGE_KEY, nextTheme);
+    setTheme(nextTheme);
   }
+
+  const isDark = theme === "dark";
 
   return (
     <button
       type="button"
-      onClick={cycleTheme}
-      aria-label="Cambiar tema"
-      className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated"
+      onClick={toggleTheme}
+      aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      aria-pressed={isDark}
+      className={[
+        "group flex w-full items-center gap-3 rounded-lg border",
+        "border-border bg-background/70 px-3 py-2.5 text-left",
+        "transition-colors hover:bg-surface-elevated",
+        "focus-visible:outline-none focus-visible:ring-2",
+        "focus-visible:ring-primary focus-visible:ring-offset-2",
+        "focus-visible:ring-offset-surface",
+      ].join(" ")}
     >
-      Tema: {LABELS[preference]}
+      <span className="text-muted transition-colors group-hover:text-foreground">
+        {isDark ? <MoonIcon /> : <SunIcon />}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block text-xs font-medium text-foreground">
+          Apariencia
+        </span>
+
+        <span className="block text-[11px] text-muted">
+          {theme === null
+            ? "Detectando tema"
+            : isDark
+              ? "Modo oscuro"
+              : "Modo claro"}
+        </span>
+      </span>
+
+      <span
+        aria-hidden="true"
+        className={[
+          "relative h-5 w-9 shrink-0 rounded-full border border-border",
+          "transition-colors",
+          isDark ? "bg-primary" : "bg-surface-elevated",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 size-4 rounded-full shadow-sm",
+            "transition-transform",
+            isDark
+              ? "translate-x-4 bg-primary-foreground"
+              : "translate-x-0.5 bg-muted",
+          ].join(" ")}
+        />
+      </span>
     </button>
   );
 }

@@ -1,7 +1,12 @@
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <div className="flex min-h-dvh flex-col">{children}</div>;
+import { navigationItems } from "@/config/navigation";
+import { AppShell } from "@/shared/components/layout/app-shell";
+
+export default function DashboardPage({children}: LayoutProps<"/dashboard">) {
+  return (
+    <AppShell
+      navigationItems={navigationItems}
+    >
+      {children}
+    </AppShell>
+  )
 }

@@ -1,12 +1,12 @@
-export default function DashboardPage() {
+export default function UsersPage() {
   return (
     <section className="p-6">
       <h1 className="text-2xl font-semibold text-foreground">
-        Resumen
+        Usuarios
       </h1>
 
       <p className="mt-2 text-sm text-muted">
-        Vista general de la plataforma.
+        Gestión de usuarios de la plataforma.
       </p>
     </section>
   );
