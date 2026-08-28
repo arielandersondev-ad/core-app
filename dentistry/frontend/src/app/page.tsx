@@ -1,17 +1,42 @@
-import Link from "next/link";
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTheme } from '@/infrastructure/hooks/useTheme';
+import ClinicLayout from '@/shared/layouts/ClinicLayout';
+import ClinicDashboard from '@/modules/clinic/views/ClinicDashboard';
+
+type ClinicTab = 'dashboard' | 'pacientes' | 'agenda' | 'tratamientos' | 'pagos' | 'inventario';
 
 export default function Home() {
+  const router = useRouter();
+  const { dark, toggleDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<ClinicTab>('dashboard');
+
+  const handleTabChange = (tab: ClinicTab) => {
+    setActiveTab(tab);
+    const routes: Record<ClinicTab, string> = {
+      dashboard: '/',
+      pacientes: '/patients',      
+      agenda: '/agenda',      
+      tratamientos: '/treatments',
+      pagos: '/payments',
+      inventario: '/inventory',  
+    };
+    router.push(routes[tab]);
+  };
+
   return (
-    <div className="flex min-h-dvh flex-1 flex-col items-center justify-center gap-4 bg-background px-4">
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">
-        Core App
-      </h1>
-      <Link
-        href="/dashboard/hola"
-        className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-accent"
-      >
-        Ir al Hola Mundo
-      </Link>
-    </div>
+    <ClinicLayout
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      dark={dark}
+      onToggleDark={toggleDark}
+      onSwitchApp={() => router.push('/')}
+      title="Dashboard"
+      breadcrumbs={[{ label: 'Dashboard' }]}
+    >
+      <ClinicDashboard onNavigate={() => {}} />
+    </ClinicLayout>
   );
 }
