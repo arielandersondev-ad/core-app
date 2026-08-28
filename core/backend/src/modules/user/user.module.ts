@@ -22,6 +22,6 @@ import { PasswordHasher } from "./domain/services/password-hasher.js";
     },
     CreateUserUseCase,
   ],
-  exports: [],
+  exports: [UserRepository, PasswordHasher],
 })
 export class UserModule {}

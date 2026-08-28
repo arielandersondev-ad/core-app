@@ -1,23 +1,24 @@
-import { ConflictException, Injectable, Logger } from "@nestjs/common";
-import { UserRepository } from "../../domain/repositories/user.repository.js";
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { UserRepository } from '../../domain/repositories/user.repository.js';
 import {
   CreateUserWithAccess,
   UserWithMembership,
-} from "../../domain/entities/user.entity.js";
-import { CreateUserDto } from "../../presentation/dto/create-user.dto.js";
+} from '../../domain/entities/user.entity.js';
+import { CreateUserDto } from '../../presentation/dto/create-user.dto.js';
+import { MembershipAlreadyExistsError } from '../../domain/errors/membership-already-exists.error.js';
 
 @Injectable()
 export class CreateUserUseCase {
   private readonly logger = new Logger(CreateUserUseCase.name);
 
-  constructor(
-    private readonly userRepository: UserRepository,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async execute(data: CreateUserDto): Promise<UserWithMembership> {
-    this.logger.log(`Paso 1/4 - Iniciando registro del usuario "${data.email}"`);
+    this.logger.log(
+      `Paso 1/4 - Iniciando registro del usuario "${data.email}"`,
+    );
 
-    this.logger.log("Paso 2/4 - Verificando disponibilidad del correo");
+    this.logger.log('Paso 2/4 - Verificando disponibilidad del correo');
     const emailTaken = await this.userRepository.emailExists(data.email);
     if (emailTaken) {
       this.logger.warn(`El correo ${data.email} ya está registrado`);
@@ -41,7 +42,15 @@ export class CreateUserUseCase {
         `${data.branchIds.length} sucursal(es) y ${data.roleIds.length} rol(es)`,
     );
 
-    const result = await this.userRepository.createUserWithMembership(payload);
+    let result: UserWithMembership;
+    try {
+      result = await this.userRepository.createUserWithMembership(payload);
+    } catch (error) {
+      if (error instanceof MembershipAlreadyExistsError) {
+        throw new ConflictException(error.message);
+      }
+      throw error;
+    }
 
     this.logger.log(
       `Paso 4/4 - Registro completado: userId=${result.user.id}, ` +
