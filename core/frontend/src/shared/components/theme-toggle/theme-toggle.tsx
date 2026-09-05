@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
+type ThemeToggleProps = {
+  variant?: "panel" | "icon";
+};
+
 const STORAGE_KEY = "theme";
 
 function SunIcon() {
@@ -47,18 +51,26 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({
+  variant = "panel",
+}: ThemeToggleProps) {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    const currentTheme = document.documentElement.classList.contains("dark") ? "dark" : "light";
+    const currentTheme = document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
+
     setTheme(currentTheme);
   }, []);
 
   function toggleTheme() {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
-    document.documentElement.classList.toggle( "dark", nextTheme === "dark",);
+    document.documentElement.classList.toggle(
+      "dark",
+      nextTheme === "dark",
+    );
 
     localStorage.setItem(STORAGE_KEY, nextTheme);
     setTheme(nextTheme);
@@ -66,11 +78,40 @@ export function ThemeToggle() {
 
   const isDark = theme === "dark";
 
+  const accessibleLabel =
+    theme === null
+      ? "Cambiar tema"
+      : isDark
+        ? "Activar modo claro"
+        : "Activar modo oscuro";
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={accessibleLabel}
+        aria-pressed={isDark}
+        title={accessibleLabel}
+        className={[
+          "inline-flex size-10 items-center justify-center rounded-lg",
+          "border border-border bg-surface-elevated text-muted",
+          "transition-colors hover:text-foreground",
+          "focus-visible:outline-none focus-visible:ring-2",
+          "focus-visible:ring-primary focus-visible:ring-offset-2",
+          "focus-visible:ring-offset-surface",
+        ].join(" ")}
+      >
+        {isDark ? <MoonIcon /> : <SunIcon />}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      aria-label={accessibleLabel}
       aria-pressed={isDark}
       className={[
         "group flex w-full items-center gap-3 rounded-lg border",

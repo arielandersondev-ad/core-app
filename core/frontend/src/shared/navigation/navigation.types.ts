@@ -9,6 +9,7 @@ export type NavigationIcon =
 export type NavigationItem = Readonly<{
   id: string;
   label: string;
+  mobileLabel: string;
   href: `/${string}`;
   icon: NavigationIcon;
   match: NavigationMatch;

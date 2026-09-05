@@ -1,12 +1,5 @@
+import { OrganizationsPage } from "@/features/organization/views/organizations-page";
+
 export default function OrganizationPage() {
-    return (
-        <section className="p-6">
-            <h1 className="text-2xl font-semibold text-foreground">
-                Organización
-            </h1>
-            <p className="mt-2 text-sm text-muted">
-                Gestionar organizaciones y sucursales
-            </p>
-        </section>
-    )
+    return <OrganizationsPage/>
 }

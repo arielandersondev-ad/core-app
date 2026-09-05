@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { AppSidebar } from "./app-sidebar";
 import type { NavigationItem } from "@/shared/navigation/navigation.types";
+import { AppNavbar } from "./app-navbar";
+import { MobileBottomNavigation } from "./mobile-button-navigation";
 
 type AppShellProps = {
   children: ReactNode;
@@ -15,12 +17,14 @@ export function AppShell({ children, navigationItems }: AppShellProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <AppNavbar items={navigationItems} />
         <main
           id="main-content"
           className="min-h-0 flex-1 overflow-y-auto"
         >
           {children}
         </main>
+        <MobileBottomNavigation items={navigationItems} />
       </div>
     </div>
   );

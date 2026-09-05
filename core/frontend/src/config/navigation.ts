@@ -4,6 +4,7 @@ export const navigationItems = [
   {
     id: "dashboard",
     label: "Resumen",
+    mobileLabel: "Inicio",
     href: "/dashboard",
     icon: "dashboard",
     match: "exact",
@@ -11,6 +12,7 @@ export const navigationItems = [
   {
     id: "organizations",
     label: "Organizaciones",
+    mobileLabel: "Org..",
     href: "/dashboard/organizations",
     icon: "organizations",
     match: "nested",
@@ -18,6 +20,7 @@ export const navigationItems = [
   {
     id: "users",
     label: "Usuarios",
+    mobileLabel: "Usu..",
     href: "/dashboard/users",
     icon: "users",
     match: "nested",
@@ -25,6 +28,7 @@ export const navigationItems = [
   {
     id: "roles",
     label: "Roles y permisos",
+    mobileLabel: "Roles",
     href: "/dashboard/roles",
     icon: "roles",
     match: "nested",

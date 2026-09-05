@@ -76,6 +76,17 @@ body {
   --foreground: #121814;
   --muted: #647168;
   --border: #dce3de;
+  /*pa los estados*/
+  --success: #176f36;
+  --success-subtle: #e6f2e8;
+
+  --warning: #a96f12;
+  --warning-subtle: #f8edd9;
+
+  --danger: #b42318;
+  --danger-subtle: #fce8e6;
+
+  --neutral-subtle: #edf1ee;
 }
 
 .dark {
@@ -97,6 +108,17 @@ body {
   --foreground: #f1f5f2;
   --muted: #98a59e;
   --border: #29343a;
+  /*Estados darketos perry*/
+  --success: #6fc77a;
+  --success-subtle: #173622;
+
+  --warning: #e0a646;
+  --warning-subtle: #382914;
+
+  --danger: #ff8a80;
+  --danger-subtle: #3d1d1c;
+
+  --neutral-subtle: #20292d;
 }
 
 @theme inline {
@@ -119,6 +141,17 @@ body {
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /*Mas estados perry*/
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-neutral-subtle: var(--neutral-subtle);
 }
 
 body {
