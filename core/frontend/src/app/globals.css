@@ -2,6 +2,7 @@
 
 /* @custom-variant dark (&:is(.dark *));
 
+/* ── Brand palette ─────────────────────────────────── */
 :root {
   --background: #f3efe6;
   --surface: #faf8f3;
@@ -36,17 +37,33 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-elevated: var(--surface-elevated);
+
   --color-primary: var(--primary);
   --color-primary-accent: var(--primary-accent);
   --color-primary-subtle: var(--primary-subtle);
+  --color-primary-foreground: var(--primary-foreground);
+
   --color-secondary: var(--secondary);
   --color-hazelnut: var(--hazelnut);
   --color-gold-accent: var(--gold-accent);
+
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /*Mas estados perry*/
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-neutral-subtle: var(--neutral-subtle);
 }
 
 body {

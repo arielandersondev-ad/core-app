@@ -1,5 +1,8 @@
 import { Badge, type BadgeVariant } from "@/shared/components/ui/badge";
-import type { OrganizationPlan, OrganizationStatus } from "../types/organization";
+import type {
+  OrganizationPlan,
+  OrganizationStatus,
+} from "../types/organization";
 
 type BadgeConfiguration = {
   label: string;
@@ -56,16 +59,11 @@ type OrganizationPlanBadgeProps = {
   plan: OrganizationPlan;
 };
 
-export function OrganizationPlanBadge({
-  plan,
-}: OrganizationPlanBadgeProps) {
+export function OrganizationPlanBadge({ plan }: OrganizationPlanBadgeProps) {
   const configuration = planConfiguration[plan];
 
   return (
-    <Badge
-      variant={configuration.variant}
-      className="tracking-[0.04em]"
-    >
+    <Badge variant={configuration.variant} className="tracking-[0.04em]">
       {configuration.label}
     </Badge>
   );

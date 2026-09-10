@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 
@@ -63,6 +63,7 @@ export function ThemeToggle({
 
     setTheme(currentTheme);
   }, []);
+>>>>>>> c3c802cb2ac0139e966d33b6daf8df495ef62fb7
 
   function toggleTheme() {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
