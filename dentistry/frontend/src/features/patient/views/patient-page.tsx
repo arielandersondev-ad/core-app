@@ -5,7 +5,7 @@ import { patients, calcAge, type Patient } from "@/shared/data/clinic-data";
 import { CreatePatientModal } from "@/shared/components/layout/create-patient-modal";
 import { StatsBar } from "@/shared/components/layout/stats-bar";
 import { Toolbar } from "@/shared/components/layout/toolbar";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "@/shared/components/ui/Button";
 import { DynamicTable, type ColumnConfig } from "@/shared/components/data-table";
 
 const patientColumns: ColumnConfig<Patient>[] = [

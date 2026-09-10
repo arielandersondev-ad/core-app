@@ -1,4 +1,3 @@
-import { useState } from "react";
 import React, { useState, type ChangeEvent } from "react";
 import {
   Input,
@@ -6,7 +5,6 @@ import {
   Button,
   Card,
   SectionHeader,
-} from "../../components/ui";
 } from "@/shared/components/ui";
 
 export default function CreatePatient({ onBack }: { onBack: () => void }) {
@@ -88,7 +86,7 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 label="Nombre completo"
                 placeholder="Ana Cristina Vidal Torres"
                 value={form.name}
-                onChange={(e) => set("name", e.target.value)}
+ //               onChange={(e) => set("name", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => set("name", e.target.value)}
                 error={errors.name}
               />
@@ -96,14 +94,14 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 label="Fecha de nacimiento"
                 type="date"
                 value={form.dob}
-                onChange={(e) => set("dob", e.target.value)}
+              //  onChange={(e) => set("dob", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => set("dob", e.target.value)}
                 error={errors.dob}
               />
               <Select
                 label="Tipo de sangre"
                 value={form.bloodType}
-                onChange={(e) => set("bloodType", e.target.value)}
+           //     onChange={(e) => set("bloodType", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLSelectElement>) => set("bloodType", e.target.value)}
               >
                 {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((t) => (
@@ -123,7 +121,7 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 label="Teléfono"
                 placeholder="+51 987 654 321"
                 value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
+              //  onChange={(e) => set("phone", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => set("phone", e.target.value)}
                 error={errors.phone}
               />
@@ -132,14 +130,14 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 type="email"
                 placeholder="paciente@gmail.com"
                 value={form.email}
-                onChange={(e) => set("email", e.target.value)}
+             //   onChange={(e) => set("email", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => set("email", e.target.value)}
               />
               <Input
                 label="Dirección (opcional)"
                 placeholder="Av. Los Álamos 234, Lima"
                 value={form.address}
-                onChange={(e) => set("address", e.target.value)}
+              //  onChange={(e) => set("address", e.target.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => set("address", e.target.value)}
               />
             </div>
@@ -157,7 +155,7 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 </label>
                 <textarea
                   value={form.allergies}
-                  onChange={(e) => set("allergies", e.target.value)}
+               //   onChange={(e) => set("allergies", e.target.value)}
                   onChange={(e: ChangeEvent<HTMLTextAreaElement>) => set("allergies", e.target.value)}
                   placeholder="Ibuprofeno, Penicilina… (separar con coma)"
                   rows={2}
@@ -173,7 +171,7 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
                 </label>
                 <textarea
                   value={form.notes}
-                  onChange={(e) => set("notes", e.target.value)}
+               //   onChange={(e) => set("notes", e.target.value)}
                   onChange={(e: ChangeEvent<HTMLTextAreaElement>) => set("notes", e.target.value)}
                   placeholder="Diagnóstico inicial, antecedentes relevantes, condiciones crónicas…"
                   rows={4}
