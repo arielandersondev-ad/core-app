@@ -12,7 +12,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(process.env.PORT ?? 3001);
   const port = process.env.PORT ?? 3002;
   await app.listen(port);
   console.log(`[Dentistry Backend] Server running at http://localhost:${port}`);
