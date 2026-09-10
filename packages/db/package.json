@@ -1,0 +1,41 @@
+{
+  "name": "@app/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dueño único del contrato y las migraciones de la base compartida (schemas core + dentistry).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ./scripts/copy-artifacts.mjs",
+    "contract:emit": "prisma-cli contract emit",
+    "db:init": "prisma-cli db init",
+    "db:update": "prisma-cli db update",
+    "db:verify": "prisma-cli db verify",
+    "db:schema": "prisma-cli db schema",
+    "migration:plan": "prisma-cli migration plan",
+    "migration:status": "prisma-cli migration status",
+    "migration:list": "prisma-cli migration list",
+    "migration:show": "prisma-cli migration show",
+    "migrate": "prisma-cli migrate"
+  },
+  "dependencies": {
+    "@prisma/orm-postgres": "8.0.0-rc.4"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts"
+    },
+    "./src/prisma/generated/contract.js": {
+      "types": "./dist/prisma/generated/contract.d.ts"
+    },
+    "./src/prisma/generated/contract.json": "./dist/prisma/generated/contract.json"
+  },
+  "devDependencies": {
+    "@prisma/cli": "8.0.0-rc.6",
+    "@prisma/cli-engine": "0.2.0",
+    "@types/node": "24.0.0",
+    "dotenv": "17.4.2",
+    "typescript": "5.9"
+  }
+}

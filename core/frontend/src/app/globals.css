@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* @custom-variant dark (&:is(.dark *));
+
+/* ── Brand palette ─────────────────────────────────── */
+:root {
+  --background: #f3efe6;
+  --surface: #faf8f3;
+  --surface-elevated: #ffffff;
+  --primary: #3d7a46;
+  --primary-accent: #62a84f;
+  --primary-subtle: #e6ede3;
+  --secondary: #9a744f;
+  --hazelnut: #9a744f;
+  --gold-accent: #c5a46d;
+  --foreground: #171a17;
+  --muted: #65685f;
+  --border: #ddd7ca;
+}
+
+.dark {
+  --background: #0b0e0c;
+  --surface: #111512;
+  --surface-elevated: #181d19;
+  --primary: #62a84f;
+  --primary-accent: #79c165;
+  --primary-subtle: #315d39;
+  --secondary: #a88762;
+  --hazelnut: #a88762;
+  --gold-accent: #c5a46d;
+  --foreground: #f1f3ee;
+  --muted: #a6ada4;
+  --border: #293029;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+
+  --color-primary: var(--primary);
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-hazelnut: var(--hazelnut);
+  --color-gold-accent: var(--gold-accent);
+
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /*Mas estados perry*/
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-neutral-subtle: var(--neutral-subtle);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+} */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+
+  --background: #f5f7f5;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+
+  --primary: #176f36;
+  --primary-accent: #2d8a48;
+  --primary-subtle: #e6f2e8;
+  --primary-foreground: #ffffff;
+
+  --secondary: #a96f12;
+  --hazelnut: #a96f12;
+  --gold-accent: #c78616;
+
+  --foreground: #121814;
+  --muted: #647168;
+  --border: #dce3de;
+  /*pa los estados*/
+  --success: #176f36;
+  --success-subtle: #e6f2e8;
+
+  --warning: #a96f12;
+  --warning-subtle: #f8edd9;
+
+  --danger: #b42318;
+  --danger-subtle: #fce8e6;
+
+  --neutral-subtle: #edf1ee;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #090f13;
+  --surface: #0d151a;
+  --surface-elevated: #121b21;
+
+  --primary: #3e8f49;
+  --primary-accent: #61b75f;
+  --primary-subtle: #173622;
+  --primary-foreground: #ffffff;
+
+  --secondary: #c9903e;
+  --hazelnut: #c9903e;
+  --gold-accent: #e0a646;
+
+  --foreground: #f1f5f2;
+  --muted: #98a59e;
+  --border: #29343a;
+  /*Estados darketos perry*/
+  --success: #6fc77a;
+  --success-subtle: #173622;
+
+  --warning: #e0a646;
+  --warning-subtle: #382914;
+
+  --danger: #ff8a80;
+  --danger-subtle: #3d1d1c;
+
+  --neutral-subtle: #20292d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+
+  --color-primary: var(--primary);
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-hazelnut: var(--hazelnut);
+  --color-gold-accent: var(--gold-accent);
+
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /*Mas estados perry*/
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-neutral-subtle: var(--neutral-subtle);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
