@@ -1,6 +1,18 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+} from "class-validator";
+
+const UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export class CreateBranchDto {
+  @IsOptional()
+  @Matches(UUID_PATTERN)
+  organizationId?: string;
+
   @IsString()
   name!: string;
 
@@ -32,10 +44,9 @@ export class CreateBranchDto {
   @IsString()
   state?: string;
 
-  // Opcional: si se omite se hereda de la organización.
-  @IsOptional()
   @IsString()
-  country?: string;
+  @IsNotEmpty()
+  country!: string;
 
   @IsOptional()
   @IsString()
@@ -49,8 +60,7 @@ export class CreateBranchDto {
   @IsNumber()
   longitude?: number;
 
-  // Opcional: si se omite se hereda de la organización.
-  @IsOptional()
   @IsString()
-  timezone?: string;
+  @IsNotEmpty()
+  timezone!: string;
 }

@@ -13,4 +13,9 @@ copyFileSync(
   `${distGenerated}contract.d.ts`,
 );
 
-console.log('[copy-artifacts] generated/contract.d.ts -> dist/prisma/generated/');
+copyFileSync(
+  fileURLToPath(new URL('../src/prisma/generated/contract.json', import.meta.url)),
+  `${distGenerated}contract.json`,
+);
+
+console.log('[copy-artifacts] generated/contract.d.ts + contract.json -> dist/prisma/generated/');

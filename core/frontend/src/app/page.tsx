@@ -7,10 +7,10 @@ export default function Home() {
         Core App
       </h1>
       <Link
-        href="/dashboard/hola"
+        href="/dashboard"
         className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-accent"
       >
-        Ir al Hola Mundo
+        Ir al Dashboard
       </Link>
     </div>
   );

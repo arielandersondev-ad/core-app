@@ -1,5 +1,5 @@
-import OrganizationList from '@/modules/organization/views/OrganizationList';
+import { OrganizationsPage } from "@/features/organization/views/organizations-page";
 
-export default function OrganizationsPage() {
-  return <OrganizationList />;
+export default function OrganizationPage() {
+  return <OrganizationsPage />;
 }

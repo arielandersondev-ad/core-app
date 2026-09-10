@@ -70,7 +70,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
       const branchRows: BranchRow[] = [];
       for (const branch of input.branches) {
         const branchRow = await tx.orm.core.Branch.create({
-          organizationId: organizationRow.id,
+          organizationId: toUuid36(organizationRow.id),
           name: branch.name,
           code: branch.code,
           email: branch.email,

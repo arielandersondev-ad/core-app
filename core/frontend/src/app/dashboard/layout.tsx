@@ -1,5 +1,6 @@
-import MainLayout from '@/shared/layouts/MainLayout';
+import { navigationItems } from "@/config/navigation";
+import { AppShell } from "@/shared/components/layout/app-shell";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <MainLayout title="Dashboard">{children}</MainLayout>;
+export default function DashboardPage({ children }: LayoutProps<"/dashboard">) {
+  return <AppShell navigationItems={navigationItems}>{children}</AppShell>;
 }

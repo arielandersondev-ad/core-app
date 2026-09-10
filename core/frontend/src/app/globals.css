@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *));
 
 /* ── Brand palette ─────────────────────────────────── */
 :root {
@@ -103,15 +103,110 @@ html, body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+} */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+
+  --background: #f5f7f5;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+
+  --primary: #176f36;
+  --primary-accent: #2d8a48;
+  --primary-subtle: #e6f2e8;
+  --primary-foreground: #ffffff;
+
+  --secondary: #a96f12;
+  --hazelnut: #a96f12;
+  --gold-accent: #c78616;
+
+  --foreground: #121814;
+  --muted: #647168;
+  --border: #dce3de;
+  /*pa los estados*/
+  --success: #176f36;
+  --success-subtle: #e6f2e8;
+
+  --warning: #a96f12;
+  --warning-subtle: #f8edd9;
+
+  --danger: #b42318;
+  --danger-subtle: #fce8e6;
+
+  --neutral-subtle: #edf1ee;
 }
 
-/* Scrollbar personalizada (opcional) */
-::-webkit-scrollbar { width: 0; }
-::-webkit-scrollbar:hover { width: 4px; }
+.dark {
+  color-scheme: dark;
 
-input, textarea, select { font-family: inherit; }
+  --background: #090f13;
+  --surface: #0d151a;
+  --surface-elevated: #121b21;
 
-.font-display { font-family: var(--font-display); }
-.font-mono    { font-family: var(--font-mono); }
+  --primary: #3e8f49;
+  --primary-accent: #61b75f;
+  --primary-subtle: #173622;
+  --primary-foreground: #ffffff;
+
+  --secondary: #c9903e;
+  --hazelnut: #c9903e;
+  --gold-accent: #e0a646;
+
+  --foreground: #f1f5f2;
+  --muted: #98a59e;
+  --border: #29343a;
+  /*Estados darketos perry*/
+  --success: #6fc77a;
+  --success-subtle: #173622;
+
+  --warning: #e0a646;
+  --warning-subtle: #382914;
+
+  --danger: #ff8a80;
+  --danger-subtle: #3d1d1c;
+
+  --neutral-subtle: #20292d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+
+  --color-primary: var(--primary);
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-hazelnut: var(--hazelnut);
+  --color-gold-accent: var(--gold-accent);
+
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /*Mas estados perry*/
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+
+  --color-neutral-subtle: var(--neutral-subtle);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}

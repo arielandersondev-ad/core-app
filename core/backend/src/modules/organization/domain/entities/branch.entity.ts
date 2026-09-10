@@ -29,6 +29,10 @@ export type Branch = {
 }
 
 export type CreateBranch = {
+  // Opcional: en create-organization se asigna dentro de la tx; en
+  // create-branch se valida y convierte con toUuid36.
+  organizationId?: string;
+
   name: string;
   code?: string;
 

@@ -12,4 +12,11 @@ export type Role = {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-}
+};
+
+export type CreateRole = {
+  organizationId: string | null;
+  name: string;
+  code: string;
+  description?: string;
+};

@@ -1,21 +1,54 @@
-import { ReactNode } from "react";
+import type { HTMLAttributes } from "react";
 
-type BadgeVariant = 'active' | 'inactive' | 'suspended' | 'enterprise' | 'professional' | 'starter' | 'role' | 'neutral';
+export type BadgeVariant = "primary" | "success" | "warning" | "danger" | "neutral";
 
-const badgeMap: Record<BadgeVariant, string> = {
-  active: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300',
-  inactive: 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-400',
-  suspended: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-  enterprise: 'bg-[var(--primary)]/10 text-[var(--primary)] dark:bg-[var(--primary)]/20',
-  professional: 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300',
-  starter: 'bg-stone-100 text-stone-500 dark:bg-stone-800/50 dark:text-stone-500',
-  role: 'bg-stone-200 text-stone-700 dark:bg-stone-800 dark:text-stone-300',
-  neutral: 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400',
+export type BadgeSize = "sm" | "md";
+
+export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  dot?: boolean;
 };
 
-export function Badge({ variant = 'neutral', children }: { variant?: BadgeVariant; children: ReactNode }) {
+const variantClasses: Record<BadgeVariant, string> = {
+  primary: "bg-primary-subtle text-primary",
+  success: "bg-success-subtle text-success",
+  warning: "bg-warning-subtle text-warning",
+  danger: "bg-danger-subtle text-danger",
+  neutral: "bg-neutral-subtle text-muted",
+};
+
+const sizeClasses: Record<BadgeSize, string> = {
+  sm: "min-h-5 gap-1.5 px-2 py-1 text-[10px]",
+  md: "min-h-6 gap-2 px-2.5 py-1 text-xs",
+};
+
+export function Badge({
+  variant = "neutral",
+  size = "sm",
+  dot = false,
+  className,
+  children,
+  ...props
+}: BadgeProps) {
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider rounded-xs ${badgeMap[variant]}`}>
+    <span
+      className={[
+        "inline-flex w-fit items-center rounded-md",
+        "font-medium leading-none",
+        variantClasses[variant],
+        sizeClasses[size],
+        className ?? "",
+      ].join(" ")}
+      {...props}
+    >
+      {dot && (
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-current"
+        />
+      )}
+
       {children}
     </span>
   );

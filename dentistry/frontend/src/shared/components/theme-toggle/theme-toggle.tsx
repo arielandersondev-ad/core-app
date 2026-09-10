@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icons } from "../icons/icons";
 
 type ThemePreference = "light" | "dark" | "system";
 
@@ -22,7 +23,11 @@ function applyTheme(preference: ThemePreference) {
   document.documentElement.classList.toggle("dark", isDark);
 }
 
-export function ThemeToggle() {
+type ThemeToggleProps = {
+  variant?: "pill" | "sidebar" | "icon";
+};
+
+export function ThemeToggle({ variant = "pill" }: ThemeToggleProps) {
   const [preference, setPreference] = useState<ThemePreference>("system");
 
   useEffect(() => {
@@ -42,6 +47,33 @@ export function ThemeToggle() {
     }
     applyTheme(next);
     setPreference(next);
+  }
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={cycleTheme}
+        aria-label="Cambiar tema"
+        className="p-2 text-muted transition-colors hover:text-foreground"
+      >
+        {preference === "dark" ? Icons.sun : Icons.moon}
+      </button>
+    );
+  }
+
+  if (variant === "sidebar") {
+    return (
+      <button
+        type="button"
+        onClick={cycleTheme}
+        aria-label="Cambiar tema"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-[3px] text-sm text-muted transition-colors hover:bg-background hover:text-foreground w-full"
+      >
+        <span>{preference === "dark" ? Icons.sun : Icons.moon}</span>
+        Tema {LABELS[preference]}
+      </button>
+    );
   }
 
   return (

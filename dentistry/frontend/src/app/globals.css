@@ -9,12 +9,24 @@
   --primary: #3d7a46;
   --primary-accent: #62a84f;
   --primary-subtle: #e6ede3;
+  --primary-foreground: #ffffff;
   --secondary: #9a744f;
   --hazelnut: #9a744f;
   --gold-accent: #c5a46d;
   --foreground: #171a17;
   --muted: #65685f;
   --border: #ddd7ca;
+  --danger: #9e2a2a;
+  --danger-foreground: #ffffff;
+  --success: #2d7a3a;
+  --success-foreground: #ffffff;
+  --destructive: #9e2a2a;
+  --destructive-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --muted-foreground: #65685f;
+  --popover: #ffffff;
+  --accent: #f0ebe1;
 }
 
 .dark {
@@ -24,33 +36,73 @@
   --primary: #62a84f;
   --primary-accent: #79c165;
   --primary-subtle: #315d39;
+  --primary-foreground: #0b0e0c;
   --secondary: #a88762;
   --hazelnut: #a88762;
   --gold-accent: #c5a46d;
   --foreground: #f1f3ee;
   --muted: #a6ada4;
   --border: #293029;
+  --danger: #c0362b;
+  --danger-foreground: #ffffff;
+  --success: #4ade80;
+  --success-foreground: #0b0e0c;
+  --destructive: #c0362b;
+  --destructive-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #0b0e0c;
+  --muted-foreground: #a6ada4;
+  --popover: #181d19;
+  --accent: #1a201a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-primary: var(--primary);
-  --color-primary-accent: var(--primary-accent);
-  --color-primary-subtle: var(--primary-subtle);
-  --color-secondary: var(--secondary);
-  --color-hazelnut: var(--hazelnut);
-  --color-gold-accent: var(--gold-accent);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ── Superficies ── */
+  --color-background: var(--background);      /* body, páginas, hover de filas */
+  --color-surface: var(--surface);            /* cards, tablas, inputs */
+  --color-surface-elevated: var(--surface-elevated); /* dropdowns, modals */
+
+  /* ── Marca / primarios ── */
+  --color-primary: var(--primary);            /* botones, links, acentos */
+  --color-primary-accent: var(--primary-accent); /* hover de primarios */
+  --color-primary-subtle: var(--primary-subtle);  /* avatars, highlights suaves */
+  --color-primary-foreground: var(--primary-foreground); /* texto sobre bg-primary */
+
+  /* ── Secundarios / marca ── */
+  --color-secondary: var(--secondary);        /* botones secundarios */
+  --color-hazelnut: var(--hazelnut);          /* acento de marca */
+  --color-gold-accent: var(--gold-accent);    /* acento dorado */
+
+  /* ── Texto ── */
+  --color-foreground: var(--foreground);       /* texto principal */
+  --color-muted: var(--muted);                /* texto secundario, iconos */
+  --color-muted-foreground: var(--muted-foreground); /* encabezados de tabla, texto deshabilitado */
+
+  /* ── Bordes ── */
+  --color-border: var(--border);              /* bordes de tablas, inputs, cards */
+
+  /* ── Estados ── */
+  --color-danger: var(--danger);              /* botones de peligro, acciones destructivas */
+  --color-danger-foreground: var(--danger-foreground); /* texto sobre bg-danger */
+  --color-success: var(--success);            /* badges de estado exitoso (data-table) */
+  --color-success-foreground: var(--success-foreground); /* texto sobre bg-success */
+  --color-destructive: var(--destructive);    /* badges de estado destructivo (data-table) */
+  --color-destructive-foreground: var(--destructive-foreground); /* texto sobre bg-destructive */
+  --color-warning: var(--warning);            /* badges de estado de advertencia (data-table) */
+  --color-warning-foreground: var(--warning-foreground); /* texto sobre bg-warning */
+
+  /* ── Componentes ── */
+  --color-popover: var(--popover);            /* menus desplegables (data-table actions) */
+  --color-accent: var(--accent);              /* hover states (data-table actions) */
+
+  /* ── Tipografía ── */
+  --font-sans: var(--font-inter);             /* cuerpo de texto */
+  --font-display: var(--font-work-sans);      /* títulos, etiquetas */
+  --font-mono: var(--font-dm-mono);           /* código, timestamps, datos monoespaciados */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
