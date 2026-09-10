@@ -1,5 +1,16 @@
-import { useState } from "react";
-import { appointments, getPatientById, getServiceById, getProfessionalById, getAppointmentsByDate, statusColors, statusLabels, professionals, TODAY_DATE } from "@/modules/clinic/__mocks__/data";
+﻿import { useState, useEffect } from "react";
+import {
+  getPatientById,
+  getServiceById,
+  getProfessionalById,
+  getAppointmentsByDate,
+  statusColors,
+  statusLabels,
+  professionals,
+  TODAY_DATE,
+  Appointment,
+} from "@/modules/clinic/__mocks__/data";
+import { fetchAppointments, AppointmentDto } from "@/modules/clinic/api/appointments";
 
 function addDays(dateStr: string, n: number) {
   const d = new Date(dateStr + "T12:00:00");
@@ -14,6 +25,40 @@ function timeToMinutes(t: string) {
   return h * 60 + m;
 }
 
+function mapDtoToAppointment(dto: AppointmentDto): Appointment {
+  const startDate = new Date(dto.startsAt);
+  const endDate = new Date(dto.endsAt);
+  const startTime = startDate.toLocaleTimeString("es-PE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const endTime = endDate.toLocaleTimeString("es-PE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const statusMap: Record<string, Appointment["status"]> = {
+    SCHEDULED: "programada",
+    IN_PROGRESS: "en_curso",
+    COMPLETED: "completada",
+    CANCELLED: "cancelada",
+  };
+
+  return {
+    id: dto.id,
+    patientId: dto.patientId,
+    professionalId: dto.professionalMembershipId,
+    serviceId: dto.serviceId,
+    date: dto.startsAt.slice(0, 10),
+    startTime,
+    endTime,
+    status: statusMap[dto.status] ?? "programada",
+    notes: dto.notes ?? "",
+  };
+}
+
 export default function Agenda({
   onNavigate,
 }: {
@@ -21,13 +66,51 @@ export default function Agenda({
 }) {
   const [date, setDate] = useState(TODAY_DATE);
   const [proFilter, setProFilter] = useState("all");
+  const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFromApi, setIsFromApi] = useState(false);
 
-  const dayAppts = getAppointmentsByDate(date).filter(
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    // Intentar consultar backend; si falla o no hay datos, usar mock data
+    fetchAppointments({
+      organizationId: "018f0000-0000-7000-0000-000000000001",
+      date,
+    })
+      .then((dtos) => {
+        if (isMounted) {
+          if (dtos && dtos.length > 0) {
+            setAppointmentsList(dtos.map(mapDtoToAppointment));
+            setIsFromApi(true);
+          } else {
+            const fallback = getAppointmentsByDate(date);
+            setAppointmentsList(fallback);
+            setIsFromApi(false);
+          }
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAppointmentsList(getAppointmentsByDate(date));
+          setIsFromApi(false);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [date]);
+
+  const dayAppts = appointmentsList.filter(
     (a) => proFilter === "all" || a.professionalId === proFilter
   );
 
   const dayStart = 8 * 60;
-  const totalMinutes = 12 * 60;
 
   const formatDateLabel = (d: string) => {
     const dt = new Date(d + "T12:00:00");
@@ -37,7 +120,7 @@ export default function Agenda({
   return (
     <div className="p-8 flex flex-col gap-6">
       {/* Header controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDate((d) => addDays(d, -1))}
@@ -60,6 +143,18 @@ export default function Agenda({
         </div>
         <h2 className="font-display text-lg font-bold text-[var(--foreground)] capitalize">{formatDateLabel(date)}</h2>
 
+        {isFromApi && (
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+            En vivo (API)
+          </span>
+        )}
+
+        {isLoading && (
+          <span className="text-xs font-mono text-[var(--muted)] animate-pulse">
+            Cargando...
+          </span>
+        )}
+
         <div className="ml-auto flex items-center gap-3">
           <select
             value={proFilter}
@@ -79,7 +174,7 @@ export default function Agenda({
       </div>
 
       {/* Stats strip */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap">
         {[
           { label: "Programadas", count: dayAppts.filter((a) => a.status === "programada").length },
           { label: "En curso", count: dayAppts.filter((a) => a.status === "en_curso").length },
@@ -94,7 +189,7 @@ export default function Agenda({
       </div>
 
       {/* Calendar grid */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 overflow-x-auto">
         {/* Time column */}
         <div className="flex flex-col" style={{ width: 64 }}>
           <div style={{ height: 36 }} />
@@ -106,7 +201,7 @@ export default function Agenda({
         </div>
 
         {/* Calendar body */}
-        <div className="flex-1 bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-hidden">
+        <div className="flex-1 min-w-[600px] bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-hidden">
           {/* Pro headers */}
           <div className="grid border-b border-[var(--border)]" style={{ gridTemplateColumns: proFilter === "all" ? `repeat(${professionals.length}, 1fr)` : "1fr" }}>
             {(proFilter === "all" ? professionals : professionals.filter((p) => p.id === proFilter)).map((pro) => (
@@ -147,7 +242,7 @@ export default function Agenda({
               if (proIndex === -1) return null;
 
               const start = timeToMinutes(apt.startTime) - dayStart;
-              const duration = timeToMinutes(apt.endTime) - timeToMinutes(apt.startTime);
+              const duration = Math.max(timeToMinutes(apt.endTime) - timeToMinutes(apt.startTime), 30);
               const top = (start / 60) * 80;
               const height = Math.max((duration / 60) * 80 - 4, 28);
               const left = `calc(${(proIndex / visiblePros.length) * 100}% + 4px)`;
@@ -189,8 +284,8 @@ export default function Agenda({
       {dayAppts.length > 0 && (
         <div>
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Lista del día ({dayAppts.length} citas)</p>
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-hidden">
-            <table className="w-full">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--background)]/40">
                   {["Hora", "Paciente", "Servicio", "Profesional", "Estado", "Notas"].map((h) => (
