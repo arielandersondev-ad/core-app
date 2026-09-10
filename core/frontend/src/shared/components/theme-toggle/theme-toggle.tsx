@@ -51,27 +51,12 @@ function MoonIcon() {
   );
 }
 
-<<<<<<< HEAD
-export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>(() => {
-    if (typeof window === 'undefined') return 'system';
-    const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    return stored && OPTIONS.includes(stored) ? stored : 'system';
-  });
-=======
 export function ThemeToggle({
   variant = "panel",
 }: ThemeToggleProps) {
   const [theme, setTheme] = useState<Theme | null>(null);
->>>>>>> c3c802cb2ac0139e966d33b6daf8df495ef62fb7
 
-  // Solo al montar: aplicar el tema inicial
   useEffect(() => {
-<<<<<<< HEAD
-    applyTheme(preference);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ← Deshabilita la regla porque es intencional
-=======
     const currentTheme = document.documentElement.classList.contains("dark")
       ? "dark"
       : "light";
