@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Modal } from "../ui/modal";
-import { Input } from "../ui/input";
-import { Select } from "../ui/select";
-import { Button } from "../ui/button";
+import { Button } from "../ui";
+import { Input } from "../ui";
+import { Select } from "../ui";
 
 type CreatePatientModalProps = {
   open: boolean;

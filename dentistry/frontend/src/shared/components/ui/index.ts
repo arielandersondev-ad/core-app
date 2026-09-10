@@ -1,13 +1,13 @@
 export { Avatar } from "./Avatar";
-export { Button } from "./button";
+export { Button } from "./Button";
 export { Card } from "./Card";
-export { Badge } from "./badge";
+export { Badge } from "./Badge";
 export { EmptyState } from "./EmptyState";
 export { Icons } from "./Icons";
-export { Input } from "./input";
+export { Input } from "./Input";
 export { Label } from "./Label";
 export { SectionHeader } from "./SectionHeader";
-export { Select } from "./select";
+export { Select } from "./Select";
 export { Separator } from "./Separator";
 export { StatCard } from "./StatCard";
 export { Toggle } from "./Toggle";

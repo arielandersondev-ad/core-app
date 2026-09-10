@@ -9,9 +9,11 @@ import {
 type Tab = "resumen" | "historial" | "citas" | "sesiones" | "pagos";
 
 export default function PatientDetail({
+  onBack,
   patientId,
   onNavigate,
 }: {
+  onBack: () => void ;
   patientId: string;
   onNavigate: (s: string, p?: Record<string, string>) => void;
 }) {
