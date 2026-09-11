@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { CreateOrganizationButton } from "../components/create-organization-button";
 import { OrganizationMobileCard } from "../components/organization-mobile-card";
 import { OrganizationTable } from "../components/organization-table";
@@ -42,11 +45,26 @@ function FilterIcon() {
 }
 
 export function OrganizationsPage() {
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+
   const activeCount = organizations.filter(
     (organization) => organization.status === "active",
   ).length;
 
   const inactiveCount = organizations.length - activeCount;
+  const normalizedSearch = search.trim().toLocaleLowerCase("es");
+  const filteredOrganizations = organizations.filter((organization) => {
+    const matchesStatus = status === "all" || organization.status === status;
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      organization.name.toLocaleLowerCase("es").includes(normalizedSearch) ||
+      organization.legalName.toLocaleLowerCase("es").includes(normalizedSearch) ||
+      organization.city.toLocaleLowerCase("es").includes(normalizedSearch) ||
+      organization.taxId.toLocaleLowerCase("es").includes(normalizedSearch);
+
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <section className="mx-auto flex w-full max-w-[1440px] flex-col p-4 sm:p-6 lg:p-8">
@@ -77,6 +95,8 @@ export function OrganizationsPage() {
 
           <input
             type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar organización, ciudad o NIT..."
             className={[
               "h-11 w-full rounded-lg border border-border",
@@ -111,12 +131,14 @@ export function OrganizationsPage() {
       >
         <button
           type="button"
-          aria-pressed="true"
+          aria-pressed={status === "all"}
+          onClick={() => setStatus("all")}
           className={[
             "relative flex min-h-12 flex-1 items-center justify-center gap-2",
-            "px-2 text-sm font-medium text-primary lg:flex-none lg:px-4",
-            "after:absolute after:inset-x-0 after:bottom-0",
-            "after:h-0.5 after:bg-primary",
+            "px-2 text-sm font-medium lg:flex-none lg:px-4",
+            status === "all"
+              ? "text-primary after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary"
+              : "text-muted hover:text-foreground",
           ].join(" ")}
         >
           Todas
@@ -127,8 +149,14 @@ export function OrganizationsPage() {
 
         <button
           type="button"
-          aria-pressed="false"
-          className="flex min-h-12 flex-1 items-center justify-center gap-2 px-2 text-sm text-muted hover:text-foreground lg:flex-none lg:px-4"
+          aria-pressed={status === "active"}
+          onClick={() => setStatus("active")}
+          className={[
+            "relative flex min-h-12 flex-1 items-center justify-center gap-2 px-2 text-sm lg:flex-none lg:px-4",
+            status === "active"
+              ? "font-medium text-primary after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary"
+              : "text-muted hover:text-foreground",
+          ].join(" ")}
         >
           Activas
           <span className="text-xs">{activeCount}</span>
@@ -136,8 +164,14 @@ export function OrganizationsPage() {
 
         <button
           type="button"
-          aria-pressed="false"
-          className="flex min-h-12 flex-1 items-center justify-center gap-2 px-2 text-sm text-muted hover:text-foreground lg:flex-none lg:px-4"
+          aria-pressed={status === "inactive"}
+          onClick={() => setStatus("inactive")}
+          className={[
+            "relative flex min-h-12 flex-1 items-center justify-center gap-2 px-2 text-sm lg:flex-none lg:px-4",
+            status === "inactive"
+              ? "font-medium text-primary after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary"
+              : "text-muted hover:text-foreground",
+          ].join(" ")}
         >
           Inactivas
           <span className="text-xs">{inactiveCount}</span>
@@ -145,14 +179,23 @@ export function OrganizationsPage() {
       </div>
 
       <div className="mt-4 grid gap-3 lg:hidden">
-        {organizations.map((organization) => (
+        {filteredOrganizations.map((organization) => (
           <OrganizationMobileCard
             key={organization.id}
             organization={organization}
           />
         ))}
       </div>
-      <OrganizationTable organizations={organizations} />
+      <OrganizationTable
+        organizations={filteredOrganizations}
+        total={organizations.length}
+      />
+
+      {filteredOrganizations.length === 0 && (
+        <p className="py-12 text-center text-sm text-muted">
+          No se encontraron organizaciones con esos filtros.
+        </p>
+      )}
     </section>
   );
 }

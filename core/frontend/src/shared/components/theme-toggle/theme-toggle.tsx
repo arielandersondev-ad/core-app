@@ -1,14 +1,10 @@
 'use client';
 
-import { useEffect, useState } from "react";
-
-type Theme = "light" | "dark";
+import { useTheme } from "@/shared/hooks/use-theme";
 
 type ThemeToggleProps = {
   variant?: "panel" | "icon";
 };
-
-const STORAGE_KEY = "theme";
 
 function SunIcon() {
   return (
@@ -54,43 +50,16 @@ function MoonIcon() {
 export function ThemeToggle({
   variant = "panel",
 }: ThemeToggleProps) {
-  const [theme, setTheme] = useState<Theme | null>(null);
-
-  useEffect(() => {
-    const currentTheme = document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "light";
-
-    setTheme(currentTheme);
-  }, []);
->>>>>>> c3c802cb2ac0139e966d33b6daf8df495ef62fb7
-
-  function toggleTheme() {
-    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
-
-    document.documentElement.classList.toggle(
-      "dark",
-      nextTheme === "dark",
-    );
-
-    localStorage.setItem(STORAGE_KEY, nextTheme);
-    setTheme(nextTheme);
-  }
-
-  const isDark = theme === "dark";
-
-  const accessibleLabel =
-    theme === null
-      ? "Cambiar tema"
-      : isDark
-        ? "Activar modo claro"
-        : "Activar modo oscuro";
+  const { dark: isDark, toggleDark } = useTheme();
+  const accessibleLabel = isDark
+    ? "Activar modo claro"
+    : "Activar modo oscuro";
 
   if (variant === "icon") {
     return (
       <button
         type="button"
-        onClick={toggleTheme}
+        onClick={toggleDark}
         aria-label={accessibleLabel}
         aria-pressed={isDark}
         title={accessibleLabel}
@@ -111,7 +80,7 @@ export function ThemeToggle({
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={toggleDark}
       aria-label={accessibleLabel}
       aria-pressed={isDark}
       className={[
@@ -133,11 +102,7 @@ export function ThemeToggle({
         </span>
 
         <span className="block text-[11px] text-muted">
-          {theme === null
-            ? "Detectando tema"
-            : isDark
-              ? "Modo oscuro"
-              : "Modo claro"}
+          {isDark ? "Modo oscuro" : "Modo claro"}
         </span>
       </span>
 

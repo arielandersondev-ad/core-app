@@ -10,15 +10,15 @@ function normalizePathname(pathname: string): string {
 
 export function isNavigationItemActive( pathname: string, item: NavigationItem ): boolean {
   const currentPath = normalizePathname(pathname);
-  const itemPath = normalizePathname(item.href);
+  const itemPaths = [item.href, ...(item.aliases ?? [])].map(normalizePathname);
 
   if (item.match === "exact") {
-    return currentPath === itemPath;
+    return itemPaths.includes(currentPath);
   }
 
-  return (
-    currentPath === itemPath ||
-    currentPath.startsWith(`${itemPath}/`)
+  return itemPaths.some(
+    (itemPath) =>
+      currentPath === itemPath || currentPath.startsWith(`${itemPath}/`),
   );
 }
 

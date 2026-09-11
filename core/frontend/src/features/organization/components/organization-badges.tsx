@@ -1,4 +1,4 @@
-import { Badge, type BadgeVariant } from "@/shared/components/ui/badge";
+import { Badge, type BadgeVariant } from "@/shared/components/ui";
 import type {
   OrganizationPlan,
   OrganizationStatus,

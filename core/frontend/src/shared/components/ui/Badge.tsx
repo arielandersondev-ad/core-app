@@ -1,8 +1,7 @@
 import type { HTMLAttributes } from "react";
+import type { BadgeSize, BadgeVariant } from "./types";
 
-export type BadgeVariant = "primary" | "success" | "warning" | "danger" | "neutral";
-
-export type BadgeSize = "sm" | "md";
+export type { BadgeSize, BadgeVariant } from "./types";
 
 export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   variant?: BadgeVariant;
@@ -16,6 +15,10 @@ const variantClasses: Record<BadgeVariant, string> = {
   warning: "bg-warning-subtle text-warning",
   danger: "bg-danger-subtle text-danger",
   neutral: "bg-neutral-subtle text-muted",
+  active: "bg-success-subtle text-success",
+  inactive: "bg-neutral-subtle text-muted",
+  suspended: "bg-warning-subtle text-warning",
+  role: "bg-primary-subtle text-primary",
 };
 
 const sizeClasses: Record<BadgeSize, string> = {

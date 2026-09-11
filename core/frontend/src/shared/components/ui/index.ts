@@ -1,5 +1,6 @@
 export { Avatar } from "./Avatar";
-export { Badge } from "./badge";
+export { Badge } from "./Badge";
+export type { BadgeProps, BadgeSize, BadgeVariant } from "./Badge";
 export { Button } from "./Button";
 export { Card } from "./Card";
 export { Separator } from "./Separator";

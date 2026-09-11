@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Modal } from "@/shared/components/ui/modal";
+import { Modal } from "@/shared/components/ui/Modal";
 import { OrganizationGeneralForm } from "./forms/organization-general-form";
-import { BranchGeneralForm } from "./forms/branch-general-form";
 
 type CreateOrganizationDialogProps = {
   open: boolean;
