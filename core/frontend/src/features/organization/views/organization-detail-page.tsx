@@ -1,19 +1,8 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Badge,
-  Avatar,
-  Separator,
-  Icons,
-} from '@/shared/components/ui';
-import {
-  getOrgById,
-  getBranchesByOrg,
-  getUsersByOrg,
-  formatDate,
-  planLabels,
-} from '@/shared/data/platform.mock';
+import { Badge, Avatar, Separator, Icons } from '@/shared/components/ui';
+import { getOrgById, getBranchesByOrg, getUsersByOrg, formatDate, planLabels } from '@/shared/data/platform.mock';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
