@@ -1,48 +1,5 @@
+import { organizations as platformOrganizations } from "@/shared/data/platform.mock";
 import type { Organization } from "../types/organization";
 
-export const organizations = [
-  {
-    id: "org-001",
-    name: "Comercial Vega",
-    legalName: "Comercial Vega S.A.C.",
-    taxId: "20601234567",
-    city: "Lima",
-    plan: "enterprise",
-    branchesCount: 4,
-    usersCount: 18,
-    status: "active",
-  },
-  {
-    id: "org-002",
-    name: "Grupo Altamira",
-    legalName: "Grupo Altamira Ltda.",
-    taxId: "76.321.098-5",
-    city: "Santiago",
-    plan: "professional",
-    branchesCount: 2,
-    usersCount: 9,
-    status: "active",
-  },
-  {
-    id: "org-003",
-    name: "Distribuciones Norte",
-    legalName: "Distribuciones Norte E.I.R.L.",
-    taxId: "20509876543",
-    city: "Chiclayo",
-    plan: "starter",
-    branchesCount: 1,
-    usersCount: 3,
-    status: "inactive",
-  },
-  {
-    id: "org-004",
-    name: "Soluciones Ábaco",
-    legalName: "Soluciones Ábaco S.A.S.",
-    taxId: "900.456.123-7",
-    city: "Bogotá",
-    plan: "professional",
-    branchesCount: 3,
-    usersCount: 12,
-    status: "active",
-  },
-] as const satisfies readonly Organization[];
+export const organizations =
+  platformOrganizations satisfies readonly Organization[];

@@ -4,13 +4,15 @@ export type NavigationIcon =
   | "dashboard"
   | "organizations"
   | "users"
-  | "roles";
+  | "roles"
+  | "settings";
 
 export type NavigationItem = Readonly<{
   id: string;
   label: string;
   mobileLabel: string;
   href: `/${string}`;
+  aliases?: readonly `/${string}`[];
   icon: NavigationIcon;
   match: NavigationMatch;
 }>;

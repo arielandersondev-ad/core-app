@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
-/* @custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *));
 
-/* ── Brand palette ─────────────────────────────────── */
 :root {
   --background: #f3efe6;
   --surface: #faf8f3;
@@ -10,12 +9,34 @@
   --primary: #3d7a46;
   --primary-accent: #62a84f;
   --primary-subtle: #e6ede3;
+  --primary-foreground: #ffffff;
   --secondary: #9a744f;
+  --secondary-foreground: #171a17;
   --hazelnut: #9a744f;
   --gold-accent: #c5a46d;
   --foreground: #171a17;
   --muted: #65685f;
   --border: #ddd7ca;
+  --danger: #9e2a2a;
+  --danger-foreground: #ffffff;
+  --danger-subtle: #f7dddd;
+  --success: #2d7a3a;
+  --success-foreground: #ffffff;
+  --success-subtle: #e6f2e8;
+  --destructive: #9e2a2a;
+  --destructive-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --warning-subtle: #f8edd9;
+  --neutral-subtle: #edf1ee;
+  --muted-foreground: #65685f;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --accent: #f0ebe1;
+  --accent-foreground: var(--foreground);
+  --ring: var(--primary);
+  --radius: 0.375rem;
 }
 
 .dark {
@@ -25,154 +46,110 @@
   --primary: #62a84f;
   --primary-accent: #79c165;
   --primary-subtle: #315d39;
+  --primary-foreground: #0b0e0c;
   --secondary: #a88762;
+  --secondary-foreground: #f1f3ee;
   --hazelnut: #a88762;
   --gold-accent: #c5a46d;
   --foreground: #f1f3ee;
   --muted: #a6ada4;
   --border: #293029;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-
-  --color-primary: var(--primary);
-  --color-primary-accent: var(--primary-accent);
-  --color-primary-subtle: var(--primary-subtle);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-hazelnut: var(--hazelnut);
-  --color-gold-accent: var(--gold-accent);
-
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  /*Mas estados perry*/
-  --color-success: var(--success);
-  --color-success-subtle: var(--success-subtle);
-
-  --color-warning: var(--warning);
-  --color-warning-subtle: var(--warning-subtle);
-
-  --color-danger: var(--danger);
-  --color-danger-subtle: var(--danger-subtle);
-
-  --color-neutral-subtle: var(--neutral-subtle);
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-} */
-
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  color-scheme: light;
-
-  --background: #f5f7f5;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-
-  --primary: #176f36;
-  --primary-accent: #2d8a48;
-  --primary-subtle: #e6f2e8;
-  --primary-foreground: #ffffff;
-
-  --secondary: #a96f12;
-  --hazelnut: #a96f12;
-  --gold-accent: #c78616;
-
-  --foreground: #121814;
-  --muted: #647168;
-  --border: #dce3de;
-  /*pa los estados*/
-  --success: #176f36;
-  --success-subtle: #e6f2e8;
-
-  --warning: #a96f12;
-  --warning-subtle: #f8edd9;
-
-  --danger: #b42318;
-  --danger-subtle: #fce8e6;
-
-  --neutral-subtle: #edf1ee;
-}
-
-.dark {
-  color-scheme: dark;
-
-  --background: #090f13;
-  --surface: #0d151a;
-  --surface-elevated: #121b21;
-
-  --primary: #3e8f49;
-  --primary-accent: #61b75f;
-  --primary-subtle: #173622;
-  --primary-foreground: #ffffff;
-
-  --secondary: #c9903e;
-  --hazelnut: #c9903e;
-  --gold-accent: #e0a646;
-
-  --foreground: #f1f5f2;
-  --muted: #98a59e;
-  --border: #29343a;
-  /*Estados darketos perry*/
-  --success: #6fc77a;
-  --success-subtle: #173622;
-
-  --warning: #e0a646;
-  --warning-subtle: #382914;
-
-  --danger: #ff8a80;
+  --danger: #c0362b;
+  --danger-foreground: #ffffff;
   --danger-subtle: #3d1d1c;
-
+  --success: #4ade80;
+  --success-foreground: #0b0e0c;
+  --success-subtle: #173622;
+  --destructive: #c0362b;
+  --destructive-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #0b0e0c;
+  --warning-subtle: #382914;
   --neutral-subtle: #20292d;
+  --muted-foreground: #a6ada4;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: #181d19;
+  --accent: #1a201a;
+  --accent-foreground: var(--foreground);
+  --ring: var(--primary);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
+  /* ── Superficies ── */
+  --color-background: var(--background);      /* body, páginas, hover de filas */
+  --color-surface: var(--surface);            /* cards, tablas, inputs */
+  --color-surface-elevated: var(--surface-elevated); /* dropdowns, modals */
 
-  --color-primary: var(--primary);
-  --color-primary-accent: var(--primary-accent);
-  --color-primary-subtle: var(--primary-subtle);
-  --color-primary-foreground: var(--primary-foreground);
+  /* ── Marca / primarios ── */
+  --color-primary: var(--primary);            /* botones, links, acentos */
+  --color-primary-accent: var(--primary-accent); /* hover de primarios */
+  --color-primary-subtle: var(--primary-subtle);  /* avatars, highlights suaves */
+  --color-primary-foreground: var(--primary-foreground); /* texto sobre bg-primary */
 
-  --color-secondary: var(--secondary);
-  --color-hazelnut: var(--hazelnut);
-  --color-gold-accent: var(--gold-accent);
+  /* ── Secundarios / marca ── */
+  --color-secondary: var(--secondary);        /* botones secundarios */
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-hazelnut: var(--hazelnut);          /* acento de marca */
+  --color-gold-accent: var(--gold-accent);    /* acento dorado */
 
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
+  /* ── Texto ── */
+  --color-foreground: var(--foreground);       /* texto principal */
+  --color-muted: var(--muted);                /* texto secundario, iconos */
+  --color-muted-foreground: var(--muted-foreground); /* encabezados de tabla, texto deshabilitado */
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  /*Mas estados perry*/
-  --color-success: var(--success);
+  /* ── Bordes ── */
+  --color-border: var(--border);              /* bordes de tablas, inputs, cards */
+
+  /* ── Estados ── */
+  --color-danger: var(--danger);              /* botones de peligro, acciones destructivas */
+  --color-danger-foreground: var(--danger-foreground); /* texto sobre bg-danger */
+  --color-success: var(--success);            /* badges de estado exitoso (data-table) */
+  --color-success-foreground: var(--success-foreground); /* texto sobre bg-success */
+  --color-destructive: var(--destructive);    /* badges de estado destructivo (data-table) */
+  --color-destructive-foreground: var(--destructive-foreground); /* texto sobre bg-destructive */
+  --color-warning: var(--warning);            /* badges de estado de advertencia (data-table) */
+  --color-warning-foreground: var(--warning-foreground); /* texto sobre bg-warning */
   --color-success-subtle: var(--success-subtle);
-
-  --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
-
-  --color-danger: var(--danger);
   --color-danger-subtle: var(--danger-subtle);
-
   --color-neutral-subtle: var(--neutral-subtle);
+
+  /* ── Componentes ── */
+  --color-popover: var(--popover);            /* menus desplegables (data-table actions) */
+  --color-accent: var(--accent);              /* hover states (data-table actions) */
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-ring: var(--ring);
+
+  /* ── Tipografía ── */
+  --font-sans: var(--font-inter);             /* cuerpo de texto */
+  --font-display: var(--font-work-sans);      /* títulos, etiquetas */
+  --font-mono: var(--font-dm-mono);           /* código, timestamps, datos monoespaciados */
+
+  --radius-sm: calc(var(--radius) - 0.125rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.125rem);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
 }

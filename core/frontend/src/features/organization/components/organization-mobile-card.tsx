@@ -1,4 +1,5 @@
-import { Organization } from "../types/organization";
+import Link from "next/link";
+import type { Organization } from "../types/organization";
 import { getOrganizationInitials } from "../utils/get-organization-initial";
 import { OrganizationPlanBadge, OrganizationStatusBadge } from "./organization-badges";
 function ChevronRightIcon() {
@@ -20,7 +21,11 @@ function ChevronRightIcon() {
 
 export function OrganizationMobileCard({ organization }: { organization: Organization }) {
   return (
-    <article className="relative rounded-lg border border-border bg-surface">
+    <Link
+      href={`/organizations/${organization.id}`}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
+    <article className="relative rounded-lg border border-border bg-surface transition-colors hover:bg-background/60">
       <span
         aria-hidden="true"
         className="absolute -left-px -top-px h-4 w-px bg-primary"
@@ -92,5 +97,6 @@ export function OrganizationMobileCard({ organization }: { organization: Organiz
         </div>
       </dl>
     </article>
+    </Link>
   );
 }

@@ -1,11 +1,13 @@
-import { Organization } from "../types/organization";
+import Link from "next/link";
+import type { Organization } from "../types/organization";
 import { getOrganizationInitials } from "../utils/get-organization-initial";
 import { OrganizationPlanBadge, OrganizationStatusBadge } from "./organization-badges";
 
 type OrganizationTableProps = {
 	organizations: readonly Organization[];
+	total: number;
 }
-export function OrganizationTable ({ organizations }: OrganizationTableProps){
+export function OrganizationTable ({ organizations, total }: OrganizationTableProps){
 	return(<div className="mt-4 hidden overflow-hidden rounded-xl border border-border bg-surface lg:block">
     <div className="overflow-x-auto">
 			{/*Tabla a remplazat por el componente data-table */}
@@ -35,7 +37,10 @@ export function OrganizationTable ({ organizations }: OrganizationTableProps){
 						className="transition-colors hover:bg-background/70"
 					>
 						<td className="px-5 py-4">
-						<div className="flex items-center gap-3">
+						<Link
+							href={`/organizations/${organization.id}`}
+							className="flex items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+						>
 							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-xs font-bold text-primary">
 							{getOrganizationInitials(organization.name)}
 							</div>
@@ -48,7 +53,7 @@ export function OrganizationTable ({ organizations }: OrganizationTableProps){
 								{organization.legalName}
 							</p>
 							</div>
-						</div>
+						</Link>
 						</td>
 
 						<td className="px-5 py-4 font-mono text-sm text-muted">
@@ -81,7 +86,7 @@ export function OrganizationTable ({ organizations }: OrganizationTableProps){
     </div>
 
     <footer className="border-t border-border px-5 py-3 font-mono text-xs text-muted">
-			Mostrando {organizations.length} de {organizations.length} organizaciones
+			Mostrando {organizations.length} de {total} organizaciones
     </footer>
     </div>
     )
