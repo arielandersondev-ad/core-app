@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "@/shared/components/ui/Modal";
 import { OrganizationGeneralForm } from "./forms/organization-general-form";
 import { RoleGeneralForm } from "./forms/role-general-form";
@@ -72,16 +72,19 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
   const [roleFormKey, setRoleFormKey] = useState(0);
   const [branchFormKey, setBranchFormKey] = useState(0);
 
-  function resetWizard() {
+  useEffect(() => {
+    if (open) {
+      return;
+    }
+
     setCurrentStep(0);
     setWizardData(initialFormData);
     setOrganizationFormKey((key) => key + 1);
     setRoleFormKey((key) => key + 1);
     setBranchFormKey((key) => key + 1);
-  }
+  }, [open]);
 
   function handleClose() {
-    resetWizard();
     onClose();
   }
 
@@ -135,8 +138,7 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
 
     console.log("Datos enviados:", wizardData);
 
-    // Reemplazar por la llamada a la API. Reiniciar solo después de que responda correctamente.
-    resetWizard();
+    // Reemplazar por la llamada a la API. Cerrar solo después de que responda correctamente.
     onClose();
   }
 
