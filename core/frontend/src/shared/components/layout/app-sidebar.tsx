@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavigationList } from "./navigation-list";
 import { ThemeToggle } from "@/shared/components/theme-toggle/theme-toggle";
+import { CrowAntBrand } from "@/shared/components/brand/CrowAntBrand";
 import type { NavigationItem } from "@/shared/navigation/navigation.types";
 
 type AppSidebarProps = {
@@ -34,29 +35,13 @@ export function AppSidebar({ items }: AppSidebarProps) {
             "focus-visible:ring-primary",
           ].join(" ")}
         >
-          <span
-            aria-hidden="true"
-            className={[
-              "size-2 rounded-[2px] bg-primary",
-              "shadow-[0_0_14px_rgba(63,143,73,0.45)]",
-            ].join(" ")}
-          />
-
-          <span className="flex flex-col">
-            <span className="text-lg font-bold tracking-[0.08em] text-primary">
-              CORE
-            </span>
-
-            <span className="text-[10px] uppercase tracking-[0.16em] text-muted">
-              Platform System
-            </span>
-          </span>
+          <CrowAntBrand />
         </Link>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-          Administración
+          CrowAnt Core
         </p>
 
         <NavigationList

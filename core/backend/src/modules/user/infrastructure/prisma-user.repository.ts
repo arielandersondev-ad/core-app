@@ -62,10 +62,7 @@ export class PrismaUserRepository extends UserRepository {
     return !!row && !row.deleted;
   }
 
-  async findAuthRecord(
-    email: string,
-    organizationId: string,
-  ): Promise<UserAuthRecord | null> {
+  async findAuthRecord(email: string): Promise<UserAuthRecord | null> {
     const userRow = await this.prisma.orm.core.User.where({ email }).first();
 
     if (!userRow || userRow.deleted || userRow.status !== 'ACTIVE') {
@@ -87,15 +84,18 @@ export class PrismaUserRepository extends UserRepository {
 
     const memberships = await this.prisma.orm.core.Membership.where({
       userId: toUuid36(userRow.id),
-      organizationId: toUuid36(organizationId),
       deleted: false,
     }).all();
 
-    if (memberships.length !== 1 || memberships[0].status !== 'ACTIVE') {
+    const activeMemberships = memberships.filter(
+      (membership) => membership.status === 'ACTIVE',
+    );
+
+    if (activeMemberships.length !== 1) {
       return null;
     }
 
-    const membership = memberships[0];
+    const membership = activeMemberships[0];
     const organization = await this.prisma.orm.core.Organization.first({
       id: membership.organizationId,
     });

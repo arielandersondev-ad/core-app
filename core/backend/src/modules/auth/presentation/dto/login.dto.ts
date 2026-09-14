@@ -1,7 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, Matches } from 'class-validator';
-
-const UUID_PATTERN =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+import { IsEmail, IsString, IsNotEmpty } from 'class-validator';
 
 export class LoginDto {
   @IsEmail()
@@ -10,9 +7,4 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password!: string;
-
-  @Matches(UUID_PATTERN, {
-    message: 'organizationId debe ser un UUID válido',
-  })
-  organizationId!: string;
 }
