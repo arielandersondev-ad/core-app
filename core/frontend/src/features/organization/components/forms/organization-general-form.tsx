@@ -1,3 +1,5 @@
+import type { OrganizationFormData } from "./types";
+
 const inputClassName = [
   "h-11 w-full rounded-lg border border-border",
   "bg-surface px-3 text-sm text-foreground",
@@ -6,8 +8,11 @@ const inputClassName = [
 ].join(" ");
 
 const labelClassName = "mb-1.5 block text-sm font-medium text-foreground";
+type OrganizationGeneralFormProps = {
+  defaultValues: OrganizationFormData;
+};
 
-export function OrganizationGeneralForm() {
+export function OrganizationGeneralForm({ defaultValues }: OrganizationGeneralFormProps) {
   return (
     <section aria-labelledby="organization-data-title">
       <div className="mb-5">
@@ -33,7 +38,7 @@ export function OrganizationGeneralForm() {
             required
             name="name"
             type="text"
-            autoComplete="organization"
+            defaultValue={defaultValues.name}
             placeholder="Ej. Clínica Central"
             className={inputClassName}
           />
@@ -48,6 +53,7 @@ export function OrganizationGeneralForm() {
             required
             name="legalName"
             type="text"
+            defaultValue={defaultValues.legalName}
             placeholder="Ej. Clínica Central S.R.L."
             className={inputClassName}
           />
@@ -62,6 +68,7 @@ export function OrganizationGeneralForm() {
             required
             name="taxId"
             type="text"
+            defaultValue={defaultValues.taxId}
             inputMode="numeric"
             placeholder="Ej. 1020304050"
             className={inputClassName}
@@ -77,7 +84,7 @@ export function OrganizationGeneralForm() {
             required
             name="city"
             type="text"
-            autoComplete="address-level2"
+            defaultValue={defaultValues.city}
             placeholder="Ej. La Paz"
             className={inputClassName}
           />
@@ -92,7 +99,7 @@ export function OrganizationGeneralForm() {
             required
             name="email"
             type="email"
-            autoComplete="email"
+            defaultValue={defaultValues.email}
             placeholder="contacto@organizacion.com"
             className={inputClassName}
           />
@@ -107,7 +114,7 @@ export function OrganizationGeneralForm() {
             required
             name="phone"
             type="tel"
-            autoComplete="tel"
+            defaultValue={defaultValues.phone}
             placeholder="+591 70000000"
             className={inputClassName}
           />
@@ -121,7 +128,7 @@ export function OrganizationGeneralForm() {
           <select
             required
             name="timezone"
-            defaultValue="America/La_Paz"
+            defaultValue={defaultValues.timezone}
             className={inputClassName}
           >
             <option value="America/La_Paz">La Paz (UTC-4)</option>
@@ -138,6 +145,7 @@ export function OrganizationGeneralForm() {
           <input
             name="website"
             type="url"
+            defaultValue={defaultValues.website}
             autoComplete="url"
             placeholder="https://organizacion.com"
             className={inputClassName}

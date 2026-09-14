@@ -15,10 +15,7 @@ export class LoginUseCase {
   ) {}
 
   async execute(credentials: LoginDto): Promise<AuthResult> {
-    const record = await this.userRepo.findAuthRecord(
-      credentials.email,
-      credentials.organizationId,
-    );
+    const record = await this.userRepo.findAuthRecord(credentials.email);
 
     if (!record) {
       throw new UnauthorizedException('Credenciales inválidas');

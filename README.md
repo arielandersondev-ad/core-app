@@ -25,9 +25,12 @@ frontend/
 │   │   ├── layout.tsx                 # Layout raíz: HTML, fuentes y estilos
 │   │   ├── globals.css                # Tokens y estilos globales
 │   │   ├── fonts.ts                   # Fuentes de la aplicación
+│   │   ├── (public)/                  # Landing y acceso sin AppShell
+│   │   │   ├── page.tsx               # Landing pública (/)
+│   │   │   ├── landing/page.tsx       # Alias de la landing (/landing)
+│   │   │   └── login/page.tsx         # Acceso administrativo (/login)
 │   │   └── (platform)/                # Grupo de rutas; no modifica la URL
 │   │       ├── layout.tsx             # AppShell compartido
-│   │       ├── page.tsx               # Contenido inicial del dashboard (/)
 │   │       ├── dashboard/page.tsx     # /dashboard
 │   │       ├── organizations/         # /organizations y subrutas
 │   │       ├── users/                 # /users y subrutas
@@ -35,7 +38,9 @@ frontend/
 │   │       └── settings/              # /settings
 │   ├── config/                        # Configuración de navegación y aplicación
 │   ├── features/                      # Capacidades funcionales del producto
+│   │   ├── auth/
 │   │   ├── dashboard/
+│   │   ├── landing/
 │   │   ├── organization/
 │   │   ├── user/
 │   │   └── settings/
@@ -116,7 +121,9 @@ app ────────────> features ─────────�
 
 | URL | Vista |
 | --- | --- |
-| `/` | Dashboard por defecto |
+| `/` | Landing pública de CrowAnt |
+| `/landing` | Alias de la landing |
+| `/login` | Acceso administrativo |
 | `/dashboard` | Dashboard |
 | `/organizations` | Organizaciones |
 | `/users` | Usuarios |

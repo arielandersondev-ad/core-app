@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/shared/components/theme-toggle/theme-toggle";
+import { CrowAntBrand } from "@/shared/components/brand/CrowAntBrand";
 import type { NavigationItem } from "@/shared/navigation/navigation.types";
 import { findActiveNavigationItem } from "@/shared/navigation/navigation.utils";
 
@@ -30,7 +31,7 @@ function ChevronRightIcon() {
 export function AppNavbar({ items }: AppNavbarProps) {
   const pathname = usePathname();
   const activeItem = findActiveNavigationItem(pathname, items);
-  const title = activeItem?.label ?? "Core";
+  const title = activeItem?.label ?? "CrowAnt Core";
 
   return (
     <header className="flex h-16 shrink-0 items-center border-b border-border bg-surface/95 px-4 backdrop-blur lg:px-6">
@@ -44,20 +45,7 @@ export function AppNavbar({ items }: AppNavbarProps) {
             "focus-visible:ring-primary",
           ].join(" ")}
         >
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-[2px] bg-primary"
-          />
-
-          <span className="flex flex-col">
-            <span className="text-sm font-bold tracking-[0.08em] text-primary">
-              CORE
-            </span>
-
-            <span className="text-[9px] uppercase tracking-[0.14em] text-muted">
-              Platform System
-            </span>
-          </span>
+          <CrowAntBrand />
         </Link>
 
         <nav
@@ -73,7 +61,7 @@ export function AppNavbar({ items }: AppNavbarProps) {
               "focus-visible:ring-primary",
             ].join(" ")}
           >
-            Core
+            CrowAnt Core
           </Link>
 
           <span aria-hidden="true" className="text-muted">
