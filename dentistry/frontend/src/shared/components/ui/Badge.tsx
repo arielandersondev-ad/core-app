@@ -1,28 +1,57 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes } from "react";
+import type { BadgeSize, BadgeVariant } from "./types";
 
-type BadgeVariant = "active" | "inactive" | "suspended" | "neutral";
+export type { BadgeSize, BadgeVariant } from "./types";
 
-const variantStyles: Record<BadgeVariant, string> = {
-  active:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  inactive:
-    "bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
-  suspended:
-    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  neutral:
-    "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
-};
-
-type BadgeProps = {
+export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   variant?: BadgeVariant;
-  children: ReactNode;
+  size?: BadgeSize;
+  dot?: boolean;
 };
 
-export function Badge({ variant = "neutral", children }: BadgeProps) {
+const variantClasses: Record<BadgeVariant, string> = {
+  primary: "bg-primary-subtle text-primary",
+  success: "bg-success-subtle text-success",
+  warning: "bg-warning-subtle text-warning",
+  danger: "bg-danger-subtle text-danger",
+  neutral: "bg-neutral-subtle text-muted",
+  active: "bg-success-subtle text-success",
+  inactive: "bg-neutral-subtle text-muted",
+  suspended: "bg-warning-subtle text-warning",
+  role: "bg-primary-subtle text-primary",
+};
+
+const sizeClasses: Record<BadgeSize, string> = {
+  sm: "min-h-5 gap-1.5 px-2 py-1 text-[10px]",
+  md: "min-h-6 gap-2 px-2.5 py-1 text-xs",
+};
+
+export function Badge({
+  variant = "neutral",
+  size = "sm",
+  dot = false,
+  className,
+  children,
+  ...props
+}: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider rounded-[2px] ${variantStyles[variant]}`}
+      className={[
+        "inline-flex w-fit items-center rounded-md",
+        "font-medium leading-none",
+        variantClasses[variant],
+        sizeClasses[size],
+        className ?? "",
+      ].join(" ")}
+      {...props}
     >
+      {dot && (
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-current"
+        />
+      )}
+
       {children}
     </span>
   );

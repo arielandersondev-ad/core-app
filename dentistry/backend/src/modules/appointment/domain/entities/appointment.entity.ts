@@ -1,4 +1,11 @@
-﻿export type AppointmentStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type AppointmentStatus =
+  | 'SCHEDULED'
+  | 'CONFIRMED'
+  | 'WAITING_ROOM'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'NO_SHOW'
+  | 'CANCELLED';
 
 export interface AppointmentProps {
   id?: string;
@@ -90,6 +97,26 @@ export class Appointment {
     return this._cancellationReason;
   }
 
+  confirm(): void {
+    if (this._status === 'CANCELLED') {
+      throw new Error('No se puede confirmar una cita cancelada.');
+    }
+    if (this._status === 'COMPLETED') {
+      throw new Error('No se puede confirmar una cita ya completada.');
+    }
+    this._status = 'CONFIRMED';
+  }
+
+  markInWaitingRoom(): void {
+    if (this._status === 'CANCELLED') {
+      throw new Error('No se puede marcar en sala una cita cancelada.');
+    }
+    if (this._status === 'COMPLETED') {
+      throw new Error('No se puede marcar en sala una cita ya completada.');
+    }
+    this._status = 'WAITING_ROOM';
+  }
+
   start(): void {
     if (this._status === 'CANCELLED') {
       throw new Error('No se puede iniciar una cita cancelada.');
@@ -105,6 +132,20 @@ export class Appointment {
       throw new Error('No se puede completar una cita cancelada.');
     }
     this._status = 'COMPLETED';
+  }
+
+  markNoShow(): void {
+    if (this._status === 'COMPLETED') {
+      throw new Error('No se puede marcar como no asistió una cita ya completada.');
+    }
+    this._status = 'NO_SHOW';
+  }
+
+  schedule(): void {
+    if (this._status === 'COMPLETED') {
+      throw new Error('No se puede reprogramar como pendiente una cita ya completada.');
+    }
+    this._status = 'SCHEDULED';
   }
 
   cancel(cancelledByMembershipId: string, reason: string): void {
