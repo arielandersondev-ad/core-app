@@ -1,8 +1,15 @@
-﻿import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import type { AppointmentStatus } from '../../domain/entities/appointment.entity.js';
 
 export class UpdateAppointmentStatusDto {
-  @IsIn(['SCHEDULED', 'IN_PROGRESS', 'COMPLETED'])
+  @IsIn([
+    'SCHEDULED',
+    'CONFIRMED',
+    'WAITING_ROOM',
+    'IN_PROGRESS',
+    'COMPLETED',
+    'NO_SHOW',
+  ])
   status: AppointmentStatus;
 
   @IsOptional()

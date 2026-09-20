@@ -1,4 +1,4 @@
-﻿import { env } from "@/infrastructure/config/env";
+import { env } from "@/infrastructure/config/env";
 
 export interface AppointmentDto {
   id: string;
@@ -10,7 +10,14 @@ export interface AppointmentDto {
   treatmentId?: string | null;
   startsAt: string;
   endsAt: string;
-  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status:
+    | "SCHEDULED"
+    | "CONFIRMED"
+    | "WAITING_ROOM"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "NO_SHOW"
+    | "CANCELLED";
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
@@ -100,7 +107,13 @@ export async function createAppointment(
 export async function updateAppointmentStatus(
   id: string,
   payload: {
-    status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED";
+    status:
+      | "SCHEDULED"
+      | "CONFIRMED"
+      | "WAITING_ROOM"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "NO_SHOW";
     notes?: string;
   },
 ): Promise<AppointmentDto> {
