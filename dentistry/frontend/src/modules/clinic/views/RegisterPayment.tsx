@@ -14,13 +14,21 @@ import {
 type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia' | 'otro';
 type PaymentStatus = 'pagado' | 'pendiente' | 'parcial';
 
-export default function RegisterPayment() {
+interface RegisterPaymentProps {
+  initialPatientId?: string;
+  initialAmount?: string;
+}
+
+export default function RegisterPayment({
+  initialPatientId = '',
+  initialAmount = '',
+}: RegisterPaymentProps = {}) {
   const router = useRouter();
   const [form, setForm] = useState({
-    patientId: '',
+    patientId: initialPatientId,
     serviceId: '',
     professionalId: '',
-    amount: '',
+    amount: initialAmount,
     date: new Date().toISOString().split('T')[0],
     method: 'efectivo' as PaymentMethod,
     status: 'pagado' as PaymentStatus,
@@ -64,6 +72,7 @@ export default function RegisterPayment() {
     setSuccess(true);
     setTimeout(() => {
       router.push('/');
+      router.push('/payments');
     }, 1500);
   };
 
@@ -239,7 +248,7 @@ export default function RegisterPayment() {
     Registrar pago
   </button>
   <button
-    onClick={() => router.push('/')}
+    onClick={() => router.back()}
     className="w-full md:w-auto h-11 px-4 border border-border rounded-[var(--radius)] text-sm text-muted hover:text-foreground transition-colors"
   >
     Cancelar

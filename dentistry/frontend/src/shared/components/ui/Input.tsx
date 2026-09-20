@@ -1,34 +1,29 @@
-import type { InputHTMLAttributes } from "react";
+import { InputHTMLAttributes } from "react";
+import { Label } from "./Label";
 
-type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+export function Input({
+  label,
+  hint,
+  error,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & {
   label?: string;
   hint?: string;
   error?: string;
-};
-
-export function Input({ label, hint, error, ...props }: InputProps) {
+}) {
   return (
     <div className="flex flex-col gap-1">
-      {label && (
-        <label
-          htmlFor={props.id}
-          className="text-[11px] font-mono uppercase tracking-wider text-muted"
-        >
-          {label}
-        </label>
-      )}
+      {label && <Label htmlFor={props.id}>{label}</Label>}
       <input
         {...props}
         className={`h-11 w-full px-3 bg-background border ${
           error ? "border-danger" : "border-border"
-        } rounded-[3px] text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary transition-shadow`}
+        } rounded-[var(--radius)] text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-shadow`}
       />
       {hint && !error && (
-        <p className="text-[11px] text-muted">{hint}</p>
+        <p className="text-[11px] text-muted-foreground">{hint}</p>
       )}
-      {error && (
-        <p className="text-[11px] text-danger">{error}</p>
-      )}
+      {error && <p className="text-[11px] text-danger">{error}</p>}
     </div>
   );
 }
