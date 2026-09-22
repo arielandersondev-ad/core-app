@@ -9,6 +9,10 @@ import {
   UserWithMembership,
 } from '../domain/entities/user.entity.js';
 import { UserRepository } from '../domain/repositories/user.repository.js';
+import type {
+  OrganizationUserListScope,
+  UserListItem,
+} from '../domain/entities/user-list-item.js';
 import { PasswordHasher } from '../domain/services/password-hasher.js';
 import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { isPostgresUniqueViolation } from '../../../common/infrastructure/postgres-error.js';
@@ -54,6 +58,124 @@ export class PrismaUserRepository extends UserRepository {
     private passwordHasher: PasswordHasher,
   ) {
     super();
+  }
+
+  async listUsers(): Promise<UserListItem[]> {
+    const [users, memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
+      this.prisma.orm.core.User.all(),
+      this.prisma.orm.core.Membership.all(),
+      this.prisma.orm.core.Organization.all(),
+      this.prisma.orm.core.Branch.all(),
+      this.prisma.orm.core.MembershipBranch.all(),
+      this.prisma.orm.core.Role.all(),
+      this.prisma.orm.core.MembershipRole.all(),
+    ]);
+    const organizationsById = new Map(organizations.filter((item) => !item.deleted).map((item) => [String(item.id), item]));
+    const branchesById = new Map(branches.filter((item) => !item.deleted).map((item) => [String(item.id), item]));
+    const rolesById = new Map(roles.filter((item) => !item.deleted).map((item) => [String(item.id), item]));
+    return users.filter((user) => !user.deleted).map((user) => ({
+      id: String(user.id),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      status: user.status,
+      createdAt: user.createdAt,
+      memberships: memberships
+        .filter((membership) => !membership.deleted && String(membership.userId) === String(user.id))
+        .map((membership) => ({
+          organizationId: String(membership.organizationId),
+          organizationName: organizationsById.get(String(membership.organizationId))?.name ?? 'Organización no disponible',
+          branchNames: membershipBranches
+            .filter((link) => !link.deleted && String(link.membershipId) === String(membership.id))
+            .map((link) => branchesById.get(String(link.branchId))?.name)
+            .filter((name): name is string => Boolean(name)),
+          roleNames: membershipRoles
+            .filter((link) => !link.deleted && String(link.membershipId) === String(membership.id))
+            .map((link) => rolesById.get(String(link.roleId))?.name)
+            .filter((name): name is string => Boolean(name)),
+        })),
+    }));
+  }
+
+  async listUsersByOrganizationScope(
+    scope: OrganizationUserListScope,
+  ): Promise<UserListItem[]> {
+    const organization = await this.prisma.orm.core.Organization.first({
+      id: toUuid36(scope.organizationId),
+    });
+    if (!organization || organization.deleted || organization.status !== 'ACTIVE') {
+      return [];
+    }
+
+    const memberships = await this.prisma.orm.core.Membership.where({
+      organizationId: toUuid36(scope.organizationId),
+      deleted: false,
+      status: 'ACTIVE',
+    }).all();
+    const allowedBranchIds = scope.branchIds === null
+      ? null
+      : new Set(scope.branchIds);
+
+    const items = await Promise.all(memberships.map(async (membership) => {
+      const membershipBranches = await this.prisma.orm.core.MembershipBranch.where({
+        membershipId: membership.id,
+        deleted: false,
+      }).all();
+      const branches = (await Promise.all(membershipBranches.map(async (link) => {
+        const branch = await this.prisma.orm.core.Branch.first({ id: link.branchId });
+        if (
+          !branch ||
+          branch.deleted ||
+          branch.status !== 'ACTIVE' ||
+          String(branch.organizationId) !== scope.organizationId
+        ) {
+          return null;
+        }
+        return branch;
+      }))).filter((branch): branch is NonNullable<typeof branch> => Boolean(branch));
+
+      const visibleBranches = allowedBranchIds === null
+        ? branches
+        : branches.filter((branch) => allowedBranchIds.has(String(branch.id)));
+      if (allowedBranchIds !== null && visibleBranches.length === 0) return null;
+
+      const user = await this.prisma.orm.core.User.first({ id: membership.userId });
+      if (!user || user.deleted) return null;
+
+      const membershipRoles = await this.prisma.orm.core.MembershipRole.where({
+        membershipId: membership.id,
+        deleted: false,
+      }).all();
+      const roleNames = (await Promise.all(membershipRoles.map(async (link) => {
+        const role = await this.prisma.orm.core.Role.first({ id: link.roleId });
+        if (
+          !role ||
+          role.deleted ||
+          (role.organizationId !== null &&
+            String(role.organizationId) !== scope.organizationId)
+        ) {
+          return null;
+        }
+        return role.name;
+      }))).filter((name): name is string => Boolean(name));
+
+      return {
+        id: String(user.id),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        status: user.status,
+        createdAt: user.createdAt,
+        memberships: [{
+          organizationId: scope.organizationId,
+          organizationName: organization.name,
+          branchNames: visibleBranches.map((branch) => branch.name),
+          roleNames,
+        }],
+      } satisfies UserListItem;
+    }));
+
+    return items.filter((item): item is UserListItem => item !== null);
   }
 
   async emailExists(email: string): Promise<boolean> {
