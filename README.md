@@ -29,13 +29,14 @@ frontend/
 │   │   │   ├── page.tsx               # Landing pública (/)
 │   │   │   ├── landing/page.tsx       # Alias de la landing (/landing)
 │   │   │   └── login/page.tsx         # Acceso administrativo (/login)
-│   │   └── (platform)/                # Grupo de rutas; no modifica la URL
-│   │       ├── layout.tsx             # AppShell compartido
-│   │       ├── dashboard/page.tsx     # /dashboard
-│   │       ├── organizations/         # /organizations y subrutas
-│   │       ├── users/                 # /users y subrutas
-│   │       ├── roles/                 # /roles
-│   │       └── settings/              # /settings
+│   │   ├── (platform)/                # Grupo de rutas; no modifica la URL
+│   │   │   ├── layout.tsx             # AppShell compartido
+│   │   │   ├── dashboard/page.tsx     # /dashboard
+│   │   │   ├── organizations/         # /organizations y subrutas
+│   │   │   ├── users/                 # /users y subrutas
+│   │   │   ├── roles/                 # /roles
+│   │   │   └── settings/              # /settings
+│   │   └── api/                       # Rutas autenticadas del mismo origen
 │   ├── config/                        # Configuración de navegación y aplicación
 │   ├── features/                      # Capacidades funcionales del producto
 │   │   ├── auth/
@@ -44,7 +45,7 @@ frontend/
 │   │   ├── organization/
 │   │   ├── user/
 │   │   └── settings/
-│   ├── infrastructure/                # API, entorno y adaptadores externos
+│   ├── infrastructure/                # Cliente HTTP, sesión y TanStack Query compartidos
 │   └── shared/                        # Código reutilizable entre features
 │       ├── components/
 │       │   ├── layout/                # AppShell, navbar y sidebar
@@ -61,8 +62,12 @@ Cada feature puede contener únicamente las carpetas que necesite:
 
 ```text
 features/<feature>/
+├── api/           # Endpoints y claves de consulta propios de la feature
 ├── components/    # Componentes exclusivos de la feature
 ├── data/          # Datos o mocks exclusivos de la feature
+├── hooks/         # Consultas y mutaciones de TanStack Query
+├── schemas/       # Validación de formularios, cuando sea necesaria
+├── services/      # Operaciones HTTP de la feature
 ├── types/         # Tipos del dominio de la feature
 ├── utils/         # Utilidades exclusivas de la feature
 └── views/         # Vistas completas consumidas por app/
@@ -74,7 +79,12 @@ features/<feature>/
 
 Define rutas, layouts y composición. Los archivos `page.tsx` deben ser
 delgados: importan una vista desde `features` y la renderizan. No deben contener
-lógica de negocio ni implementaciones extensas de interfaz.
+lógica de negocio, peticiones HTTP ni implementaciones extensas de interfaz.
+Los `app/api/**/route.ts` son entradas HTTP del mismo origen: leen la sesión,
+reenvían únicamente las operaciones previstas al backend y devuelven respuestas
+controladas. Son endpoints públicos y deben verificar la sesión; en operaciones
+que modifican datos también se debe controlar el origen de la petición. La
+autorización final permanece en el backend.
 
 Las rutas principales son hermanas. `dashboard` no contiene a
 `organizations`, `users`, `roles` o `settings`. Todas comparten el layout de
@@ -83,8 +93,23 @@ Las rutas principales son hermanas. `dashboard` no contiene a
 ### `features`
 
 Agrupa el código por capacidad funcional. Una feature contiene sus vistas,
-componentes, tipos, datos y utilidades específicas. No se debe crear una
-estructura paralela como `src/modules`.
+componentes, tipos, datos y utilidades específicas. También contiene sus
+`api/endpoints.ts`, servicios HTTP, hooks de TanStack Query y esquemas de
+formularios cuando los necesite. No se debe crear una estructura paralela como
+`src/modules` ni carpetas vacías para completar una plantilla.
+
+- `api` nombra las rutas y las claves de consulta de la feature. Las claves
+  incluyen todos los parámetros que cambian la respuesta.
+- `services` ejecuta las peticiones y devuelve datos tipados; no maneja estado
+  de React ni guarda tokens.
+- `hooks` compone `useQuery` y `useMutation`, estados de carga, claves e
+  invalidaciones. No duplica peticiones HTTP.
+- `schemas` valida formularios. Se infieren los tipos del formulario a partir
+  del esquema cuando sea posible. El backend valida de nuevo cada petición.
+- `types` define los contratos de petición y respuesta. Las fechas recibidas
+  como JSON son cadenas hasta que se transformen explícitamente.
+- `components` contiene piezas visuales exclusivas de la feature; `views`
+  compone la pantalla. Lo reutilizado por varias features va a `shared`.
 
 ### `shared`
 
@@ -94,8 +119,22 @@ verdad y no deben duplicarse por diferencias de mayúsculas y minúsculas.
 
 ### `infrastructure`
 
-Contiene detalles de integración: clientes HTTP, endpoints, configuración de
-entorno, persistencia y adaptadores externos. No contiene componentes visuales.
+Contiene la infraestructura compartida: cliente HTTP, configuración de entorno,
+sesión, proveedor de TanStack Query y adaptadores externos transversales. Las
+rutas y operaciones HTTP exclusivas de una feature viven en esa feature. No
+contiene componentes visuales de negocio.
+
+El token de sesión permanece en la cookie HttpOnly. El cliente HTTP del
+navegador llama a rutas del mismo origen en Next.js; estas rutas leen la cookie
+y llaman al backend. No se expone el token al JavaScript del navegador. Cada
+ruta de Next.js comprueba la sesión y el backend sigue siendo responsable de
+validar el token y autorizar cada operación. La organización de carpetas y los
+controles visuales no sustituyen estas verificaciones.
+
+TanStack Query gestiona datos del servidor, caché, carga, errores e
+invalidaciones. El estado de interfaz local permanece en React; si más adelante
+se incorpora Zustand, se reserva para estado de interfaz compartido y no para
+copiar respuestas de la API.
 
 ### `config`
 
@@ -141,3 +180,9 @@ Las rutas dinámicas permanecen dentro de su recurso. Por ejemplo,
 3. Crear en `app` una página delgada que renderice la vista de la feature.
 4. Registrar la navegación en `src/config/navigation.ts`, si corresponde.
 5. Validar con `npm run lint`, TypeScript y `npm run build`.
+
+Para una nueva petición, agregar su ruta a `features/<feature>/api`, la operación
+HTTP a `services` y, si la consume una vista interactiva, un hook de TanStack
+Query. Crear una ruta `app/api` cuando el navegador necesite acceder al backend
+sin exponer la cookie HttpOnly. No agregar estas capas si la feature todavía no
+las utiliza.
