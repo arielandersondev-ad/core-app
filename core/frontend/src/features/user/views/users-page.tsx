@@ -1,247 +1,73 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Avatar,
-  Badge,
-  Icons,
-} from '@/shared/components/ui';
-import {
-  users,
-  organizations,
-  roleLabels,
-  timeAgo,
-} from '@/shared/data/platform.mock';
-
-type StatusFilter = 'all' | 'active' | 'inactive' | 'suspended';
+import { Avatar, Badge, Icons } from '@/shared/components/ui';
+import { useUsers } from '@/features/user/hooks/use-users';
+import { isAxiosError } from 'axios';
 
 export default function UserList() {
-  const router = useRouter();
+  const query = useUsers();
+  const users = query.data ?? [];
+  const error = query.isError
+    ? (isAxiosError(query.error) && typeof query.error.response?.data?.message === 'string'
+      ? query.error.response.data.message
+      : 'No se pudo cargar el listado de usuarios.')
+    : null;
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [orgFilter, setOrgFilter] = useState('all');
-
-  const filtered = users.filter((u) => {
-    const q = search.toLowerCase();
-    const matchSearch =
-      u.name.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q);
-    const matchStatus = statusFilter === 'all' || u.status === statusFilter;
-    const matchOrg = orgFilter === 'all' || u.orgId === orgFilter;
-    return matchSearch && matchStatus && matchOrg;
+  const [status, setStatus] = useState('all');
+  const [organizationId, setOrganizationId] = useState('all');
+  const organizations = Array.from(new Map(
+    users.flatMap((user) => user.memberships.map((membership) => [membership.organizationId, membership.organizationName] as const)),
+  ));
+  const filtered = users.filter((user) => {
+    const query = search.trim().toLocaleLowerCase();
+    return (!query || `${user.firstName} ${user.lastName} ${user.email}`.toLocaleLowerCase().includes(query))
+      && (status === 'all' || user.status.toUpperCase() === status)
+      && (organizationId === 'all' || user.memberships.some((membership) => membership.organizationId === organizationId));
   });
 
-  const statusCounts = {
-    active: users.filter((u) => u.status === 'active').length,
-    inactive: users.filter((u) => u.status === 'inactive').length,
-    suspended: users.filter((u) => u.status === 'suspended').length,
-  };
-
-  const filters: { value: StatusFilter; label: string }[] = [
-    { value: 'all', label: 'Todos' },
-    { value: 'active', label: 'Activos' },
-    { value: 'inactive', label: 'Inactivos' },
-    { value: 'suspended', label: 'Suspendidos' },
-  ];
-
   return (
-    <div className="flex flex-col h-full p-4 md:p-8 gap-6">
-      {/* ── Stats (solo desktop) ── */}
-      <div className="hidden md:grid grid-cols-4 gap-3">
-        {[
-          { label: 'Total', value: users.length, filter: 'all' as const },
-          { label: 'Activos', value: statusCounts.active, filter: 'active' as const },
-          { label: 'Inactivos', value: statusCounts.inactive, filter: 'inactive' as const },
-          { label: 'Suspendidos', value: statusCounts.suspended, filter: 'suspended' as const },
-        ].map((s) => (
-          <button
-            key={s.label}
-            onClick={() => setStatusFilter(s.filter)}
-            className={`p-4 rounded-sm border text-left transition-colors ${
-              statusFilter === s.filter
-                ? 'border-primary bg-primary-subtle'
-                : 'border-border bg-surface hover:border-primary/40'
-            }`}
-          >
-            <p
-              className="text-3xl font-display font-bold"
-              style={{ color: statusFilter === s.filter ? 'var(--primary)' : 'var(--foreground)' }}
-            >
-              {s.value}
-            </p>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted mt-1">
-              {s.label}
-            </p>
-          </button>
-        ))}
+    <div className="flex h-full flex-col gap-5 p-4 md:p-8">
+      <div>
+        <h1 className="font-display text-2xl font-bold text-foreground">Usuarios</h1>
+        <p className="text-sm text-muted">{users.length} usuarios registrados</p>
       </div>
-
-      {/* ── Toolbar ── */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative flex-1 max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-            {Icons.search}
-          </span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar usuario o correo…"
-            className="w-full h-9 pl-9 pr-3 bg-surface border border-border rounded-sm text-sm placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ring"
-          />
+      {query.isPending && <p role="status" className="text-sm text-muted">Cargando usuarios…</p>}
+      {error && <div role="alert" className="rounded-md border border-danger p-4 text-sm text-danger">{error} <button type="button" onClick={() => void query.refetch()} className="ml-2 underline">Reintentar</button></div>}
+      <div className="flex flex-wrap gap-2">
+        <div className="relative min-w-56 flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">{Icons.search}</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar usuario o correo…" className="h-9 w-full rounded-sm border border-border bg-surface pl-9 pr-3 text-sm" />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setStatusFilter(f.value)}
-              className={`h-7 px-3 rounded-sm text-xs font-mono transition-colors ${
-                statusFilter === f.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-surface border border-border text-muted hover:text-foreground'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-          <select
-            value={orgFilter}
-            onChange={(e) => setOrgFilter(e.target.value)}
-            className="h-7 px-2 rounded-sm text-xs font-mono bg-surface border border-border text-muted focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="all">Todas las organizaciones</option>
-            {organizations.map((o) => (
-              <option key={o.id} value={o.id}>{o.name}</option>
-            ))}
-          </select>
-        </div>
-        <button
-          onClick={() => router.push('/users/create')}
-          className="hidden md:flex h-9 px-4 bg-primary text-primary-foreground rounded-sm text-sm font-display font-semibold items-center gap-1.5 hover:opacity-90 transition-opacity ml-auto"
-        >
-          {Icons.plus} Nuevo usuario
-        </button>
+        <select aria-label="Estado" value={status} onChange={(event) => setStatus(event.target.value)} className="h-9 rounded-sm border border-border bg-surface px-2 text-sm">
+          <option value="all">Todos los estados</option>
+          <option value="ACTIVE">Activos</option>
+          <option value="INACTIVE">Inactivos</option>
+          <option value="SUSPENDED">Suspendidos</option>
+        </select>
+        <select aria-label="Organización" value={organizationId} onChange={(event) => setOrganizationId(event.target.value)} className="h-9 rounded-sm border border-border bg-surface px-2 text-sm">
+          <option value="all">Todas las organizaciones</option>
+          {organizations.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </select>
       </div>
-
-      {/* ── Listado ── */}
-      <div className="bg-surface border border-border rounded-md overflow-hidden">
-        {/* Tabla desktop */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-background/50">
-                {['Usuario', 'Organización', 'Sucursal', 'Rol', 'Estado', 'Último acceso', ''].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-muted whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((user) => {
-                const org = organizations.find((o) => o.id === user.orgId);
-                return (
-                  <tr
-                    key={user.id}
-                    onClick={() => router.push(`/users/${user.id}`)}
-                    className="border-b border-border last:border-0 hover:bg-background transition-colors cursor-pointer group"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <Avatar name={user.name} size="sm" />
-                        <div>
-                          <p className="text-sm font-display font-semibold text-foreground">{user.name}</p>
-                          <p className="text-[11px] font-mono text-muted">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted">{org?.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-sm text-muted">
-                      {user.branchId ? 'Asignada' : <span className="text-muted/50">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[10px] font-mono uppercase tracking-wide text-muted whitespace-nowrap">
-                        {roleLabels[user.role]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive'}>
-                        {user.status === 'active' ? 'Activo' : user.status === 'suspended' ? 'Suspendido' : 'Inactivo'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-[11px] font-mono text-muted whitespace-nowrap">
-                      {timeAgo(user.lastLogin)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-muted opacity-0 group-hover:opacity-100 transition-opacity">
-                        {Icons.chevronRight}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Tarjetas mobile */}
-        <div className="md:hidden divide-y divide-border">
-          {filtered.map((user) => {
-            const org = organizations.find((o) => o.id === user.orgId);
-            return (
-              <button
-                key={user.id}
-                onClick={() => router.push(`/users/${user.id}`)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-background transition-colors text-left"
-              >
-                <Avatar name={user.name} size="md" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-display font-semibold text-foreground truncate">
-                      {user.name}
-                    </p>
-                    <Badge variant={user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive'}>
-                      {user.status === 'active' ? 'Activo' : user.status === 'suspended' ? 'Susp.' : 'Inac.'}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">
-                      {roleLabels[user.role]}
-                    </span>
-                    <span className="text-border">·</span>
-                    <span className="text-[10px] font-mono text-muted-foreground truncate">
-                      {org?.name}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-muted-foreground shrink-0">{Icons.chevronRight}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="py-16 text-center text-sm text-muted">Sin resultados</div>
-        )}
-
-        <div className="px-4 py-2.5 border-t border-border bg-background/30">
-          <p className="text-[11px] font-mono text-muted">
-            {filtered.length} de {users.length} usuarios
-          </p>
-        </div>
+      <div className="overflow-x-auto rounded-md border border-border bg-surface">
+        <table className="w-full min-w-[760px] text-left text-sm">
+          <thead className="border-b border-border bg-background/50 text-xs uppercase tracking-wide text-muted">
+            <tr>{['Usuario', 'Organización', 'Sucursales', 'Roles', 'Estado'].map((label) => <th key={label} className="px-4 py-3">{label}</th>)}</tr>
+          </thead>
+          <tbody>
+            {filtered.map((user) => <tr key={user.id} className="border-b border-border last:border-0">
+              <td className="px-4 py-3"><div className="flex items-center gap-2"><Avatar name={`${user.firstName} ${user.lastName}`} size="sm" /><div><p className="font-semibold text-foreground">{user.firstName} {user.lastName}</p><p className="text-xs text-muted">{user.email}</p></div></div></td>
+              <td className="px-4 py-3 text-muted">{user.memberships.map((item) => item.organizationName).join(', ') || '—'}</td>
+              <td className="px-4 py-3 text-muted">{user.memberships.flatMap((item) => item.branchNames).join(', ') || '—'}</td>
+              <td className="px-4 py-3 text-muted">{user.memberships.flatMap((item) => item.roleNames).join(', ') || '—'}</td>
+              <td className="px-4 py-3"><Badge variant={user.status === 'ACTIVE' ? 'active' : user.status === 'SUSPENDED' ? 'suspended' : 'inactive'}>{user.status === 'ACTIVE' ? 'Activo' : user.status === 'SUSPENDED' ? 'Suspendido' : 'Inactivo'}</Badge></td>
+            </tr>)}
+          </tbody>
+        </table>
+        {!error && !query.isPending && filtered.length === 0 && <p className="p-8 text-center text-sm text-muted">Sin resultados</p>}
+        <p className="border-t border-border px-4 py-2 text-xs text-muted">{filtered.length} de {users.length} usuarios</p>
       </div>
-
-      {/* ── FAB (solo móvil) ── */}
-      <button
-        onClick={() => router.push('/users/create')}
-        className="md:hidden fixed bottom-20 right-4 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center active:opacity-80 z-10"
-      >
-        {Icons.plus}
-      </button>
     </div>
   );
 }

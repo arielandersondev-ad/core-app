@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CreateOrganizationButton } from "../components/create-organization-button";
+import { isAxiosError } from 'axios';
 import { OrganizationMobileCard } from "../components/organization-mobile-card";
 import { OrganizationTable } from "../components/organization-table";
-import { organizations } from "../data/organizations.mock";
+import { useOrganizations } from '../hooks/use-organizations';
 
 function SearchIcon() {
   return (
@@ -23,45 +23,31 @@ function SearchIcon() {
   );
 }
 
-function FilterIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className="size-5"
-    >
-      <path d="M4 6h16" />
-      <path d="M4 12h16" />
-      <path d="M4 18h16" />
-      <circle cx="9" cy="6" r="1.5" fill="currentColor" />
-      <circle cx="15" cy="12" r="1.5" fill="currentColor" />
-      <circle cx="11" cy="18" r="1.5" fill="currentColor" />
-    </svg>
-  );
-}
-
 export function OrganizationsPage() {
+  const query = useOrganizations();
+  const organizations = query.data ?? [];
+  const error = query.isError
+    ? (isAxiosError(query.error) && typeof query.error.response?.data?.message === 'string'
+      ? query.error.response.data.message
+      : 'No se pudo cargar el listado de organizaciones.')
+    : null;
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
 
   const activeCount = organizations.filter(
-    (organization) => organization.status === "active",
+    (organization) => organization.status.toUpperCase() === "ACTIVE",
   ).length;
 
   const inactiveCount = organizations.length - activeCount;
   const normalizedSearch = search.trim().toLocaleLowerCase("es");
   const filteredOrganizations = organizations.filter((organization) => {
-    const matchesStatus = status === "all" || organization.status === status;
+    const matchesStatus = status === "all" || organization.status.toLowerCase() === status;
     const matchesSearch =
       normalizedSearch.length === 0 ||
       organization.name.toLocaleLowerCase("es").includes(normalizedSearch) ||
-      organization.legalName.toLocaleLowerCase("es").includes(normalizedSearch) ||
-      organization.city.toLocaleLowerCase("es").includes(normalizedSearch) ||
-      organization.taxId.toLocaleLowerCase("es").includes(normalizedSearch);
+      (organization.legalName ?? '').toLocaleLowerCase("es").includes(normalizedSearch) ||
+      organization.country.toLocaleLowerCase("es").includes(normalizedSearch) ||
+      (organization.taxId ?? '').toLocaleLowerCase("es").includes(normalizedSearch);
 
     return matchesStatus && matchesSearch;
   });
@@ -82,8 +68,10 @@ export function OrganizationsPage() {
             Organizaciones registradas en la plataforma.
           </p>
         </div>
-        <CreateOrganizationButton/>
       </header>
+
+      {query.isPending && <p role="status" className="mt-6 text-sm text-muted">Cargando organizaciones…</p>}
+      {error && <div role="alert" className="mt-6 rounded-lg border border-danger p-4 text-sm text-danger">{error} <button type="button" onClick={() => void query.refetch()} className="ml-2 underline">Reintentar</button></div>}
 
       <div className="mt-6 flex items-center gap-2">
         <label className="relative block min-w-0 flex-1 lg:max-w-xl">
@@ -97,7 +85,7 @@ export function OrganizationsPage() {
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar organización, ciudad o NIT..."
+            placeholder="Buscar organización, país o NIT..."
             className={[
               "h-11 w-full rounded-lg border border-border",
               "bg-surface pl-11 pr-4 text-sm text-foreground",
@@ -108,20 +96,6 @@ export function OrganizationsPage() {
           />
         </label>
 
-        <button
-          type="button"
-          aria-label="Mostrar filtros"
-          className={[
-            "inline-flex size-11 shrink-0 items-center justify-center",
-            "rounded-lg border border-border bg-surface text-muted",
-            "transition-colors hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2",
-            "focus-visible:ring-primary lg:w-auto lg:gap-2 lg:px-4",
-          ].join(" ")}
-        >
-          <FilterIcon />
-          <span className="hidden text-sm lg:inline">Filtros</span>
-        </button>
       </div>
 
       <div
@@ -191,7 +165,7 @@ export function OrganizationsPage() {
         total={organizations.length}
       />
 
-      {filteredOrganizations.length === 0 && (
+      {!query.isPending && !error && filteredOrganizations.length === 0 && (
         <p className="py-12 text-center text-sm text-muted">
           No se encontraron organizaciones con esos filtros.
         </p>

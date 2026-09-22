@@ -1,13 +1,7 @@
+import RolePage from "@/features/role/views/role-page";
+
 export default function RolesPage() {
   return (
-    <section className="p-6">
-      <h1 className="text-2xl font-semibold text-foreground">
-        Roles y permisos
-      </h1>
-
-      <p className="mt-2 text-sm text-muted">
-        Administración de roles y permisos.
-      </p>
-    </section>
+    <RolePage/>
   );
 }

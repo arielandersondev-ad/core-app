@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { authenticate, AuthenticationError } from "@/infrastructure/auth/auth-api";
+import { authService, AuthenticationError } from '@/features/auth/services/auth.service';
 import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/infrastructure/auth/session";
 import type { LoginFormState } from "@/features/auth/types/login";
 
@@ -32,7 +32,7 @@ export async function loginAction(
   }
 
   try {
-    const result = await authenticate({ email, password });
+    const result = await authService.login({ email, password });
     const cookieStore = await cookies();
 
     cookieStore.set(SESSION_COOKIE, result.access_token, {

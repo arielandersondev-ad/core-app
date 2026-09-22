@@ -36,13 +36,17 @@ const planConfiguration = {
 } satisfies Record<OrganizationPlan, BadgeConfiguration>;
 
 type OrganizationStatusBadgeProps = {
-  status: OrganizationStatus;
+  status: OrganizationStatus | string;
 };
 
 export function OrganizationStatusBadge({
   status,
 }: OrganizationStatusBadgeProps) {
-  const configuration = statusConfiguration[status];
+  const configuration = statusConfiguration[status.toLowerCase() as OrganizationStatus];
+
+  if (!configuration) {
+    return <Badge variant="neutral">{status}</Badge>;
+  }
 
   return (
     <Badge
