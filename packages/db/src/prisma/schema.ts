@@ -232,7 +232,37 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
       updatedAt: field.temporal.updatedAt(),
     },
   });
+  // =========================================================
+  // PERMISSION
+  // =========================================================
+  const Permission = model('Permission', {
+    namespace: CORE_NAMESPACE,
 
+    fields: {
+      id: field.id.uuidv7String(),
+      code: field.text().unique(), // Ej.: organizations:read
+      name: field.text(),
+      description: field.text().optional(),
+
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
+  // =========================================================
+  // ROLE <-> PERMISSION
+  // =========================================================
+  const RolePermission = model('RolePermission', {
+    namespace: CORE_NAMESPACE,
+
+    fields: {
+      id: field.id.uuidv7String(),
+      roleId: field.uuidString(),
+      permissionId: field.uuidString(),
+
+      createdAt: field.temporal.createdAt(),
+    },
+  });
   // =========================================================
   // MEMBERSHIP <-> ROLE
   // =========================================================
@@ -408,9 +438,42 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         membershipRoles: rel.hasMany(MembershipRole, {
           by: 'roleId',
         }),
+
+        rolePermissions: rel.hasMany(RolePermission, {
+          by: 'roleId',
+        }),
       }).sql(({ cols, constraints }) => ({
         foreignKeys: [
           constraints.foreignKey(cols.organizationId, Organization.refs.id),
+        ],
+      })),
+
+      Permission: Permission.relations({
+        rolePermissions: rel.hasMany(RolePermission, {
+          by: 'permissionId',
+        }),
+      }),
+
+      RolePermission: RolePermission.relations({
+        role: rel.belongsTo(Role, {
+          from: 'roleId',
+          to: 'id',
+        }),
+
+        permission: rel.belongsTo(Permission, {
+          from: 'permissionId',
+          to: 'id',
+        }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.roleId, Role.refs.id),
+          constraints.foreignKey(cols.permissionId, Permission.refs.id),
+        ],
+        indexes: [
+          constraints.index(
+            [cols.roleId, cols.permissionId],
+            { name: 'role_permission_pair_uidx', unique: true },
+          ),
         ],
       })),
 
