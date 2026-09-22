@@ -1,9 +1,6 @@
 import { Matches } from 'class-validator';
-
-// Regex de UUID genérico: acepta v7 (formato del contrato).
-const UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-
+import { UUID_PATTERN } from '../../../../common/validation/uuid-pattern.js';
 export class ListRolesQueryDto {
-  //@Matches(UUID_PATTERN)
+  @Matches(UUID_PATTERN)
   organizationId!: string;
 }

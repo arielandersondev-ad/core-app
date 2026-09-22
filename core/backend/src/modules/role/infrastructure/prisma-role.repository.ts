@@ -3,13 +3,6 @@ import { PrismaService } from '../../../common/infrastructure/prisma.service.js'
 import { CreateRole, Role } from '../domain/entities/role.entity.js';
 import { RoleRepository } from '../domain/repositories/role.repository.js';
 import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
-import { isPostgresUniqueViolation } from '../../../common/infrastructure/postgres-error.js';
-import { RoleCodeAlreadyExistsError } from '../domain/errors/role-code-already-exists.error.js';
-
-const ROLE_CODE_UNIQUE_INDEXES = [
-  'role_org_code_uidx_6af438fb',
-  'role_global_code_uidx_bbc24990',
-] as const;
 
 @Injectable()
 export class PrismaRoleRepository extends RoleRepository {
@@ -40,10 +33,7 @@ export class PrismaRoleRepository extends RoleRepository {
       }));
   }
 
-  async existsByCodeInScope(
-    code: string,
-    organizationId: string | null,
-  ): Promise<boolean> {
+  async existsByCodeInScope( code: string, organizationId: string | null ): Promise<boolean> {
     const rows = await this.prisma.orm.core.Role.where({
       code,
       deleted: false,
@@ -73,9 +63,6 @@ export class PrismaRoleRepository extends RoleRepository {
         updatedAt: row.updatedAt,
       };
     } catch (error) {
-      if (isPostgresUniqueViolation(error, ROLE_CODE_UNIQUE_INDEXES)) {
-        throw new RoleCodeAlreadyExistsError(role.code);
-      }
       throw error;
     }
   }

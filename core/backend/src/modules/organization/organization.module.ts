@@ -9,9 +9,10 @@ import { ListOrganizationsUseCase } from "./application/use-case/list-organizati
 import { ListBranchesByOrganizationUseCase } from "./application/use-case/list-branches.use-case.js";
 import { OrganizationRepository } from "./domain/repositories/organization.repository.js";
 import { BranchRepository } from "./domain/repositories/branch.repository.js";
+import { AuthSecurityModule } from '../auth/auth-security.module.js';
 
 @Module({
-    imports: [],
+    imports: [AuthSecurityModule],
     controllers: [
         OrganizationController,
         BranchController,

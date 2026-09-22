@@ -4,9 +4,12 @@ import { RoleController } from "./presentation/http/role.controller.js";
 import { ListRolesByOrganizationScopeUseCase } from "./application/use-case/list-roles.use-case.js";
 import { RoleRepository } from "./domain/repositories/role.repository.js";
 import { CreateRoleUseCase } from "./application/use-case/create-role.use-case.js";
+import { AuthSecurityModule } from "../auth/auth-security.module.js";
 
 @Module({
-  imports: [],
+  imports: [
+    AuthSecurityModule
+  ],
   controllers: [
     RoleController,
   ],

@@ -5,6 +5,8 @@ import { JoseAccessTokenIssuer } from './infrastructure/security/jwt/jose-access
 import { JoseAccessTokenVerifier } from './infrastructure/security/jwt/jose-access-token-verifier.js';
 import { JwtAuthGuard } from './presentation/http/guards/jwt-auth.guard.js';
 import { RolesGuard } from './presentation/http/guards/roles.guard.js';
+import { CoreAccessGuard } from './presentation/http/guards/core-access.guard.js';
+import { CorePermissionService } from './infrastructure/security/core-permission.service.js';
 
 @Module({
   providers: [
@@ -12,7 +14,9 @@ import { RolesGuard } from './presentation/http/guards/roles.guard.js';
     { provide: AccessTokenVerifier, useClass: JoseAccessTokenVerifier },
     JwtAuthGuard,
     RolesGuard,
+    CoreAccessGuard,
+    CorePermissionService
   ],
-  exports: [AccessTokenIssuer, AccessTokenVerifier, JwtAuthGuard, RolesGuard],
+  exports: [AccessTokenIssuer, AccessTokenVerifier, JwtAuthGuard, RolesGuard, CoreAccessGuard, CorePermissionService],
 })
 export class AuthSecurityModule {}
