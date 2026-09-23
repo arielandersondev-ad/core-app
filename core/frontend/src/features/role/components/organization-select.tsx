@@ -7,10 +7,7 @@ type OrganizationSelectProps = {
   onChange: (organizationId: string) => void;
 };
 
-export function OrganizationSelect({
-  value,
-  onChange,
-}: OrganizationSelectProps) {
+export function OrganizationSelect({value, onChange}: OrganizationSelectProps) {
   const query = useOrganizations();
   const organizations = query.data ?? [];
 
