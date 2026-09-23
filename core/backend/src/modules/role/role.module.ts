@@ -5,6 +5,9 @@ import { ListRolesByOrganizationScopeUseCase } from "./application/use-case/list
 import { RoleRepository } from "./domain/repositories/role.repository.js";
 import { CreateRoleUseCase } from "./application/use-case/create-role.use-case.js";
 import { AuthSecurityModule } from "../auth/auth-security.module.js";
+import { ListPermissionByRoleIdUseCase } from "./application/use-case/list-permmision.use-case.js";
+import { PermissionRepository } from "./domain/repositories/permission.repository.js";
+import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.repository.js";
 
 @Module({
   imports: [
@@ -18,7 +21,12 @@ import { AuthSecurityModule } from "../auth/auth-security.module.js";
       provide: RoleRepository,
       useClass: PrismaRoleRepository,
     },
+    {
+      provide: PermissionRepository,
+      useClass: PrismaPermissionRepository,
+    },
     ListRolesByOrganizationScopeUseCase,
+    ListPermissionByRoleIdUseCase,
     CreateRoleUseCase
   ],
   exports: [],

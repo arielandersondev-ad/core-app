@@ -3,24 +3,14 @@
 import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
 import { Icons } from '@/shared/components/ui/Icons';
-
-type PermissionOption = {
-  code: string;
-  name: string;
-  description: string;
-};
-
-type PermissionGroup = {
-  label: string;
-  description: string;
-  permissions: readonly PermissionOption[];
-};
+import { getPermissionGroupPresentation } from '../data/permission-group-presentation';
+import type { PermissionGroup } from '../types/role';
 
 type PermissionEditorPanelProps = {
   roleName?: string;
   roleCode?: string;
   readOnly?: boolean;
-  groups: readonly PermissionGroup[];
+  permissionGroups: readonly PermissionGroup[];
   selectedCodes: ReadonlySet<string>;
   hasChanges: boolean;
   onToggle: (code: string) => void;
@@ -35,7 +25,7 @@ export function PermissionEditorPanel({
   roleName,
   roleCode,
   readOnly = false,
-  groups,
+  permissionGroups,
   selectedCodes,
   hasChanges,
   onToggle,
@@ -98,61 +88,70 @@ export function PermissionEditorPanel({
       </header>
 
       <div className="divide-y divide-border">
-        {groups.map((group) => {
-          const activeCount = group.permissions.filter((permission) => selectedCodes.has(permission.code)).length;
+        {[...permissionGroups]
+          .sort((groupA, groupB) => {
+            const presentationA = getPermissionGroupPresentation(groupA.key);
+            const presentationB = getPermissionGroupPresentation(groupB.key);
+            return presentationA.order - presentationB.order || groupA.key.localeCompare(groupB.key);
+          })
+          .map((group) => {
+            const presentation = getPermissionGroupPresentation(group.key);
 
-          return (
-            <fieldset key={group.label} className="p-4 sm:p-6" disabled={readOnly}>
-              <legend className="w-full">
-                <span className="flex items-start justify-between gap-4">
-                  <span>
-                    <span className="block font-display text-sm font-semibold">{group.label}</span>
-                    <span className="mt-1 block text-xs font-normal text-muted">{group.description}</span>
+            return (
+              <fieldset key={group.key} className="p-4 sm:p-6" disabled={readOnly}>
+                <legend className="w-full">
+                  <span className="block font-display text-base font-semibold">
+                    {presentation.label}
                   </span>
-                  <Badge variant={activeCount > 0 ? 'primary' : 'neutral'}>{activeCount}/{group.permissions.length}</Badge>
-                </span>
-              </legend>
+                  <span className="mt-1 block text-xs font-normal text-muted">
+                    {presentation.description}
+                  </span>
+                </legend>
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {group.permissions.map((permission) => {
-                  const checked = selectedCodes.has(permission.code);
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {group.permissions.map((permission) => {
+                    const checked = selectedCodes.has(permission.code);
 
-                  return (
-                    <div
-                      key={permission.code}
-                      className={`relative flex min-h-24 items-start gap-3 rounded-md border p-3 pr-10 transition-colors ${
-                        checked ? 'border-primary bg-primary-subtle' : 'border-border bg-background hover:border-primary/50'
-                      } ${readOnly ? 'opacity-80' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => onToggle(permission.code)}
-                        aria-label={`Asignar ${permission.name}`}
-                        className="mt-0.5 size-4 shrink-0 accent-primary"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold">{permission.name}</span>
-                        <span className="mt-1 block text-xs leading-5 text-muted">{permission.description}</span>
-                        <span className="mt-2 block break-all font-mono text-[10px] text-muted">{permission.code}</span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onEditPermission(permission.code, permission.name)}
-                        aria-label={`Editar permiso ${permission.name}`}
-                        className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
+                    return (
+                      <div
+                        key={permission.code}
+                        className={`relative flex min-h-24 items-start gap-3 rounded-md border p-3 pr-10 transition-colors ${
+                          checked ? 'border-primary bg-primary-subtle' : 'border-border bg-background hover:border-primary/50'
+                        } ${readOnly ? 'opacity-80' : ''}`}
                       >
-                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
-                          <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
-                        </svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </fieldset>
-          );
-        })}
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => onToggle(permission.code)}
+                          aria-label={`Asignar ${permission.name}`}
+                          className="mt-0.5 size-4 shrink-0 accent-primary"
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold">{permission.name}</span>
+                          {permission.description && (
+                            <span className="mt-1 block text-xs leading-5 text-muted">
+                              {permission.description}
+                            </span>
+                          )}
+                          <span className="mt-2 block break-all font-mono text-[10px] text-muted">{permission.code}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onEditPermission(permission.code, permission.name)}
+                          aria-label={`Editar permiso ${permission.name}`}
+                          className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
+                        >
+                          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
+                            <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            );
+          })}
       </div>
 
       {!readOnly && (

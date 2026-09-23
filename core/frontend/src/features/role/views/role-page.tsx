@@ -8,53 +8,7 @@ import { RoleSelectorPanel } from '../components/role-selector-panel';
 import { PermissionEditorPanel } from '../components/permission-editor-panel';
 import { AccessFormDialog } from '../components/access-form-dialog';
 import { Icons } from '@/shared/components/ui/Icons';
-
-const permissionGroups = [
-  {
-    label: 'Usuarios',
-    description: 'Acceso a las cuentas y membresías de la plataforma.',
-    permissions: [
-      { code: 'users:read', name: 'Ver usuarios', description: 'Consultar el listado y detalle de usuarios.' },
-      { code: 'users:create', name: 'Crear usuarios', description: 'Registrar usuarios y sus accesos iniciales.' },
-      { code: 'users:update', name: 'Editar usuarios', description: 'Modificar datos y estado de usuarios.' },
-    ],
-  },
-  {
-    label: 'Organizaciones',
-    description: 'Administración de organizaciones y sus datos principales.',
-    permissions: [
-      { code: 'organizations:read', name: 'Ver organizaciones', description: 'Consultar organizaciones y su información.' },
-      { code: 'organizations:create', name: 'Crear organizaciones', description: 'Dar de alta nuevas organizaciones.' },
-      { code: 'organizations:update', name: 'Editar organizaciones', description: 'Actualizar información organizacional.' },
-    ],
-  },
-  {
-    label: 'Sucursales',
-    description: 'Gestión de sedes y puntos de atención.',
-    permissions: [
-      { code: 'branches:read', name: 'Ver sucursales', description: 'Consultar sucursales disponibles.' },
-      { code: 'branches:create', name: 'Crear sucursales', description: 'Registrar nuevas sucursales.' },
-      { code: 'branches:update', name: 'Editar sucursales', description: 'Modificar datos de las sucursales.' },
-    ],
-  },
-  {
-    label: 'Roles y permisos',
-    description: 'Control sobre roles y configuración de accesos.',
-    permissions: [
-      { code: 'roles:read', name: 'Ver roles', description: 'Consultar roles y sus permisos.' },
-      { code: 'roles:create', name: 'Crear roles', description: 'Crear roles dentro de una organización.' },
-      { code: 'roles:update', name: 'Editar roles', description: 'Cambiar la configuración de acceso de un rol.' },
-    ],
-  },
-  {
-    label: 'Alcance de usuarios',
-    description: 'Define hasta dónde puede consultar usuarios el rol.',
-    permissions: [
-      { code: 'users:read:organization', name: 'Toda la organización', description: 'Ver usuarios de cualquier sucursal de la organización.' },
-      { code: 'users:read:assigned-branches', name: 'Sucursales asignadas', description: 'Ver únicamente usuarios de sucursales asignadas.' },
-    ],
-  },
-] as const;
+import { useRolePermissions } from '../hooks/use-role-permission';
 
 export default function RolePage() {
   const [organizationId, setOrganizationId] = useState('');
@@ -67,6 +21,9 @@ export default function RolePage() {
     name?: string;
     code?: string;
   } | null>(null);
+
+  const queryPermissions = useRolePermissions(selectedRoleId)
+  const permissionGroups = queryPermissions.data ?? [];
 
   const query = useRoles(organizationId);
   const roles = query.data ?? [];
@@ -164,7 +121,7 @@ export default function RolePage() {
             roleName={selectedRole?.name}
             roleCode={selectedRole?.code}
             readOnly={selectedRole?.organizationId === null}
-            groups={permissionGroups}
+            permissionGroups={permissionGroups}
             selectedCodes={selectedCodes}
             hasChanges={hasChanges}
             onToggle={handleTogglePermission}

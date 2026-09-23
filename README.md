@@ -136,6 +136,59 @@ invalidaciones. El estado de interfaz local permanece en React; si más adelante
 se incorpora Zustand, se reserva para estado de interfaz compartido y no para
 copiar respuestas de la API.
 
+## BFF de autenticación
+
+Next.js actúa como un **Backend for Frontend (BFF) delgado** entre el navegador
+y NestJS. Su objetivo es mantener el token fuera del JavaScript del navegador,
+no replicar el backend de negocio.
+
+```text
+Navegador
+  └── cookie HttpOnly: crowant_session=<JWT>
+          ↓ petición al mismo origen (/api/**)
+Next.js BFF
+  └── lee el JWT de la cookie en el servidor
+  └── lo reenvía como Authorization: Bearer <JWT>
+          ↓
+NestJS
+  └── verifica el JWT y aplica autorización y reglas de negocio
+```
+
+El JWT no se transforma ni se genera de nuevo: conserva el mismo valor. El BFF
+solo cambia su mecanismo de transporte, de una cookie `HttpOnly` recibida desde
+el navegador al esquema `Bearer` esperado por NestJS.
+
+### Responsabilidades del BFF
+
+- Crear, leer y eliminar la cookie de sesión.
+- Mantener el token inaccesible al JavaScript del navegador.
+- Reenviar hacia un backend fijo y configurado mediante `API_URL` únicamente
+  rutas, métodos y cuerpos expresamente permitidos.
+- Añadir el encabezado `Authorization: Bearer <JWT>` en las llamadas a NestJS.
+- Aplicar controles propios de la frontera web, como verificación de sesión,
+  origen y protección CSRF en operaciones que modifican datos.
+- Traducir fallos técnicos de conexión sin exponer información interna.
+- Componer varias respuestas solo cuando una pantalla tenga una necesidad real
+  y específica.
+
+### Fuera del alcance del BFF
+
+El BFF no debe contener reglas de negocio, consultar directamente la base de
+datos, decidir permisos ni duplicar DTO, validaciones o controladores de NestJS.
+NestJS continúa siendo la única fuente de verdad para autenticación final,
+autorización, validación de datos y lógica de negocio.
+
+Las operaciones CRUD ordinarias deben pasar por un mecanismo común de proxy
+autenticado y restringido, en lugar de crear una réplica manual de cada endpoint
+del backend. Las rutas BFF específicas se reservan para login, logout,
+renovación de sesión, composición de respuestas o tratamientos que realmente
+sean propios del frontend.
+
+En este documento, **BFF** nombra el patrón arquitectónico, **proxy de API**
+describe la función de reenviar solicitudes y **middleware** identifica una
+pieza interna del procesamiento. Un middleware puede formar parte del BFF, pero
+no son términos equivalentes.
+
 ### `config`
 
 Centraliza configuración estable de la aplicación, como los elementos y rutas

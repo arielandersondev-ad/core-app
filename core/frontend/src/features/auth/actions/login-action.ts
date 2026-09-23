@@ -1,9 +1,8 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authService, AuthenticationError } from '@/features/auth/services/auth.service';
-import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/infrastructure/auth/session";
+import { setSessionToken } from '@/infrastructure/auth/server-session';
 import type { LoginFormState } from "@/features/auth/types/login";
 
 export async function loginAction(
@@ -33,16 +32,7 @@ export async function loginAction(
 
   try {
     const result = await authService.login({ email, password });
-    const cookieStore = await cookies();
-
-    cookieStore.set(SESSION_COOKIE, result.access_token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: SESSION_MAX_AGE_SECONDS,
-      priority: "high",
-    });
+    await setSessionToken(result.access_token);
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return { message: error.message };

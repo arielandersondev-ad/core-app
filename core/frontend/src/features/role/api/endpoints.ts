@@ -1,14 +1,26 @@
 export const ROLE_ENDPOINTS = {
-  browser: {
-    list: '/roles', // Axios -> Next
-  },
-  backend: {
-    listByOrganization: '/role/get-list-org', // Next -> Nest
-  },
+  collection: '/roles',
+  permissionsByRoleId: (roleId: string) => `/roles/${roleId}/permissions`,
 } as const;
 
-export const roleQueryKeys = {
+
+// tanstack query keys
+export const RoleQueryKeys = {
   all: ['roles'] as const,
+
+  list: () =>
+    [...RoleQueryKeys.all, 'list'] as const,
+
+  detail: (roleId: string) =>
+    [...RoleQueryKeys.all, 'detail', roleId] as const,
+
   byOrganization: (organizationId: string) =>
-    ['roles', 'organization', organizationId] as const,
+    [...RoleQueryKeys.all, 'organization', organizationId] as const,
+
+  permissionByRoleId: (roleId: string) =>
+    [
+      ...RoleQueryKeys.all,
+      'permissions',
+      roleId
+    ] as const
 };
