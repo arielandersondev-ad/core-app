@@ -1,7 +1,35 @@
-# Estándar de arquitectura frontend
+# Estándar de arquitectura de la aplicación
 
-Este documento define la estructura que deben seguir los frontends del
-repositorio. `core/frontend` es la implementación de referencia.
+Este documento define la estructura y las responsabilidades que deben seguir
+el frontend, el backend y el paquete de base de datos. Las implementaciones de
+referencia son `core/frontend`, `core/backend` y `packages/db`.
+
+## Vista general del repositorio
+
+```text
+core-app/
+├── core/
+│   ├── frontend/        # Next.js, interfaz web y BFF
+│   └── backend/         # NestJS, autorización y reglas de negocio
+└── packages/
+    └── db/              # Contrato y migraciones de PostgreSQL
+```
+
+La comunicación sigue esta dirección:
+
+```text
+Navegador
+  → Next.js / BFF
+  → NestJS
+  → @app/db
+  → PostgreSQL
+```
+
+El frontend nunca accede directamente a la base de datos. NestJS es la fuente
+de verdad para autorización, validación final y reglas de negocio. El paquete
+`@app/db` es el dueño del contrato persistente y de sus migraciones.
+
+## Arquitectura frontend
 
 ## Convenciones de nombres
 
@@ -239,3 +267,316 @@ HTTP a `services` y, si la consume una vista interactiva, un hook de TanStack
 Query. Crear una ruta `app/api` cuando el navegador necesite acceder al backend
 sin exponer la cookie HttpOnly. No agregar estas capas si la feature todavía no
 las utiliza.
+
+## Flujo frontend de referencia: creación de organizaciones
+
+La creación de organizaciones muestra cómo distribuir un flujo interactivo sin
+mezclar interfaz, validación, estado del servidor y transporte HTTP.
+
+```text
+CreateOrganizationButton
+  → CreateOrganizationDialog
+  → OrganizationStep / RolesStep / BranchesStep
+  → React Hook Form + Zod
+  → useCreateOrganizationWizard
+  → useCreateOrganizationSetup
+  → organizationService
+  → Axios: POST /api/organizations/setup
+  → proxy autenticado de Next.js
+  → POST /organizations/setup en NestJS
+```
+
+La feature sigue esta estructura:
+
+```text
+features/organization/
+├── api/
+│   └── endpoints.ts                         # Rutas y claves de consulta
+├── components/
+│   ├── create-organization-button.tsx       # Abre el flujo
+│   ├── create-organization-dialog.tsx       # Compone el asistente
+│   ├── create-organization-wizard-*.tsx     # Navegación y acciones
+│   └── forms/
+│       ├── organization-step.tsx            # Datos de la organización
+│       ├── roles-step.tsx                   # Roles iniciales
+│       └── branches-step.tsx                # Sucursales iniciales
+├── hooks/
+│   ├── use-organizations.ts                 # Query y mutación del servidor
+│   └── use-create-organization-wizard.ts    # Estado local del asistente
+├── schemas/
+│   └── organization-setup.schema.ts         # Validación y transformación
+├── services/
+│   └── organization.service.ts              # Operaciones HTTP tipadas
+├── types/
+│   ├── organization.ts                      # Entidad de organización
+│   ├── organization-list.ts                 # Respuesta del listado
+│   └── organization-setup.ts                # Tipos inferidos y valores iniciales
+└── views/
+    └── organizations-page.tsx               # Composición de la pantalla
+```
+
+React Hook Form administra el estado, los errores y el envío de los formularios,
+pero no proporciona estilos ni impone componentes visuales. Los elementos HTML
+y sus clases siguen perteneciendo a la aplicación. Zod centraliza las reglas de
+cada paso, convierte valores como latitud y longitud a números e infiere el tipo
+del payload para evitar contratos duplicados.
+
+`useCreateOrganizationWizard` solo controla el paso actual y los datos
+acumulados. TanStack Query controla la mutación, sus estados y la invalidación
+del listado. El servicio se limita al transporte HTTP. Las validaciones del
+frontend mejoran la experiencia, pero NestJS siempre vuelve a validar la
+petición.
+
+No se deben crear abstracciones visuales genéricas como `FormInput` o
+`FormField` hasta que exista un sistema de diseño estable o varios consumidores
+con la misma necesidad. Separar lógica no obliga a anticipar una biblioteca UI.
+
+## Arquitectura backend
+
+El backend se organiza por módulos funcionales. `modules/role` es la referencia
+para crear o ampliar un módulo.
+
+```text
+src/modules/role/
+├── application/
+│   ├── contracts/          # Formas de salida propias de los casos de uso
+│   ├── mappers/            # Transformaciones de aplicación
+│   └── use-case/           # Orquestación de cada operación
+├── domain/
+│   ├── entities/           # Entidades y tipos del negocio
+│   ├── errors/             # Errores expresivos del dominio
+│   ├── repositories/       # Contratos abstractos de persistencia
+│   └── value-objects/      # Reglas de valores como códigos y permisos
+├── infrastructure/
+│   ├── prisma-*.repository.ts # Lecturas que implementan contratos
+│   ├── prisma-*.writer.ts     # Escrituras reutilizables y transacciones
+│   └── role.mapper.ts         # Conversión entre persistencia y dominio
+├── presentation/
+│   ├── dto/                # Validación de entrada HTTP
+│   └── http/               # Controllers, rutas, guards y decoradores
+└── role.module.ts          # Composición e inyección de dependencias
+```
+
+Cada capa tiene una responsabilidad definida:
+
+- `presentation` traduce HTTP a una entrada válida para la aplicación. Define
+  rutas, parámetros, DTO, guards y códigos de respuesta; no implementa reglas de
+  negocio ni accede a Prisma.
+- `application` contiene casos de uso. Coordina entidades, repositorios y
+  transacciones, pero no conoce controllers, cookies ni detalles HTTP.
+- `domain` contiene conceptos y contratos del negocio. No depende de NestJS,
+  Prisma ni de la forma de transporte.
+- `infrastructure` implementa los contratos definidos por el dominio mediante
+  Prisma u otros proveedores externos.
+- `*.module.ts` es la raíz de composición del módulo: registra controllers,
+  casos de uso y la implementación concreta de cada dependencia abstracta.
+
+La dirección de dependencias es:
+
+```text
+presentation ──> application ──> domain
+                         ▲           ▲
+                         │           │
+                    composición  infrastructure
+```
+
+`infrastructure` depende de los contratos del dominio; el dominio nunca conoce
+la implementación Prisma. El módulo de NestJS conecta ambos mediante
+`provide/useClass` o el mecanismo de inyección apropiado.
+
+### Flujo backend de referencia: listado de roles
+
+```text
+GET /role/get-list-org?organizationId=<uuid>
+  → JwtAuthGuard
+  → CoreAccessGuard
+  → @RequireCoreAccess('roles:read')
+  → ListRolesQueryDto
+  → ListRolesByOrganizationScopeUseCase
+  → RoleRepository
+  → PrismaRoleRepository
+  → @app/db
+  → PostgreSQL
+```
+
+El controller recibe y valida la petición, y después delega. El caso de uso
+decide qué operación del dominio ejecutar. `RoleRepository` expresa lo que la
+aplicación necesita sin imponer Prisma. `PrismaRoleRepository` traduce esa
+necesidad al acceso persistente.
+
+Para una escritura, como `POST /role/create`, se mantiene la misma separación:
+el DTO valida el borde HTTP, el guard exige `roles:create`, el caso de uso aplica
+las reglas y un writer o repositorio realiza la persistencia. Las operaciones
+que deban ser atómicas se ejecutan en una transacción dentro de infraestructura,
+no desde el controller.
+
+### Reglas para módulos backend
+
+1. Crear el módulo dentro de `src/modules/<feature>`.
+2. Definir primero los conceptos y contratos necesarios en `domain`.
+3. Crear un caso de uso por operación significativa en `application/use-case`.
+4. Validar la entrada externa con DTO en `presentation/dto`.
+5. Mantener controllers delgados y protegidos por autenticación y permisos.
+6. Implementar persistencia y adaptadores en `infrastructure`.
+7. Registrar dependencias abstractas y concretas en el módulo de NestJS.
+8. No retornar modelos Prisma directamente si el contrato público requiere una
+   forma diferente; usar un mapper o contrato de salida.
+
+## Arquitectura de base de datos
+
+`packages/db` es el dueño único del esquema, los contratos generados y las
+migraciones de la base compartida. El backend lo consume como la dependencia
+local `@app/db`.
+
+```text
+packages/db/
+├── src/
+│   ├── index.ts                    # Exportaciones públicas del paquete
+│   └── prisma/
+│       ├── schema.ts               # Definición del esquema
+│       └── generated/              # Contrato generado
+├── migrations/
+│   ├── app/                        # Migraciones versionadas
+│   └── snapshots/                  # Contratos históricos verificables
+├── prisma.config.ts                # Configuración de Prisma
+└── scripts/copy-artifacts.mjs      # Empaquetado de artefactos generados
+```
+
+```text
+packages/db ──> @app/db ──> core/backend
+```
+
+- Los cambios del esquema y las migraciones se realizan en `packages/db`.
+- El backend consume el contrato publicado por `@app/db`; no mantiene una
+  segunda definición de las tablas.
+- El frontend no importa `@app/db` ni conoce modelos de persistencia.
+- Una migración debe revisarse antes de aplicarse y conservarse en control de
+  versiones junto con su contrato.
+- La versión de PostgreSQL debe documentarse en la configuración de despliegue
+  cuando esta quede definida; no se debe inferir desde el cliente Prisma.
+
+Los comandos principales del paquete son:
+
+| Comando | Responsabilidad |
+| --- | --- |
+| `npm run build` | Compila el paquete y copia sus artefactos |
+| `npm run contract:emit` | Genera el contrato Prisma |
+| `npm run db:init` | Inicializa la base administrada por Prisma |
+| `npm run db:update` | Actualiza el estado de la base |
+| `npm run db:verify` | Verifica que contrato y base sean compatibles |
+| `npm run migration:plan` | Prepara y permite revisar una migración |
+| `npm run migration:status` | Consulta el estado de las migraciones |
+| `npm run migrate` | Aplica las migraciones previstas |
+
+## Dependencias por aplicación y paquete
+
+Las versiones de esta sección reflejan los manifiestos actuales. Cuando una
+dependencia cambie, se debe actualizar su `package.json`, el lockfile
+correspondiente y esta documentación en el mismo cambio.
+
+### Frontend (`core/frontend`)
+
+| Dependencia | Versión | Responsabilidad |
+| --- | --- | --- |
+| Next.js | `16.3.1` | Enrutado, renderizado, Server Actions y BFF |
+| React / React DOM | `19.2.8` | Composición y estado de la interfaz |
+| TanStack Query | `5.100.14` | Caché, queries, mutaciones e invalidaciones |
+| Axios | `1.20.0` | Cliente HTTP del navegador hacia `/api` |
+| React Hook Form | `^7.88.0` | Estado y envío eficiente de formularios |
+| Zod | `^4.6.5` | Validación, transformación e inferencia de tipos |
+| Hook Form Resolvers | `^5.9.1` | Integración entre React Hook Form y Zod |
+| Tailwind CSS | `^4` | Utilidades visuales y sistema de estilos |
+| TypeScript | `^5` | Tipado y verificación estática |
+| ESLint / eslint-config-next | `^9` / `16.3.1` | Calidad y convenciones del código |
+
+### Backend (`core/backend`)
+
+| Dependencia | Versión | Responsabilidad |
+| --- | --- | --- |
+| NestJS | `11.0.1` | Framework HTTP, módulos e inyección de dependencias |
+| `@app/db` | `file:../../packages/db` | Contrato local de persistencia compartido |
+| Prisma ORM PostgreSQL | `8.0.0-rc.4` | Acceso tipado a PostgreSQL |
+| class-validator | `0.15.1` | Validación declarativa de DTO |
+| class-transformer | `0.5.1` | Normalización y transformación de entradas |
+| jose | `^5.10.0` | Firma y verificación de JWT |
+| bcryptjs | `^3.0.3` | Hash y verificación de contraseñas |
+| RxJS | `7.8.1` | Primitivas reactivas utilizadas por NestJS |
+| dotenv | `17.4.2` | Carga de configuración de entorno |
+| TypeScript | `5.9` | Compilación y tipado del backend |
+| ESLint / Prettier | `9.18.0` / `3.4.2` | Calidad y formato del código |
+| Prisma CLI | `7.9.1` | Herramientas locales del backend, incluido Studio |
+
+### Base de datos (`packages/db`)
+
+| Dependencia | Versión | Responsabilidad |
+| --- | --- | --- |
+| PostgreSQL | Definida por despliegue | Motor relacional de la aplicación |
+| Prisma ORM PostgreSQL | `8.0.0-rc.4` | Contrato de acceso al motor PostgreSQL |
+| Prisma CLI | `8.0.0-rc.6` | Contratos, operaciones de base y migraciones |
+| Prisma CLI Engine | `0.2.0` | Motor utilizado por las herramientas Prisma |
+| dotenv | `17.4.2` | Configuración local del paquete |
+| TypeScript | `5.9` | Compilación del contrato de base de datos |
+
+Las dependencias marcadas como `rc` son versiones candidatas. Deben actualizarse
+de forma coordinada entre `packages/db` y los consumidores; no se debe cambiar
+una versión de Prisma de manera aislada.
+
+## Flujo transversal de una petición
+
+```text
+Interfaz de la feature
+  → validación React Hook Form + Zod
+  → mutación de TanStack Query
+  → servicio HTTP
+  → BFF de Next.js y cookie HttpOnly
+  → guard de autenticación de NestJS
+  → guard de autorización
+  → DTO y transformación de entrada
+  → caso de uso
+  → contrato de repositorio
+  → implementación Prisma
+  → @app/db
+  → PostgreSQL
+```
+
+La validación existe en más de una frontera con objetivos distintos: el
+frontend ofrece respuesta inmediata al usuario y el backend protege el sistema
+frente a cualquier cliente. Los tipos TypeScript no sustituyen la validación en
+tiempo de ejecución.
+
+## Checklist para nuevas funcionalidades
+
+### Frontend
+
+- Ubicar la capacidad dentro de la feature correcta.
+- Declarar endpoints y claves de TanStack Query con todos sus parámetros.
+- Mantener servicios HTTP sin estado de React ni acceso a tokens.
+- Inferir tipos desde Zod cuando el esquema represente el contrato completo.
+- Separar estado local de interfaz y estado remoto del servidor.
+- Registrar la operación permitida en el proxy BFF cuando corresponda.
+- Comprobar estados de carga, error, vacío y éxito.
+
+### Backend
+
+- Proteger el endpoint con autenticación y permiso explícito.
+- Validar y transformar toda entrada mediante DTO.
+- Delegar la operación desde el controller a un caso de uso.
+- Definir contratos abstractos para persistencia o servicios externos.
+- Implementar esos contratos en infraestructura y registrarlos en el módulo.
+- Usar transacciones para cambios que deban confirmarse de forma atómica.
+- Añadir pruebas para reglas, permisos y casos de error relevantes.
+
+### Base de datos
+
+- Modificar el esquema únicamente desde `packages/db`.
+- Generar y revisar el plan de migración antes de aplicarlo.
+- Verificar el contrato y conservar migraciones y snapshots.
+- Actualizar `@app/db` en los consumidores cuando cambie el contrato.
+- No exponer modelos de base de datos directamente al frontend.
+
+### Verificación
+
+- Ejecutar lint y comprobación de TypeScript en la aplicación modificada.
+- Ejecutar las pruebas del backend afectado.
+- Ejecutar el build de frontend y backend.
+- Verificar manualmente el flujo completo a través del BFF.
