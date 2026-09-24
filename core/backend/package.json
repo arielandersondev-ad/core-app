@@ -14,6 +14,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "npm run build && node --test test/**/*.test.mjs",
     "studio": "prisma studio --config ./prisma.studio.config.ts"
   },
   "dependencies": {

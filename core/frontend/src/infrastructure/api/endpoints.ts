@@ -5,4 +5,7 @@ export const ENDPOINTS = {
     LOGOUT: "/auth/logout",
     ME: "/auth/me",
   },
+  ORGANIZATIONS: {
+    SETUP: "/organizations/setup",
+  },
 } as const;

@@ -5,6 +5,7 @@ import { Modal } from "@/shared/components/ui/Modal";
 import { OrganizationGeneralForm } from "./forms/organization-general-form";
 import { RoleGeneralForm } from "./forms/role-general-form";
 import { BranchGeneralForm } from "./forms/branch-general-form";
+import { createOrganizationSetup } from "../data/create-organization-setup";
 import {
   initialFormData,
   type BranchFormData,
@@ -32,7 +33,7 @@ function readOrganization(formData: FormData): OrganizationFormData {
     name: getValue(formData, "name"),
     legalName: getValue(formData, "legalName"),
     taxId: getValue(formData, "taxId"),
-    city: getValue(formData, "city"),
+    country: getValue(formData, "country"),
     email: getValue(formData, "email"),
     phone: getValue(formData, "phone"),
     timezone: getValue(formData, "timezone"),
@@ -52,11 +53,12 @@ function readBranch(formData: FormData): BranchFormData {
   return {
     name: getValue(formData, "name"),
     code: getValue(formData, "code"),
+    city: getValue(formData, "city"),
     country: getValue(formData, "country"),
     email: getValue(formData, "email"),
     phone: getValue(formData, "phone"),
-    latitude: getValue(formData, "latitude"),
-    longitude: getValue(formData, "longitude"),
+    latitude: Number(getValue(formData, "latitude")),
+    longitude: Number(getValue(formData, "longitude")),
     timezone: getValue(formData, "timezone"),
     postalCode: getValue(formData, "postalCode"),
     addressLine1: getValue(formData, "addressLine1"),
@@ -71,6 +73,8 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
   const [organizationFormKey, setOrganizationFormKey] = useState(0);
   const [roleFormKey, setRoleFormKey] = useState(0);
   const [branchFormKey, setBranchFormKey] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -82,6 +86,8 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
     setOrganizationFormKey((key) => key + 1);
     setRoleFormKey((key) => key + 1);
     setBranchFormKey((key) => key + 1);
+    setIsSubmitting(false);
+    setSubmitError(null);
   }, [open]);
 
   function handleClose() {
@@ -131,15 +137,26 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
     }));
   }
 
-  function handleCreate() {
+  async function handleCreate() {
     if (wizardData.roles.length === 0 || wizardData.branches.length === 0) {
       return;
     }
 
-    console.log("Datos enviados:", wizardData);
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Reemplazar por la llamada a la API. Cerrar solo después de que responda correctamente.
-    onClose();
+    try {
+      await createOrganizationSetup(wizardData);
+      onClose();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear la organización",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -209,6 +226,15 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
           )}
         </div>
 
+        {submitError && (
+          <p
+            role="alert"
+            className="border-t border-danger/20 bg-danger/10 px-5 py-3 text-sm text-danger sm:px-6"
+          >
+            {submitError}
+          </p>
+        )}
+
         <footer className="flex items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
           <button
             type="button"
@@ -250,13 +276,16 @@ export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDi
                 handleCreate();
               }}
               disabled={
+                isSubmitting ||
                 (currentStep === 1 && wizardData.roles.length === 0) ||
                 (currentStep === 2 && wizardData.branches.length === 0)
               }
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-40"
             >
               {currentStep === steps.length - 1
-                ? "Crear organización"
+                ? isSubmitting
+                  ? "Creando..."
+                  : "Crear organización"
                 : "Siguiente"}
             </button>
           </div>
