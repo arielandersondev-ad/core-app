@@ -2,7 +2,7 @@ export type OrganizationFormData = {
   name: string;
   legalName: string;
   taxId: string;
-  city: string;
+  country: string;
   email: string;
   phone: string;
   timezone: string;
@@ -18,11 +18,12 @@ export type RoleFormData = {
 export type BranchFormData = {
   name: string;
   code: string;
+  city: string;
   country: string;
   email: string;
   phone: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   timezone: string;
   postalCode: string;
   addressLine1: string;
@@ -40,7 +41,7 @@ export const initialFormData: CreateOrganizationPayload = {
     name: "",
     legalName: "",
     taxId: "",
-    city: "",
+    country: "BO",
     email: "",
     phone: "",
     timezone: "America/La_Paz",
