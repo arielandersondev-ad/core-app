@@ -77,17 +77,23 @@ export function OrganizationGeneralForm({ defaultValues }: OrganizationGeneralFo
 
         <label>
           <span className={labelClassName}>
-            Ciudad <span className="text-danger">*</span>
+            País <span className="text-danger">*</span>
           </span>
 
-          <input
+          <select
             required
-            name="city"
-            type="text"
-            defaultValue={defaultValues.city}
-            placeholder="Ej. La Paz"
+            name="country"
+            defaultValue={defaultValues.country}
             className={inputClassName}
-          />
+          >
+            <option value="BO">Bolivia</option>
+            <option value="PE">Perú</option>
+            <option value="CL">Chile</option>
+            <option value="CO">Colombia</option>
+            <option value="MX">México</option>
+            <option value="AR">Argentina</option>
+            <option value="EC">Ecuador</option>
+          </select>
         </label>
 
         <label>

@@ -9,10 +9,19 @@ import { ListOrganizationsUseCase } from "./application/use-case/list-organizati
 import { ListBranchesByOrganizationUseCase } from "./application/use-case/list-branches.use-case.js";
 import { OrganizationRepository } from "./domain/repositories/organization.repository.js";
 import { BranchRepository } from "./domain/repositories/branch.repository.js";
-import { AuthSecurityModule } from '../auth/auth-security.module.js';
+import { AuthSecurityModule } from "../auth/auth-security.module.js";
+import { RoleModule } from '../role/role.module.js';
+import { PrismaOrganizationWriter } from './infrastructure/prisma-organization.writer.js';
+import { PrismaBranchWriter } from './infrastructure/prisma-branch.writer.js';
+import { PrismaOrganizationProvisioningRepository } from './infrastructure/prisma-organization-provisioning.repository.js';
+import { OrganizationProvisioningRepository } from './domain/repositories/organization-provisioning.repository.js';
+import { CreateOrganizationSetupUseCase } from './application/use-case/create-organization-setup.use-case.js';
 
 @Module({
-    imports: [AuthSecurityModule],
+    imports: [
+        AuthSecurityModule,
+        RoleModule
+    ],
     controllers: [
         OrganizationController,
         BranchController,
@@ -30,6 +39,11 @@ import { AuthSecurityModule } from '../auth/auth-security.module.js';
         CreateBranchUseCase,
         ListOrganizationsUseCase,
         ListBranchesByOrganizationUseCase,
+        PrismaOrganizationWriter,
+        PrismaBranchWriter,
+        PrismaOrganizationProvisioningRepository,
+        OrganizationProvisioningRepository,
+        CreateOrganizationSetupUseCase,
     ],
     exports: [],
 })

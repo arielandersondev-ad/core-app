@@ -3,6 +3,8 @@ import { CreateOrganizationUseCase } from "../../application/use-case/create-org
 import { ListOrganizationsUseCase } from "../../application/use-case/list-organizations.use-case.js";
 import { ListBranchesByOrganizationUseCase } from "../../application/use-case/list-branches.use-case.js";
 import { CreateOrganizationDto } from "../dto/create-organization.dto.js";
+import { CreateOrganizationSetupUseCase } from '../../application/use-case/create-organization-setup.use-case.js';
+import { ReqCreateOrganizationSetupDto } from '../dto/organization-setup.dto.js';
 import { JwtAuthGuard } from '../../../auth/presentation/http/guards/jwt-auth.guard.js';
 import { CoreAccessGuard } from '../../../auth/presentation/http/guards/core-access.guard.js';
 import { RequireCoreAccess } from '../../../auth/presentation/http/decorators/require-core-access.decorator.js';
@@ -10,11 +12,17 @@ import { RequireCoreAccess } from '../../../auth/presentation/http/decorators/re
 @Controller('organizations')
 @UseGuards(JwtAuthGuard, CoreAccessGuard)
 export class OrganizationController {
-    constructor(
-        private readonly createOrganizationUseCase: CreateOrganizationUseCase,
-        private readonly listOrganizationsUseCase: ListOrganizationsUseCase,
-        private readonly listBranchesByOrganizationUseCase: ListBranchesByOrganizationUseCase,
-    ) {}
+  constructor(
+    private readonly createOrganizationUseCase: CreateOrganizationUseCase,
+    private readonly createOrganizationSetupUseCase: CreateOrganizationSetupUseCase,
+    private readonly listOrganizationsUseCase: ListOrganizationsUseCase,
+    private readonly listBranchesByOrganizationUseCase: ListBranchesByOrganizationUseCase,
+  ) {}
+
+  @Post('setup')
+  createSetup(@Body() data: ReqCreateOrganizationSetupDto) {
+    return this.createOrganizationSetupUseCase.execute(data);
+  }
 
     @Post()
     @RequireCoreAccess('organizations:create')
@@ -31,7 +39,7 @@ export class OrganizationController {
     }
 
     @Get(':organizationId/branches')
-    @RequireCoreAccess('branches:read')
+    @RequireCoreAccess('organizations:read')
     async listBranches(
         @Param('organizationId') organizationId: string
     ) {

@@ -77,17 +77,38 @@ export function BranchGeneralForm({ branches, onRemove }: BranchGeneralFormProps
 
         <label>
           <span className={labelClassName}>
-            País <span className="text-danger">*</span>
+            Ciudad <span className="text-danger">*</span>
           </span>
 
           <input
             required
-            name="country"
+            name="city"
             type="text"
             autoComplete="address-level2"
             placeholder="Ej. La Paz"
             className={inputClassName}
           />
+        </label>
+
+        <label>
+          <span className={labelClassName}>
+            País <span className="text-danger">*</span>
+          </span>
+
+          <select
+            required
+            name="country"
+            defaultValue="BO"
+            className={inputClassName}
+          >
+            <option value="BO">Bolivia</option>
+            <option value="PE">Perú</option>
+            <option value="CL">Chile</option>
+            <option value="CO">Colombia</option>
+            <option value="MX">México</option>
+            <option value="AR">Argentina</option>
+            <option value="EC">Ecuador</option>
+          </select>
         </label>
 
         <label>
@@ -234,7 +255,7 @@ export function BranchGeneralForm({ branches, onRemove }: BranchGeneralFormProps
                   </p>
                   <p className="mt-0.5 font-mono text-xs text-primary">{branch.code}</p>
                   <p className="mt-2 text-xs text-muted">
-                    {branch.country} · {branch.email}
+                    {branch.city}, {branch.country} · {branch.email}
                   </p>
                 </div>
 

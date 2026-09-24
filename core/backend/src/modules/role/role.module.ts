@@ -4,10 +4,12 @@ import { RoleController } from "./presentation/http/role.controller.js";
 import { ListRolesByOrganizationScopeUseCase } from "./application/use-case/list-roles.use-case.js";
 import { RoleRepository } from "./domain/repositories/role.repository.js";
 import { CreateRoleUseCase } from "./application/use-case/create-role.use-case.js";
+import { PrismaRoleWriter } from './infrastructure/prisma-role.writer.js';
 import { AuthSecurityModule } from "../auth/auth-security.module.js";
 import { ListPermissionByRoleIdUseCase } from "./application/use-case/list-permmision.use-case.js";
 import { PermissionRepository } from "./domain/repositories/permission.repository.js";
 import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.repository.js";
+
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.r
     RoleController,
   ],
   providers: [
+    PrismaRoleWriter,
     {
       provide: RoleRepository,
       useClass: PrismaRoleRepository,
@@ -27,8 +30,8 @@ import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.r
     },
     ListRolesByOrganizationScopeUseCase,
     ListPermissionByRoleIdUseCase,
-    CreateRoleUseCase
+    CreateRoleUseCase,
   ],
-  exports: [],
+  exports: [PrismaRoleWriter],
 })
 export class RoleModule {}
