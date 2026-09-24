@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Avatar, Badge, Icons } from '@/shared/components/ui';
 import { useUsers } from '@/features/user/hooks/use-users';
 import { isAxiosError } from 'axios';
 
 export default function UserList() {
+  const router = useRouter();
   const query = useUsers();
   const users = query.data ?? [];
   const error = query.isError
@@ -49,6 +51,13 @@ export default function UserList() {
           <option value="all">Todas las organizaciones</option>
           {organizations.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
         </select>
+        <button
+          type="button"
+          onClick={() => router.push('/users/create')}
+          className="ml-auto hidden h-9 items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-display font-semibold text-primary-foreground transition-opacity hover:opacity-90 md:flex"
+        >
+          {Icons.plus} Nuevo usuario
+        </button>
       </div>
       <div className="overflow-x-auto rounded-md border border-border bg-surface">
         <table className="w-full min-w-[760px] text-left text-sm">
@@ -68,6 +77,14 @@ export default function UserList() {
         {!error && !query.isPending && filtered.length === 0 && <p className="p-8 text-center text-sm text-muted">Sin resultados</p>}
         <p className="border-t border-border px-4 py-2 text-xs text-muted">{filtered.length} de {users.length} usuarios</p>
       </div>
+      <button
+        type="button"
+        aria-label="Crear usuario"
+        onClick={() => router.push('/users/create')}
+        className="fixed bottom-20 right-4 z-10 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:opacity-80 md:hidden"
+      >
+        {Icons.plus}
+      </button>
     </div>
   );
 }

@@ -1,296 +1,102 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { Modal } from "@/shared/components/ui/Modal";
-import { OrganizationGeneralForm } from "./forms/organization-general-form";
-import { RoleGeneralForm } from "./forms/role-general-form";
-import { BranchGeneralForm } from "./forms/branch-general-form";
-import { createOrganizationSetup } from "../data/create-organization-setup";
-import {
-  initialFormData,
-  type BranchFormData,
-  type CreateOrganizationPayload,
-  type OrganizationFormData,
-  type RoleFormData,
-} from "./forms/types";
+import { useCreateOrganizationSetup } from "../hooks/use-organizations";
+import { useCreateOrganizationWizard } from "../hooks/use-create-organization-wizard";
+import { BranchesStep } from "./forms/branches-step";
+import { OrganizationStep } from "./forms/organization-step";
+import { RolesStep } from "./forms/roles-step";
+import { CreateOrganizationWizardActions } from "./create-organization-wizard-actions";
+import { CreateOrganizationWizardHeader } from "./create-organization-wizard-header";
 
 type CreateOrganizationDialogProps = {
   open: boolean;
   onClose: () => void;
 };
 
-const steps = [
-  { number: 1, label: "Organización" },
-  { number: 2, label: "Roles" },
-  { number: 3, label: "Sucursal" },
-];
-function getValue(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "");
-}
-
-function readOrganization(formData: FormData): OrganizationFormData {
-  return {
-    name: getValue(formData, "name"),
-    legalName: getValue(formData, "legalName"),
-    taxId: getValue(formData, "taxId"),
-    country: getValue(formData, "country"),
-    email: getValue(formData, "email"),
-    phone: getValue(formData, "phone"),
-    timezone: getValue(formData, "timezone"),
-    website: getValue(formData, "website"),
-  };
-}
-
-function readRole(formData: FormData): RoleFormData {
-  return {
-    name: getValue(formData, "name"),
-    code: getValue(formData, "code"),
-    description: getValue(formData, "description"),
-  };
-}
-
-function readBranch(formData: FormData): BranchFormData {
-  return {
-    name: getValue(formData, "name"),
-    code: getValue(formData, "code"),
-    city: getValue(formData, "city"),
-    country: getValue(formData, "country"),
-    email: getValue(formData, "email"),
-    phone: getValue(formData, "phone"),
-    latitude: Number(getValue(formData, "latitude")),
-    longitude: Number(getValue(formData, "longitude")),
-    timezone: getValue(formData, "timezone"),
-    postalCode: getValue(formData, "postalCode"),
-    addressLine1: getValue(formData, "addressLine1"),
-    addressLine2: getValue(formData, "addressLine2"),
-  };
-}
-
 export function CreateOrganizationDialog({ open, onClose }: CreateOrganizationDialogProps) {
-  const formRef = useRef<HTMLFormElement>(null);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [wizardData, setWizardData] = useState<CreateOrganizationPayload>(initialFormData);
-  const [organizationFormKey, setOrganizationFormKey] = useState(0);
-  const [roleFormKey, setRoleFormKey] = useState(0);
-  const [branchFormKey, setBranchFormKey] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const wizard = useCreateOrganizationWizard();
+  const createOrganization = useCreateOrganizationSetup();
+  const resetWizard = wizard.reset;
+  const resetMutation = createOrganization.reset;
 
   useEffect(() => {
-    if (open) {
-      return;
+    if (!open) {
+      resetWizard();
+      resetMutation();
     }
-
-    setCurrentStep(0);
-    setWizardData(initialFormData);
-    setOrganizationFormKey((key) => key + 1);
-    setRoleFormKey((key) => key + 1);
-    setBranchFormKey((key) => key + 1);
-    setIsSubmitting(false);
-    setSubmitError(null);
-  }, [open]);
-
-  function handleClose() {
-    onClose();
-  }
-
-  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-
-    if (currentStep === 0) {
-      setWizardData((data) => ({
-        ...data,
-        organization: readOrganization(formData),
-      }));
-      setCurrentStep(1);
-      return;
-    }
-
-    if (currentStep === 1) {
-      setWizardData((data) => ({
-        ...data,
-        roles: [...data.roles, readRole(formData)],
-      }));
-      setRoleFormKey((key) => key + 1);
-      return;
-    }
-
-    setWizardData((data) => ({
-      ...data,
-      branches: [...data.branches, readBranch(formData)],
-    }));
-    setBranchFormKey((key) => key + 1);
-  }
-
-  function removeRole(indexToRemove: number) {
-    setWizardData((data) => ({
-      ...data,
-      roles: data.roles.filter((_, index) => index !== indexToRemove),
-    }));
-  }
-
-  function removeBranch(indexToRemove: number) {
-    setWizardData((data) => ({
-      ...data,
-      branches: data.branches.filter((_, index) => index !== indexToRemove),
-    }));
-  }
+  }, [open, resetWizard, resetMutation]);
 
   async function handleCreate() {
-    if (wizardData.roles.length === 0 || wizardData.branches.length === 0) {
+    if (wizard.data.roles.length === 0 || wizard.data.branches.length === 0) {
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      await createOrganizationSetup(wizardData);
-      onClose();
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "No se pudo crear la organización",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    await createOrganization.mutateAsync(wizard.data, {
+      onSuccess: onClose,
+    });
   }
+
+  const error = createOrganization.error instanceof Error
+    ? createOrganization.error.message
+    : createOrganization.error
+      ? "No se pudo crear la organización."
+      : null;
+
+  const canContinue = wizard.currentStep === 0
+    || (wizard.currentStep === 1 && wizard.data.roles.length > 0)
+    || (wizard.currentStep === 2 && wizard.data.branches.length > 0);
 
   return (
     <Modal
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       title="Crear organización"
       description="Configura la organización, sus roles y sucursales."
     >
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="flex min-h-0 flex-1 flex-col"
-      >
-        <ol className="grid grid-cols-3 border-b border-border px-5 sm:px-6">
-          {steps.map((step, index) => {
-            const active = index === currentStep;
-            const completed = index < currentStep;
-
-            return (
-              <li
-                key={step.number}
-                className={[
-                  "relative flex min-h-16 items-center gap-2 text-xs sm:text-sm",
-                  active || completed ? "text-primary" : "text-muted",
-                  active
-                    ? "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-primary"
-                    : "",
-                ].join(" ")}
-              >
-                <span
-                  className={[
-                    "flex size-7 shrink-0 items-center justify-center rounded-full border",
-                    active || completed
-                      ? "border-primary bg-primary-subtle font-semibold"
-                      : "border-border",
-                  ].join(" ")}
-                >
-                  {step.number}
-                </span>
-                <span className="hidden sm:inline">{step.label}</span>
-              </li>
-            );
-          })}
-        </ol>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <CreateOrganizationWizardHeader currentStep={wizard.currentStep} />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-          {currentStep === 0 && (
-            <OrganizationGeneralForm
-              key={organizationFormKey}
-              defaultValues={wizardData.organization}
+          {wizard.currentStep === 0 && (
+            <OrganizationStep
+              defaultValues={wizard.data.organization}
+              onSubmit={wizard.saveOrganization}
             />
           )}
-          {currentStep === 1 && (
-            <RoleGeneralForm
-              key={roleFormKey}
-              roles={wizardData.roles}
-              onRemove={removeRole}
+          {wizard.currentStep === 1 && (
+            <RolesStep
+              roles={wizard.data.roles}
+              onAdd={wizard.addRole}
+              onRemove={wizard.removeRole}
             />
           )}
-          {currentStep === 2 && (
-            <BranchGeneralForm
-              key={branchFormKey}
-              branches={wizardData.branches}
-              onRemove={removeBranch}
+          {wizard.currentStep === 2 && (
+            <BranchesStep
+              branches={wizard.data.branches}
+              onAdd={wizard.addBranch}
+              onRemove={wizard.removeBranch}
             />
           )}
         </div>
 
-        {submitError && (
-          <p
-            role="alert"
-            className="border-t border-danger/20 bg-danger/10 px-5 py-3 text-sm text-danger sm:px-6"
-          >
-            {submitError}
+        {error && (
+          <p role="alert" className="border-t border-danger/20 bg-danger/10 px-5 py-3 text-sm text-danger sm:px-6">
+            {error}
           </p>
         )}
 
-        <footer className="flex items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
-          <button
-            type="button"
-            onClick={() => setCurrentStep((step) => step - 1)}
-            disabled={currentStep === 0}
-            className={[
-              "rounded-lg border border-border px-4 py-2.5 text-sm",
-              "text-foreground transition-colors hover:bg-neutral-subtle",
-              "disabled:pointer-events-none disabled:opacity-40",
-            ].join(" ")}
-          >
-            Atrás
-          </button>
-
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="rounded-lg px-4 py-2.5 text-sm text-muted hover:text-foreground"
-            >
-              Cancelar
-            </button>
-
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-
-                if (currentStep === 0) {
-                  formRef.current?.requestSubmit();
-                  return;
-                }
-
-                if (currentStep === 1) {
-                  setCurrentStep(2);
-                  return;
-                }
-
-                handleCreate();
-              }}
-              disabled={
-                isSubmitting ||
-                (currentStep === 1 && wizardData.roles.length === 0) ||
-                (currentStep === 2 && wizardData.branches.length === 0)
-              }
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-40"
-            >
-              {currentStep === steps.length - 1
-                ? isSubmitting
-                  ? "Creando..."
-                  : "Crear organización"
-                : "Siguiente"}
-            </button>
-          </div>
-        </footer>
-      </form>
+        <CreateOrganizationWizardActions
+          currentStep={wizard.currentStep}
+          canContinue={canContinue}
+          isSubmitting={createOrganization.isPending}
+          onBack={wizard.goBack}
+          onCancel={onClose}
+          onContinue={wizard.goToBranches}
+          onCreate={() => void handleCreate()}
+        />
+      </div>
     </Modal>
   );
 }

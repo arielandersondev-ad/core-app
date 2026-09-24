@@ -4,6 +4,7 @@ import { useState } from "react";
 import { isAxiosError } from 'axios';
 import { OrganizationMobileCard } from "../components/organization-mobile-card";
 import { OrganizationTable } from "../components/organization-table";
+import { CreateOrganizationButton } from "../components/create-organization-button";
 import { useOrganizations } from '../hooks/use-organizations';
 
 function SearchIcon() {
@@ -68,6 +69,8 @@ export function OrganizationsPage() {
             Organizaciones registradas en la plataforma.
           </p>
         </div>
+
+        <CreateOrganizationButton />
       </header>
 
       {query.isPending && <p role="status" className="mt-6 text-sm text-muted">Cargando organizaciones…</p>}

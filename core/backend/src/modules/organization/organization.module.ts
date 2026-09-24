@@ -18,33 +18,35 @@ import { OrganizationProvisioningRepository } from './domain/repositories/organi
 import { CreateOrganizationSetupUseCase } from './application/use-case/create-organization-setup.use-case.js';
 
 @Module({
-    imports: [
-        AuthSecurityModule,
-        RoleModule
-    ],
-    controllers: [
-        OrganizationController,
-        BranchController,
-    ],
-    providers: [
-        {
-            provide: OrganizationRepository,
-            useClass: PrismaOrganizationRepository,
-        },
-        {
-            provide: BranchRepository,
-            useClass: PrismaBranchRepository,
-        },
-        CreateOrganizationUseCase,
-        CreateBranchUseCase,
-        ListOrganizationsUseCase,
-        ListBranchesByOrganizationUseCase,
-        PrismaOrganizationWriter,
-        PrismaBranchWriter,
-        PrismaOrganizationProvisioningRepository,
-        OrganizationProvisioningRepository,
-        CreateOrganizationSetupUseCase,
-    ],
-    exports: [],
+	imports: [
+		AuthSecurityModule,
+		RoleModule
+	],
+	controllers: [
+		OrganizationController,
+		BranchController,
+	],
+	providers: [
+		{
+			provide: OrganizationRepository,
+			useClass: PrismaOrganizationRepository,
+		},
+		{
+			provide: BranchRepository,
+			useClass: PrismaBranchRepository,
+		},
+		{
+			provide: OrganizationProvisioningRepository,
+			useClass: PrismaOrganizationProvisioningRepository,
+		},
+		CreateOrganizationUseCase,
+		CreateBranchUseCase,
+		ListOrganizationsUseCase,
+		ListBranchesByOrganizationUseCase,
+		PrismaOrganizationWriter,
+		PrismaBranchWriter,
+		CreateOrganizationSetupUseCase,
+	],
+	exports: [],
 })
 export class OrganizationModule {}

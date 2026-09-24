@@ -1,9 +1,12 @@
-export type RoleListItem = {
-	id: string;
+export type CreateRole = {
 	organizationId: string | null
 	name: string
 	code: string
 	description: string | null
+}
+
+export type RoleListItem = CreateRole & {
+	id: string;
 	deleted: boolean
 	deletedAt: string | null
 	createdAt: string

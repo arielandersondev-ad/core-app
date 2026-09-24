@@ -5,14 +5,22 @@ export type OrganizationPlan =
   | "professional"
   | "enterprise";
 
-export type Organization = Readonly<{
+export type Organization = CreateOrganization & {
   id: string;
+  deleted: boolean
+  deletedAt: string
+  updatedAt: string
+  createdAt: string
+  status: string
+};
+
+export type CreateOrganization = {
+  email?: string;
+  country: string;
   name: string;
   legalName: string;
+  phone: string;
   taxId: string;
-  city: string;
-  plan: OrganizationPlan;
-  branchesCount: number;
-  usersCount: number;
-  status: OrganizationStatus;
-}>;
+  timezone: string;
+  website?: string
+}

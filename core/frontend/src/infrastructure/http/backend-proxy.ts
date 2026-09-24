@@ -18,6 +18,8 @@ type ProxyRule = {
 };
 
 const proxyRules: readonly ProxyRule[] = [
+
+  //organizasiones
   {
     methods: ['GET', 'POST'],
     pattern: /^organizations$/,
@@ -34,10 +36,18 @@ const proxyRules: readonly ProxyRule[] = [
     backendPath: (match) => `/organizations/${match[1]}/users`,
   },
   {
+    methods: ['POST'],
+    pattern: /^organizations\/setup$/,
+    backendPath: () => '/organizations/setup',
+  },
+
+  //USers
+  {
     methods: ['GET', 'POST'],
     pattern: /^users$/,
     backendPath: () => '/users',
   },
+  //ROles
   {
     methods: ['GET'],
     pattern: /^roles$/,

@@ -1,7 +1,10 @@
 export const ORGANIZATION_ENDPOINTS = {
-  list: '/organizations',
+  collection: '/organizations',
+  createSetup: '/organizations/setup',
 } as const;
 
 export const organizationQueryKeys = {
+  all: ['organizations'] as const,
+
   list: () => ['organizations', 'list'] as const,
 };

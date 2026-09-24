@@ -5,7 +5,7 @@ type ProxyContext = {params: Promise<{ path: string[] }>};
 
 async function handle(request: NextRequest, context: ProxyContext) {
 
-  console.log('Proxying request to backend:', request.method, request.url, 'context: ',context);
+  //console.log('Proxying request to backend:', request.method, request.url, 'context: ',context);
   const { path } = await context.params;
   return proxyToBackend(request, path);
 }

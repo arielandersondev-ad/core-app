@@ -20,29 +20,30 @@ export class OrganizationController {
   ) {}
 
   @Post('setup')
+	@RequireCoreAccess('organizations:create')
   createSetup(@Body() data: ReqCreateOrganizationSetupDto) {
     return this.createOrganizationSetupUseCase.execute(data);
   }
 
-    @Post()
-    @RequireCoreAccess('organizations:create')
-    async createOrganization(
-        @Body() data: CreateOrganizationDto
-    ) {
-        return await this.createOrganizationUseCase.execute(data);
-    }
+	@Post()
+	@RequireCoreAccess('organizations:create')
+	async createOrganization(
+			@Body() data: CreateOrganizationDto
+	) {
+			return await this.createOrganizationUseCase.execute(data);
+	}
 
-    @Get()
-    @RequireCoreAccess('organizations:read')
-    async listOrganizations() {
-        return await this.listOrganizationsUseCase.execute();
-    }
+	@Get()
+	@RequireCoreAccess('organizations:read')
+	async listOrganizations() {
+			return await this.listOrganizationsUseCase.execute();
+	}
 
-    @Get(':organizationId/branches')
-    @RequireCoreAccess('organizations:read')
-    async listBranches(
-        @Param('organizationId') organizationId: string
-    ) {
-        return await this.listBranchesByOrganizationUseCase.execute(organizationId);
-    }
+	@Get(':organizationId/branches')
+	@RequireCoreAccess('organizations:read')
+	async listBranches(
+			@Param('organizationId') organizationId: string
+	) {
+			return await this.listBranchesByOrganizationUseCase.execute(organizationId);
+	}
 }
