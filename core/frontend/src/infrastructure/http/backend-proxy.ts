@@ -43,9 +43,14 @@ const proxyRules: readonly ProxyRule[] = [
 
   //USers
   {
-    methods: ['GET', 'POST'],
+    methods: ['GET'],
     pattern: /^users$/,
     backendPath: () => '/users',
+  },
+  {
+    methods: ['POST'],
+    pattern: /^users\/create$/,
+    backendPath: () => '/users/create',
   },
   //ROles
   {

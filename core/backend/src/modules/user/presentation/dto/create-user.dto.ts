@@ -11,10 +11,10 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
+import { UUID_PATTERN } from "../../../../common/validation/uuid-pattern.js";
 
 // Regex de UUID genérico: acepta v7 (formato del contrato), a diferencia
 // de @IsUUID() que por defecto valida solo v4.
-const UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 export class CreateUserDto {
   @IsEmail()

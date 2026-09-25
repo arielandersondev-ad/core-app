@@ -20,7 +20,7 @@ export class UserController {
     return this.listUsersUseCase.execute();
   }
 
-  @Post()
+  @Post('create')
   @RequireCoreAccess('users:create')
   async createUser(@Body() data: CreateUserDto) {
     return this.createUserUseCase.execute(data);

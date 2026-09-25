@@ -23,3 +23,11 @@ export function useCreateOrganizationSetup() {
     },
   });
 }
+
+export function useBranches(organizationId: string) {
+  return useQuery({
+    queryKey: organizationQueryKeys.branches(organizationId),
+    queryFn: () => organizationService.branchList(organizationId),
+    enabled: Boolean(organizationId)
+  })
+}
