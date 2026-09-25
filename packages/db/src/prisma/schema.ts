@@ -127,6 +127,79 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   });
 
   // =========================================================
+  // PLAN
+  // =========================================================
+  const Plan = model('Plan', {
+    namespace: CORE_NAMESPACE,
+
+    fields: {
+      id: field.id.uuidv7String(),
+
+      // Stable identifier used by Core and the verticals, e.g.
+      // DENTISTRY_STARTER or DENTISTRY_PRO.
+      code: field.text().unique(),
+      name: field.text(),
+      description: field.text().optional(),
+
+      // PUBLIC plans are offered in pricing. CUSTOM plans are assigned
+      // through OrganizationPlan and keep their resolved configuration here.
+      type: field.text().default('PUBLIC'),
+      vertical: field.text(),
+      durationDays: field.int(),
+      configuration: field.json(),
+
+      // Optional because a custom plan may have a privately negotiated price.
+      priceMinor: field.int().optional(),
+      currency: field.text().optional(),
+
+      active: field.boolean().default(true),
+      deleted: field.boolean().default(false),
+      deletedAt: field.temporal.timestamp().optional(),
+
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
+  // =========================================================
+  // ORGANIZATION <-> PLAN
+  // =========================================================
+  const OrganizationPlan = model('OrganizationPlan', {
+    namespace: CORE_NAMESPACE,
+
+    fields: {
+      id: field.id.uuidv7String(),
+
+      organizationId: field.uuidString(),
+      planId: field.uuidString(),
+
+      // Duplicated intentionally to enforce one assignment per
+      // organization and vertical without joining Plan.
+      vertical: field.text(),
+
+      // Expected values: TRIALING, ACTIVE, SUSPENDED or CANCELED.
+      // Expiration is derived from endsAt instead of persisted as a status.
+      status: field.text().default('ACTIVE'),
+
+      startsAt: field.temporal.timestamp(),
+      endsAt: field.temporal.timestamp(),
+
+      // This is the customer's intent, not an automatic charge or extension.
+      // Expected values: UNDECIDED, WANTS_RENEWAL or DOES_NOT_WANT_RENEWAL.
+      renewalPreference: field.text().default('UNDECIDED'),
+      renewalCount: field.int().default(0),
+      lastRenewedAt: field.temporal.timestamp().optional(),
+
+      suspendedAt: field.temporal.timestamp().optional(),
+      suspensionReason: field.text().optional(),
+      canceledAt: field.temporal.timestamp().optional(),
+
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
+  // =========================================================
   // BRANCH
   // =========================================================
   const Branch = model('Branch', {
@@ -363,10 +436,47 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           by: 'organizationId',
         }),
 
+        plans: rel.hasMany(OrganizationPlan, {
+          by: 'organizationId',
+        }),
+
         auditLogs: rel.hasMany(AuditLog, {
           by: 'organizationId',
         }),
       }),
+
+      Plan: Plan.relations({
+        organizations: rel.hasMany(OrganizationPlan, {
+          by: 'planId',
+        }),
+      }),
+
+      OrganizationPlan: OrganizationPlan.relations({
+        organization: rel.belongsTo(Organization, {
+          from: 'organizationId',
+          to: 'id',
+        }),
+
+        plan: rel.belongsTo(Plan, {
+          from: 'planId',
+          to: 'id',
+        }),
+      }).sql(({ cols, constraints }) => ({
+        foreignKeys: [
+          constraints.foreignKey(cols.organizationId, Organization.refs.id),
+          constraints.foreignKey(cols.planId, Plan.refs.id),
+        ],
+        indexes: [
+          constraints.index(
+            [cols.organizationId, cols.vertical],
+            { name: 'organization_plan_vertical_uidx', unique: true },
+          ),
+          constraints.index(
+            [cols.endsAt, cols.status],
+            { name: 'organization_plan_expiration_idx' },
+          ),
+        ],
+      })),
 
       Branch: Branch.relations({
         organization: rel.belongsTo(Organization, {
