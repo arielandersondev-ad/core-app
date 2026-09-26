@@ -836,6 +836,76 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
     },
   });
 
+    // =========================================================
+  // INVENTORY ITEM
+  // =========================================================
+
+  const InventoryItem = model('InventoryItem', {
+    namespace: NAMESPACE,
+
+    fields: {
+      id: field.id.uuidv7String(),
+
+      // External references -> Core
+      organizationId: field.uuidString(),
+      branchId: field.uuidString(),
+
+      sku: field.text(),
+      name: field.text(),
+      description: field.text().optional(),
+      category: field.text().optional(),
+
+      unit: field.text(), // "unidad" | "caja" | "ml" | ...
+
+      minStock: field.int().default(0),
+      currentStock: field.int().default(0),
+
+      active: field.boolean().default(true),
+
+      // External references -> Core.Membership.id
+      createdByMembershipId: field.uuidString(),
+      updatedByMembershipId: field.uuidString().optional(),
+
+      deleted: field.boolean().default(false),
+      deletedAt: field.temporal.timestamp().optional(),
+
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
+  // =========================================================
+  // INVENTORY MOVEMENT
+  // =========================================================
+
+  const InventoryMovement = model('InventoryMovement', {
+    namespace: NAMESPACE,
+
+    fields: {
+      id: field.id.uuidv7String(),
+
+      // External references -> Core
+      organizationId: field.uuidString(),
+      branchId: field.uuidString(),
+
+      itemId: field.uuidString(),
+
+      type: field.text(), // IN | OUT | ADJUSTMENT
+
+      quantity: field.int(),
+      reason: field.text().optional(),
+
+      // Internal references (mismo namespace, sí llevan FK real)
+      relatedTreatmentId: field.uuidString().optional(),
+      relatedClinicalEncounterId: field.uuidString().optional(),
+
+      // External reference -> Core.Membership.id
+      createdByMembershipId: field.uuidString(),
+
+      createdAt: field.temporal.createdAt(),
+    },
+  });
+
   // =========================================================
   // RELATIONS + SQL STORAGE
   // =========================================================
@@ -964,6 +1034,10 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
 
         clinicalFiles: rel.hasMany(ClinicalFile, {
           by: 'treatmentId',
+        }),
+
+        inventoryMovements: rel.hasMany(InventoryMovement, {
+          by: 'relatedTreatmentId',
         }),
       }).sql(({ cols, constraints }) => ({
         table: 'treatments',
@@ -1231,6 +1305,67 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           constraints.index(
             [cols.organizationId, cols.takenAt],
             { name: 'rad_org_taken_idx' },
+          ),
+        ],
+      })),
+
+            InventoryItem: InventoryItem.relations({
+        movements: rel.hasMany(InventoryMovement, {
+          by: 'itemId',
+        }),
+      }).sql(({ cols, constraints }) => ({
+        table: 'inventory_items',
+
+        indexes: [
+          constraints.index(
+            [cols.organizationId, cols.branchId],
+            { name: 'inv_org_branch_idx' },
+          ),
+          constraints.index(
+            [cols.branchId, cols.sku],
+            { name: 'inv_branch_sku_uidx', unique: true },
+          ),
+        ],
+      })),
+
+      InventoryMovement: InventoryMovement.relations({
+        item: rel.belongsTo(InventoryItem, {
+          from: 'itemId',
+          to: 'id',
+        }),
+
+        relatedTreatment: rel.belongsTo(Treatment, {
+          from: 'relatedTreatmentId',
+          to: 'id',
+        }),
+
+        relatedClinicalEncounter: rel.belongsTo(ClinicalEncounter, {
+          from: 'relatedClinicalEncounterId',
+          to: 'id',
+        }),
+      }).sql(({ cols, constraints }) => ({
+        table: 'inventory_movements',
+
+        foreignKeys: [
+          constraints.foreignKey(cols.itemId, InventoryItem.refs.id),
+          constraints.foreignKey(
+            cols.relatedTreatmentId,
+            Treatment.refs.id,
+          ),
+          constraints.foreignKey(
+            cols.relatedClinicalEncounterId,
+            ClinicalEncounter.refs.id,
+          ),
+        ],
+
+        indexes: [
+          constraints.index(
+            [cols.itemId, cols.createdAt],
+            { name: 'invmov_item_created_idx' },
+          ),
+          constraints.index(
+            [cols.organizationId, cols.type],
+            { name: 'invmov_org_type_idx' },
           ),
         ],
       })),
