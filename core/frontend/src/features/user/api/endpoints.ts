@@ -5,5 +5,5 @@ export const USER_ENDPOINTS = {
 
 export const userQueryKeys = {
   all: ['users'] as const,
-  list: () => [userQueryKeys.all, 'list'] as const,
+  list: () => [...userQueryKeys.all, 'list'] as const,
 };

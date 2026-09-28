@@ -9,6 +9,7 @@ import { PermissionEditorPanel } from '../components/permission-editor-panel';
 import { AccessFormDialog } from '../components/access-form-dialog';
 import { Icons } from '@/shared/components/ui/Icons';
 import { useRolePermissions } from '../hooks/use-role-permission';
+import { CreateRoleDialog } from '../components/create-role-dialog';
 
 export default function RolePage() {
   const [organizationId, setOrganizationId] = useState('');
@@ -33,6 +34,8 @@ export default function RolePage() {
     [savedCodes, selectedCodes],
   );
 
+  const [selectedOrganization, setSelectedOrganization] = useState<{ id: string; name: string } | null>(null);
+  const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
   function handleOrganizationChange(nextOrganizationId: string) {
     setOrganizationId(nextOrganizationId);
     setSelectedRoleId('');
@@ -74,7 +77,13 @@ export default function RolePage() {
             Configura qué puede consultar y administrar cada rol dentro de la plataforma.
           </p>
         </div>
-        <OrganizationSelect value={organizationId} onChange={handleOrganizationChange} />
+        <OrganizationSelect
+          value={selectedOrganization?.id ?? ''}
+          onChange={(organization) => {
+            setSelectedOrganization(organization);
+            handleOrganizationChange(organization?.id ?? '');
+          }}
+        />
       </header>
 
       {!organizationId && (
@@ -115,7 +124,7 @@ export default function RolePage() {
             roles={roles}
             selectedRoleId={selectedRoleId}
             onSelectRole={handleSelectRole}
-            onCreateRole={() => setDialog({ kind: 'role', mode: 'create' })}
+            onCreateRole={() => setIsCreateRoleOpen(true)}
           />
           <PermissionEditorPanel
             roleName={selectedRole?.name}
@@ -134,15 +143,24 @@ export default function RolePage() {
         </div>
       )}
 
-      {organizationId && (
+      {selectedOrganization && (
         <button
           type="button"
-          onClick={() => setDialog({ kind: 'role', mode: 'create' })}
+          onClick={() => setIsCreateRoleOpen(true)}
           className="fixed bottom-20 right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-primary px-5 font-display text-sm font-semibold text-primary-foreground shadow-xl transition-transform active:scale-95 lg:hidden"
         >
           <span aria-hidden="true">{Icons.plus}</span>
           Nuevo rol
         </button>
+      )}
+
+      {selectedOrganization && (
+        <CreateRoleDialog
+          open={isCreateRoleOpen}
+          organizationId={selectedOrganization.id}
+          organizationName={selectedOrganization.name}
+          onClose={() => setIsCreateRoleOpen(false)}
+        />
       )}
 
       {dialog && (

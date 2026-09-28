@@ -1,5 +1,6 @@
 export const ROLE_ENDPOINTS = {
   collection: '/roles',
+  create: '/roles',
   permissionsByRoleId: (roleId: string) => `/roles/${roleId}/permissions`,
 } as const;
 

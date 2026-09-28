@@ -26,4 +26,5 @@ export type branchMinimalList = {
 	id: string
 	name: string
 	code: string
+	status: string
 }

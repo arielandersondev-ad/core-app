@@ -1,7 +1,7 @@
 export const ORGANIZATION_ENDPOINTS = {
   collection: '/organizations',
   createSetup: '/organizations/setup',
-  branches: (organizationId: string) => `/organizations/${organizationId}/branches`
+  branches: (organizationId: string) => `/organizations/${organizationId}/branches`,
 } as const;
 
 export const organizationQueryKeys = {
@@ -9,5 +9,9 @@ export const organizationQueryKeys = {
 
   list: () => [organizationQueryKeys.all, 'list'] as const,
 
-  branches: (organizationId: string) => ['organizations', 'branches',organizationId ]
+  branches: (organizationId: string) => [
+    ...organizationQueryKeys.all,
+    'branches',
+    organizationId,
+  ] as const,
 };
