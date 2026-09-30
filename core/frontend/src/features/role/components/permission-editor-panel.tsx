@@ -1,5 +1,6 @@
 'use client';
 
+import { useId, useState } from 'react';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
 import { Icons } from '@/shared/components/ui/Icons';
@@ -10,10 +11,15 @@ type PermissionEditorPanelProps = {
   roleName?: string;
   roleCode?: string;
   readOnly?: boolean;
+  isEditing: boolean;
   permissionGroups: readonly PermissionGroup[];
-  selectedCodes: ReadonlySet<string>;
+  selectedPermissionIds: ReadonlySet<string>;
+  totalPermissions: number;
   hasChanges: boolean;
-  onToggle: (code: string) => void;
+  isSaving: boolean;
+  saveError?: string | null;
+  onToggle: (permissionId: string) => void;
+  onStartEditing: () => void;
   onDiscard: () => void;
   onSave: () => void;
   onEditRole: () => void;
@@ -25,16 +31,33 @@ export function PermissionEditorPanel({
   roleName,
   roleCode,
   readOnly = false,
+  isEditing,
   permissionGroups,
-  selectedCodes,
+  selectedPermissionIds,
+  totalPermissions,
   hasChanges,
+  isSaving,
+  saveError,
   onToggle,
+  onStartEditing,
   onDiscard,
   onSave,
   onEditRole,
   onCreatePermission,
   onEditPermission,
 }: PermissionEditorPanelProps) {
+  const accordionId = useId();
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  function toggleGroup(groupKey: string) {
+    setExpandedGroups((current) => {
+      const next = new Set(current);
+      if (next.has(groupKey)) next.delete(groupKey);
+      else next.add(groupKey);
+      return next;
+    });
+  }
+
   if (!roleName) {
     return (
       <section className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface px-6 text-center">
@@ -62,11 +85,16 @@ export function PermissionEditorPanel({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="mr-1 flex items-center gap-1 text-sm text-muted">
-              <span className="font-semibold text-foreground">{selectedCodes.size}</span>
-              permisos activos
+              <span className="font-semibold text-foreground">{selectedPermissionIds.size}</span>
+              de {totalPermissions} permisos asignados
             </div>
             {!readOnly && (
-              <Button variant="outline" size="sm" onClick={onEditRole}>Editar rol</Button>
+              <>
+                <Button variant="outline" size="sm" onClick={onEditRole}>Editar rol</Button>
+                {!isEditing && (
+                  <Button variant="outline" size="sm" onClick={onStartEditing}>Editar permisos</Button>
+                )}
+              </>
             )}
             <Button size="sm" onClick={onCreatePermission}>
               <span aria-hidden="true" className="[&>svg]:size-4">{Icons.plus}</span>
@@ -82,7 +110,9 @@ export function PermissionEditorPanel({
           </div>
         ) : (
           <p className="mt-4 max-w-2xl text-sm text-muted">
-            Activa solo las acciones que necesita este rol. Los cambios se aplicarán cuando los guardes.
+            {isEditing
+              ? 'Selecciona las acciones que necesita este rol y guarda los cambios cuando termines.'
+              : 'Los permisos están en modo de consulta. Presiona Editar permisos para modificarlos.'}
           </p>
         )}
       </header>
@@ -96,71 +126,113 @@ export function PermissionEditorPanel({
           })
           .map((group) => {
             const presentation = getPermissionGroupPresentation(group.key);
+            const expanded = expandedGroups.has(group.key);
+            const panelId = `${accordionId}-${group.key}`;
+            const assignedCount = group.permissions.filter((permission) =>
+              selectedPermissionIds.has(permission.id),
+            ).length;
 
             return (
-              <fieldset key={group.key} className="p-4 sm:p-6" disabled={readOnly}>
-                <legend className="w-full">
-                  <span className="block font-display text-base font-semibold">
-                    {presentation.label}
+              <section key={group.key}>
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-controls={panelId}
+                  onClick={() => toggleGroup(group.key)}
+                  className="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:px-6"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-base font-semibold">
+                      {presentation.label}
+                    </span>
+                    <span className="mt-1 block text-xs font-normal text-muted">
+                      {presentation.description}
+                    </span>
                   </span>
-                  <span className="mt-1 block text-xs font-normal text-muted">
-                    {presentation.description}
+                  <span className="shrink-0 text-xs text-muted">
+                    {assignedCount}/{group.permissions.length}
                   </span>
-                </legend>
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className={`size-5 shrink-0 text-muted transition-transform ${expanded ? 'rotate-180' : ''}`}
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
 
-                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  {group.permissions.map((permission) => {
-                    const checked = selectedCodes.has(permission.code);
+                {expanded && (
+                  <fieldset
+                    id={panelId}
+                    className="border-t border-border px-4 pb-5 pt-4 sm:px-6"
+                    disabled={readOnly || !isEditing || isSaving}
+                  >
+                    <legend className="sr-only">Permisos de {presentation.label}</legend>
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {group.permissions.map((permission) => {
+                        const checked = selectedPermissionIds.has(permission.id);
 
-                    return (
-                      <div
-                        key={permission.code}
-                        className={`relative flex min-h-24 items-start gap-3 rounded-md border p-3 pr-10 transition-colors ${
-                          checked ? 'border-primary bg-primary-subtle' : 'border-border bg-background hover:border-primary/50'
-                        } ${readOnly ? 'opacity-80' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => onToggle(permission.code)}
-                          aria-label={`Asignar ${permission.name}`}
-                          className="mt-0.5 size-4 shrink-0 accent-primary"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold">{permission.name}</span>
-                          {permission.description && (
-                            <span className="mt-1 block text-xs leading-5 text-muted">
-                              {permission.description}
+                        return (
+                          <div
+                            key={permission.code}
+                            className={`relative flex min-h-24 items-start gap-3 rounded-md border p-3 pr-10 transition-colors ${
+                              checked ? 'border-primary bg-primary-subtle' : 'border-border bg-background hover:border-primary/50'
+                            } ${readOnly || !isEditing ? 'opacity-80' : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => onToggle(permission.id)}
+                              aria-label={`Asignar ${permission.name}`}
+                              className="mt-0.5 size-4 shrink-0 accent-primary"
+                            />
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold">{permission.name}</span>
+                              {permission.description && (
+                                <span className="mt-1 block text-xs leading-5 text-muted">
+                                  {permission.description}
+                                </span>
+                              )}
+                              <span className="mt-2 block break-all font-mono text-[10px] text-muted">{permission.code}</span>
                             </span>
-                          )}
-                          <span className="mt-2 block break-all font-mono text-[10px] text-muted">{permission.code}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onEditPermission(permission.code, permission.name)}
-                          aria-label={`Editar permiso ${permission.name}`}
-                          className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
-                        >
-                          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
-                            <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
-                          </svg>
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </fieldset>
+                            <button
+                              type="button"
+                              onClick={() => onEditPermission(permission.code, permission.name)}
+                              aria-label={`Editar permiso ${permission.name}`}
+                              className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface hover:text-foreground"
+                            >
+                              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
+                                <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+                              </svg>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
+              </section>
             );
           })}
       </div>
 
-      {!readOnly && (
-        <footer className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-border bg-surface/95 px-4 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-end sm:px-6">
-          <Button variant="ghost" onClick={onDiscard} disabled={!hasChanges}>Descartar</Button>
-          <Button onClick={onSave} disabled={!hasChanges}>
-            <span aria-hidden="true">{Icons.check}</span>
-            Guardar cambios
-          </Button>
+      {!readOnly && isEditing && (
+        <footer className="sticky bottom-0 border-t border-border bg-surface/95 px-4 py-4 backdrop-blur sm:px-6">
+          {saveError && (
+            <p role="alert" className="mb-3 rounded-md border border-danger/30 bg-danger-subtle p-3 text-sm text-danger">
+              {saveError}
+            </p>
+          )}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+            <Button variant="ghost" onClick={onDiscard} disabled={isSaving}>Cancelar</Button>
+            <Button onClick={onSave} disabled={!hasChanges || isSaving}>
+              <span aria-hidden="true">{Icons.check}</span>
+              {isSaving ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+          </div>
         </footer>
       )}
     </section>

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
 import type { CreateRole, Role } from '../domain/entities/role.entity.js';
 import { RoleRepository } from '../domain/repositories/role.repository.js';
@@ -60,5 +60,46 @@ export class PrismaRoleRepository extends RoleRepository {
     } catch (error) {
       throw error;
     }
+  }
+
+  async replacePermissions(roleId: string, permissionIds: string[]) {
+    return this.prisma.transaction(async (tx) => {
+      const role = await tx.orm.core.Role.first({ id: toUuid36(roleId) });
+      if (!role || role.deleted) throw new NotFoundException('Rol no encontrado');
+      if (role.organizationId === null) {
+        throw new ForbiddenException('No se pueden modificar permisos de un rol sin organizacion');
+      }
+      const organization = await tx.orm.core.Organization.first({ id: role.organizationId });
+      if (!organization || organization.deleted || organization.status !== 'ACTIVE') {
+        throw new ForbiddenException('La organización del rol no está activa');
+      }
+
+      for (const permissionId of permissionIds) {
+        const permission = await tx.orm.core.Permission.first({ id: toUuid36(permissionId) });
+        if (!permission) throw new BadRequestException(`El permiso ${permissionId} no existe`);
+      }
+
+      const existing = await tx.orm.core.RolePermission.where({ roleId: role.id }).all();
+      const requested = new Set(permissionIds);
+      const previous = new Set(existing.map((link) => String(link.permissionId)));
+      for (const link of existing) {
+        if (!requested.has(String(link.permissionId))) {
+          await tx.orm.core.RolePermission.where({ id: link.id }).delete();
+        }
+      }
+      for (const permissionId of permissionIds) {
+        if (!previous.has(permissionId)) {
+          await tx.orm.core.RolePermission.create({
+            roleId: role.id,
+            permissionId: toUuid36(permissionId),
+          });
+        }
+      }
+      return {
+        roleId: String(role.id),
+        organizationId: String(role.organizationId),
+        permissionIds,
+      };
+    });
   }
 }

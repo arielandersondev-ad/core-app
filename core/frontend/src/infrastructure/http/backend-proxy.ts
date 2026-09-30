@@ -95,9 +95,19 @@ const proxyRules: readonly ProxyRule[] = [
     backendPath: () => '/role/create',
   },
   {
+    methods: ['GET', 'POST'],
+    pattern: /^roles\/permissions$/,
+    backendPath: () => '/role/permissions',
+  },
+  {
     methods: ['GET'],
     pattern: new RegExp(`^roles/(${UUID_SEGMENT})/permissions$`),
     backendPath: (match) => `/role/permissions/${match[1]}`,
+  },
+  {
+    methods: ['PUT'],
+    pattern: new RegExp(`^roles/(${UUID_SEGMENT})/permissions$`),
+    backendPath: (match) => `/role/${match[1]}/permissions`,
   },
 ] as const;
 

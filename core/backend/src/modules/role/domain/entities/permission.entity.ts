@@ -1,8 +1,8 @@
 export type RolePermission = {
     id: string;
     createdAt: Date;
-    PermissionId: string;
-    RoleId: string;
+    permissionId: string;
+    roleId: string;
 }
 export type Permission = {
     id: string

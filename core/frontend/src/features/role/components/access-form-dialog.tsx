@@ -9,7 +9,6 @@ import { Modal } from '@/shared/components/ui/Modal';
 type AccessFormDialogProps = {
   open: boolean;
   kind: 'role' | 'permission';
-  mode: 'create' | 'edit';
   initialName?: string;
   initialCode?: string;
   onClose: () => void;
@@ -18,13 +17,11 @@ type AccessFormDialogProps = {
 export function AccessFormDialog({
   open,
   kind,
-  mode,
   initialName = '',
   initialCode = '',
   onClose,
 }: AccessFormDialogProps) {
   const isRole = kind === 'role';
-  const isEdit = mode === 'edit';
   const resource = isRole ? 'rol' : 'permiso';
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -36,7 +33,7 @@ export function AccessFormDialog({
     <Modal
       open={open}
       eyebrow={isRole ? 'Administración de roles' : 'Catálogo de permisos'}
-      title={`${isEdit ? 'Editar' : 'Nuevo'} ${resource}`}
+      title={`Editar ${resource}`}
       description={isRole
         ? 'Define la identidad del rol para la organización seleccionada.'
         : 'Configura una capacidad reutilizable que luego podrás asignar a los roles.'}
@@ -61,7 +58,7 @@ export function AccessFormDialog({
             placeholder={isRole ? 'COORDINADOR_SUCURSAL' : 'reports:export'}
             hint="Usa un código estable y descriptivo; será utilizado por las reglas de acceso."
             required
-            disabled={isEdit}
+            disabled
           />
 
           <div>
@@ -87,7 +84,7 @@ export function AccessFormDialog({
 
         <footer className="flex flex-col-reverse gap-2 border-t border-border p-4 sm:flex-row sm:justify-end sm:px-6">
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button type="submit">{isEdit ? 'Guardar cambios' : `Crear ${resource}`}</Button>
+          <Button type="submit">Guardar cambios</Button>
         </footer>
       </form>
     </Modal>
