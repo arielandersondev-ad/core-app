@@ -32,7 +32,7 @@ export async function loginAction(
 
   try {
     const result = await authService.login({ email, password });
-    await setSessionToken(result.access_token);
+    await setSessionToken(result.access_token, result.expires_in);
   } catch (error) {
     if (error instanceof AuthenticationError) {
       return { message: error.message };

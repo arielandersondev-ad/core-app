@@ -251,8 +251,7 @@ export class PrismaUserRepository extends UserRepository {
       }
     }
 
-    const roleIds = new Set<string>();
-    const roleCodes = new Set<string>();
+    const permissions = new Set<string>();
     const membershipRoles = await this.prisma.orm.core.MembershipRole.where({
       membershipId: membership.id,
       deleted: false,
@@ -268,8 +267,15 @@ export class PrismaUserRepository extends UserRepository {
         (role.organizationId === null ||
           role.organizationId === membership.organizationId)
       ) {
-        roleIds.add(String(role.id));
-        roleCodes.add(role.code.trim().toUpperCase());
+        const assignments = await this.prisma.orm.core.RolePermission.where({
+          roleId: role.id,
+        }).all();
+        for (const assignment of assignments) {
+          const permission = await this.prisma.orm.core.Permission.first({
+            id: assignment.permissionId,
+          });
+          if (permission) permissions.add(permission.code);
+        }
       }
     }
 
@@ -278,10 +284,24 @@ export class PrismaUserRepository extends UserRepository {
       membershipId: String(membership.id),
       organizationId: String(membership.organizationId),
       branchIds: [...branchIds],
-      roleIds: [...roleIds],
-      roleCodes: [...roleCodes],
+      permissions: [...permissions].sort(),
       passwordHash: auth.passwordHash,
     };
+  }
+
+  async findCurrentSession(
+    userId: string,
+    membershipId: string,
+    organizationId: string,
+  ): Promise<UserAuthRecord | null> {
+    const user = await this.prisma.orm.core.User.first({ id: toUuid36(userId) });
+    if (!user) return null;
+    const record = await this.findAuthRecord(user.email);
+    if (!record || record.user.id !== userId ||
+      record.membershipId !== membershipId || record.organizationId !== organizationId) {
+      return null;
+    }
+    return record;
   }
 
   async createUserWithMembership(

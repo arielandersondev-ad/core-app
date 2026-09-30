@@ -16,6 +16,11 @@ export abstract class UserRepository {
   abstract emailExists(email: string): Promise<boolean>;
 
   abstract findAuthRecord(email: string): Promise<UserAuthRecord | null>;
+  abstract findCurrentSession(
+    userId: string,
+    membershipId: string,
+    organizationId: string,
+  ): Promise<UserAuthRecord | null>;
 
   abstract createUserWithMembership(
     data: CreateUserWithAccess,

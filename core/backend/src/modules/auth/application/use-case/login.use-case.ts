@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserRepository } from '../../../user/domain/repositories/user.repository.js';
 import { PasswordHasher } from '../../../user/domain/services/password-hasher.js';
 import { AccessTokenIssuer } from '../ports/access-token-issuer.js';
 import type { AuthResult } from '../contracts/auth-result.js';
 import type { AuthenticatedPrincipal } from '../contracts/authenticated-principal.js';
+import type { TokenAudience } from '../contracts/token-audience.js';
+import { TOKEN_AUDIENCES } from '../contracts/token-audience.js';
+import { permissionsForAudience } from '../services/audience-permission-filter.js';
+import { VerticalAccessPolicy } from '../ports/vertical-access-policy.js';
+import { accessTokenLifetimeSeconds } from '../contracts/access-token-lifetime.js';
 import { LoginDto } from '../../presentation/dto/login.dto.js';
 
 @Injectable()
@@ -12,48 +17,43 @@ export class LoginUseCase {
     private readonly userRepo: UserRepository,
     private readonly passwordHasher: PasswordHasher,
     private readonly tokenIssuer: AccessTokenIssuer,
+    private readonly verticalAccessPolicy: VerticalAccessPolicy,
   ) {}
 
-  async execute(credentials: LoginDto): Promise<AuthResult> {
+  async execute( credentials: LoginDto, audience: TokenAudience ): Promise<AuthResult> {
     const record = await this.userRepo.findAuthRecord(credentials.email);
 
     if (!record) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
-
     const valid = await this.passwordHasher.verify(
       credentials.password,
       record.passwordHash,
     );
-
     if (!valid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    if (
+      audience === TOKEN_AUDIENCES.dentistry && !(await this.verticalAccessPolicy.canAccessDentistry(record.organizationId, new Date()))
+    ) {
+      throw new ForbiddenException('La organización no tiene acceso a Dentistry');
+    }
+
     const principal: AuthenticatedPrincipal = {
       sub: record.user.id,
-      email: record.user.email,
       membershipId: record.membershipId,
       organizationId: record.organizationId,
       branchIds: record.branchIds,
-      roleCodes: record.roleCodes,
+      permissions: permissionsForAudience(record.permissions, audience),
     };
 
-    const access_token = await this.tokenIssuer.sign(principal);
+    const access_token = await this.tokenIssuer.sign(principal, audience);
 
     return {
       access_token,
-      user: {
-        id: record.user.id,
-        email: record.user.email,
-        firstName: record.user.firstName,
-        lastName: record.user.lastName,
-        membershipId: record.membershipId,
-        organizationId: record.organizationId,
-        branchIds: record.branchIds,
-        roleIds: record.roleIds,
-        roleCodes: record.roleCodes,
-      },
+      token_type: 'Bearer',
+      expires_in: accessTokenLifetimeSeconds(),
     };
   }
 }

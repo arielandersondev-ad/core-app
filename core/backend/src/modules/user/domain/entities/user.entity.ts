@@ -41,14 +41,13 @@ export type UserWithMembership = {
   membership: MembershipSummary;
 };
 
-// Read model para login: usuario + sus accesos (membresía, sucursales, roles)
+// Read model para login: usuario + sus accesos (membresía, sucursales, permisos)
 // y el hash de contraseña para verificación.
 export type UserAuthRecord = {
   user: User;
   membershipId: string;
   organizationId: string;
   branchIds: string[];
-  roleIds: string[];
-  roleCodes: string[];
+  permissions: string[];
   passwordHash: string;
 };

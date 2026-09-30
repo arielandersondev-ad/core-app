@@ -30,6 +30,14 @@ export class CorePermissionService {
       return false;
     }
 
+    const organization = await this.prisma.orm.core.Organization.first({
+      id: membership.organizationId,
+    });
+
+    if (!organization || organization.deleted || organization.status !== 'ACTIVE') {
+      return false;
+    }
+
     const permission = await this.prisma.orm.core.Permission.first({ code });
     if (!permission) return false;
 
