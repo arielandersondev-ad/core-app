@@ -1,11 +1,6 @@
 export type NavigationMatch = "exact" | "nested";
 
-export type NavigationIcon =
-  | "dashboard"
-  | "organizations"
-  | "users"
-  | "roles"
-  | "settings";
+export type NavigationIcon = "dashboard"| "organizations"| "users"| "roles"| 'plans' | "settings";
 
 export type NavigationItem = Readonly<{
   id: string;
