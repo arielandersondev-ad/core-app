@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./navigation";
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
 import { Icons } from "../icons/icons";
+import { logoutAction } from "@/features/auth/actions/logout-action";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -51,20 +52,9 @@ export function AppSidebar() {
       {/* Bottom */}
       <div className="border-t border-border p-3 flex flex-col gap-1">
         <ThemeToggle variant="sidebar" />
-
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-[3px]">
-          <div className="w-7 h-7 rounded-[2px] bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-display font-bold flex-shrink-0">
-            DA
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-display font-semibold text-foreground truncate">
-              Dr. Admin
-            </p>
-            <p className="text-[10px] font-mono text-muted truncate">
-              Administrador
-            </p>
-          </div>
-        </div>
+        <form action={logoutAction}>
+          <button type="submit" className="w-full text-left px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-background rounded-[3px]">Cerrar sesión</button>
+        </form>
       </div>
     </aside>
   );

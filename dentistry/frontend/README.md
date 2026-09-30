@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Dentistry authentication
+
+Copy `.env.example` to `.env.local` and set the backend addresses:
+
+```env
+AUTH_API_URL=http://localhost:3001
+DENTISTRY_API_URL=http://localhost:3004
+```
+
+Both variables are server-only. `AUTH_API_URL` points to Core/Auth for `POST /auth/dentistry/login`; `DENTISTRY_API_URL` points to Dentistry Backend for `/auth/me` and appointments. The BFF stores the 15-minute access token in the `crowant_dentistry_access` HttpOnly cookie and forwards it only to allowlisted Dentistry endpoints. Refresh is not implemented yet; after expiry the user signs in again.
+
 ## Getting Started
 
 First, run the development server:

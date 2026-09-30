@@ -1,398 +1,166 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  appointments,
-  getPatientById,
-  getServiceById,
-  getProfessionalById,
-  statusColors,
-  statusLabels,
-  formatCurrency,
-  AppointmentStatus,
-} from "@/modules/clinic/__mocks__/data";
-import {
-  updateAppointmentStatus,
+  AppointmentApiError,
   cancelAppointment,
+  fetchAppointmentById,
+  updateAppointmentStatus,
+  type AppointmentDto,
 } from "@/modules/clinic/api/appointments";
-import { Icons } from "@/shared/components/ui/Icons";
-import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
-import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
-import {
-  DentalWhatsAppContext,
-  WhatsAppTemplateKey,
-  normalizePhoneNumber,
-} from "@/shared/utils/whatsapp-generator";
 
-export default function AppointmentDetail({
-  citaId,
-  onNavigate,
-}: {
+type ChangeableStatus = Exclude<AppointmentDto["status"], "CANCELLED">;
+
+const STATUS_LABELS: Record<AppointmentDto["status"], string> = {
+  SCHEDULED: "Programada",
+  CONFIRMED: "Confirmada",
+  WAITING_ROOM: "En sala de espera",
+  IN_PROGRESS: "En curso",
+  COMPLETED: "Completada",
+  NO_SHOW: "No asistió",
+  CANCELLED: "Cancelada",
+};
+
+const CHANGEABLE_STATUSES: ChangeableStatus[] = [
+  "SCHEDULED", "CONFIRMED", "WAITING_ROOM", "IN_PROGRESS", "COMPLETED", "NO_SHOW",
+];
+
+export default function AppointmentDetail({ citaId, onNavigate }: {
   citaId: string;
-  onNavigate: (s: string, p?: Record<string, string>) => void;
+  onNavigate: (view: string, params?: Record<string, string>) => void;
 }) {
-  const apt = appointments.find((a) => a.id === citaId);
-  const [status, setStatus] = useState<AppointmentStatus>(
-    apt?.status ?? "programada"
-  );
-  const [sessionNotes, setSessionNotes] = useState(apt?.notes ?? "");
-  const [sessionSaved, setSessionSaved] = useState(false);
+  const [appointment, setAppointment] = useState<AppointmentDto | null>(null);
+  const [loadError, setLoadError] = useState<{ message: string; notFound: boolean } | null>(null);
+  const [notes, setNotes] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ message: string; error: boolean } | null>(null);
 
-  // WhatsApp modal
-  const [isWaOpen, setIsWaOpen] = useState(false);
-  const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");
+  useEffect(() => {
+    let active = true;
+    fetchAppointmentById(citaId)
+      .then((result) => {
+        if (!active) return;
+        setAppointment(result);
+        setNotes(result.notes ?? "");
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setLoadError({
+          message: error instanceof Error ? error.message : "No se pudo cargar la cita.",
+          notFound: error instanceof AppointmentApiError && error.status === 404,
+        });
+      });
+    return () => { active = false; };
+  }, [citaId]);
 
-  // Payment prompt
-  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
-
-  if (!apt) return null;
-
-  const patient = getPatientById(apt.patientId);
-  const svc = getServiceById(apt.serviceId);
-  const pro = getProfessionalById(apt.professionalId);
-  const cleanPhone = normalizePhoneNumber(patient?.phone || "", "591");
-
-  const statusOptions: AppointmentStatus[] = [
-    "programada",
-    "confirmada",
-    "en_sala",
-    "en_curso",
-    "completada",
-    "no_asistio",
-    "cancelada",
-  ];
-
-  const handleStatusChange = async (newStatus: AppointmentStatus) => {
-    setStatus(newStatus);
+  async function applyChange(action: () => Promise<unknown>, successMessage: string) {
     setIsUpdating(true);
-    setFeedbackMessage(null);
-
-    const backendStatusMap: Record<
-      AppointmentStatus,
-      | "SCHEDULED"
-      | "CONFIRMED"
-      | "WAITING_ROOM"
-      | "IN_PROGRESS"
-      | "COMPLETED"
-      | "NO_SHOW"
-      | "CANCELLED"
-    > = {
-      programada: "SCHEDULED",
-      confirmada: "CONFIRMED",
-      en_sala: "WAITING_ROOM",
-      en_curso: "IN_PROGRESS",
-      completada: "COMPLETED",
-      no_asistio: "NO_SHOW",
-      cancelada: "CANCELLED",
-    };
-
+    setFeedback(null);
     try {
-      if (newStatus === "cancelada") {
-        await cancelAppointment(citaId, {
-          cancelledByMembershipId: "018f0000-0000-7000-0000-000000000003",
-          reason: "Cancelación solicitada por el usuario desde la interfaz",
-        });
-      } else {
-        await updateAppointmentStatus(citaId, {
-          status: backendStatusMap[newStatus] as
-            | "SCHEDULED"
-            | "CONFIRMED"
-            | "WAITING_ROOM"
-            | "IN_PROGRESS"
-            | "COMPLETED"
-            | "NO_SHOW",
-          notes: sessionNotes,
-        });
-      }
-      setFeedbackMessage("Estado actualizado correctamente");
-    } catch (_err) {
-      setFeedbackMessage("Estado actualizado localmente");
+      await action();
+      const updated = await fetchAppointmentById(citaId);
+      setAppointment(updated);
+      setNotes(updated.notes ?? "");
+      setFeedback({ message: successMessage, error: false });
+    } catch (error) {
+      setFeedback({ message: error instanceof Error ? error.message : "No se pudo actualizar la cita.", error: true });
     } finally {
       setIsUpdating(false);
     }
+  }
 
-    if (newStatus === "completada") {
-      setShowPaymentPrompt(true);
-    }
-  };
+  if (loadError) {
+    return (
+      <div className="p-8 max-w-3xl mx-auto text-center" role="alert">
+        <h2 className="font-display text-lg font-bold text-[var(--foreground)]">
+          {loadError.notFound ? "Cita no encontrada" : "No se pudo cargar la cita"}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--muted)]">{loadError.message}</p>
+        <button type="button" onClick={() => onNavigate("agenda")} className="mt-4 text-sm text-[var(--primary)] hover:underline">Volver a la agenda</button>
+      </div>
+    );
+  }
 
-  const handleSaveNotes = async () => {
-    setIsUpdating(true);
-    try {
-      if (status !== "cancelada") {
-        const backendStatusMap: Record<
-          AppointmentStatus,
-          | "SCHEDULED"
-          | "CONFIRMED"
-          | "WAITING_ROOM"
-          | "IN_PROGRESS"
-          | "COMPLETED"
-          | "NO_SHOW"
-        > = {
-          programada: "SCHEDULED",
-          confirmada: "CONFIRMED",
-          en_sala: "WAITING_ROOM",
-          en_curso: "IN_PROGRESS",
-          completada: "COMPLETED",
-          no_asistio: "NO_SHOW",
-          cancelada: "SCHEDULED",
-        };
-        await updateAppointmentStatus(citaId, {
-          status: backendStatusMap[status],
-          notes: sessionNotes,
-        });
-      }
-      setSessionSaved(true);
-    } catch (_err) {
-      setSessionSaved(true);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  if (!appointment) {
+    return <p className="p-8 text-center text-sm text-[var(--muted)]" role="status">Cargando detalle de la cita…</p>;
+  }
 
-  const openWhatsApp = (tplKey?: WhatsAppTemplateKey) => {
-    let chosen = tplKey;
-    if (!chosen) {
-      if (status === "en_sala") chosen = "turno_listo";
-      else if (status === "no_asistio") chosen = "no_show";
-      else if (status === "completada") chosen = "post_tratamiento";
-      else chosen = "confirmacion";
-    }
-    setWaTemplate(chosen);
-    setIsWaOpen(true);
-  };
-
-  const dt = new Date(apt.date + "T12:00:00");
-  const dateFormatted = dt.toLocaleDateString("es-BO", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  const waContext: DentalWhatsAppContext = {
-    patientName: patient?.name || "Paciente",
-    patientPhone: patient?.phone || "",
-    serviceName: svc?.name || "Consulta",
-    dateStr: dateFormatted,
-    timeStr: apt.startTime,
-    clinicName: "Dental Care Consultorio",
-    professionalName: pro?.name,
-  };
+  const startsAt = new Date(appointment.startsAt);
+  const endsAt = new Date(appointment.endsAt);
+  const dateLabel = Number.isNaN(startsAt.getTime()) ? appointment.startsAt :
+    startsAt.toLocaleString("es-BO", { dateStyle: "full", timeStyle: "short" });
+  const endLabel = Number.isNaN(endsAt.getTime()) ? appointment.endsAt :
+    endsAt.toLocaleTimeString("es-BO", { timeStyle: "short" });
+  const cancelled = appointment.status === "CANCELLED";
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5 pb-20">
-      {/* Header */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 shadow-xs">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex justify-between items-start gap-4">
           <div>
-            <p className="text-[11px] font-mono text-[var(--muted)] mb-1 capitalize">
-              {dateFormatted}
-            </p>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-[var(--foreground)]">
-              {svc?.name}
-            </h2>
-            <p className="text-xs sm:text-sm text-[var(--muted)] mt-1">
-              ⏰ {apt.startTime} – {apt.endTime} · {svc?.durationMin} min ·{" "}
-              <strong className="text-[var(--primary)] font-mono">
-                {formatCurrency(svc?.price ?? 0)}
-              </strong>
-            </p>
+            <p className="text-[11px] font-mono text-[var(--muted)]">{dateLabel} – {endLabel}</p>
+            <h2 className="font-display text-lg sm:text-xl font-bold text-[var(--foreground)] mt-1">Detalle de cita</h2>
+            <p className="text-xs text-[var(--muted)] mt-1">{appointment.reason || "Sin motivo registrado"}</p>
           </div>
-          <span
-            className={`inline-flex items-center px-3 py-1 text-xs font-mono font-bold rounded-full border ${statusColors[status]}`}
-          >
-            {statusLabels[status]}
-          </span>
+          <span className="text-xs font-semibold rounded-full border border-[var(--border)] px-3 py-1">{STATUS_LABELS[appointment.status]}</span>
         </div>
-
-        {/* Barra de contacto directo */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--border)]/60 flex-wrap">
-          <button
-            type="button"
-            onClick={() => openWhatsApp()}
-            className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xs transition-all"
-          >
-            <span className="w-4 h-4 flex items-center justify-center">
-              {Icons.whatsapp}
-            </span>
-            <span>Contactar por WhatsApp</span>
-          </button>
-
-          {cleanPhone && (
-            <a
-              href={`tel:+${cleanPhone}`}
-              className="h-10 px-3.5 border border-[var(--border)] rounded-xl text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] active:scale-95 flex items-center gap-1.5 transition-all"
-            >
-              {Icons.phoneCall}
-              <span>+{cleanPhone}</span>
-            </a>
-          )}
-
-          <button
-            type="button"
-            onClick={() => onNavigate("registrar-pago", { patientId: apt.patientId })}
-            className="ml-auto h-10 px-4 bg-[var(--surface)] border border-[var(--primary)] text-[var(--primary)] rounded-xl text-xs font-semibold hover:bg-[var(--primary-subtle)] active:scale-95 transition-all"
-          >
-            💳 Cobrar atención
-          </button>
-        </div>
-
-        {feedbackMessage && (
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-mono">
-            ✓ {feedbackMessage}
-          </p>
-        )}
+        {feedback && <p role="status" className={`mt-4 text-sm ${feedback.error ? "text-red-600" : "text-emerald-600"}`}>{feedback.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Paciente */}
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
-              Paciente
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] font-display font-bold flex-shrink-0 text-sm">
-                {patient?.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-display font-bold text-[var(--foreground)] truncate">
-                  {patient?.name}
-                </p>
-                <p className="text-xs font-mono text-[var(--muted)]">
-                  {patient?.phone}
-                </p>
-              </div>
-            </div>
-
-            {patient?.allergies && patient.allergies.length > 0 && (
-              <div className="mt-3 p-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
-                <strong>⚠️ Alergias reportadas:</strong> {patient.allergies.join(", ")}
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => onNavigate("paciente-detalle", { patientId: apt.patientId })}
-            className="mt-4 text-xs text-[var(--primary)] font-semibold hover:underline text-left"
-          >
-            Ver expediente 360° del paciente →
-          </button>
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Paciente</p>
+          <p className="mt-2 text-sm text-[var(--foreground)]">ID: {appointment.patientId}</p>
         </div>
-
-        {/* Profesional asignado */}
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
-            Odontólogo Tratante
-          </p>
-          <p
-            className="text-sm font-display font-bold text-[var(--foreground)]"
-            style={{ color: pro?.color }}
-          >
-            {pro?.name}
-          </p>
-          <p className="text-xs font-mono text-[var(--muted)] mt-0.5">
-            {pro?.specialty}
-          </p>
-          <div className="mt-4 p-3 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs text-[var(--muted)]">
-            <span>Sillón Dental #1 · Consultorio Principal</span>
-          </div>
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Servicio y profesional</p>
+          <p className="mt-2 text-sm text-[var(--foreground)]">Servicio: {appointment.serviceId}</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">Membresía profesional: {appointment.professionalMembershipId}</p>
         </div>
       </div>
 
-      {/* Selector de Estado Clínico Completo */}
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
-          Actualizar Estado Clínico
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {statusOptions.map((s) => {
-            const isSelected = status === s;
-            return (
-              <button
-                key={s}
-                disabled={isUpdating}
-                onClick={() => handleStatusChange(s)}
-                className={`p-3 rounded-xl text-left border transition-all flex flex-col gap-1.5 ${
-                  isSelected
-                    ? "border-[var(--primary)] bg-[var(--primary-subtle)] font-bold"
-                    : "border-[var(--border)] hover:bg-[var(--background)]"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      isSelected ? "bg-[var(--primary)]" : "bg-[var(--muted)]/40"
-                    }`}
-                  />
-                </div>
-                <span className="text-xs font-display">{statusLabels[s]}</span>
+      {!cancelled && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Actualizar estado clínico</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+            {CHANGEABLE_STATUSES.map((status) => (
+              <button type="button" key={status} disabled={isUpdating || appointment.status === status}
+                onClick={() => applyChange(() => updateAppointmentStatus(citaId, { status, notes }), "Estado actualizado correctamente.")}
+                className="p-3 rounded-xl text-left text-xs border border-[var(--border)] hover:bg-[var(--background)] disabled:opacity-50">
+                {STATUS_LABELS[status]}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
+      )}
+
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+        <label htmlFor="appointment-notes" className="text-sm font-semibold text-[var(--foreground)]">Notas de la cita</label>
+        <textarea id="appointment-notes" value={notes} disabled={cancelled || isUpdating}
+          onChange={(event) => setNotes(event.target.value)} rows={4}
+          className="mt-3 w-full px-3.5 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm text-[var(--foreground)] disabled:opacity-60" />
+        <button type="button" disabled={cancelled || isUpdating || notes === (appointment.notes ?? "")}
+          onClick={() => applyChange(() => updateAppointmentStatus(citaId, { status: appointment.status as ChangeableStatus, notes }), "Notas guardadas correctamente.")}
+          className="mt-3 h-10 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-sm font-semibold disabled:opacity-50">
+          Guardar notas
+        </button>
       </div>
 
-      {/* Evolución clínica y notas */}
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">
-            Evolución / Procedimiento realizado
-          </p>
-          {sessionSaved && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono">
-              ✓ Guardado
-            </span>
-          )}
-        </div>
-        <textarea
-          value={sessionNotes}
-          onChange={(e) => {
-            setSessionNotes(e.target.value);
-            setSessionSaved(false);
-          }}
-          placeholder="Piezas dentales tratadas, anestésico utilizado, indicaciones al paciente…"
-          rows={4}
-          className="w-full px-3.5 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-xs sm:text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 resize-none"
-        />
-        <div className="flex items-center gap-3 mt-3">
-          <button
-            onClick={handleSaveNotes}
-            disabled={isUpdating}
-            className="h-10 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs sm:text-sm font-semibold hover:opacity-90 disabled:opacity-50 active:scale-95 transition-all shadow-xs"
-          >
-            Guardar evolución
+      {!cancelled && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+          <label htmlFor="cancel-reason" className="text-sm font-semibold text-[var(--foreground)]">Cancelar cita</label>
+          <p className="mt-1 text-xs text-[var(--muted)]">Indica el motivo para registrar la cancelación.</p>
+          <textarea id="cancel-reason" value={cancelReason} onChange={(event) => setCancelReason(event.target.value)}
+            rows={2} maxLength={500} disabled={isUpdating}
+            className="mt-3 w-full px-3.5 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-sm text-[var(--foreground)]" />
+          <button type="button" disabled={isUpdating || !cancelReason.trim()}
+            onClick={() => applyChange(() => cancelAppointment(citaId, { reason: cancelReason.trim() }), "Cita cancelada correctamente.")}
+            className="mt-3 h-10 px-4 border border-red-600 text-red-600 rounded-xl text-sm font-semibold disabled:opacity-50">
+            Cancelar cita
           </button>
         </div>
-      </div>
-
-      {/* Modal WhatsApp */}
-      <WhatsAppModal
-        isOpen={isWaOpen}
-        onClose={() => setIsWaOpen(false)}
-        context={waContext}
-        defaultTemplate={waTemplate}
-      />
-
-      {/* Prompt Cobro */}
-      <PaymentPromptModal
-        isOpen={showPaymentPrompt}
-        onClose={() => setShowPaymentPrompt(false)}
-        onConfirmPayment={() => {
-          setShowPaymentPrompt(false);
-          onNavigate("registrar-pago", { patientId: apt.patientId });
-        }}
-        patientName={patient?.name || "Paciente"}
-        serviceName={svc?.name || "Atención"}
-        priceFormatted={formatCurrency(svc?.price || 0)}
-      />
+      )}
     </div>
   );
 }

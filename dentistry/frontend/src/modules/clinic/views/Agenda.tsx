@@ -5,10 +5,8 @@ import {
   getPatientById,
   getServiceById,
   getProfessionalById,
-  getAppointmentsByDate,
   statusColors,
   statusLabels,
-  professionals,
   TODAY_DATE,
   Appointment,
   AppointmentStatus,
@@ -54,8 +52,10 @@ const statusMap: Record<string, AppointmentStatus> = {
   CANCELLED: "cancelada",
 };
 
+type QuickStatus = Exclude<AppointmentStatus, "cancelada">;
+
 const backendStatusMap: Record<
-  AppointmentStatus,
+  QuickStatus,
   | "SCHEDULED"
   | "CONFIRMED"
   | "WAITING_ROOM"
@@ -69,7 +69,6 @@ const backendStatusMap: Record<
   en_curso: "IN_PROGRESS",
   completada: "COMPLETED",
   no_asistio: "NO_SHOW",
-  cancelada: "SCHEDULED",
 };
 
 const statusBorderAccents: Record<AppointmentStatus, string> = {
@@ -125,12 +124,18 @@ export default function Agenda({
   onNavigate: (s: string, p?: Record<string, string>) => void;
 }) {
   const [date, setDate] = useState(TODAY_DATE);
-  const [proFilter, setProFilter] = useState("all");
+  const [proFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"feed" | "grid">("feed");
   const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFromApi, setIsFromApi] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const changeDate = (nextDate: string) => {
+    setIsLoading(true);
+    setLoadError(null);
+    setDate(nextDate);
+  };
 
   // WhatsApp Modal State
   const [waContext, setWaContext] = useState<DentalWhatsAppContext | null>(
@@ -146,28 +151,18 @@ export default function Agenda({
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
-
     fetchAppointments({
-      organizationId: "018f0000-0000-7000-0000-000000000001",
       date,
     })
       .then((dtos) => {
         if (isMounted) {
-          if (dtos && dtos.length > 0) {
-            setAppointmentsList(dtos.map(mapDtoToAppointment));
-            setIsFromApi(true);
-          } else {
-            const fallback = getAppointmentsByDate(date);
-            setAppointmentsList(fallback);
-            setIsFromApi(false);
-          }
+          setAppointmentsList(dtos.map(mapDtoToAppointment));
         }
       })
       .catch(() => {
         if (isMounted) {
-          setAppointmentsList(getAppointmentsByDate(date));
-          setIsFromApi(false);
+          setAppointmentsList([]);
+          setLoadError("No se pudo cargar la agenda. Inténtalo nuevamente.");
         }
       })
       .finally(() => {
@@ -182,7 +177,7 @@ export default function Agenda({
   // Actualizar estado de cita de forma reactiva en UI y backend
   const handleQuickStatusChange = async (
     aptId: string,
-    newStatus: AppointmentStatus,
+    newStatus: QuickStatus,
   ) => {
     const apt = appointmentsList.find((a) => a.id === aptId);
     if (!apt) return;
@@ -197,8 +192,10 @@ export default function Agenda({
         status: backendStatusMap[newStatus],
         notes: apt.notes,
       });
-    } catch (_err) {
-      // Mantenemos la actualización local en caso de estar en modo mock
+    } catch {
+      setAppointmentsList((prev) =>
+        prev.map((item) => item.id === aptId ? apt : item),
+      );
     }
 
     // Si la cita pasó a completada, abrir prompt de cobro automático
@@ -309,7 +306,7 @@ export default function Agenda({
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setDate((d) => addDays(d, -7))}
+              onClick={() => changeDate(addDays(date, -7))}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
               aria-label="Semana anterior"
               title="Semana anterior"
@@ -332,7 +329,7 @@ export default function Agenda({
 
             <button
               type="button"
-              onClick={() => setDate((d) => addDays(d, 7))}
+              onClick={() => changeDate(addDays(date, 7))}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
               aria-label="Semana siguiente"
               title="Semana siguiente"
@@ -380,7 +377,7 @@ export default function Agenda({
 
             <button
               type="button"
-              onClick={() => setDate(TODAY_DATE)}
+              onClick={() => changeDate(TODAY_DATE)}
               className={`px-3.5 h-8 text-xs font-semibold rounded-full border transition-all active:scale-95 shadow-2xs ${
                 date === TODAY_DATE
                   ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]"
@@ -390,11 +387,6 @@ export default function Agenda({
               Hoy
             </button>
 
-            {isFromApi && (
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[10px] font-medium border border-emerald-200/70">
-                API
-              </span>
-            )}
           </div>
         </div>
 
@@ -404,7 +396,7 @@ export default function Agenda({
             <button
               key={wd.iso}
               type="button"
-              onClick={() => setDate(wd.iso)}
+              onClick={() => changeDate(wd.iso)}
               className="flex flex-col items-center gap-1.5 py-1.5 rounded-xl group transition-all"
             >
               <span
@@ -506,6 +498,7 @@ export default function Agenda({
       </div>
 
       {/* ── CUERPO PRINCIPAL: FEED CRONOLÓGICO MÓVIL ── */}
+      {loadError && <p role="alert" className="text-xs text-red-600">{loadError}</p>}
       {viewMode === "feed" ? (
         <div className="flex flex-col gap-3">
           {isLoading ? (
