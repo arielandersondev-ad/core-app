@@ -18,8 +18,15 @@ import { CreateAppointmentDto } from '../dto/create-appointment.dto.js';
 import { ListAppointmentsQueryDto } from '../dto/list-appointments.query.dto.js';
 import { UpdateAppointmentStatusDto } from '../dto/update-appointment-status.dto.js';
 import { CancelAppointmentDto } from '../dto/cancel-appointment.dto.js';
+import { ForbiddenException, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import type { DentistryPrincipal } from '../../../auth/application/contracts/dentistry-principal.js';
+import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/current-principal.decorator.js';
+import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
+import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
+import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
 
 @Controller('appointments')
+@UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
 export class AppointmentController {
   constructor(
     private readonly createAppointmentUseCase: CreateAppointmentUseCase,
@@ -30,10 +37,12 @@ export class AppointmentController {
   ) {}
 
   @Post()
-  async create(@Body() dto: CreateAppointmentDto) {
+  @RequirePermission('dentistry:appointments:create')
+  async create(@CurrentPrincipal() principal: DentistryPrincipal, @Body() dto: CreateAppointmentDto) {
     return this.createAppointmentUseCase.execute({
-      organizationId: dto.organizationId,
+      organizationId: principal.organizationId,
       branchId: dto.branchId,
+      authorizedBranchIds: principal.branchIds,
       patientId: dto.patientId,
       professionalMembershipId: dto.professionalMembershipId,
       serviceId: dto.serviceId,
@@ -42,12 +51,16 @@ export class AppointmentController {
       endsAt: new Date(dto.endsAt),
       reason: dto.reason,
       notes: dto.notes,
-      createdByMembershipId: dto.createdByMembershipId,
+      createdByMembershipId: principal.membershipId,
     });
   }
 
   @Get()
-  async list(@Query() query: ListAppointmentsQueryDto) {
+  @RequirePermission('dentistry:appointments:read')
+  async list(@CurrentPrincipal() principal: DentistryPrincipal, @Query() query: ListAppointmentsQueryDto) {
+    if (query.branchId && !principal.branchIds.includes(query.branchId)) {
+      throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
+    }
     let startDate = query.startDate ? new Date(query.startDate) : undefined;
     let endDate = query.endDate ? new Date(query.endDate) : undefined;
 
@@ -58,7 +71,8 @@ export class AppointmentController {
     }
 
     return this.listAppointmentsUseCase.execute({
-      organizationId: query.organizationId,
+      organizationId: principal.organizationId,
+      authorizedBranchIds: principal.branchIds,
       branchId: query.branchId,
       patientId: query.patientId,
       professionalMembershipId: query.professionalMembershipId,
@@ -69,17 +83,22 @@ export class AppointmentController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    return this.getAppointmentByIdUseCase.execute(id);
+  @RequirePermission('dentistry:appointments:read')
+  async getById(@CurrentPrincipal() principal: DentistryPrincipal, @Param('id', ParseUUIDPipe) id: string) {
+    return this.getAppointmentByIdUseCase.execute(id, principal.organizationId, principal.branchIds);
   }
 
   @Patch(':id/status')
+  @RequirePermission('dentistry:appointments:update')
   async updateStatus(
-    @Param('id') id: string,
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAppointmentStatusDto,
   ) {
     return this.updateAppointmentStatusUseCase.execute({
       id,
+      organizationId: principal.organizationId,
+      authorizedBranchIds: principal.branchIds,
       status: dto.status,
       notes: dto.notes,
     });
@@ -87,13 +106,17 @@ export class AppointmentController {
 
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('dentistry:appointments:cancel')
   async cancel(
-    @Param('id') id: string,
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CancelAppointmentDto,
   ) {
     return this.cancelAppointmentUseCase.execute({
       id,
-      cancelledByMembershipId: dto.cancelledByMembershipId,
+      organizationId: principal.organizationId,
+      authorizedBranchIds: principal.branchIds,
+      cancelledByMembershipId: principal.membershipId,
       reason: dto.reason,
     });
   }

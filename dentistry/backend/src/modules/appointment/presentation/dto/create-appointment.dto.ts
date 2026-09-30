@@ -2,9 +2,6 @@
 
 export class CreateAppointmentDto {
   @IsUUID()
-  organizationId: string;
-
-  @IsUUID()
   branchId: string;
 
   @IsUUID()
@@ -34,6 +31,4 @@ export class CreateAppointmentDto {
   @IsString()
   notes?: string;
 
-  @IsUUID()
-  createdByMembershipId: string;
 }
