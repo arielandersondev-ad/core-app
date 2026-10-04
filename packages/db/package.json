@@ -13,6 +13,7 @@
     "db:update": "prisma-cli db update",
     "db:verify": "prisma-cli db verify",
     "db:schema": "prisma-cli db schema",
+    "db:seed": "node ./scripts/seed.mjs",
     "migration:plan": "prisma-cli migration plan",
     "migration:status": "prisma-cli migration status",
     "migration:list": "prisma-cli migration list",
