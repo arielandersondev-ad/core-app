@@ -1,6 +1,3 @@
-// import { Button } from "../../ui/button";
-// import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-
 interface Props {
   searchTerm: string;
 
@@ -16,13 +13,40 @@ interface Props {
   onToggleColumn?: (
     key: string
   ) => void;
+
+  quickFilters?: {
+    label: string;
+    value: string;
+  }[];
+
+  activeQuickFilter?: string;
+
+  onQuickFilter?: (value: string) => void;
+
+  searchPlaceholder?: string;
 }
 
-export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns, onToggleColumn }: Props) {
+export function DataTableToolbar({
+  searchTerm,
+  onSearch,
+  quickFilters = [],
+  activeQuickFilter,
+  onQuickFilter,
+  searchPlaceholder = 'Buscar...',
+  // TODO: re-enable column visibility toggle when the
+  // dropdown-menu component lands
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  columns,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visibleColumns,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onToggleColumn,
+}: Props) {
   return (
     <div
       className="
         border-b
+        border-border
         bg-background
         p-4
       "
@@ -37,7 +61,39 @@ export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns
           lg:justify-between
         "
       >
-        <div />
+        <div className="flex flex-wrap items-center gap-1.5">
+          {quickFilters.map((filter) => {
+            const isActive =
+              activeQuickFilter === filter.value;
+
+            return (
+              <button
+                key={filter.value}
+                type="button"
+                onClick={() =>
+                  onQuickFilter?.(filter.value)
+                }
+                className={`
+                  rounded-[2px]
+                  px-2.5
+                  py-1
+                  font-mono
+                  text-[10px]
+                  uppercase
+                  tracking-widest
+                  transition-colors
+                  ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                  }
+                `}
+              >
+                {filter.label}
+              </button>
+            );
+          })}
+        </div>
 
         <div className="relative w-full lg:max-w-xs flex items-center gap-2">
           <input
@@ -45,7 +101,7 @@ export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns
             onChange={(e) =>
               onSearch(e.target.value)
             }
-            placeholder="Buscar..."
+            placeholder={searchPlaceholder}
             className="
               w-full
               rounded-[4px]
@@ -55,32 +111,6 @@ export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns
               py-2
             "
           />
-          {/* TODO: Re-enable column visibility toggle when dropdown-menu component is available */}
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Columnas
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end">
-              {columns?.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.key}
-                  checked={visibleColumns?.includes(
-                    column.key
-                  )}
-                  onCheckedChange={() =>
-                    onToggleColumn?.(
-                      column.key
-                    )
-                  }
-                >
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu> */}
         </div>
       </div>
     </div>

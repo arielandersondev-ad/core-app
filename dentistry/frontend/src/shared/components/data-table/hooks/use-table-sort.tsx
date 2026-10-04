@@ -1,18 +1,12 @@
 'use client';
 import { useMemo } from 'react';
-import { ColumnConfig } from '../types';
 
-function getNestedValue(
-  obj: any,
-  path: string
-) {
-  return path
-    .split('.')
-    .reduce((acc, part) => acc?.[part], obj);
-}
+import type { ColumnConfig } from '../types';
+import { getNestedValue } from '../utils/get-nested-value';
 
 export interface SortConfig {
   key: string;
+
   direction: 'asc' | 'desc';
 }
 
@@ -36,7 +30,7 @@ export function useTableSort<T>(
       );
 
       const column = columns.find(
-        (c) => c.key === sortConfig.key
+        (c) => String(c.key) === sortConfig.key
       );
 
       const type = column?.type ?? 'text';
@@ -51,8 +45,8 @@ export function useTableSort<T>(
 
         case 'date':
           comparison =
-            new Date(aValue).getTime() -
-            new Date(bValue).getTime();
+            new Date(aValue as string).getTime() -
+            new Date(bValue as string).getTime();
           break;
 
         default:

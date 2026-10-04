@@ -26,38 +26,44 @@ data-table/
 
 ## Bugs conocidos
 
-### 1. Rules of Hooks violado (`dynamic-table.tsx:81-88`)
+### Corregidos en Fase 1
 
-```tsx
-// PROBLEMA: llamada condicional de hook
-const paginatedData = showPagination
-  ? useTablePagination(sortedData, currentPage, pageSize)
-  : sortedData;
+### 1. Rules of Hooks violado — RESUELTO
 
-// FIX: llamar siempre, controlar visualmente
-const paginatedData = useTablePagination(sortedData, currentPage, pageSize);
-// Luego usar showPagination para decidir si mostrar controles, no si computar
-```
+`useTablePagination` se llamaba dentro de un ternario. Ahora se llama siempre y
+`showPagination` solo decide si se pintan los controles. De paso se corrigió el
+página fuera de rango: `safePage = min(currentPage, totalPages)`, que antes
+podía dejar la tabla vacía al filtrar estando en la última página.
 
-### 2. `getNestedValue` duplicado 3 veces
+### 2. `getNestedValue` duplicado 3 veces — RESUELTO
 
-- `utils/get-nested-value.ts`
-- `hooks/use-table-sort.tsx` (líneas 5-12)
-- `hooks/use-table-filter.tsx` (líneas 5-12)
+Los tres sites usan `utils/get-nested-value.ts`. Su firma es
+`(obj: unknown, path: string): unknown`; los hooks castean donde hace falta.
 
-**Fix:** Los hooks deben importar del util compartido.
+### 3. `ColumnConfig.key` era `keyof T | string` — RESUELTO
 
-### 3. `ColumnConfig.key` es `keyof T | string`
+Ahora es `keyof T`. Ningún consumidor usa rutas con punto; si alguna vez hace
+falta, agregar `getRowId` y no re-abierta el tipo.
 
-El `| string` anula la seguridad de tipos. Debería ser `keyof T` para que TypeScript valide las keys.
+### 4. Row key usaba array index — RESUELTO
 
-### 4. Row key usa array index
+`resolveRowKey()` usa el prop `getRowId`, con fallback a `row.id` y finalmente
+al índice. `row.id` se lee como `unknown`, sin castear `T`.
 
-`key={rowIndex}` causa bugs de reconciliación. Debería usarse un `getRowId` prop.
+### 5. `quickFilters` era dead prop — RESUELTO
 
-### 5. `quickFilters` — dead prop
+`quickFilters` + `quickFilterKey` filtran dentro de `useTableFilter` y se
+pintan como chips en el toolbar. El chip activo se puede deseleccionar para
+volver a "todo".
 
-Definido en `types.ts:99` pero nunca consumido en `dynamic-table.tsx`.
+### Pendiente
+
+- `<img>` en la columna `type: 'image'` dispara `@next/next/no-img-element`.
+  No se migra a `next/image` hasta que haya `remotePatterns` configurados;
+  con URLs remotas sin host permitido, `next/image` revienta en runtime.
+- Los props `columns` / `visibleColumns` / `onToggleColumn` del toolbar siguen
+  sin uso: es la infraestructura del toggle de visibilidad, pendiente del
+  componente `dropdown-menu`.
 
 ---
 
@@ -79,11 +85,12 @@ Definido en `types.ts:99` pero nunca consumido en `dynamic-table.tsx`.
 
 ## Roadmap de mejoras
 
-### Fase 1: Corregir lo roto
-- [ ] Fix Rules of Hooks en `useTablePagination`
-- [ ] Eliminar `getNestedValue` duplicado
-- [ ] Corregir `ColumnConfig.key` a `keyof T`
-- [ ] Agregar `getRowId` prop para key estable
+### Fase 1: Corregir lo roto — COMPLETA
+- [x] Fix Rules of Hooks en `useTablePagination`
+- [x] Eliminar `getNestedValue` duplicado
+- [x] Corregir `ColumnConfig.key` a `keyof T`
+- [x] Agregar `getRowId` prop para key estable
+- [x] Implementar `quickFilters`
 
 ### Fase 2: Sub-componentes exportables
 - [ ] Exportar todos los sub-componentes y hooks desde `index.ts`
