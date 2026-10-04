@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { SectionTabs } from "@/shared/components/layout/section-tabs";
 import Treatments from "@/modules/clinic/views/Treatments";
 
 export default function TreatmentsPage() {
@@ -14,5 +15,10 @@ export default function TreatmentsPage() {
     }
   };
 
-  return <Treatments onNavigate={handleNavigate} />;
+  return (
+    <>
+      <SectionTabs section="tratamientos" />
+      <Treatments onNavigate={handleNavigate} />
+    </>
+  );
 }

@@ -9,6 +9,12 @@ export type AppSection =
   | "pagos"
   | "inventario";
 
+export type SectionTab = {
+  label: string;
+  href: string;
+  exact?: boolean;
+};
+
 export const NAV_ITEMS: readonly {
   section: AppSection;
   label: string;
@@ -50,4 +56,11 @@ export const SECTION_TITLES: Record<AppSection, string> = {
   tratamientos: "Tratamientos",
   pagos: "Pagos",
   inventario: "Inventario",
+};
+
+export const SECTION_TABS: Partial<Record<AppSection, readonly SectionTab[]>> = {
+  tratamientos: [
+    { label: "Tratamientos", href: "/treatments", exact: true },
+    { label: "Consultas", href: "/treatments/consultations" },
+  ],
 };
