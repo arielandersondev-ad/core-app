@@ -4,7 +4,7 @@ import {
   getClinicalByPatient, getSessionsByPatient,
   getServiceById, getProfessionalById,
   calcAge, formatCurrency, statusColors, statusLabels, paymentMethodLabels,
-} from "@/modules/clinic/__mocks__/data";
+} from "@/shared/data/clinic-data";
 
 type Tab = "resumen" | "historial" | "citas" | "sesiones" | "pagos";
 
@@ -27,8 +27,8 @@ export default function PatientDetail({
   const clinical = getClinicalByPatient(patientId);
   const sessions = getSessionsByPatient(patientId);
 
-  const totalPaid = pays.filter((p) => p.status === "pagado").reduce((s, p) => s + p.amount, 0);
-  const totalPending = pays.filter((p) => p.status === "pendiente").reduce((s, p) => s + p.amount, 0);
+  const totalPaid = pays.filter((p) => p.status === "pagado").reduce((s, p) => s + p.amountMinor, 0);
+  const totalPending = pays.filter((p) => p.status === "pendiente").reduce((s, p) => s + p.amountMinor, 0);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "resumen", label: "Resumen" },
@@ -93,12 +93,12 @@ export default function PatientDetail({
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-hidden">
               <div className="grid grid-cols-2">
                 {[
-                  { label: "Fecha de nacimiento", value: new Date(patient.dob).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" }) },
+                  { label: "Fecha de nacimiento", value: new Date(patient.dob).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) },
                   { label: "Tipo de sangre", value: patient.bloodType },
                   { label: "Correo", value: patient.email },
                   { label: "Teléfono", value: patient.phone },
                   { label: "Dirección", value: patient.address },
-                  { label: "Paciente desde", value: new Date(patient.createdAt).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" }) },
+                  { label: "Paciente desde", value: new Date(patient.createdAt).toLocaleDateString("es-BO", { day: "2-digit", month: "long", year: "numeric" }) },
                 ].map((item, i) => (
                   <div key={item.label} className={`px-5 py-4 ${i % 2 === 0 ? "border-r border-[var(--border)]" : ""} ${i < 4 ? "border-b border-[var(--border)]" : ""}`}>
                     <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-1">{item.label}</p>
@@ -119,7 +119,7 @@ export default function PatientDetail({
               <div>
                 <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-2">Último registro clínico</p>
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-5">
-                  <p className="text-[11px] font-mono text-[var(--muted)] mb-1">{new Date(clinical[0].date).toLocaleDateString("es-PE")} · {getProfessionalById(clinical[0].professionalId)?.name}</p>
+                  <p className="text-[11px] font-mono text-[var(--muted)] mb-1">{new Date(clinical[0].date).toLocaleDateString("es-BO")} · {getProfessionalById(clinical[0].professionalId)?.name}</p>
                   <p className="text-sm font-display font-semibold text-[var(--foreground)] mb-2">{clinical[0].title}</p>
                   <p className="text-sm text-[var(--muted)]">{clinical[0].notes}</p>
                   <div className="flex gap-1.5 mt-3 flex-wrap">
@@ -172,7 +172,7 @@ export default function PatientDetail({
                 <div>
                   <p className="text-sm font-display font-bold text-[var(--foreground)]">{entry.title}</p>
                   <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">
-                    {new Date(entry.date).toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {getProfessionalById(entry.professionalId)?.name}
+                    {new Date(entry.date).toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · {getProfessionalById(entry.professionalId)?.name}
                   </p>
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function PatientDetail({
             <tbody>
               {appts.map((apt) => (
                 <tr key={apt.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--background)] cursor-pointer transition-colors" onClick={() => onNavigate("cita-detalle", { citaId: apt.id })}>
-                  <td className="px-4 py-3 text-xs font-mono text-[var(--foreground)]">{new Date(apt.date).toLocaleDateString("es-PE", { day: "2-digit", month: "short" })} · {apt.startTime}</td>
+                  <td className="px-4 py-3 text-xs font-mono text-[var(--foreground)]">{new Date(apt.date).toLocaleDateString("es-BO", { day: "2-digit", month: "short" })} · {apt.startTime}</td>
                   <td className="px-4 py-3 text-sm text-[var(--muted)]">{getServiceById(apt.serviceId)?.name}</td>
                   <td className="px-4 py-3 text-sm text-[var(--muted)]">{getProfessionalById(apt.professionalId)?.name.replace("Dra. ", "").replace("Dr. ", "").replace("Lic. ", "")}</td>
                   <td className="px-4 py-3"><span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium rounded-[2px] ${statusColors[apt.status]}`}>{statusLabels[apt.status]}</span></td>
@@ -227,7 +227,7 @@ export default function PatientDetail({
               </div>
               <div className="flex-1">
                 <p className="text-sm font-display font-semibold text-[var(--foreground)]">{getServiceById(ses.serviceId)?.name}</p>
-                <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">{new Date(ses.date).toLocaleDateString("es-PE")} · {getProfessionalById(ses.professionalId)?.name}</p>
+                <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">{new Date(ses.date).toLocaleDateString("es-BO")} · {getProfessionalById(ses.professionalId)?.name}</p>
                 {ses.notes && <p className="text-sm text-[var(--muted)] mt-2">{ses.notes}</p>}
               </div>
             </div>
@@ -262,9 +262,9 @@ export default function PatientDetail({
               <tbody>
                 {pays.map((pay) => (
                   <tr key={pay.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--background)] transition-colors">
-                    <td className="px-4 py-3 text-xs font-mono text-[var(--muted)]">{new Date(pay.date).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                    <td className="px-4 py-3 text-xs font-mono text-[var(--muted)]">{new Date(pay.date).toLocaleDateString("es-BO", { day: "2-digit", month: "short", year: "numeric" })}</td>
                     <td className="px-4 py-3 text-sm text-[var(--foreground)]">{pay.concept}</td>
-                    <td className="px-4 py-3 text-sm font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amount)}</td>
+                    <td className="px-4 py-3 text-sm font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amountMinor)}</td>
                     <td className="px-4 py-3 text-[11px] font-mono text-[var(--muted)]">{paymentMethodLabels[pay.method]}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium rounded-[2px] ${pay.status === "pagado" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : pay.status === "pendiente" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700"}`}>

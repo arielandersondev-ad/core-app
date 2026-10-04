@@ -7,9 +7,10 @@ import {
   professionals,
   TODAY_DATE,
   formatCurrency,
-} from "@/modules/clinic/__mocks__/data";
+} from "@/shared/data/clinic-data";
 import { Select, Button } from "@/shared/components/ui";
 import { createAppointment } from "@/modules/clinic/api/appointments";
+import { env } from "@/infrastructure/config/env";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { DentalWhatsAppContext } from "@/shared/utils/whatsapp-generator";
@@ -81,15 +82,15 @@ export default function CreateAppointment({
 
     try {
       await createAppointment({
-        organizationId: "018f0000-0000-7000-0000-000000000001",
-        branchId: "018f0000-0000-7000-0000-000000000002",
+        organizationId: env.organizationId,
+        branchId: env.branchId,
         patientId: form.patientId,
         professionalMembershipId: form.professionalId,
         serviceId: form.serviceId,
         startsAt: startIso,
         endsAt: endIso,
         notes: form.notes,
-        createdByMembershipId: "018f0000-0000-7000-0000-000000000003",
+        createdByMembershipId: env.membershipId,
       });
       setSuccess(true);
     } catch (err: any) {
@@ -143,7 +144,7 @@ export default function CreateAppointment({
               📅 {dateFormatted} · ⏰ {form.startTime} - {calcEnd()}
             </p>
             <p className="text-[var(--primary)] font-mono font-bold mt-1">
-              {formatCurrency(selectedSvc?.price || 0)}
+              {formatCurrency(selectedSvc?.basePriceMinor || 0)}
             </p>
           </div>
         </div>
@@ -222,7 +223,7 @@ export default function CreateAppointment({
                 .filter((s) => s.active)
                 .map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} ({s.durationMin}m · {formatCurrency(s.price)})
+                    {s.name} ({s.durationMin}m · {formatCurrency(s.basePriceMinor)})
                   </option>
                 ))}
             </Select>
@@ -241,7 +242,7 @@ export default function CreateAppointment({
               </p>
               <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">
                 Duración: {selectedSvc.durationMin} min · Precio sugerido:{" "}
-                <strong>{formatCurrency(selectedSvc.price)}</strong>
+                <strong>{formatCurrency(selectedSvc.basePriceMinor)}</strong>
               </p>
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
-import { payments, getPatientById, getServiceById, formatCurrency, paymentMethodLabels } from "@/modules/clinic/__mocks__/data";
+import { payments, getPatientById, getServiceById, formatCurrency, paymentMethodLabels } from "@/shared/data/clinic-data";
 
 export default function Payments({ onNavigate }: { onNavigate: (s: string, p?: Record<string, string>) => void }) {
   const [dateFrom, setDateFrom] = useState("2026-08-01");
@@ -17,13 +17,13 @@ export default function Payments({ onNavigate }: { onNavigate: (s: string, p?: R
     return inRange && matchMethod && matchStatus;
   });
 
-  const totalPaid = filtered.filter((p) => p.status === "pagado").reduce((s, p) => s + p.amount, 0);
-  const totalPending = filtered.filter((p) => p.status === "pendiente").reduce((s, p) => s + p.amount, 0);
-  const totalPartial = filtered.filter((p) => p.status === "parcial").reduce((s, p) => s + p.amount, 0);
+  const totalPaid = filtered.filter((p) => p.status === "pagado").reduce((s, p) => s + p.amountMinor, 0);
+  const totalPending = filtered.filter((p) => p.status === "pendiente").reduce((s, p) => s + p.amountMinor, 0);
+  const totalPartial = filtered.filter((p) => p.status === "parcial").reduce((s, p) => s + p.amountMinor, 0);
 
   const byMethod = ["efectivo", "tarjeta", "transferencia", "otro"].map((m) => ({
     method: m,
-    total: filtered.filter((p) => p.method === m && p.status === "pagado").reduce((s, p) => s + p.amount, 0),
+    total: filtered.filter((p) => p.method === m && p.status === "pagado").reduce((s, p) => s + p.amountMinor, 0),
     count: filtered.filter((p) => p.method === m).length,
   }));
 
@@ -93,10 +93,10 @@ export default function Payments({ onNavigate }: { onNavigate: (s: string, p?: R
                   const patient = getPatientById(pay.patientId);
                   return (
                     <tr key={pay.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--background)] cursor-pointer transition-colors" onClick={() => onNavigate("paciente-detalle", { patientId: pay.patientId })}>
-                      <td className="px-4 py-3 text-xs font-mono text-[var(--muted)] whitespace-nowrap">{new Date(pay.date).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                      <td className="px-4 py-3 text-xs font-mono text-[var(--muted)] whitespace-nowrap">{new Date(pay.date).toLocaleDateString("es-BO", { day: "2-digit", month: "short", year: "numeric" })}</td>
                       <td className="px-4 py-3 text-sm font-display font-semibold text-[var(--foreground)]">{patient?.name.split(" ").slice(0, 2).join(" ")}</td>
                       <td className="px-4 py-3 text-sm text-[var(--muted)]">{pay.concept}</td>
-                      <td className="px-4 py-3 text-sm font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amount)}</td>
+                      <td className="px-4 py-3 text-sm font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amountMinor)}</td>
                       <td className="px-4 py-3 text-[11px] font-mono text-[var(--muted)]">{paymentMethodLabels[pay.method]}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium rounded-[2px] ${pay.status === "pagado" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : pay.status === "pendiente" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700"}`}>
@@ -123,10 +123,10 @@ export default function Payments({ onNavigate }: { onNavigate: (s: string, p?: R
               <div key={pay.id} onClick={() => onNavigate("paciente-detalle", { patientId: pay.patientId })} className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-4 cursor-pointer hover:bg-[var(--background)] transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-xs font-mono text-[var(--muted)]">{new Date(pay.date).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                    <p className="text-xs font-mono text-[var(--muted)]">{new Date(pay.date).toLocaleDateString("es-BO", { day: "2-digit", month: "short", year: "numeric" })}</p>
                     <p className="font-display font-semibold text-[var(--foreground)]">{patient?.name.split(" ").slice(0, 2).join(" ") || "N/A"}</p>
                   </div>
-                  <span className="text-lg font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amount)}</span>
+                  <span className="text-lg font-display font-bold text-[var(--foreground)]">{formatCurrency(pay.amountMinor)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs">
                   <span className="text-[var(--muted)]">{pay.concept || "Sin concepto"}</span>

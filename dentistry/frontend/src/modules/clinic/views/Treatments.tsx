@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { services, formatCurrency } from "@/modules/clinic/__mocks__/data";
+import { services, formatCurrency } from "@/shared/data/clinic-data";
 
 export default function Treatments({
   onNavigate,
@@ -25,7 +25,7 @@ export default function Treatments({
           { label: "Total servicios", value: services.length },
           { label: "Activos", value: services.filter((s) => s.active).length },
           { label: "Categorías", value: categories.length },
-          { label: "Precio promedio", value: formatCurrency(services.filter((s) => s.active).reduce((sum, s) => sum + s.price, 0) / services.filter((s) => s.active).length) },
+          { label: "Precio promedio", value: formatCurrency(services.filter((s) => s.active).reduce((sum, s) => sum + s.basePriceMinor, 0) / services.filter((s) => s.active).length) },
         ].map((s) => (
           <div key={s.label} className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-4">
             <p className="text-2xl font-display font-bold text-[var(--foreground)]">{s.value}</p>
@@ -76,7 +76,7 @@ export default function Treatments({
                       </td>
                       <td className="px-4 py-3.5 text-sm text-[var(--muted)] max-w-xs">{svc.description}</td>
                       <td className="px-4 py-3.5 text-sm font-mono text-[var(--foreground)]">{svc.durationMin} min</td>
-                      <td className="px-4 py-3.5 text-sm font-display font-bold text-[var(--primary)]">{formatCurrency(svc.price)}</td>
+                      <td className="px-4 py-3.5 text-sm font-display font-bold text-[var(--primary)]">{formatCurrency(svc.basePriceMinor)}</td>
                       <td className="px-4 py-3.5">
                         <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-medium rounded-[2px] ${svc.active ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400"}`}>
                           {svc.active ? "Activo" : "Inactivo"}

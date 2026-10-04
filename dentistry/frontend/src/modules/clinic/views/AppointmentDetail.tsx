@@ -10,7 +10,7 @@ import {
   statusLabels,
   formatCurrency,
   AppointmentStatus,
-} from "@/modules/clinic/__mocks__/data";
+} from "@/shared/data/clinic-data";
 import {
   updateAppointmentStatus,
   cancelAppointment,
@@ -197,7 +197,7 @@ export default function AppointmentDetail({
             <p className="text-xs sm:text-sm text-[var(--muted)] mt-1">
               ⏰ {apt.startTime} – {apt.endTime} · {svc?.durationMin} min ·{" "}
               <strong className="text-[var(--primary)] font-mono">
-                {formatCurrency(svc?.price ?? 0)}
+                {formatCurrency(svc?.basePriceMinor ?? 0)}
               </strong>
             </p>
           </div>
@@ -391,7 +391,7 @@ export default function AppointmentDetail({
         }}
         patientName={patient?.name || "Paciente"}
         serviceName={svc?.name || "Atención"}
-        priceFormatted={formatCurrency(svc?.price || 0)}
+        priceFormatted={formatCurrency(svc?.basePriceMinor || 0)}
       />
     </div>
   );

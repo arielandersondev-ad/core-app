@@ -13,12 +13,13 @@ import {
   Appointment,
   AppointmentStatus,
   formatCurrency,
-} from "@/modules/clinic/__mocks__/data";
+} from "@/shared/data/clinic-data";
 import {
   fetchAppointments,
   updateAppointmentStatus,
   AppointmentDto,
 } from "@/modules/clinic/api/appointments";
+import { env } from "@/infrastructure/config/env";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
@@ -149,7 +150,7 @@ export default function Agenda({
     setIsLoading(true);
 
     fetchAppointments({
-      organizationId: "018f0000-0000-7000-0000-000000000001",
+      organizationId: env.organizationId,
       date,
     })
       .then((dtos) => {
@@ -617,9 +618,9 @@ export default function Agenda({
                         </div>
                       </div>
 
-                      {svc?.price !== undefined && (
+                      {svc?.basePriceMinor !== undefined && (
                         <span className="font-mono text-xs font-semibold text-[var(--muted)] flex-shrink-0 pt-0.5">
-                          {formatCurrency(svc.price)}
+                          {formatCurrency(svc.basePriceMinor)}
                         </span>
                       )}
                     </div>
@@ -869,7 +870,7 @@ export default function Agenda({
             "Atención Odontológica"
           }
           priceFormatted={formatCurrency(
-            getServiceById(paymentPromptAppointment.serviceId)?.price || 0,
+            getServiceById(paymentPromptAppointment.serviceId)?.basePriceMinor || 0,
           )}
         />
       )}

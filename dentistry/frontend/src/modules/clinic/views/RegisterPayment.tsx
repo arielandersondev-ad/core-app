@@ -8,11 +8,12 @@ import {
   professionals,
   payments,
   formatCurrency,
+  parseCurrency,
   paymentMethodLabels,
-} from '@/modules/clinic/__mocks__/data';
-
-type PaymentMethod = 'efectivo' | 'tarjeta' | 'transferencia' | 'otro';
-type PaymentStatus = 'pagado' | 'pendiente' | 'parcial';
+  CLINIC_CURRENCY,
+  type PaymentMethod,
+  type PaymentStatus,
+} from '@/shared/data/clinic-data';
 
 interface RegisterPaymentProps {
   initialPatientId?: string;
@@ -47,7 +48,7 @@ export default function RegisterPayment({
       setError('Selecciona un paciente');
       return;
     }
-    if (!form.amount || parseFloat(form.amount) <= 0) {
+    if (!form.amount || parseCurrency(form.amount) <= 0) {
       setError('Ingresa un monto válido');
       return;
     }
@@ -58,7 +59,8 @@ export default function RegisterPayment({
       patientId: form.patientId,
       serviceId: form.serviceId || undefined,
       appointmentId: undefined,
-      amount: parseFloat(form.amount),
+      amountMinor: parseCurrency(form.amount),
+      currency: CLINIC_CURRENCY,
       date: form.date,
       method: form.method,
       status: form.status,
@@ -86,7 +88,7 @@ export default function RegisterPayment({
         </div>
         <h3 className="font-display text-xl font-bold text-foreground">Pago registrado</h3>
         <p className="text-sm text-muted-foreground text-center">
-          El pago de <strong>{formatCurrency(parseFloat(form.amount))}</strong> ha sido registrado.
+          El pago de <strong>{formatCurrency(parseCurrency(form.amount))}</strong> ha sido registrado.
         </p>
       </div>
     );
@@ -138,7 +140,7 @@ export default function RegisterPayment({
             <option value="">Sin servicio asociado</option>
             {services.filter(s => s.active).map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} - {formatCurrency(s.price)}
+                {s.name} - {formatCurrency(s.basePriceMinor)}
               </option>
             ))}
           </select>

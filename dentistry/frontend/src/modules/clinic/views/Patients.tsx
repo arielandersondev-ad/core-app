@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { patients, calcAge } from "@/modules/clinic/__mocks__/data";
+import { patients, calcAge } from "@/shared/data/clinic-data";
 
 export default function Patients({
   onNavigate,
@@ -94,7 +94,7 @@ export default function Patients({
                   )}
                 </td>
                 <td className="px-4 py-3.5 text-[11px] font-mono text-[var(--muted)]">
-                  {new Date(p.lastVisit).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}
+                  {new Date(p.lastVisit).toLocaleDateString("es-BO", { day: "2-digit", month: "short", year: "numeric" })}
                 </td>
                 <td className="px-4 py-3.5 text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>

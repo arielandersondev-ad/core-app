@@ -14,7 +14,7 @@ import {
   inventoryStatus,
   inventory,
   TODAY_DATE,
-} from '@/modules/clinic/__mocks__/data';
+} from '@/shared/data/clinic-data';
 import { Badge } from '@/shared/components/ui';
 
 const todayAppts = appointments
@@ -23,7 +23,7 @@ const todayAppts = appointments
 
 const totalHoy = payments
   .filter((p) => p.date === TODAY_DATE && p.status === 'pagado')
-  .reduce((s, p) => s + p.amount, 0);
+  .reduce((s, p) => s + p.amountMinor, 0);
 
 const pendingPayments = payments.filter((p) => p.status === 'pendiente').length;
 const alertItems = inventory.filter((i) => inventoryStatus(i) !== 'ok');
@@ -44,7 +44,7 @@ export default function ClinicDashboard({
       <div>
         <p className="text-[11px] font-mono uppercase tracking-widest text-[var(--muted)] mb-1">
           Hoy ·{' '}
-          {new Date(TODAY_DATE + 'T12:00:00').toLocaleDateString('es-PE', {
+          {new Date(TODAY_DATE + 'T12:00:00').toLocaleDateString('es-BO', {
             weekday: 'long',
             day: 'numeric',
             month: 'long',

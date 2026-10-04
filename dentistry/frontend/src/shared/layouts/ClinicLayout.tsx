@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { inventory, inventoryStatus } from "@/modules/clinic/__mocks__/data";
+import { inventory, inventoryStatus } from "@/shared/data/clinic-data";
 
 type ClinicTab = "dashboard" | "pacientes" | "agenda" | "tratamientos" | "pagos" | "inventario";
 
