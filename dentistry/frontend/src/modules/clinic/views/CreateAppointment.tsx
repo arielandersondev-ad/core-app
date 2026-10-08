@@ -9,6 +9,7 @@ import {
   formatCurrency,
 } from "@/modules/clinic/__mocks__/data";
 import { Select, Button } from "@/shared/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { createAppointment } from "@/modules/clinic/api/appointments";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
@@ -24,11 +25,12 @@ export default function CreateAppointment({
   const [form, setForm] = useState({
     patientId: patientId ?? "",
     professionalId: professionals[0]?.id ?? "",
-    serviceId: "",
+    serviceIds: [] as string[],
     date: TODAY_DATE,
     startTime: "09:00",
     notes: "",
   });
+  const [serviceToAdd, setServiceToAdd] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -37,29 +39,54 @@ export default function CreateAppointment({
   // WhatsApp modal state post-agendamiento
   const [isWaOpen, setIsWaOpen] = useState(false);
 
-  const set = (k: string, v: string) => {
+  const set = (k: string, v: any) => {
     setForm((f) => ({ ...f, [k]: v }));
     setErrors((e) => ({ ...e, [k]: "" }));
     setSubmitError(null);
   };
 
-  const selectedSvc = services.find((s) => s.id === form.serviceId);
+  const selectedServices = services.filter((s) =>
+    form.serviceIds.includes(s.id),
+  );
   const selectedPatient = patients.find((p) => p.id === form.patientId);
   const selectedPro = professionals.find((p) => p.id === form.professionalId);
 
+  // Combined duration and price calculations
+  const totalDurationMin = selectedServices.reduce(
+    (sum, s) => sum + s.durationMin,
+    0,
+  );
+  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+
+  const handleAddService = (sId: string) => {
+    if (!sId) return;
+    if (!form.serviceIds.includes(sId)) {
+      set("serviceIds", [...form.serviceIds, sId]);
+    }
+    setServiceToAdd("");
+  };
+
+  const handleRemoveService = (sId: string) => {
+    set(
+      "serviceIds",
+      form.serviceIds.filter((id) => id !== sId),
+    );
+  };
+
   const calcEnd = () => {
-    if (!form.startTime || !selectedSvc) return "";
+    if (!form.startTime || totalDurationMin === 0) return "";
     const [h, m] = form.startTime.split(":").map(Number);
-    const total = h * 60 + m + selectedSvc.durationMin;
+    const total = h * 60 + m + totalDurationMin;
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(
-      total % 60
+      total % 60,
     ).padStart(2, "0")}`;
   };
 
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.patientId) e.patientId = "Selecciona un paciente";
-    if (!form.serviceId) e.serviceId = "Selecciona un servicio odontológico";
+    if (form.serviceIds.length === 0)
+      e.serviceIds = "Selecciona al menos un servicio odontológico";
     if (!form.professionalId) e.professionalId = "Asigna un profesional";
     if (!form.date) e.date = "Selecciona una fecha";
     return e;
@@ -85,7 +112,8 @@ export default function CreateAppointment({
         branchId: "018f0000-0000-7000-0000-000000000002",
         patientId: form.patientId,
         professionalMembershipId: form.professionalId,
-        serviceId: form.serviceId,
+        serviceId: form.serviceIds[0],
+        serviceIds: form.serviceIds,
         startsAt: startIso,
         endsAt: endIso,
         notes: form.notes,
@@ -111,10 +139,12 @@ export default function CreateAppointment({
     month: "long",
   });
 
+  const serviceNames = selectedServices.map((s) => s.name).join(" + ");
+
   const waContext: DentalWhatsAppContext = {
     patientName: selectedPatient?.name || "Paciente",
     patientPhone: selectedPatient?.phone || "",
-    serviceName: selectedSvc?.name || "Consulta odontológica",
+    serviceName: serviceNames || "Consulta odontológica",
     dateStr: dateFormatted,
     timeStr: form.startTime,
     clinicName: "Dental Care Consultorio",
@@ -135,16 +165,33 @@ export default function CreateAppointment({
           <p className="text-xs sm:text-sm text-[var(--muted)] mt-1">
             <strong>{selectedPatient?.name}</strong>
           </p>
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3.5 mt-3 text-left text-xs flex flex-col gap-1">
-            <p className="text-[var(--foreground)] font-semibold">
-              🦷 {selectedSvc?.name}
-            </p>
-            <p className="text-[var(--muted)] font-mono">
-              📅 {dateFormatted} · ⏰ {form.startTime} - {calcEnd()}
-            </p>
-            <p className="text-[var(--primary)] font-mono font-bold mt-1">
-              {formatCurrency(selectedSvc?.price || 0)}
-            </p>
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3.5 mt-3 text-left text-xs flex flex-col gap-2">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--muted)]">
+                Servicios ({selectedServices.length}):
+              </p>
+              <ul className="mt-1 space-y-1">
+                {selectedServices.map((s) => (
+                  <li
+                    key={s.id}
+                    className="text-[var(--foreground)] font-semibold flex items-center justify-between"
+                  >
+                    <span>🦷 {s.name}</span>
+                    <span className="font-mono text-xs text-[var(--muted)]">
+                      {s.durationMin}m · {formatCurrency(s.price)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="pt-2 border-t border-[var(--border)] flex justify-between items-center text-xs">
+              <span className="text-[var(--muted)] font-mono">
+                📅 {dateFormatted} · ⏰ {form.startTime} - {calcEnd()}
+              </span>
+              <span className="text-[var(--primary)] font-mono font-bold">
+                {formatCurrency(totalPrice)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -178,7 +225,16 @@ export default function CreateAppointment({
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl mx-auto pb-20">
+    <PageContainer maxWidth="max-w-4xl" className="pb-20">
+      <PageHeader
+        title="Agendar Cita"
+        description="Programar cita clínica, asignar paciente, odontólogo y servicios requeridos"
+        breadcrumbs={[
+          { label: "Agenda", onClick: onBack },
+          { label: "Nueva cita" },
+        ]}
+      />
+
       {submitError && (
         <div className="mb-4 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs sm:text-sm">
           {submitError}
@@ -186,10 +242,10 @@ export default function CreateAppointment({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Paciente y Servicio */}
+        {/* Paciente y Servicios */}
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs flex flex-col gap-4">
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">
-            Paciente y Procedimiento
+            Paciente y Servicios Odontológicos
           </p>
 
           <div>
@@ -207,42 +263,91 @@ export default function CreateAppointment({
               ))}
             </Select>
             {errors.patientId && (
-              <p className="text-[11px] text-[var(--danger)] mt-1">{errors.patientId}</p>
+              <p className="text-[11px] text-[var(--danger)] mt-1">
+                {errors.patientId}
+              </p>
             )}
           </div>
 
           <div>
-            <Select
-              label="Servicio Odontológico"
-              value={form.serviceId}
-              onChange={(e) => set("serviceId", e.target.value)}
-            >
-              <option value="">Seleccionar servicio…</option>
-              {services
-                .filter((s) => s.active)
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.durationMin}m · {formatCurrency(s.price)})
-                  </option>
-                ))}
-            </Select>
-            {errors.serviceId && (
-              <p className="text-[11px] text-[var(--danger)] mt-1">{errors.serviceId}</p>
+            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] block mb-1">
+              Agregar Servicio
+            </label>
+            <div className="flex gap-2">
+              <Select
+                value={serviceToAdd}
+                onChange={(e) => {
+                  setServiceToAdd(e.target.value);
+                  handleAddService(e.target.value);
+                }}
+              >
+                <option value="">+ Seleccionar y agregar servicio…</option>
+                {services
+                  .filter((s) => s.active && !form.serviceIds.includes(s.id))
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.durationMin}m · {formatCurrency(s.price)})
+                    </option>
+                  ))}
+              </Select>
+            </div>
+            {errors.serviceIds && (
+              <p className="text-[11px] text-[var(--danger)] mt-1">
+                {errors.serviceIds}
+              </p>
             )}
           </div>
 
-          {selectedSvc && (
-            <div className="bg-[var(--primary-subtle)] rounded-xl p-3 border border-[var(--primary)]/20">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--primary)] font-bold mb-0.5">
-                Estimación de consulta
+          {/* Selected Services Tags / Breakdown */}
+          {selectedServices.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold text-[var(--foreground)]">
+                Servicios seleccionados ({selectedServices.length}):
               </p>
-              <p className="text-xs font-semibold text-[var(--foreground)]">
-                {selectedSvc.name}
-              </p>
-              <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">
-                Duración: {selectedSvc.durationMin} min · Precio sugerido:{" "}
-                <strong>{formatCurrency(selectedSvc.price)}</strong>
-              </p>
+              <div className="divide-y divide-[var(--border)] border border-[var(--border)] rounded-xl bg-[var(--surface-subtle)] overflow-hidden">
+                {selectedServices.map((s) => (
+                  <div
+                    key={s.id}
+                    className="p-2.5 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <p className="font-semibold text-[var(--foreground)]">
+                        {s.name}
+                      </p>
+                      <p className="text-[10px] text-[var(--muted)] font-mono">
+                        ⏱ {s.durationMin} min · {formatCurrency(s.price)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveService(s.id)}
+                      className="text-red-500 hover:text-red-700 text-sm font-bold p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Total Duration & Price Summary Box */}
+              <div className="bg-[var(--primary-subtle)] rounded-xl p-3 border border-[var(--primary)]/20 flex items-center justify-between text-xs">
+                <div>
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--primary)] font-bold">
+                    Duración Acumulada
+                  </p>
+                  <p className="font-bold text-[var(--foreground)] font-mono text-sm mt-0.5">
+                    ⏱ {totalDurationMin} minutos
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--primary)] font-bold">
+                    Precio Total Estimado
+                  </p>
+                  <p className="font-bold text-[var(--primary)] font-mono text-sm mt-0.5">
+                    {formatCurrency(totalPrice)}
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -285,7 +390,9 @@ export default function CreateAppointment({
                 className="w-full h-10 px-3 bg-[var(--background)] border border-[var(--border)] rounded-xl text-xs text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
               />
               {errors.date && (
-                <p className="text-[11px] text-[var(--danger)] mt-1">{errors.date}</p>
+                <p className="text-[11px] text-[var(--danger)] mt-1">
+                  {errors.date}
+                </p>
               )}
             </div>
 
@@ -302,11 +409,11 @@ export default function CreateAppointment({
             </div>
           </div>
 
-          {selectedSvc && (
-            <div className="bg-[var(--background)] rounded-xl p-3 border border-[var(--border)] text-xs text-[var(--muted)]">
-              <span>Hora estimada de finalización: </span>
-              <strong className="font-mono text-[var(--foreground)]">
-                {calcEnd()}
+          {selectedServices.length > 0 && (
+            <div className="bg-[var(--background)] rounded-xl p-3 border border-[var(--border)] text-xs text-[var(--muted)] flex items-center justify-between">
+              <span>Hora estimada de finalización:</span>
+              <strong className="font-mono text-[var(--foreground)] text-sm">
+                ⏰ {calcEnd()}
               </strong>
             </div>
           )}
@@ -342,6 +449,6 @@ export default function CreateAppointment({
           Cancelar
         </button>
       </div>
-    </div>
+    </PageContainer>
   );
 }

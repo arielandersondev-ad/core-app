@@ -1,4 +1,8 @@
-﻿import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { Appointment } from '../../domain/entities/appointment.entity.js';
 import { AppointmentRepository } from '../../domain/repositories/appointment.repository.js';
 
@@ -7,7 +11,8 @@ export interface CreateAppointmentCommand {
   branchId: string;
   patientId: string;
   professionalMembershipId: string;
-  serviceId: string;
+  serviceId?: string;
+  serviceIds?: string[];
   treatmentId?: string | null;
   startsAt: Date;
   endsAt: Date;
@@ -22,7 +27,18 @@ export class CreateAppointmentUseCase {
 
   async execute(command: CreateAppointmentCommand): Promise<Appointment> {
     if (command.startsAt >= command.endsAt) {
-      throw new BadRequestException('La hora de inicio debe ser anterior a la hora de fin.');
+      throw new BadRequestException(
+        'La hora de inicio debe ser anterior a la hora de fin.',
+      );
+    }
+
+    if (
+      !command.serviceId &&
+      (!command.serviceIds || command.serviceIds.length === 0)
+    ) {
+      throw new BadRequestException(
+        'Debe seleccionar al menos un servicio para la cita.',
+      );
     }
 
     // Comprobar que no exista solapamiento de horario para el profesional
@@ -46,6 +62,7 @@ export class CreateAppointmentUseCase {
       patientId: command.patientId,
       professionalMembershipId: command.professionalMembershipId,
       serviceId: command.serviceId,
+      serviceIds: command.serviceIds,
       treatmentId: command.treatmentId,
       startsAt: command.startsAt,
       endsAt: command.endsAt,

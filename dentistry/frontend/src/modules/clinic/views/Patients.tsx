@@ -1,5 +1,10 @@
+"use client";
+
 import { useState } from "react";
 import { patients, calcAge } from "@/modules/clinic/__mocks__/data";
+import { PageContainer, PageHeader, FilterToolbar } from "@/shared/components/layout";
+import { StatCard, Button, Input, EmptyState, Icons } from "@/shared/components/ui";
+import { CreatePatientModal } from "@/modules/clinic/components";
 
 export default function Patients({
   onNavigate,
@@ -7,109 +12,188 @@ export default function Patients({
   onNavigate: (s: string, p?: Record<string, string>) => void;
 }) {
   const [search, setSearch] = useState("");
+  const [patientsList, setPatientsList] = useState(patients);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filtered = patients.filter((p) => {
+  const filtered = patientsList.filter((p) => {
     const q = search.toLowerCase();
-    return p.name.toLowerCase().includes(q) || p.phone.includes(q) || p.email.toLowerCase().includes(q);
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.phone.includes(q) ||
+      p.email.toLowerCase().includes(q)
+    );
   });
 
   return (
-    <div className="p-8 flex flex-col gap-6">
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Total pacientes", value: patients.length },
-          { label: "Con cita esta semana", value: 5 },
-          { label: "Nuevos este mes", value: 2 },
-        ].map((s) => (
-          <div key={s.label} className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-4">
-            <p className="text-3xl font-display font-bold text-[var(--foreground)]">{s.value}</p>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mt-1">{s.label}</p>
-          </div>
-        ))}
+    <PageContainer>
+      {/* 1. Cabecera */}
+      <PageHeader
+        title="Pacientes"
+        description="Gestión del padrón de pacientes, expedientes clínicos e historial de consultas"
+        action={
+          <Button
+            variant="primary"
+            onClick={() => setIsModalOpen(true)}
+            className="font-semibold text-xs shadow-xs"
+          >
+            <span className="text-base leading-none font-bold">+</span>
+            Nuevo paciente
+          </Button>
+        }
+      />
+
+      {/* 2. KPIs y Métricas */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <StatCard
+          label="Total Pacientes"
+          value={patients.length}
+          sublabel="Registrados en el sistema"
+          icon={Icons.users}
+        />
+        <StatCard
+          label="Citas Esta Semana"
+          value={5}
+          sublabel="Atenciones programadas"
+          variant="accent"
+          icon={Icons.calendar}
+        />
+        <StatCard
+          label="Nuevos Este Mes"
+          value={2}
+          sublabel="Incorporaciones recientes"
+          variant="success"
+          icon={Icons.plus}
+        />
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input
+      {/* 3. Filtros y Búsqueda */}
+      <FilterToolbar>
+        <div className="relative flex-1 max-w-md">
+          <Input
+            inputSize="sm"
+            leftIcon={Icons.search}
+            placeholder="Buscar por nombre, teléfono o correo…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nombre, teléfono o correo…"
-            className="w-full h-9 pl-9 pr-3 bg-[var(--surface)] border border-[var(--border)] rounded-[3px] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
           />
         </div>
-        <button
-          onClick={() => onNavigate("crear-paciente")}
-          className="h-9 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-[3px] text-sm font-display font-semibold flex items-center gap-1.5 hover:opacity-90 ml-auto"
-        >
-          + Nuevo paciente
-        </button>
-      </div>
+        <p className="text-xs font-mono text-[var(--muted)]">
+          Mostrando {filtered.length} de {patients.length} pacientes
+        </p>
+      </FilterToolbar>
 
-      {/* Table */}
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--background)]/40">
-              {["Paciente", "Edad · Sangre", "Teléfono", "Alergias", "Última visita", ""].map((h) => (
-                <th key={h} className="text-left px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr
-                key={p.id}
-                onClick={() => onNavigate("paciente-detalle", { patientId: p.id })}
-                className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--background)] cursor-pointer transition-colors group"
-              >
-                <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] text-xs font-display font-bold flex-shrink-0">
-                      {p.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
-                    </div>
-                    <div>
-                      <p className="text-sm font-display font-semibold text-[var(--foreground)]">{p.name}</p>
-                      <p className="text-[11px] font-mono text-[var(--muted)]">{p.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3.5 text-sm text-[var(--muted)]">
-                  {calcAge(p.dob)} años · <span className="font-mono">{p.bloodType}</span>
-                </td>
-                <td className="px-4 py-3.5 text-sm font-mono text-[var(--foreground)]">{p.phone}</td>
-                <td className="px-4 py-3.5">
-                  {p.allergies.length === 0 ? (
-                    <span className="text-[11px] text-[var(--muted)]">—</span>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {p.allergies.map((a) => (
-                        <span key={a} className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wide rounded-[2px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
-                          {a}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td className="px-4 py-3.5 text-[11px] font-mono text-[var(--muted)]">
-                  {new Date(p.lastVisit).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}
-                </td>
-                <td className="px-4 py-3.5 text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
-                </td>
+      {/* 4. Tabla de Datos */}
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-[var(--border)] bg-[var(--background)]/50">
+                {[
+                  "Paciente",
+                  "Edad · Sangre",
+                  "Teléfono",
+                  "Alergias",
+                  "Última visita",
+                  "",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {filtered.map((p) => (
+                <tr
+                  key={p.id}
+                  onClick={() =>
+                    onNavigate("paciente-detalle", { patientId: p.id })
+                  }
+                  className="hover:bg-[var(--background)]/60 cursor-pointer transition-colors group"
+                >
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--primary-subtle)] flex items-center justify-center text-[var(--primary)] text-xs font-display font-bold flex-shrink-0">
+                        {p.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")}
+                      </div>
+                      <div>
+                        <p className="text-sm font-display font-semibold text-[var(--foreground)]">
+                          {p.name}
+                        </p>
+                        <p className="text-[11px] font-mono text-[var(--muted)]">
+                          {p.email}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-sm text-[var(--muted)]">
+                    {calcAge(p.dob)} años ·{" "}
+                    <span className="font-mono text-xs font-medium text-[var(--foreground)]">
+                      {p.bloodType}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-sm font-mono text-[var(--foreground)]">
+                    {p.phone}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    {p.allergies.length === 0 ? (
+                      <span className="text-xs text-[var(--muted)]">—</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {p.allergies.map((a) => (
+                          <span
+                            key={a}
+                            className="inline-flex items-center px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide rounded-md bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900"
+                          >
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5 text-xs font-mono text-[var(--muted)]">
+                    {new Date(p.lastVisit).toLocaleDateString("es-PE", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+                  <td className="px-4 py-3.5 text-right text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="inline-block transform group-hover:translate-x-0.5 transition-transform">
+                      →
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {filtered.length === 0 && (
-          <div className="py-16 text-center text-sm text-[var(--muted)]">Sin resultados para "{search}"</div>
+          <EmptyState message={`Sin resultados para "${search}"`} />
         )}
-        <div className="px-4 py-2.5 border-t border-[var(--border)] bg-[var(--background)]/30">
-          <p className="text-[11px] font-mono text-[var(--muted)]">{filtered.length} de {patients.length} pacientes</p>
+
+        <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--background)]/30 flex items-center justify-between text-xs font-mono text-[var(--muted)]">
+          <span>{filtered.length} registros</span>
+          <span>Sincronizado con base de datos</span>
         </div>
       </div>
-    </div>
+
+      <CreatePatientModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(newPat) => {
+          setPatientsList([...patients]);
+          onNavigate("paciente-detalle", { patientId: newPat.id });
+        }}
+      />
+    </PageContainer>
   );
 }

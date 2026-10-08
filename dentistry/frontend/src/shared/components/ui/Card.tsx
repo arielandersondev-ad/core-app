@@ -12,7 +12,7 @@ export function Card({
   return (
     <div
       onClick={onClick}
-      className={`bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius)] ${onClick ? 'active:opacity-70 cursor-pointer' : ''} ${className}`}
+      className={`bg-[var(--surface)] border border-[var(--border)] rounded-xl ${onClick ? 'active:opacity-70 cursor-pointer' : ''} ${className}`}
     >
       {children}
     </div>

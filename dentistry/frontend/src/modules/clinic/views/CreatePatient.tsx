@@ -1,11 +1,6 @@
 import React, { useState, type ChangeEvent } from "react";
-import {
-  Input,
-  Select,
-  Button,
-  Card,
-  SectionHeader,
-} from "@/shared/components/ui";
+import { Input, Select, Button } from "@/shared/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export default function CreatePatient({ onBack }: { onBack: () => void }) {
   const [form, setForm] = useState({
@@ -45,64 +40,69 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
 
   if (success) {
     return (
-      <div className="p-8 max-w-lg flex flex-col items-center gap-5 pt-20">
-        <div className="w-14 h-14 rounded-[4px] bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+      <PageContainer maxWidth="max-w-lg" className="pt-16 items-center text-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-2xl shadow-xs">
+          ✓
         </div>
-        <div className="text-center">
-          <h3 className="font-display text-xl font-bold text-[var(--foreground)]">
+        <div className="space-y-1">
+          <h3 className="font-display text-2xl font-bold text-[var(--foreground)]">
             Paciente registrado
           </h3>
-          <p className="text-sm text-[var(--muted)] mt-1">
-            <strong>{form.name}</strong> fue registrado correctamente.
+          <p className="text-sm text-[var(--muted)]">
+            <strong>{form.name}</strong> fue registrado con éxito en el sistema clínico.
           </p>
         </div>
-        <Button onClick={onBack} fullWidth>
-          Ir a pacientes
+        <Button onClick={onBack} fullWidth className="mt-4 shadow-xs">
+          Volver a pacientes
         </Button>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-5">
-          <section>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
+    <PageContainer maxWidth="max-w-4xl">
+      {/* 1. Cabecera */}
+      <PageHeader
+        title="Nuevo Paciente"
+        description="Registrar expediente, antecedentes personales e información clínica inicial"
+        breadcrumbs={[
+          { label: "Pacientes", onClick: onBack },
+          { label: "Nuevo paciente" },
+        ]}
+      />
+
+      {/* 2. Formulario en 2 Columnas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-6">
+          <section className="flex flex-col gap-2.5">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--muted)] font-semibold">
               Datos personales
-            </p>
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-5 flex flex-col gap-4">
+            </h2>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-4 shadow-xs">
               <Input
-                label="Nombre completo"
-                placeholder="Ana Cristina Vidal Torres"
+                label="Nombre completo *"
+                placeholder="Ej. Ana Cristina Vidal Torres"
                 value={form.name}
- //               onChange={(e) => set("name", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => set("name", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  set("name", e.target.value)
+                }
                 error={errors.name}
               />
               <Input
-                label="Fecha de nacimiento"
+                label="Fecha de nacimiento *"
                 type="date"
                 value={form.dob}
-              //  onChange={(e) => set("dob", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => set("dob", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  set("dob", e.target.value)
+                }
                 error={errors.dob}
               />
               <Select
                 label="Tipo de sangre"
                 value={form.bloodType}
-           //     onChange={(e) => set("bloodType", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => set("bloodType", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                  set("bloodType", e.target.value)
+                }
               >
                 {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((t) => (
                   <option key={t} value={t}>
@@ -112,87 +112,93 @@ export default function CreatePatient({ onBack }: { onBack: () => void }) {
               </Select>
             </div>
           </section>
-          <section>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
+
+          <section className="flex flex-col gap-2.5">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--muted)] font-semibold">
               Contacto
-            </p>
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-5 flex flex-col gap-4">
+            </h2>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-4 shadow-xs">
               <Input
-                label="Teléfono"
+                label="Teléfono principal *"
                 placeholder="+51 987 654 321"
                 value={form.phone}
-              //  onChange={(e) => set("phone", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => set("phone", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  set("phone", e.target.value)
+                }
                 error={errors.phone}
               />
               <Input
-                label="Correo (opcional)"
+                label="Correo electrónico (opcional)"
                 type="email"
-                placeholder="paciente@gmail.com"
+                placeholder="paciente@correo.com"
                 value={form.email}
-             //   onChange={(e) => set("email", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => set("email", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  set("email", e.target.value)
+                }
               />
               <Input
-                label="Dirección (opcional)"
+                label="Dirección de residencia (opcional)"
                 placeholder="Av. Los Álamos 234, Lima"
                 value={form.address}
-              //  onChange={(e) => set("address", e.target.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => set("address", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  set("address", e.target.value)
+                }
               />
             </div>
           </section>
         </div>
-        <div className="flex flex-col gap-5">
-          <section>
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
+
+        <div className="flex flex-col gap-6">
+          <section className="flex flex-col gap-2.5">
+            <h2 className="text-xs font-mono uppercase tracking-wider text-[var(--muted)] font-semibold">
               Información clínica
-            </p>
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[4px] p-5 flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]">
+            </h2>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5 flex flex-col gap-4 shadow-xs">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">
                   Alergias conocidas
                 </label>
                 <textarea
                   value={form.allergies}
-               //   onChange={(e) => set("allergies", e.target.value)}
-                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => set("allergies", e.target.value)}
-                  placeholder="Ibuprofeno, Penicilina… (separar con coma)"
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    set("allergies", e.target.value)
+                  }
+                  placeholder="Ibuprofeno, Penicilina, Látex… (separar por coma)"
                   rows={2}
-                  className="w-full px-3 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-[3px] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] resize-none"
+                  className="w-full px-3 py-2.5 bg-[var(--surface-subtle)] border border-[var(--border)] rounded-xl text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] resize-none transition-all"
                 />
-                <p className="text-[10px] text-[var(--muted)]">
-                  Si no hay alergias conocidas, dejar en blanco
+                <p className="text-[11px] text-[var(--muted)]">
+                  Si no presenta alergias conocidas, dejar este campo en blanco.
                 </p>
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]">
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-mono uppercase tracking-wider text-[var(--muted)]">
                   Notas clínicas iniciales
                 </label>
                 <textarea
                   value={form.notes}
-               //   onChange={(e) => set("notes", e.target.value)}
-                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => set("notes", e.target.value)}
-                  placeholder="Diagnóstico inicial, antecedentes relevantes, condiciones crónicas…"
-                  rows={4}
-                  className="w-full px-3 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-[3px] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] resize-none"
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    set("notes", e.target.value)
+                  }
+                  placeholder="Diagnóstico previo, antecedentes médicos o motivos de consulta…"
+                  rows={5}
+                  className="w-full px-3 py-2.5 bg-[var(--surface-subtle)] border border-[var(--border)] rounded-xl text-sm placeholder:text-[var(--muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)] resize-none transition-all"
                 />
               </div>
             </div>
           </section>
-          <div className="flex gap-3 mt-auto">
-            <Button onClick={handleSubmit} fullWidth>
+
+          <div className="flex items-center gap-3 pt-2 mt-auto">
+            <Button onClick={handleSubmit} fullWidth className="shadow-xs">
               Registrar paciente
             </Button>
-            <button
-              onClick={onBack}
-              className="h-10 px-4 text-sm text-[var(--muted)] border border-[var(--border)] rounded-[3px] hover:text-[var(--foreground)]"
-            >
+            <Button variant="outline" onClick={onBack}>
               Cancelar
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

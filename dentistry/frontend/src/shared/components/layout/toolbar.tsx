@@ -24,7 +24,7 @@ export function Toolbar({ search, children }: ToolbarProps) {
             value={search.value}
             onChange={(e) => search.onChange(e.target.value)}
             placeholder={search.placeholder ?? "Buscar..."}
-            className="w-full h-9 pl-9 pr-3 bg-surface border border-border rounded-[3px] text-sm placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full h-9 pl-9 pr-3 bg-surface border border-border rounded-xl text-sm placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
       )}

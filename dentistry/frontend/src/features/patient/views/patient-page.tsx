@@ -54,7 +54,7 @@ const patientColumns: ColumnConfig<Patient>[] = [
           {allergies.map((a) => (
             <span
               key={a}
-              className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wide rounded-[2px] bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+              className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wide rounded-md bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
             >
               {a}
             </span>

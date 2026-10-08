@@ -1,5 +1,14 @@
 import { env } from "@/infrastructure/config/env";
 
+export interface AppointmentServiceDto {
+  id?: string;
+  serviceId: string;
+  serviceName?: string;
+  priceMinor?: number | null;
+  durationMinutes?: number | null;
+  notes?: string | null;
+}
+
 export interface AppointmentDto {
   id: string;
   organizationId: string;
@@ -7,6 +16,7 @@ export interface AppointmentDto {
   patientId: string;
   professionalMembershipId: string;
   serviceId: string;
+  serviceIds?: string[];
   treatmentId?: string | null;
   startsAt: string;
   endsAt: string;
@@ -26,6 +36,7 @@ export interface AppointmentDto {
   cancellationReason?: string | null;
   createdAt: string;
   updatedAt: string;
+  services?: AppointmentServiceDto[];
 }
 
 export interface CreateAppointmentRequest {
@@ -33,7 +44,8 @@ export interface CreateAppointmentRequest {
   branchId: string;
   patientId: string;
   professionalMembershipId: string;
-  serviceId: string;
+  serviceId?: string;
+  serviceIds?: string[];
   treatmentId?: string;
   startsAt: string;
   endsAt: string;
@@ -71,7 +83,9 @@ export async function fetchAppointments(
   return res.json();
 }
 
-export async function fetchAppointmentById(id: string): Promise<AppointmentDto> {
+export async function fetchAppointmentById(
+  id: string,
+): Promise<AppointmentDto> {
   const res = await fetch(`${env.apiUrl}/appointments/${id}`, {
     headers: { Accept: "application/json" },
   });

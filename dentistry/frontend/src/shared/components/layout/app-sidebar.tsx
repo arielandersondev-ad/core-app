@@ -13,7 +13,7 @@ export function AppSidebar() {
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-border gap-2.5">
-        <div className="w-7 h-7 bg-primary rounded-[3px] flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
           {Icons.tooth}
         </div>
         <span className="font-display text-sm font-bold tracking-wide text-foreground">
@@ -33,7 +33,7 @@ export function AppSidebar() {
             <Link
               key={section}
               href={href}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[3px] text-left transition-colors text-sm font-display font-medium ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors text-sm font-display font-medium ${
                 active
                   ? "bg-primary-subtle text-primary"
                   : "text-muted hover:bg-background hover:text-foreground"
@@ -52,8 +52,8 @@ export function AppSidebar() {
       <div className="border-t border-border p-3 flex flex-col gap-1">
         <ThemeToggle variant="sidebar" />
 
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-[3px]">
-          <div className="w-7 h-7 rounded-[2px] bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-display font-bold flex-shrink-0">
+        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
+          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-display font-bold flex-shrink-0">
             DA
           </div>
           <div className="flex-1 min-w-0">

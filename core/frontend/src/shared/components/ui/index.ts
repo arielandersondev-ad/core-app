@@ -1,14 +1,39 @@
-export { Avatar } from "./Avatar";
-export { Badge } from "./Badge";
-export type { BadgeProps, BadgeSize, BadgeVariant } from "./Badge";
-export { Button } from "./Button";
-export { Card } from "./Card";
-export { Separator } from "./Separator";
-export { Label } from "./Label";
-export { Input } from "./Input";
-export { Select } from "./Select";
-export { Toggle } from "./Toggle";
-export { SectionHeader } from "./SectionHeader";
-export { StatCard } from "./StatCard";
-export { EmptyState } from "./EmptyState";
-export { Icons } from "./Icons";
+// Re-export standardized Design System components from @app/ui
+export {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Separator,
+  Label,
+  Input,
+  Select,
+  Toggle,
+  SectionHeader,
+  StatCard,
+  EmptyState,
+  Icons,
+  Modal,
+} from "@app/ui";
+
+export type {
+  BadgeProps,
+  BadgeSize,
+  BadgeVariant,
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+  CardProps,
+  InputProps,
+  InputSize,
+  SelectProps,
+  SelectOption,
+  StatCardProps,
+  StatCardVariant,
+  ModalProps,
+  ToggleProps,
+  EmptyStateProps,
+  AvatarProps,
+  SeparatorProps,
+  SectionHeaderProps,
+} from "@app/ui";

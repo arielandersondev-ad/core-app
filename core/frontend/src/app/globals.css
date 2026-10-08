@@ -36,7 +36,7 @@
   --accent: #f0ebe1;
   --accent-foreground: var(--foreground);
   --ring: var(--primary);
-  --radius: 0.375rem;
+  --radius: 0.75rem;
 }
 
 .dark {
@@ -128,9 +128,10 @@
   --font-display: var(--font-work-sans);      /* títulos, etiquetas */
   --font-mono: var(--font-dm-mono);           /* código, timestamps, datos monoespaciados */
 
-  --radius-sm: calc(var(--radius) - 0.125rem);
+  --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 0.125rem);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: 1rem;
 }
 
 * {

@@ -6,11 +6,13 @@
   --background: #f3efe6;
   --surface: #faf8f3;
   --surface-elevated: #ffffff;
+  --surface-subtle: #f5f2eb;
   --primary: #3d7a46;
   --primary-accent: #62a84f;
   --primary-subtle: #e6ede3;
   --primary-foreground: #ffffff;
   --secondary: #9a744f;
+  --secondary-foreground: #ffffff;
   --hazelnut: #9a744f;
   --gold-accent: #c5a46d;
   --foreground: #171a17;
@@ -18,26 +20,36 @@
   --border: #ddd7ca;
   --danger: #9e2a2a;
   --danger-foreground: #ffffff;
+  --danger-subtle: #f7dddd;
   --success: #2d7a3a;
   --success-foreground: #ffffff;
+  --success-subtle: #e6f2e8;
   --destructive: #9e2a2a;
   --destructive-foreground: #ffffff;
   --warning: #b45309;
   --warning-foreground: #ffffff;
+  --warning-subtle: #f8edd9;
+  --neutral-subtle: #edf1ee;
   --muted-foreground: #65685f;
   --popover: #ffffff;
   --accent: #f0ebe1;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --ring: var(--primary);
+  --radius: 0.75rem;
 }
 
 .dark {
   --background: #0b0e0c;
   --surface: #111512;
   --surface-elevated: #181d19;
+  --surface-subtle: #141815;
   --primary: #62a84f;
   --primary-accent: #79c165;
   --primary-subtle: #315d39;
   --primary-foreground: #0b0e0c;
   --secondary: #a88762;
+  --secondary-foreground: #f1f3ee;
   --hazelnut: #a88762;
   --gold-accent: #c5a46d;
   --foreground: #f1f3ee;
@@ -45,60 +57,82 @@
   --border: #293029;
   --danger: #c0362b;
   --danger-foreground: #ffffff;
+  --danger-subtle: #3d1d1c;
   --success: #4ade80;
   --success-foreground: #0b0e0c;
+  --success-subtle: #173622;
   --destructive: #c0362b;
   --destructive-foreground: #ffffff;
   --warning: #f59e0b;
   --warning-foreground: #0b0e0c;
+  --warning-subtle: #382914;
+  --neutral-subtle: #20292d;
   --muted-foreground: #a6ada4;
   --popover: #181d19;
   --accent: #1a201a;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --ring: var(--primary);
 }
 
 @theme inline {
   /* ── Superficies ── */
-  --color-background: var(--background);      /* body, páginas, hover de filas */
-  --color-surface: var(--surface);            /* cards, tablas, inputs */
+  --color-background: var(--background); /* body, páginas, hover de filas */
+  --color-surface: var(--surface); /* cards, tablas, inputs */
   --color-surface-elevated: var(--surface-elevated); /* dropdowns, modals */
+  --color-surface-subtle: var(--surface-subtle);
 
   /* ── Marca / primarios ── */
-  --color-primary: var(--primary);            /* botones, links, acentos */
+  --color-primary: var(--primary); /* botones, links, acentos */
   --color-primary-accent: var(--primary-accent); /* hover de primarios */
-  --color-primary-subtle: var(--primary-subtle);  /* avatars, highlights suaves */
+  --color-primary-subtle: var(--primary-subtle); /* avatars, highlights suaves */
   --color-primary-foreground: var(--primary-foreground); /* texto sobre bg-primary */
 
   /* ── Secundarios / marca ── */
-  --color-secondary: var(--secondary);        /* botones secundarios */
-  --color-hazelnut: var(--hazelnut);          /* acento de marca */
-  --color-gold-accent: var(--gold-accent);    /* acento dorado */
+  --color-secondary: var(--secondary); /* botones secundarios */
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-hazelnut: var(--hazelnut); /* acento de marca */
+  --color-gold-accent: var(--gold-accent); /* acento dorado */
 
   /* ── Texto ── */
-  --color-foreground: var(--foreground);       /* texto principal */
-  --color-muted: var(--muted);                /* texto secundario, iconos */
+  --color-foreground: var(--foreground); /* texto principal */
+  --color-muted: var(--muted); /* texto secundario, iconos */
   --color-muted-foreground: var(--muted-foreground); /* encabezados de tabla, texto deshabilitado */
 
   /* ── Bordes ── */
-  --color-border: var(--border);              /* bordes de tablas, inputs, cards */
+  --color-border: var(--border); /* bordes de tablas, inputs, cards */
 
   /* ── Estados ── */
-  --color-danger: var(--danger);              /* botones de peligro, acciones destructivas */
+  --color-danger: var(--danger); /* botones de peligro, acciones destructivas */
   --color-danger-foreground: var(--danger-foreground); /* texto sobre bg-danger */
-  --color-success: var(--success);            /* badges de estado exitoso (data-table) */
+  --color-danger-subtle: var(--danger-subtle);
+  --color-success: var(--success); /* badges de estado exitoso */
   --color-success-foreground: var(--success-foreground); /* texto sobre bg-success */
-  --color-destructive: var(--destructive);    /* badges de estado destructivo (data-table) */
+  --color-success-subtle: var(--success-subtle);
+  --color-destructive: var(--destructive); /* badges de estado destructivo */
   --color-destructive-foreground: var(--destructive-foreground); /* texto sobre bg-destructive */
-  --color-warning: var(--warning);            /* badges de estado de advertencia (data-table) */
+  --color-warning: var(--warning); /* badges de estado de advertencia */
   --color-warning-foreground: var(--warning-foreground); /* texto sobre bg-warning */
+  --color-warning-subtle: var(--warning-subtle);
+  --color-neutral-subtle: var(--neutral-subtle);
 
   /* ── Componentes ── */
-  --color-popover: var(--popover);            /* menus desplegables (data-table actions) */
-  --color-accent: var(--accent);              /* hover states (data-table actions) */
+  --color-popover: var(--popover); /* menus desplegables */
+  --color-accent: var(--accent); /* hover states */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-ring: var(--ring);
+
+  /* ── Radios Oficiales ── */
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 0.25rem);
+  --radius-xl: 1rem;
 
   /* ── Tipografía ── */
-  --font-sans: var(--font-inter);             /* cuerpo de texto */
-  --font-display: var(--font-work-sans);      /* títulos, etiquetas */
-  --font-mono: var(--font-dm-mono);           /* código, timestamps, datos monoespaciados */
+  --font-sans: var(--font-inter); /* cuerpo de texto */
+  --font-display: var(--font-work-sans); /* títulos, etiquetas */
+  --font-mono: var(--font-dm-mono); /* código, timestamps, datos monoespaciados */
 }
 
 body {

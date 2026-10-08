@@ -10,7 +10,7 @@ export function DataTablePagination({ currentPage, totalPages, onChange }: Props
       <button
         onClick={() => onChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="rounded-[4px] border border-border px-3 py-1"
+        className="rounded-lg border border-border px-3 py-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-elevated transition-colors"
       >
         Anterior
       </button>
@@ -18,7 +18,7 @@ export function DataTablePagination({ currentPage, totalPages, onChange }: Props
       <button
         onClick={() => onChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="rounded-[4px] border border-border px-3 py-1"
+        className="rounded-lg border border-border px-3 py-1 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-elevated transition-colors"
       >
         Siguiente
       </button>

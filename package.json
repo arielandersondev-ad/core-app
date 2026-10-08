@@ -1,0 +1,21 @@
+{
+  "name": "core-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo workspace scripts for Core and Dentistry verticals",
+  "scripts": {
+    "dentistry": "concurrently -k -n \"back,front\" -c \"cyan.bold,magenta.bold\" \"npm run dentistry:backend\" \"npm run dentistry:frontend\"",
+    "dentistry:backend": "npm --prefix dentistry/backend run start:dev",
+    "dentistry:frontend": "npm --prefix dentistry/frontend run dev",
+    "dentistry:db": "npm --prefix packages/db run build",
+    "dentistry:build": "npm --prefix packages/db run build && npm --prefix dentistry/backend run build && npm --prefix dentistry/frontend run build",
+    "core": "concurrently -k -n \"core-back,core-front\" -c \"blue.bold,green.bold\" \"npm run core:backend\" \"npm run core:frontend\"",
+    "core:backend": "npm --prefix core/backend run start:dev",
+    "core:frontend": "npm --prefix core/frontend run dev",
+    "storybook": "npm --prefix packages/ui run storybook",
+    "build-storybook": "npm --prefix packages/ui run build-storybook"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

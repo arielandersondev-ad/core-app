@@ -22,6 +22,7 @@ import {
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
+import { CreateAppointmentModal, RegisterPaymentModal } from "@/modules/clinic/components";
 import {
   DentalWhatsAppContext,
   WhatsAppTemplateKey,
@@ -72,21 +73,11 @@ const backendStatusMap: Record<
   cancelada: "SCHEDULED",
 };
 
-const statusBorderAccents: Record<AppointmentStatus, string> = {
-  programada: "border-l-blue-400",
-  confirmada: "border-l-emerald-500",
-  en_sala: "border-l-purple-500",
-  en_curso: "border-l-amber-500",
-  completada: "border-l-zinc-300 dark:border-l-zinc-700",
-  no_asistio: "border-l-orange-400",
-  cancelada: "border-l-rose-400",
-};
-
 const statusDotColors: Record<AppointmentStatus, string> = {
-  programada: "bg-blue-500",
-  confirmada: "bg-emerald-500",
-  en_sala: "bg-purple-500 animate-pulse",
-  en_curso: "bg-amber-500 animate-pulse",
+  programada: "bg-stone-400 dark:bg-stone-500",
+  confirmada: "bg-emerald-600 dark:bg-emerald-400",
+  en_sala: "bg-[var(--secondary)]",
+  en_curso: "bg-amber-600 dark:bg-amber-400",
   completada: "bg-zinc-400",
   no_asistio: "bg-orange-500",
   cancelada: "bg-rose-500",
@@ -106,11 +97,19 @@ function mapDtoToAppointment(dto: AppointmentDto): Appointment {
     hour12: false,
   });
 
+  const serviceIds =
+    dto.services && dto.services.length > 0
+      ? dto.services.map((s) => s.serviceId)
+      : dto.serviceIds && dto.serviceIds.length > 0
+        ? dto.serviceIds
+        : [dto.serviceId];
+
   return {
     id: dto.id,
     patientId: dto.patientId,
     professionalId: dto.professionalMembershipId,
     serviceId: dto.serviceId,
+    serviceIds,
     date: dto.startsAt.slice(0, 10),
     startTime,
     endTime,
@@ -143,6 +142,16 @@ export default function Agenda({
   // Payment Prompt Modal State
   const [paymentPromptAppointment, setPaymentPromptAppointment] =
     useState<Appointment | null>(null);
+
+  // Modals de creación integrados
+  const [isCreateApptOpen, setIsCreateApptOpen] = useState(false);
+  const [paymentModalState, setPaymentModalState] = useState<{
+    open: boolean;
+    patientId?: string;
+    amount?: number;
+    serviceId?: string;
+    concept?: string;
+  }>({ open: false });
 
   useEffect(() => {
     let isMounted = true;
@@ -300,7 +309,7 @@ export default function Agenda({
   ).length;
 
   return (
-    <div className="flex flex-col gap-4 p-3 sm:p-6 max-w-5xl mx-auto pb-24">
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24">
       {/* ── BARRA SUPERIOR: Selector de Calendario Minimalista (Floating Minimal) ── */}
       <div className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
         {/* Fila Superior: Navegación de Mes/Año + Controles de Modo y Hoy (Sin botón +) */}
@@ -350,8 +359,8 @@ export default function Agenda({
             </button>
           </div>
 
-          {/* Acciones de la cabecera: Toggle de vista desktop + Botón Hoy */}
-          <div className="flex items-center gap-1.5">
+          {/* Acciones de la cabecera: Toggle de vista desktop + Botón Hoy + Botón Nueva Cita */}
+          <div className="flex items-center gap-2">
             {/* Toggle Feed / Grid en desktop */}
             <div className="hidden sm:flex bg-[var(--background)] border border-[var(--border)] rounded-full p-0.5 text-xs">
               <button
@@ -395,6 +404,15 @@ export default function Agenda({
                 API
               </span>
             )}
+
+            <button
+              type="button"
+              onClick={() => setIsCreateApptOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 h-8 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 active:scale-95 shadow-xs transition-all"
+            >
+              <span className="text-sm font-bold leading-none">+</span>
+              Nueva Cita
+            </button>
           </div>
         </div>
 
@@ -421,8 +439,8 @@ export default function Agenda({
                   wd.isCurrentDay
                     ? "bg-[var(--primary)] text-[var(--primary-foreground)] font-bold shadow-xs scale-105"
                     : wd.isToday
-                    ? "border border-[var(--primary)] text-[var(--primary)] font-semibold"
-                    : "text-[var(--foreground)] group-hover:bg-[var(--background)]"
+                      ? "border border-[var(--primary)] text-[var(--primary)] font-semibold"
+                      : "text-[var(--foreground)] group-hover:bg-[var(--background)]"
                 }`}
               >
                 {wd.dayNum}
@@ -443,13 +461,13 @@ export default function Agenda({
       </div>
 
       {/* ── CHIPS DE FILTRO RÁPIDO ── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
         <button
           onClick={() => setStatusFilter("all")}
           className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border ${
             statusFilter === "all"
-              ? "bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] font-semibold"
-              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] border-[var(--border)]"
+              ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-semibold shadow-xs"
+              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] border-[var(--border)]"
           }`}
         >
           Todas ({totalCount})
@@ -460,32 +478,33 @@ export default function Agenda({
             onClick={() => setStatusFilter("activas")}
             className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border flex items-center gap-1.5 ${
               statusFilter === "activas"
-                ? "bg-purple-600 text-white border-purple-600 font-semibold"
-                : "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-semibold shadow-xs"
+                : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] border-[var(--border)]"
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
             <span>En clínica ({waitingOrChair})</span>
           </button>
         )}
 
         <button
           onClick={() => setStatusFilter("confirmada")}
-          className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border ${
+          className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border flex items-center gap-1.5 ${
             statusFilter === "confirmada"
-              ? "bg-emerald-600 text-white border-emerald-600 font-semibold"
-              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] border-[var(--border)]"
+              ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-semibold shadow-xs"
+              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] border-[var(--border)]"
           }`}
         >
-          Confirmadas ({confirmedCount})
+          <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+          <span>Confirmadas ({confirmedCount})</span>
         </button>
 
         <button
           onClick={() => setStatusFilter("programada")}
           className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border ${
             statusFilter === "programada"
-              ? "bg-blue-600 text-white border-blue-600 font-semibold"
-              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] border-[var(--border)]"
+              ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-semibold shadow-xs"
+              : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] border-[var(--border)]"
           }`}
         >
           Por confirmar
@@ -494,13 +513,14 @@ export default function Agenda({
         {noShowCount > 0 && (
           <button
             onClick={() => setStatusFilter("no_asistio")}
-            className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border ${
+            className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border flex items-center gap-1.5 ${
               statusFilter === "no_asistio"
-                ? "bg-orange-600 text-white border-orange-600 font-semibold"
-                : "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800"
+                ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)] font-semibold shadow-xs"
+                : "bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] border-[var(--border)]"
             }`}
           >
-            No asistió ({noShowCount})
+            <span className="w-2 h-2 rounded-full bg-orange-500" />
+            <span>No asistió ({noShowCount})</span>
           </button>
         )}
       </div>
@@ -526,8 +546,8 @@ export default function Agenda({
                 </p>
               </div>
               <button
-                onClick={() => onNavigate("nueva-cita")}
-                className="mt-2 h-9 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs font-semibold"
+                onClick={() => setIsCreateApptOpen(true)}
+                className="mt-2 h-9 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs font-semibold hover:bg-[var(--primary-accent)] active:scale-95 shadow-xs transition-all"
               >
                 + Agendar Cita
               </button>
@@ -545,11 +565,11 @@ export default function Agenda({
               return (
                 <div
                   key={apt.id}
-                  className={`group bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl py-2 px-3 shadow-2xs hover:shadow-xs transition-all flex flex-col gap-3 border-l-4 ${statusBorderAccents[apt.status]} hover:border-[var(--foreground)]/20`}
+                  className="group bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs hover:border-[var(--primary)]/30 transition-all flex flex-col gap-3 relative"
                 >
                   {patient?.allergies && patient.allergies.length > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[10px] font-semibold border border-rose-200/80 dark:border-rose-900/60">
-                      <span className="w-3 h-3 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-medium border border-rose-500/20 self-start">
+                      <span className="w-3.5 h-3.5 flex items-center justify-center text-rose-600 dark:text-rose-400">
                         {Icons.alertTriangle}
                       </span>
                       <span>Alergia: {patient.allergies.join(", ")}</span>
@@ -567,17 +587,17 @@ export default function Agenda({
                         </span>
                       </div>
                       {svc?.durationMin && (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-xl bg-[var(--background)] text-[var(--muted)] border border-[var(--border)]/70">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-[var(--background)] text-[var(--muted)] border border-[var(--border)]/70">
                           {svc.durationMin} min
                         </span>
                       )}
                     </div>
 
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-xl border ${statusColors[apt.status]}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-medium rounded-lg ${statusColors[apt.status]}`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-xl ${statusDotColors[apt.status]}`}
+                        className={`w-1.5 h-1.5 rounded-full ${statusDotColors[apt.status]}`}
                       />
                       <span>{statusLabels[apt.status]}</span>
                     </span>
@@ -606,9 +626,9 @@ export default function Agenda({
                           {pro && (
                             <span className="inline-flex items-center gap-1.5 text-[var(--muted)]">
                               <span
-                                className="w-1.5 h-1.5 rounded-xl"
+                                className="w-2 h-2 rounded-full"
                                 style={{
-                                  backgroundColor: pro.color || "#10b981",
+                                  backgroundColor: pro.color || "#3d7a46",
                                 }}
                               />
                               <span>{pro.name}</span>
@@ -625,15 +645,14 @@ export default function Agenda({
                     </div>
                   </div>
 
-                  {/* BARRA DE ACCIONES TÁCTILES RÁPIDAS (Thumb-friendly & Jerárquica) */}
-                  <div className="pt-2.5 border-t border-[var(--border)]/70 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                  {/* BARRA DE ACCIONES TÁCTILES RÁPIDAS (Jerárquica y armoniosa) */}
+                  <div className="pt-3 border-t border-[var(--border)]/60 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                     {/* Cluster de contacto secundario */}
                     <div className="flex items-center gap-1.5">
-                      {/* Botón WhatsApp con icono oficial real */}
                       <button
                         type="button"
                         onClick={() => handleOpenWhatsApp(apt)}
-                        className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-emerald-50/70 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 text-[var(--foreground)] hover:text-emerald-700 dark:hover:text-emerald-300 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs active:scale-95"
+                        className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] hover:border-[var(--primary)]/30 text-[var(--foreground)] text-xs font-medium flex items-center gap-2 transition-all shadow-2xs active:scale-95"
                         title="Enviar mensaje por WhatsApp"
                       >
                         <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
@@ -642,11 +661,10 @@ export default function Agenda({
                         <span>WhatsApp</span>
                       </button>
 
-                      {/* Botón de llamada directa circular */}
                       {cleanPhone && (
                         <a
                           href={`tel:+${cleanPhone}`}
-                          className="h-9 w-9 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
+                          className="h-9 w-9 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
                           title={`Llamar a ${patient?.name || "paciente"}`}
                         >
                           <span className="w-4 h-4 flex items-center justify-center">
@@ -664,12 +682,12 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "confirmada")
                           }
-                          className="h-9 px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
                         >
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
                             {Icons.check}
                           </span>
-                          <span>Confirmar</span>
+                          <span>Confirmar cita</span>
                         </button>
                       )}
 
@@ -679,9 +697,9 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "en_sala")
                           }
-                          className="h-9 px-4 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-9 px-4 bg-[var(--primary-subtle)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] active:scale-95 text-[var(--primary)] rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-[var(--primary)]/20 shadow-2xs transition-all"
                         >
-                          <span>🚪 Ingresar a Sala</span>
+                          <span>A sala de espera</span>
                         </button>
                       )}
 
@@ -691,9 +709,9 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "en_curso")
                           }
-                          className="h-9 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
                         >
-                          <span>🦷 Pasar al Sillón</span>
+                          <span>Pasar al sillón</span>
                         </button>
                       )}
 
@@ -703,12 +721,12 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "completada")
                           }
-                          className="h-9 px-4 bg-[var(--primary)] hover:opacity-90 active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
                         >
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
                             {Icons.check}
                           </span>
-                          <span>Finalizar (Cobrar)</span>
+                          <span>Finalizar y cobrar</span>
                         </button>
                       )}
 
@@ -718,7 +736,7 @@ export default function Agenda({
                           onClick={() =>
                             onNavigate("cita-detalle", { citaId: apt.id })
                           }
-                          className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] hover:bg-[var(--background)] text-[var(--foreground)] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
+                          className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--foreground)] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
                         >
                           <span>Ver Ficha</span>
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
@@ -735,7 +753,7 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "no_asistio")
                           }
-                          className="h-9 px-2.5 text-[var(--muted)] hover:text-amber-700 dark:hover:text-amber-400 text-xs font-medium transition-colors rounded-xl"
+                          className="h-9 px-2.5 text-[var(--muted)] hover:text-rose-600 text-xs font-medium transition-colors rounded-xl"
                           title="Marcar que no asistió"
                         >
                           No asistió
@@ -812,17 +830,34 @@ export default function Agenda({
                       onNavigate("cita-detalle", { citaId: apt.id })
                     }
                     style={{ top: `${top}px`, height: `${height}px` }}
-                    className={`absolute left-2 right-2 rounded-xl p-2 cursor-pointer border shadow-xs flex items-center justify-between transition-transform hover:scale-[1.01] ${statusColors[apt.status]}`}
+                    className="absolute left-2 right-2 rounded-xl p-2.5 cursor-pointer border border-[var(--border)] bg-[var(--surface-elevated)] hover:border-[var(--primary)]/60 shadow-2xs hover:shadow-xs flex items-center justify-between transition-all group overflow-hidden"
                   >
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold truncate">
+                    <div
+                      className={`absolute left-0 top-0 bottom-0 w-1 ${
+                        apt.status === "confirmada"
+                          ? "bg-emerald-600 dark:bg-emerald-400"
+                          : apt.status === "en_curso"
+                            ? "bg-amber-600 dark:bg-amber-400"
+                            : apt.status === "en_sala"
+                              ? "bg-[var(--secondary)]"
+                              : apt.status === "no_asistio"
+                                ? "bg-orange-500"
+                                : apt.status === "cancelada"
+                                  ? "bg-rose-500"
+                                  : "bg-stone-300 dark:bg-stone-600"
+                      }`}
+                    />
+                    <div className="min-w-0 pl-1.5">
+                      <p className="text-xs font-display font-bold text-[var(--foreground)] truncate group-hover:text-[var(--primary)] transition-colors">
                         {patient?.name}
                       </p>
-                      <p className="text-[10px] truncate">
+                      <p className="text-[10px] text-[var(--muted)] truncate">
                         {svc?.name} · {apt.startTime} - {apt.endTime}
                       </p>
                     </div>
-                    <span className="text-[10px] font-mono font-bold uppercase ml-2">
+                    <span
+                      className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md ml-2 flex-shrink-0 ${statusColors[apt.status]}`}
+                    >
                       {statusLabels[apt.status]}
                     </span>
                   </div>
@@ -835,7 +870,7 @@ export default function Agenda({
 
       {/* ── BOTÓN FLOTANTE MÓVIL (FAB) ── */}
       <button
-        onClick={() => onNavigate("nueva-cita")}
+        onClick={() => setIsCreateApptOpen(true)}
         className="sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] shadow-xl flex items-center justify-center text-2xl font-bold active:scale-90 transition-transform z-30"
         aria-label="Nueva cita rápida"
       >
@@ -857,8 +892,17 @@ export default function Agenda({
           onClose={() => setPaymentPromptAppointment(null)}
           onConfirmPayment={() => {
             const pid = paymentPromptAppointment.patientId;
+            const sid = paymentPromptAppointment.serviceId;
+            const svcPrice = getServiceById(sid)?.price || 0;
+            const svcName = getServiceById(sid)?.name || "Atención Odontológica";
             setPaymentPromptAppointment(null);
-            onNavigate("registrar-pago", { patientId: pid });
+            setPaymentModalState({
+              open: true,
+              patientId: pid,
+              amount: svcPrice,
+              serviceId: sid,
+              concept: `Cobro por ${svcName}`,
+            });
           }}
           patientName={
             getPatientById(paymentPromptAppointment.patientId)?.name ||
@@ -873,6 +917,31 @@ export default function Agenda({
           )}
         />
       )}
+
+      {/* ── MODAL AGENDAR CITA ── */}
+      <CreateAppointmentModal
+        open={isCreateApptOpen}
+        initialDate={date}
+        onClose={() => setIsCreateApptOpen(false)}
+        onSuccess={(newAppt) => {
+          if (newAppt.date === date) {
+            setAppointmentsList((prev) => [newAppt, ...prev]);
+          }
+        }}
+      />
+
+      {/* ── MODAL REGISTRAR PAGO ── */}
+      <RegisterPaymentModal
+        open={paymentModalState.open}
+        initialPatientId={paymentModalState.patientId}
+        initialAmount={paymentModalState.amount}
+        initialServiceId={paymentModalState.serviceId}
+        initialConcept={paymentModalState.concept}
+        onClose={() => setPaymentModalState({ open: false })}
+        onSuccess={() => {
+          setPaymentModalState({ open: false });
+        }}
+      />
     </div>
   );
 }

@@ -197,7 +197,7 @@ export function DynamicTable<
     <div
       className={`
         overflow-hidden
-        rounded-[4px]
+        rounded-xl
         border
         border-border
         bg-surface

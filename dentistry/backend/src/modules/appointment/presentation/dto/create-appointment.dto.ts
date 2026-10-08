@@ -1,4 +1,4 @@
-﻿import { IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateAppointmentDto {
   @IsUUID()
@@ -13,8 +13,13 @@ export class CreateAppointmentDto {
   @IsUUID()
   professionalMembershipId: string;
 
+  @IsOptional()
   @IsUUID()
-  serviceId: string;
+  serviceId?: string;
+
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  serviceIds?: string[];
 
   @IsOptional()
   @IsUUID()

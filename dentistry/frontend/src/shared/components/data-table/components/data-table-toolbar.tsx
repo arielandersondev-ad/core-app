@@ -48,7 +48,7 @@ export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns
             placeholder="Buscar..."
             className="
               w-full
-              rounded-[4px]
+              rounded-xl
               border
               border-border
               px-4

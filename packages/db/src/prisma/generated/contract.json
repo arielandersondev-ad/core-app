@@ -60,6 +60,10 @@
       "model": "User",
       "namespace": "core"
     },
+    "appointment_services": {
+      "model": "AppointmentService",
+      "namespace": "dentistry"
+    },
     "appointments": {
       "model": "Appointment",
       "namespace": "dentistry"
@@ -74,6 +78,10 @@
     },
     "clinical_histories": {
       "model": "ClinicalHistory",
+      "namespace": "dentistry"
+    },
+    "dental_service_supplies": {
+      "model": "DentalServiceSupply",
       "namespace": "dentistry"
     },
     "dental_services": {
@@ -2493,6 +2501,21 @@
               }
             },
             "relations": {
+              "appointmentServices": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "appointmentId"
+                  ]
+                },
+                "to": {
+                  "model": "AppointmentService",
+                  "namespace": "dentistry"
+                }
+              },
               "clinicalEncounter": {
                 "cardinality": "1:1",
                 "on": {
@@ -2643,6 +2666,150 @@
               },
               "namespaceId": "dentistry",
               "table": "appointments"
+            }
+          },
+          "AppointmentService": {
+            "fields": {
+              "appointmentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMinutes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "priceMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "serviceId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "appointment": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "appointmentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Appointment",
+                  "namespace": "dentistry"
+                }
+              },
+              "service": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "serviceId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "DentalService",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "appointmentId": {
+                  "column": "appointmentId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "durationMinutes": {
+                  "column": "durationMinutes"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "priceMinor": {
+                  "column": "priceMinor"
+                },
+                "serviceId": {
+                  "column": "serviceId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "appointment_services"
             }
           },
           "ClinicalEncounter": {
@@ -3455,6 +3622,13 @@
                   "kind": "scalar"
                 }
               },
+              "category": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "code": {
                 "nullable": true,
                 "type": {
@@ -3510,6 +3684,13 @@
                   }
                 }
               },
+              "labCostMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "name": {
                 "nullable": false,
                 "type": {
@@ -3546,6 +3727,21 @@
               }
             },
             "relations": {
+              "appointmentServices": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "serviceId"
+                  ]
+                },
+                "to": {
+                  "model": "AppointmentService",
+                  "namespace": "dentistry"
+                }
+              },
               "appointments": {
                 "cardinality": "1:N",
                 "on": {
@@ -3558,6 +3754,21 @@
                 },
                 "to": {
                   "model": "Appointment",
+                  "namespace": "dentistry"
+                }
+              },
+              "supplies": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "serviceId"
+                  ]
+                },
+                "to": {
+                  "model": "DentalServiceSupply",
                   "namespace": "dentistry"
                 }
               },
@@ -3585,6 +3796,9 @@
                 "basePriceMinor": {
                   "column": "basePriceMinor"
                 },
+                "category": {
+                  "column": "category"
+                },
                 "code": {
                   "column": "code"
                 },
@@ -3606,6 +3820,9 @@
                 "id": {
                   "column": "id"
                 },
+                "labCostMinor": {
+                  "column": "labCostMinor"
+                },
                 "name": {
                   "column": "name"
                 },
@@ -3621,6 +3838,155 @@
               },
               "namespaceId": "dentistry",
               "table": "dental_services"
+            }
+          },
+          "DentalServiceSupply": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "estimatedCostMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "inventoryItemId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "quantity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "serviceId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "unit": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "service": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "serviceId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "DentalService",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "estimatedCostMinor": {
+                  "column": "estimatedCostMinor"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "inventoryItemId": {
+                  "column": "inventoryItemId"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "quantity": {
+                  "column": "quantity"
+                },
+                "serviceId": {
+                  "column": "serviceId"
+                },
+                "unit": {
+                  "column": "unit"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "dental_service_supplies"
             }
           },
           "Patient": {
@@ -6265,6 +6631,147 @@
       "dentistry": {
         "entries": {
           "table": {
+            "appointment_services": {
+              "columns": {
+                "appointmentId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "durationMinutes": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "priceMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "serviceId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "appointmentId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "appointment_services"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "appointments"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "serviceId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "appointment_services"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "dental_services"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "appointmentId"
+                  ],
+                  "name": "appointment_services_appointmentId_idx_682a8b58",
+                  "prefix": "appointment_services_appointmentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "serviceId"
+                  ],
+                  "name": "appointment_services_serviceId_idx_b5d9acbf",
+                  "prefix": "appointment_services_serviceId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "appointmentId"
+                  ],
+                  "name": "apptsvc_org_appt_idx_9087d499",
+                  "prefix": "apptsvc_org_appt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "serviceId"
+                  ],
+                  "name": "apptsvc_org_svc_idx_8c10b794",
+                  "prefix": "apptsvc_org_svc_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "appointments": {
               "columns": {
                 "branchId": {
@@ -7134,6 +7641,132 @@
                 }
               ]
             },
+            "dental_service_supplies": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "estimatedCostMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "inventoryItemId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "quantity": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "serviceId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "unit": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "unidades"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "serviceId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "dental_service_supplies"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "dental_services"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "serviceId"
+                  ],
+                  "name": "dental_service_supplies_serviceId_idx_b5d9acbf",
+                  "prefix": "dental_service_supplies_serviceId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "serviceId"
+                  ],
+                  "name": "dss_org_service_idx_8c10b794",
+                  "prefix": "dss_org_service_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "dental_services": {
               "columns": {
                 "active": {
@@ -7148,6 +7781,11 @@
                 "basePriceMinor": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": true
+                },
+                "category": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 },
                 "code": {
@@ -7195,6 +7833,11 @@
                     "length": 36
                   }
                 },
+                "labCostMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
                 "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -7231,6 +7874,15 @@
                   ],
                   "name": "svc_org_active_idx_0c9a1852",
                   "prefix": "svc_org_active_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "category"
+                  ],
+                  "name": "svc_org_category_idx_a0ddcd26",
+                  "prefix": "svc_org_category_idx",
                   "unique": false
                 },
                 {
@@ -7997,12 +8649,38 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "63fd4b7d92e6c92a3fac0a6f3c2112b48614b28eeaf766754ace7b526c20156d"
+    "storageHash": "0ebda04f6a9e692ce82d511f100cd78a2f29836b1b82b73e3ecac8963ff6a6e2"
   },
   "execution": {
-    "executionHash": "786d84d157eed1f7cf0ddf083f5eb7e3d91ea8182639019b0978077109730e13",
+    "executionHash": "c86f7f1825f4e24d0927fffdaefdfac28b4fc364112e94dc8cec87e8b2411109",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "appointment_services"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "appointment_services"
+          }
+        },
         {
           "onCreate": {
             "id": "uuidv7",
@@ -8168,6 +8846,32 @@
             "column": "updatedAt",
             "namespace": "dentistry",
             "table": "clinical_histories"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "dental_service_supplies"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "dental_service_supplies"
           }
         },
         {

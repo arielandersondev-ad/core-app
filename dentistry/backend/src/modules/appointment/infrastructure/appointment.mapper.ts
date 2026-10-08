@@ -1,4 +1,22 @@
-﻿import { Appointment, type AppointmentStatus } from '../domain/entities/appointment.entity.js';
+import {
+  Appointment,
+  type AppointmentStatus,
+} from '../domain/entities/appointment.entity.js';
+
+export interface AppointmentServiceRow {
+  id: string;
+  organizationId: string;
+  appointmentId: string;
+  serviceId: string;
+  priceMinor: number | null;
+  durationMinutes: number | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  service?: {
+    name: string;
+  };
+}
 
 export interface AppointmentRow {
   id: string;
@@ -19,9 +37,24 @@ export interface AppointmentRow {
   cancellationReason: string | null;
   createdAt: Date;
   updatedAt: Date;
+  services?: AppointmentServiceRow[];
 }
 
 export function toAppointmentEntity(row: AppointmentRow): Appointment {
+  const serviceItems = (row.services || []).map((s) => ({
+    id: s.id,
+    serviceId: s.serviceId,
+    serviceName: s.service?.name,
+    priceMinor: s.priceMinor,
+    durationMinutes: s.durationMinutes,
+    notes: s.notes,
+  }));
+
+  const serviceIds =
+    serviceItems.length > 0
+      ? serviceItems.map((s) => s.serviceId)
+      : [row.serviceId];
+
   return new Appointment({
     id: row.id,
     organizationId: row.organizationId,
@@ -29,6 +62,7 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     patientId: row.patientId,
     professionalMembershipId: row.professionalMembershipId,
     serviceId: row.serviceId,
+    serviceIds,
     treatmentId: row.treatmentId,
     startsAt: row.startsAt,
     endsAt: row.endsAt,
@@ -41,5 +75,6 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     cancellationReason: row.cancellationReason,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    services: serviceItems,
   });
 }

@@ -51,7 +51,7 @@ export default function ClinicLayout({
       <aside className="hidden md:flex w-56 flex-shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)]">
         {/* Logo */}
         <div className="h-14 flex items-center px-5 border-b border-[var(--border)] gap-2.5">
-          <div className="w-7 h-7 bg-[var(--primary)] rounded-[3px] flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 bg-[var(--primary)] rounded-xl flex items-center justify-center flex-shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
@@ -70,7 +70,7 @@ export default function ClinicLayout({
               <button
                 key={tab}
                 onClick={() => onTabChange(tab)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[3px] text-left transition-colors text-sm font-display font-medium ${active ? "bg-[var(--primary-subtle)] text-[var(--primary)]" : "text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"}`}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors text-sm font-display font-medium ${active ? "bg-[var(--primary-subtle)] text-[var(--primary)]" : "text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"}`}
               >
                 <span className={active ? "text-[var(--primary)]" : "text-[var(--muted)]"}>{icon}</span>
                 <span className="flex-1">{label}</span>
@@ -85,20 +85,20 @@ export default function ClinicLayout({
         </nav>
 
         <div className="border-t border-[var(--border)] p-3 flex flex-col gap-1">
-          <button onClick={onToggleDark} className="flex items-center gap-2.5 px-3 py-2 rounded-[3px] text-sm text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-colors w-full">
+          <button onClick={onToggleDark} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-colors w-full">
             {dark ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
             ) : (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" /></svg>
             )}
             {dark ? "Tema claro" : "Tema oscuro"}
           </button>
-          <button onClick={onSwitchApp} className="flex items-center gap-2.5 px-3 py-2 rounded-[3px] text-sm text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-colors w-full">
+          <button onClick={onSwitchApp} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-[var(--muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-colors w-full">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="15 18 9 12 15 6" /></svg>
             Cambiar sistema
           </button>
           <div className="flex items-center gap-2.5 px-3 py-2">
-            <div className="w-7 h-7 rounded-[2px] bg-[var(--primary)] flex items-center justify-center text-[var(--primary-foreground)] text-[10px] font-bold flex-shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-[var(--primary)] flex items-center justify-center text-[var(--primary-foreground)] text-[10px] font-bold flex-shrink-0">
               DR
             </div>
             <div className="flex-1 min-w-0">

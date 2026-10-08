@@ -10,7 +10,7 @@ export function StatsBar({ stats }: StatsBarProps) {
       {stats.map((s) => (
         <div
           key={s.label}
-          className="bg-surface border border-border rounded-[4px] p-4"
+          className="bg-surface border border-border rounded-xl p-4"
         >
           <p className="text-3xl font-display font-bold text-foreground">
             {s.value}

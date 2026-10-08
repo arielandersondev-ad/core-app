@@ -1,4 +1,4 @@
-﻿import {
+import {
   Body,
   Controller,
   Get,
@@ -37,6 +37,7 @@ export class AppointmentController {
       patientId: dto.patientId,
       professionalMembershipId: dto.professionalMembershipId,
       serviceId: dto.serviceId,
+      serviceIds: dto.serviceIds,
       treatmentId: dto.treatmentId,
       startsAt: new Date(dto.startsAt),
       endsAt: new Date(dto.endsAt),
@@ -87,10 +88,7 @@ export class AppointmentController {
 
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  async cancel(
-    @Param('id') id: string,
-    @Body() dto: CancelAppointmentDto,
-  ) {
+  async cancel(@Param('id') id: string, @Body() dto: CancelAppointmentDto) {
     return this.cancelAppointmentUseCase.execute({
       id,
       cancelledByMembershipId: dto.cancelledByMembershipId,

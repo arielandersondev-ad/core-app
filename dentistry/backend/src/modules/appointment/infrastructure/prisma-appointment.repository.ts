@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
 import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { Appointment } from '../domain/entities/appointment.entity.js';
@@ -16,7 +16,7 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
   }
 
   async create(appointment: Appointment): Promise<Appointment> {
-    const row = await this.prisma.orm.dentistry.Appointment.create({
+    const row = (await this.prisma.orm.dentistry.Appointment.create({
       organizationId: toUuid36(appointment.organizationId),
       branchId: toUuid36(appointment.branchId),
       patientId: toUuid36(appointment.patientId),
@@ -29,27 +29,62 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       reason: appointment.reason,
       notes: appointment.notes,
       createdByMembershipId: toUuid36(appointment.createdByMembershipId),
-    });
+    })) as unknown as AppointmentRow;
 
-    return toAppointmentEntity(row as unknown as AppointmentRow);
+    // Create AppointmentService rows for all services
+    const servicesToLink =
+      appointment.serviceIds.length > 0
+        ? appointment.serviceIds
+        : [appointment.serviceId];
+
+    for (const sId of servicesToLink) {
+      if (sId) {
+        await this.prisma.orm.dentistry.AppointmentService.create({
+          organizationId: toUuid36(appointment.organizationId),
+          appointmentId: toUuid36(row.id),
+          serviceId: toUuid36(sId),
+        });
+      }
+    }
+
+    const created = await this.findById(row.id);
+    return created!;
   }
 
   async findById(id: string): Promise<Appointment | null> {
-    const row = await this.prisma.orm.dentistry.Appointment.first({
+    const row = (await this.prisma.orm.dentistry.Appointment.first({
       id: toUuid36(id),
-    });
+    })) as unknown as AppointmentRow | null;
 
     if (!row) {
       return null;
     }
 
-    return toAppointmentEntity(row as unknown as AppointmentRow);
+    const apptServices = (await this.prisma.orm.dentistry.AppointmentService.where({
+      appointmentId: toUuid36(id),
+    }).all()) as unknown as AppointmentRow['services'];
+
+    row.services = apptServices || [];
+
+    return toAppointmentEntity(row);
   }
 
   async findByFilters(filters: FindAppointmentsFilters): Promise<Appointment[]> {
     const rows = (await this.prisma.orm.dentistry.Appointment.where({
       organizationId: toUuid36(filters.organizationId),
     }).all()) as unknown as AppointmentRow[];
+
+    const allApptServices = (await this.prisma.orm.dentistry.AppointmentService.where({
+      organizationId: toUuid36(filters.organizationId),
+    }).all()) as unknown as AppointmentRow['services'];
+
+    const servicesByAppt = new Map<string, any[]>();
+    for (const s of allApptServices || []) {
+      if (!servicesByAppt.has(s.appointmentId)) {
+        servicesByAppt.set(s.appointmentId, []);
+      }
+      servicesByAppt.get(s.appointmentId)!.push(s);
+    }
 
     return rows
       .filter((row) => {
@@ -72,7 +107,10 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
         return true;
       })
       .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
-      .map(toAppointmentEntity);
+      .map((r) => {
+        r.services = servicesByAppt.get(r.id) || [];
+        return toAppointmentEntity(r);
+      });
   }
 
   async hasOverlap(params: CheckOverlapParams): Promise<boolean> {
@@ -110,3 +148,4 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
     return updated!;
   }
 }
+

@@ -15,9 +15,11 @@ import {
   updateAppointmentStatus,
   cancelAppointment,
 } from "@/modules/clinic/api/appointments";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
+import { RegisterPaymentModal } from "@/modules/clinic/components";
 import {
   DentalWhatsAppContext,
   WhatsAppTemplateKey,
@@ -33,7 +35,7 @@ export default function AppointmentDetail({
 }) {
   const apt = appointments.find((a) => a.id === citaId);
   const [status, setStatus] = useState<AppointmentStatus>(
-    apt?.status ?? "programada"
+    apt?.status ?? "programada",
   );
   const [sessionNotes, setSessionNotes] = useState(apt?.notes ?? "");
   const [sessionSaved, setSessionSaved] = useState(false);
@@ -42,17 +44,36 @@ export default function AppointmentDetail({
 
   // WhatsApp modal
   const [isWaOpen, setIsWaOpen] = useState(false);
-  const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");
+  const [waTemplate, setWaTemplate] =
+    useState<WhatsAppTemplateKey>("confirmacion");
 
   // Payment prompt
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   if (!apt) return null;
 
   const patient = getPatientById(apt.patientId);
-  const svc = getServiceById(apt.serviceId);
+  const serviceIds =
+    apt.serviceIds && apt.serviceIds.length > 0
+      ? apt.serviceIds
+      : [apt.serviceId];
+  const allServices = serviceIds
+    .map((id) => getServiceById(id))
+    .filter(Boolean) as NonNullable<ReturnType<typeof getServiceById>>[];
+  const svc = allServices[0] || getServiceById(apt.serviceId);
   const pro = getProfessionalById(apt.professionalId);
   const cleanPhone = normalizePhoneNumber(patient?.phone || "", "591");
+
+  const totalApptDuration = allServices.reduce(
+    (sum, s) => sum + (s?.durationMin || 0),
+    0,
+  );
+  const totalApptPrice = allServices.reduce(
+    (sum, s) => sum + (s?.price || 0),
+    0,
+  );
+  const serviceNamesTitle = allServices.map((s) => s.name).join(" + ");
 
   const statusOptions: AppointmentStatus[] = [
     "programada",
@@ -183,8 +204,24 @@ export default function AppointmentDetail({
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto flex flex-col gap-5 pb-20">
-      {/* Header */}
+    <PageContainer maxWidth="max-w-4xl" className="pb-20">
+      <PageHeader
+        title={serviceNamesTitle || svc?.name || "Detalle de Cita"}
+        description={`Cita con ${patient?.name || "Paciente"} · ${dateFormatted}`}
+        breadcrumbs={[
+          { label: "Agenda", onClick: () => onNavigate("agenda") },
+          { label: "Detalle de cita" },
+        ]}
+        badge={
+          <span
+            className={`inline-flex items-center px-3 py-1 text-xs font-mono font-bold rounded-full ${statusColors[status]}`}
+          >
+            {statusLabels[status]}
+          </span>
+        }
+      />
+
+      {/* Tarjeta de Resumen Clínico */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 shadow-xs">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -192,20 +229,15 @@ export default function AppointmentDetail({
               {dateFormatted}
             </p>
             <h2 className="font-display text-lg sm:text-xl font-bold text-[var(--foreground)]">
-              {svc?.name}
+              {serviceNamesTitle || svc?.name || "Consulta odontológica"}
             </h2>
             <p className="text-xs sm:text-sm text-[var(--muted)] mt-1">
-              ⏰ {apt.startTime} – {apt.endTime} · {svc?.durationMin} min ·{" "}
+              ⏰ {apt.startTime} – {apt.endTime} · {totalApptDuration || svc?.durationMin || 30} min ·{" "}
               <strong className="text-[var(--primary)] font-mono">
-                {formatCurrency(svc?.price ?? 0)}
+                {formatCurrency(totalApptPrice || svc?.price || 0)}
               </strong>
             </p>
           </div>
-          <span
-            className={`inline-flex items-center px-3 py-1 text-xs font-mono font-bold rounded-full border ${statusColors[status]}`}
-          >
-            {statusLabels[status]}
-          </span>
         </div>
 
         {/* Barra de contacto directo */}
@@ -233,10 +265,10 @@ export default function AppointmentDetail({
 
           <button
             type="button"
-            onClick={() => onNavigate("registrar-pago", { patientId: apt.patientId })}
-            className="ml-auto h-10 px-4 bg-[var(--surface)] border border-[var(--primary)] text-[var(--primary)] rounded-xl text-xs font-semibold hover:bg-[var(--primary-subtle)] active:scale-95 transition-all"
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="ml-auto h-10 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs font-semibold hover:bg-[var(--primary-accent)] active:scale-95 shadow-xs transition-all flex items-center gap-1.5"
           >
-            💳 Cobrar atención
+            <span>💳 Cobrar atención</span>
           </button>
         </div>
 
@@ -274,13 +306,16 @@ export default function AppointmentDetail({
 
             {patient?.allergies && patient.allergies.length > 0 && (
               <div className="mt-3 p-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
-                <strong>⚠️ Alergias reportadas:</strong> {patient.allergies.join(", ")}
+                <strong>⚠️ Alergias reportadas:</strong>{" "}
+                {patient.allergies.join(", ")}
               </div>
             )}
           </div>
 
           <button
-            onClick={() => onNavigate("paciente-detalle", { patientId: apt.patientId })}
+            onClick={() =>
+              onNavigate("paciente-detalle", { patientId: apt.patientId })
+            }
             className="mt-4 text-xs text-[var(--primary)] font-semibold hover:underline text-left"
           >
             Ver expediente 360° del paciente →
@@ -329,7 +364,9 @@ export default function AppointmentDetail({
                 <div className="flex items-center justify-between">
                   <div
                     className={`w-2.5 h-2.5 rounded-full ${
-                      isSelected ? "bg-[var(--primary)]" : "bg-[var(--muted)]/40"
+                      isSelected
+                        ? "bg-[var(--primary)]"
+                        : "bg-[var(--muted)]/40"
                     }`}
                   />
                 </div>
@@ -387,12 +424,24 @@ export default function AppointmentDetail({
         onClose={() => setShowPaymentPrompt(false)}
         onConfirmPayment={() => {
           setShowPaymentPrompt(false);
-          onNavigate("registrar-pago", { patientId: apt.patientId });
+          setIsPaymentModalOpen(true);
         }}
         patientName={patient?.name || "Paciente"}
         serviceName={svc?.name || "Atención"}
         priceFormatted={formatCurrency(svc?.price || 0)}
       />
-    </div>
+
+      <RegisterPaymentModal
+        open={isPaymentModalOpen}
+        initialPatientId={apt.patientId}
+        initialAmount={totalApptPrice || svc?.price}
+        initialServiceId={apt.serviceId}
+        initialConcept={`Cobro por ${serviceNamesTitle || svc?.name || "Atención odontológica"}`}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={() => {
+          setFeedbackMessage("Pago registrado correctamente.");
+        }}
+      />
+    </PageContainer>
   );
 }
