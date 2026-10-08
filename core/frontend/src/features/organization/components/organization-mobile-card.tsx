@@ -1,6 +1,6 @@
 import type { OrganizationListItem } from '../types/organization-list';
 import { getOrganizationInitials } from '../utils/get-organization-initial';
-import { OrganizationStatusBadge } from './organization-badges';
+import { OrganizationStatusBadge } from './organization-status-badge';
 
 export function OrganizationMobileCard({ organization }: { organization: OrganizationListItem }) {
   return (

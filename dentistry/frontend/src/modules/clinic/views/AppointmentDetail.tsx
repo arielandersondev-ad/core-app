@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   appointments,
   getPatientById,
@@ -12,8 +12,11 @@ import {
   AppointmentStatus,
 } from "@/modules/clinic/__mocks__/data";
 import {
-  updateAppointmentStatus,
+  AppointmentApiError,
   cancelAppointment,
+  fetchAppointmentById,
+  updateAppointmentStatus,
+  type AppointmentDto,
 } from "@/modules/clinic/api/appointments";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Icons } from "@/shared/components/ui/Icons";
@@ -26,110 +29,220 @@ import {
   normalizePhoneNumber,
 } from "@/shared/utils/whatsapp-generator";
 
+const backendStatusMap: Record<
+  AppointmentStatus,
+  | "SCHEDULED"
+  | "CONFIRMED"
+  | "WAITING_ROOM"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "NO_SHOW"
+  | "CANCELLED"
+> = {
+  programada: "SCHEDULED",
+  confirmada: "CONFIRMED",
+  en_sala: "WAITING_ROOM",
+  en_curso: "IN_PROGRESS",
+  completada: "COMPLETED",
+  no_asistio: "NO_SHOW",
+  cancelada: "CANCELLED",
+};
+
+const reverseStatusMap: Record<AppointmentDto["status"], AppointmentStatus> = {
+  SCHEDULED: "programada",
+  CONFIRMED: "confirmada",
+  WAITING_ROOM: "en_sala",
+  IN_PROGRESS: "en_curso",
+  COMPLETED: "completada",
+  NO_SHOW: "no_asistio",
+  CANCELLED: "cancelada",
+};
+
+const statusOptions: AppointmentStatus[] = [
+  "programada",
+  "confirmada",
+  "en_sala",
+  "en_curso",
+  "completada",
+  "no_asistio",
+  "cancelada",
+];
+
 export default function AppointmentDetail({
   citaId,
   onNavigate,
 }: {
   citaId: string;
-  onNavigate: (s: string, p?: Record<string, string>) => void;
+  onNavigate: (view: string, params?: Record<string, string>) => void;
 }) {
-  const apt = appointments.find((a) => a.id === citaId);
+  const mockApt = appointments.find((a) => a.id === citaId);
+  const [apiAppointment, setApiAppointment] = useState<AppointmentDto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<{ message: string; notFound: boolean } | null>(null);
+
   const [status, setStatus] = useState<AppointmentStatus>(
-    apt?.status ?? "programada",
+    mockApt?.status ?? "programada",
   );
-  const [sessionNotes, setSessionNotes] = useState(apt?.notes ?? "");
+  const [sessionNotes, setSessionNotes] = useState(mockApt?.notes ?? "");
   const [sessionSaved, setSessionSaved] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   // WhatsApp modal
   const [isWaOpen, setIsWaOpen] = useState(false);
-  const [waTemplate, setWaTemplate] =
-    useState<WhatsAppTemplateKey>("confirmacion");
+  const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");
 
-  // Payment prompt
+  // Payment prompt & modal
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  if (!apt) return null;
+  useEffect(() => {
+    let active = true;
+    setIsLoading(true);
 
-  const patient = getPatientById(apt.patientId);
-  const serviceIds =
-    apt.serviceIds && apt.serviceIds.length > 0
-      ? apt.serviceIds
-      : [apt.serviceId];
-  const allServices = serviceIds
+    fetchAppointmentById(citaId)
+      .then((result) => {
+        if (!active) return;
+        setApiAppointment(result);
+        if (result.notes !== undefined && result.notes !== null) {
+          setSessionNotes(result.notes);
+        }
+        setStatus(reverseStatusMap[result.status] ?? "programada");
+        setLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (!mockApt) {
+          setLoadError({
+            message: error instanceof Error ? error.message : "No se pudo cargar la cita.",
+            notFound: error instanceof AppointmentApiError && error.status === 404,
+          });
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [citaId, mockApt]);
+
+  if (loadError) {
+    return (
+      <div className="p-8 max-w-3xl mx-auto text-center" role="alert">
+        <h2 className="font-display text-lg font-bold text-[var(--foreground)]">
+          {loadError.notFound ? "Cita no encontrada" : "No se pudo cargar la cita"}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--muted)]">{loadError.message}</p>
+        <button
+          type="button"
+          onClick={() => onNavigate("agenda")}
+          className="mt-4 text-sm text-[var(--primary)] hover:underline"
+        >
+          Volver a la agenda
+        </button>
+      </div>
+    );
+  }
+
+  if (isLoading && !mockApt && !apiAppointment) {
+    return (
+      <p className="p-8 text-center text-sm text-[var(--muted)]" role="status">
+        Cargando detalle de la cita…
+      </p>
+    );
+  }
+
+  if (!mockApt && !apiAppointment) return null;
+
+  const patientId = apiAppointment?.patientId || mockApt?.patientId || "";
+  const mockPatient = getPatientById(patientId);
+  const patient = mockPatient || (patientId ? {
+    id: patientId,
+    name: `Paciente ${patientId.slice(0, 8)}`,
+    phone: "",
+    allergies: [],
+  } : null);
+
+  const proId = apiAppointment?.professionalMembershipId || mockApt?.professionalId || "";
+  const mockPro = getProfessionalById(proId);
+  const pro = mockPro || {
+    id: proId,
+    name: "Odontólogo Tratante",
+    specialty: "Odontología General",
+    color: "#0ea5e9",
+  };
+
+  const rawServiceIds = apiAppointment?.serviceIds?.length
+    ? apiAppointment.serviceIds
+    : mockApt?.serviceIds?.length
+    ? mockApt.serviceIds
+    : [apiAppointment?.serviceId || mockApt?.serviceId || ""].filter(Boolean);
+
+  const allServices = rawServiceIds
     .map((id) => getServiceById(id))
     .filter(Boolean) as NonNullable<ReturnType<typeof getServiceById>>[];
-  const svc = allServices[0] || getServiceById(apt.serviceId);
-  const pro = getProfessionalById(apt.professionalId);
+
+  const fallbackSvc = getServiceById(apiAppointment?.serviceId || mockApt?.serviceId || "") || {
+    id: apiAppointment?.serviceId || mockApt?.serviceId || "default",
+    name: "Consulta odontológica",
+    price: 150,
+    durationMin: 30,
+    active: true,
+  };
+
+  const svc = allServices[0] || fallbackSvc;
+  const serviceNamesTitle = allServices.length > 0 ? allServices.map((s) => s.name).join(" + ") : svc.name;
+  const totalApptPrice = allServices.length > 0 ? allServices.reduce((sum, s) => sum + (s?.price || 0), 0) : svc.price;
+  const totalApptDuration = allServices.length > 0 ? allServices.reduce((sum, s) => sum + (s?.durationMin || 0), 0) : svc.durationMin;
   const cleanPhone = normalizePhoneNumber(patient?.phone || "", "591");
 
-  const totalApptDuration = allServices.reduce(
-    (sum, s) => sum + (s?.durationMin || 0),
-    0,
-  );
-  const totalApptPrice = allServices.reduce(
-    (sum, s) => sum + (s?.price || 0),
-    0,
-  );
-  const serviceNamesTitle = allServices.map((s) => s.name).join(" + ");
-
-  const statusOptions: AppointmentStatus[] = [
-    "programada",
-    "confirmada",
-    "en_sala",
-    "en_curso",
-    "completada",
-    "no_asistio",
-    "cancelada",
-  ];
+  let dateFormatted = "";
+  let timeRangeFormatted = "";
+  if (apiAppointment?.startsAt) {
+    const startDt = new Date(apiAppointment.startsAt);
+    const endDt = new Date(apiAppointment.endsAt);
+    dateFormatted = Number.isNaN(startDt.getTime())
+      ? apiAppointment.startsAt
+      : startDt.toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long" });
+    const startTimeStr = Number.isNaN(startDt.getTime())
+      ? ""
+      : startDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
+    const endTimeStr = Number.isNaN(endDt.getTime())
+      ? ""
+      : endDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
+    timeRangeFormatted = `${startTimeStr} – ${endTimeStr}`;
+  } else if (mockApt) {
+    const dt = new Date(mockApt.date + "T12:00:00");
+    dateFormatted = dt.toLocaleDateString("es-BO", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    timeRangeFormatted = `${mockApt.startTime} – ${mockApt.endTime}`;
+  }
 
   const handleStatusChange = async (newStatus: AppointmentStatus) => {
     setStatus(newStatus);
     setIsUpdating(true);
     setFeedbackMessage(null);
 
-    const backendStatusMap: Record<
-      AppointmentStatus,
-      | "SCHEDULED"
-      | "CONFIRMED"
-      | "WAITING_ROOM"
-      | "IN_PROGRESS"
-      | "COMPLETED"
-      | "NO_SHOW"
-      | "CANCELLED"
-    > = {
-      programada: "SCHEDULED",
-      confirmada: "CONFIRMED",
-      en_sala: "WAITING_ROOM",
-      en_curso: "IN_PROGRESS",
-      completada: "COMPLETED",
-      no_asistio: "NO_SHOW",
-      cancelada: "CANCELLED",
-    };
-
     try {
       if (newStatus === "cancelada") {
         await cancelAppointment(citaId, {
-          cancelledByMembershipId: "018f0000-0000-7000-0000-000000000003",
-          reason: "Cancelación solicitada por el usuario desde la interfaz",
+          reason: cancelReason.trim() || "Cancelación solicitada desde la interfaz",
         });
       } else {
         await updateAppointmentStatus(citaId, {
-          status: backendStatusMap[newStatus] as
-            | "SCHEDULED"
-            | "CONFIRMED"
-            | "WAITING_ROOM"
-            | "IN_PROGRESS"
-            | "COMPLETED"
-            | "NO_SHOW",
+          status: backendStatusMap[newStatus] as any,
           notes: sessionNotes,
         });
       }
-      setFeedbackMessage("Estado actualizado correctamente");
+      setFeedbackMessage("Estado actualizado correctamente.");
     } catch (_err) {
-      setFeedbackMessage("Estado actualizado localmente");
+      setFeedbackMessage("Estado actualizado localmente.");
     } finally {
       setIsUpdating(false);
     }
@@ -143,31 +256,16 @@ export default function AppointmentDetail({
     setIsUpdating(true);
     try {
       if (status !== "cancelada") {
-        const backendStatusMap: Record<
-          AppointmentStatus,
-          | "SCHEDULED"
-          | "CONFIRMED"
-          | "WAITING_ROOM"
-          | "IN_PROGRESS"
-          | "COMPLETED"
-          | "NO_SHOW"
-        > = {
-          programada: "SCHEDULED",
-          confirmada: "CONFIRMED",
-          en_sala: "WAITING_ROOM",
-          en_curso: "IN_PROGRESS",
-          completada: "COMPLETED",
-          no_asistio: "NO_SHOW",
-          cancelada: "SCHEDULED",
-        };
         await updateAppointmentStatus(citaId, {
-          status: backendStatusMap[status],
+          status: backendStatusMap[status] as any,
           notes: sessionNotes,
         });
       }
       setSessionSaved(true);
+      setFeedbackMessage("Evolución guardada correctamente.");
     } catch (_err) {
       setSessionSaved(true);
+      setFeedbackMessage("Evolución guardada localmente.");
     } finally {
       setIsUpdating(false);
     }
@@ -185,21 +283,13 @@ export default function AppointmentDetail({
     setIsWaOpen(true);
   };
 
-  const dt = new Date(apt.date + "T12:00:00");
-  const dateFormatted = dt.toLocaleDateString("es-BO", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
   const waContext: DentalWhatsAppContext = {
     patientName: patient?.name || "Paciente",
-    patientPhone: patient?.phone || "",
-    serviceName: svc?.name || "Consulta",
+    patientPhone: cleanPhone,
+    serviceName: serviceNamesTitle || svc?.name || "Consulta Odontológica",
     dateStr: dateFormatted,
-    timeStr: apt.startTime,
-    clinicName: "Dental Care Consultorio",
+    timeStr: timeRangeFormatted.split("–")[0]?.trim() || "09:00",
+    clinicName: "Clínica Dental",
     professionalName: pro?.name,
   };
 
@@ -223,7 +313,7 @@ export default function AppointmentDetail({
 
       {/* Tarjeta de Resumen Clínico */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 shadow-xs">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex justify-between items-start gap-4">
           <div>
             <p className="text-[11px] font-mono text-[var(--muted)] mb-1 capitalize">
               {dateFormatted}
@@ -232,11 +322,16 @@ export default function AppointmentDetail({
               {serviceNamesTitle || svc?.name || "Consulta odontológica"}
             </h2>
             <p className="text-xs sm:text-sm text-[var(--muted)] mt-1">
-              ⏰ {apt.startTime} – {apt.endTime} · {totalApptDuration || svc?.durationMin || 30} min ·{" "}
+              ⏰ {timeRangeFormatted} · {totalApptDuration || svc?.durationMin || 30} min ·{" "}
               <strong className="text-[var(--primary)] font-mono">
                 {formatCurrency(totalApptPrice || svc?.price || 0)}
               </strong>
             </p>
+            {(apiAppointment?.reason || mockApt?.notes) && (
+              <p className="text-xs text-[var(--muted)] mt-1">
+                Motivo: {apiAppointment?.reason || mockApt?.notes}
+              </p>
+            )}
           </div>
         </div>
 
@@ -299,7 +394,7 @@ export default function AppointmentDetail({
                   {patient?.name}
                 </p>
                 <p className="text-xs font-mono text-[var(--muted)]">
-                  {patient?.phone}
+                  {patient?.phone || "Sin teléfono registrado"}
                 </p>
               </div>
             </div>
@@ -313,8 +408,9 @@ export default function AppointmentDetail({
           </div>
 
           <button
+            type="button"
             onClick={() =>
-              onNavigate("paciente-detalle", { patientId: apt.patientId })
+              onNavigate("paciente-detalle", { patientId })
             }
             className="mt-4 text-xs text-[var(--primary)] font-semibold hover:underline text-left"
           >
@@ -342,7 +438,7 @@ export default function AppointmentDetail({
         </div>
       </div>
 
-      {/* Selector de Estado Clínico Completo */}
+      {/* Selector de Estado Clínico */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs">
         <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)] mb-3">
           Actualizar Estado Clínico
@@ -352,6 +448,7 @@ export default function AppointmentDetail({
             const isSelected = status === s;
             return (
               <button
+                type="button"
                 key={s}
                 disabled={isUpdating}
                 onClick={() => handleStatusChange(s)}
@@ -401,6 +498,7 @@ export default function AppointmentDetail({
         />
         <div className="flex items-center gap-3 mt-3">
           <button
+            type="button"
             onClick={handleSaveNotes}
             disabled={isUpdating}
             className="h-10 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs sm:text-sm font-semibold hover:opacity-90 disabled:opacity-50 active:scale-95 transition-all shadow-xs"
@@ -409,6 +507,39 @@ export default function AppointmentDetail({
           </button>
         </div>
       </div>
+
+      {/* Cancelación de cita */}
+      {status !== "cancelada" && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-xs">
+          <label
+            htmlFor="cancel-reason"
+            className="text-sm font-semibold text-[var(--foreground)]"
+          >
+            Cancelar cita
+          </label>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Indica el motivo para registrar la cancelación.
+          </p>
+          <textarea
+            id="cancel-reason"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Motivo de la cancelación..."
+            rows={2}
+            maxLength={500}
+            disabled={isUpdating}
+            className="mt-3 w-full px-3.5 py-2.5 bg-[var(--background)] border border-[var(--border)] rounded-xl text-xs sm:text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 resize-none"
+          />
+          <button
+            type="button"
+            disabled={isUpdating || !cancelReason.trim()}
+            onClick={() => handleStatusChange("cancelada")}
+            className="mt-3 h-10 px-4 border border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl text-xs sm:text-sm font-semibold disabled:opacity-50 transition-all active:scale-95"
+          >
+            Cancelar cita
+          </button>
+        </div>
+      )}
 
       {/* Modal WhatsApp */}
       <WhatsAppModal
@@ -433,9 +564,9 @@ export default function AppointmentDetail({
 
       <RegisterPaymentModal
         open={isPaymentModalOpen}
-        initialPatientId={apt.patientId}
+        initialPatientId={patientId}
         initialAmount={totalApptPrice || svc?.price}
-        initialServiceId={apt.serviceId}
+        initialServiceId={svc?.id}
         initialConcept={`Cobro por ${serviceNamesTitle || svc?.name || "Atención odontológica"}`}
         onClose={() => setIsPaymentModalOpen(false)}
         onSuccess={() => {

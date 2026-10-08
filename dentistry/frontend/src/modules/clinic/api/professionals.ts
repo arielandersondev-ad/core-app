@@ -1,4 +1,4 @@
-import { env } from "@/infrastructure/config/env";
+const API_BASE = "/api/dentistry";
 
 export interface ProfessionalDto {
   id: string; // membershipId
@@ -14,7 +14,7 @@ export async function fetchProfessionals(
   organizationId: string,
 ): Promise<ProfessionalDto[]> {
   const res = await fetch(
-    `${env.apiUrl}/clinic/professionals?organizationId=${organizationId}`,
+    `${API_BASE}/clinic/professionals?organizationId=${organizationId}`,
     {
       headers: { Accept: "application/json" },
     },

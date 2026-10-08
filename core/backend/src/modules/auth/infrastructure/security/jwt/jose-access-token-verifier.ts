@@ -4,10 +4,8 @@ import { jwtVerify, type JWTPayload } from 'jose';
 import { AccessTokenVerifier } from '../../../application/ports/access-token-verifier.js';
 import type { AuthenticatedPrincipal } from '../../../application/contracts/authenticated-principal.js';
 import { loadJwtKey } from './jwt-key.loader.js';
-
-const UUID_PATTERN =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
-const ROLE_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+import { UUID_PATTERN } from '../../../../../common/validation/uuid-pattern.js';
+import { TOKEN_AUDIENCES } from '../../../application/contracts/token-audience.js';
 
 function requiredString(payload: JWTPayload, claim: string): string {
   const value = payload[claim];
@@ -54,21 +52,36 @@ export class JoseAccessTokenVerifier extends AccessTokenVerifier {
       (pem) => createPublicKey(pem),
     );
     this.issuer = process.env['JWT_ISSUER'] ?? 'core-auth';
-    this.audience = process.env['JWT_AUDIENCE'] ?? 'core-services';
+    this.audience = process.env['JWT_CORE_AUDIENCE'] ?? 'core-api';
+    if (this.audience !== TOKEN_AUDIENCES.core) {
+      throw new Error('JWT_CORE_AUDIENCE debe ser core-api');
+    }
   }
 
   async verify(token: string): Promise<AuthenticatedPrincipal> {
-    const { payload } = await jwtVerify(token, this.publicKey, {
+    const { payload, protectedHeader } = await jwtVerify(token, this.publicKey, {
       algorithms: ['RS256'],
       issuer: this.issuer,
       audience: this.audience,
     });
 
-    if (typeof payload.iat !== 'number' || typeof payload.exp !== 'number') {
-      throw new Error('El token debe incluir iat y exp');
+    if (protectedHeader.typ !== 'at+jwt') {
+      throw new Error('Tipo de token inválido');
     }
 
-    const email = requiredString(payload, 'email');
+    if (payload.aud !== TOKEN_AUDIENCES.core) {
+      throw new Error('El token debe tener una única audiencia core-api');
+    }
+
+    const issuedAt = payload.iat;
+    const expiresAt = payload.exp;
+    if (typeof issuedAt !== 'number' || typeof expiresAt !== 'number' ||
+      !Number.isSafeInteger(issuedAt) || !Number.isSafeInteger(expiresAt) ||
+      expiresAt <= issuedAt || expiresAt - issuedAt > 900) {
+      throw new Error('Vigencia del token inválida');
+    }
+
+    requiredUuid(payload, 'jti');
     const sub = payload.sub;
     if (typeof sub !== 'string' || !UUID_PATTERN.test(sub)) {
       throw new Error('Claim JWT inválido: sub');
@@ -76,11 +89,10 @@ export class JoseAccessTokenVerifier extends AccessTokenVerifier {
 
     return {
       sub,
-      email,
       membershipId: requiredUuid(payload, 'membershipId'),
       organizationId: requiredUuid(payload, 'organizationId'),
       branchIds: requiredStringArray(payload, 'branchIds', UUID_PATTERN),
-      roleCodes: requiredStringArray(payload, 'roleCodes', ROLE_CODE_PATTERN),
+      permissions: requiredStringArray(payload, 'permissions', /^(?!dentistry:)[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)+$/),
     };
   }
 }

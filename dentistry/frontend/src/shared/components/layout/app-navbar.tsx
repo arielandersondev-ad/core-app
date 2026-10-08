@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS, SECTION_TITLES } from "./navigation";
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
-import { Icons } from "../icons/icons";
+import { logoutAction } from "@/features/auth/actions/logout-action";
 
 function getSectionTitle(pathname: string): string {
   const item = [...NAV_ITEMS]
@@ -49,6 +49,9 @@ export function AppNavbar() {
 
       {/* Theme toggle icon */}
       <ThemeToggle variant="icon" />
+      <form action={logoutAction} className="lg:hidden">
+        <button type="submit" className="text-xs text-muted hover:text-foreground">Salir</button>
+      </form>
     </header>
   );
 }

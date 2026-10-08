@@ -13,14 +13,20 @@ export type RoleListItem = CreateRole & {
 	updatedAt: string
 }
 
-export type PermissionItem = {
-	id: string;
+export type CreatePermissionPayload = {
 	code: string;
 	name: string;
 	description: string | null;
+}
+export type PermissionItem = CreatePermissionPayload &{
+	id: string;
 }
 
 export type PermissionGroup = {
 	key: string;
 	permissions: PermissionItem[];
 }
+
+export type ReplaceRolePermissionsPayload = {
+  permissionIds: string[];
+};

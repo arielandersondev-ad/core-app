@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Avatar, Badge, Icons } from '@/shared/components/ui';
 import { useUsers } from '@/features/user/hooks/use-users';
 import { isAxiosError } from 'axios';
+import { useState } from 'react';
+import { CreateUserDialog } from '@/features/user/components/create-user-dialog';
 
 export default function UserList() {
-  const router = useRouter();
-  const query = useUsers();
+const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);  
+const query = useUsers();
   const users = query.data ?? [];
   const error = query.isError
     ? (isAxiosError(query.error) && typeof query.error.response?.data?.message === 'string'
@@ -53,7 +53,7 @@ export default function UserList() {
         </select>
         <button
           type="button"
-          onClick={() => router.push('/users/create')}
+          onClick={() => setIsCreateUserOpen(true)}
           className="ml-auto hidden h-9 items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-display font-semibold text-primary-foreground transition-opacity hover:opacity-90 md:flex"
         >
           {Icons.plus} Nuevo usuario
@@ -80,11 +80,18 @@ export default function UserList() {
       <button
         type="button"
         aria-label="Crear usuario"
-        onClick={() => router.push('/users/create')}
+        onClick={() => setIsCreateUserOpen(true)}
         className="fixed bottom-20 right-4 z-10 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:opacity-80 md:hidden"
       >
         {Icons.plus}
       </button>
+      
+      {isCreateUserOpen && (
+        <CreateUserDialog
+          open={isCreateUserOpen}
+          onClose={() => setIsCreateUserOpen(false)}
+        />
+      )}
     </div>
   );
 }

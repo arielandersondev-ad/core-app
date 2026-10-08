@@ -18,6 +18,37 @@ type ProxyRule = {
 };
 
 const proxyRules: readonly ProxyRule[] = [
+  // Planes y suscripciones. Cada ruta queda enumerada para que el BFF no sea un proxy abierto.
+  {
+    methods: ['GET', 'POST'],
+    pattern: /^plans$/,
+    backendPath: () => '/plans',
+  },
+  {
+    methods: ['GET'],
+    pattern: /^plans\/assignments$/,
+    backendPath: () => '/plans/assignments',
+  },
+  {
+    methods: ['GET', 'PATCH', 'DELETE'],
+    pattern: new RegExp(`^plans/(${UUID_SEGMENT})$`),
+    backendPath: (match) => `/plans/${match[1]}`,
+  },
+  {
+    methods: ['GET'],
+    pattern: new RegExp(`^organizations/(${UUID_SEGMENT})/plans$`),
+    backendPath: (match) => `/organizations/${match[1]}/plans`,
+  },
+  {
+    methods: ['PUT'],
+    pattern: new RegExp(`^organizations/(${UUID_SEGMENT})/plans/([A-Z][A-Z0-9_]*)$`),
+    backendPath: (match) => `/organizations/${match[1]}/plans/${match[2]}`,
+  },
+  {
+    methods: ['PATCH'],
+    pattern: new RegExp(`^organizations/(${UUID_SEGMENT})/plans/([A-Z][A-Z0-9_]*)/status$`),
+    backendPath: (match) => `/organizations/${match[1]}/plans/${match[2]}/status`,
+  },
 
   //organizasiones
   {
@@ -43,9 +74,14 @@ const proxyRules: readonly ProxyRule[] = [
 
   //USers
   {
-    methods: ['GET', 'POST'],
+    methods: ['GET'],
     pattern: /^users$/,
     backendPath: () => '/users',
+  },
+  {
+    methods: ['POST'],
+    pattern: /^users\/create$/,
+    backendPath: () => '/users/create',
   },
   //ROles
   {
@@ -59,9 +95,19 @@ const proxyRules: readonly ProxyRule[] = [
     backendPath: () => '/role/create',
   },
   {
+    methods: ['GET', 'POST'],
+    pattern: /^roles\/permissions$/,
+    backendPath: () => '/role/permissions',
+  },
+  {
     methods: ['GET'],
     pattern: new RegExp(`^roles/(${UUID_SEGMENT})/permissions$`),
     backendPath: (match) => `/role/permissions/${match[1]}`,
+  },
+  {
+    methods: ['PUT'],
+    pattern: new RegExp(`^roles/(${UUID_SEGMENT})/permissions$`),
+    backendPath: (match) => `/role/${match[1]}/permissions`,
   },
 ] as const;
 

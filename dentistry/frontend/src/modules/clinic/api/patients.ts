@@ -1,4 +1,4 @@
-import { env } from "@/infrastructure/config/env";
+const API_BASE = "/api/dentistry";
 
 export interface PatientDto {
   id: string;
@@ -63,7 +63,7 @@ export async function fetchPatients(
     if (value) query.append(key, value);
   });
 
-  const res = await fetch(`${env.apiUrl}/patients?${query.toString()}`, {
+  const res = await fetch(`${API_BASE}/patients?${query.toString()}`, {
     headers: { Accept: "application/json" },
   });
 
@@ -78,7 +78,7 @@ export async function fetchPatientById(
   organizationId: string,
 ): Promise<PatientDto> {
   const res = await fetch(
-    `${env.apiUrl}/patients/${id}?organizationId=${organizationId}`,
+    `${API_BASE}/patients/${id}?organizationId=${organizationId}`,
     {
       headers: { Accept: "application/json" },
     },
@@ -93,7 +93,7 @@ export async function fetchPatientById(
 export async function createPatient(
   payload: CreatePatientRequest,
 ): Promise<PatientDto> {
-  const res = await fetch(`${env.apiUrl}/patients`, {
+  const res = await fetch(`${API_BASE}/patients`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -116,7 +116,7 @@ export async function updatePatient(
   id: string,
   payload: UpdatePatientRequest,
 ): Promise<PatientDto> {
-  const res = await fetch(`${env.apiUrl}/patients/${id}`, {
+  const res = await fetch(`${API_BASE}/patients/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

@@ -9,6 +9,9 @@ import { AuthSecurityModule } from "../auth/auth-security.module.js";
 import { ListPermissionByRoleIdUseCase } from "./application/use-case/list-permmision.use-case.js";
 import { PermissionRepository } from "./domain/repositories/permission.repository.js";
 import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.repository.js";
+import { CreatePermissionUseCase } from './application/use-case/create-permission.use-case.js';
+import { ReplaceRolePermissionsUseCase } from './application/use-case/replace-role-permissions.use-case.js';
+import { ListAllPermissionsUseCase } from "./application/use-case/list-all-permissions.use-case.js";
 
 
 @Module({
@@ -31,6 +34,9 @@ import { PrismaPermissionRepository } from "./infrastructure/prisma-permission.r
     ListRolesByOrganizationScopeUseCase,
     ListPermissionByRoleIdUseCase,
     CreateRoleUseCase,
+    CreatePermissionUseCase,
+    ReplaceRolePermissionsUseCase,
+    ListAllPermissionsUseCase
   ],
   exports: [PrismaRoleWriter],
 })

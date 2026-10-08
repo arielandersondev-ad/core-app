@@ -1,4 +1,4 @@
-import { env } from "@/infrastructure/config/env";
+const API_BASE = "/api/dentistry";
 
 export interface DentalServiceSupplyDto {
   id?: string;
@@ -90,7 +90,7 @@ export async function fetchDentalServices(
     if (value !== undefined && value !== "") query.append(key, String(value));
   });
 
-  const res = await fetch(`${env.apiUrl}/services?${query.toString()}`, {
+  const res = await fetch(`${API_BASE}/services?${query.toString()}`, {
     headers: { Accept: "application/json" },
   });
 
@@ -105,7 +105,7 @@ export async function fetchDentalServiceById(
   organizationId: string,
 ): Promise<DentalServiceDto> {
   const res = await fetch(
-    `${env.apiUrl}/services/${id}?organizationId=${organizationId}`,
+    `${API_BASE}/services/${id}?organizationId=${organizationId}`,
     {
       headers: { Accept: "application/json" },
     },
@@ -120,7 +120,7 @@ export async function fetchDentalServiceById(
 export async function createDentalService(
   payload: CreateDentalServiceRequest,
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${env.apiUrl}/services`, {
+  const res = await fetch(`${API_BASE}/services`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -143,7 +143,7 @@ export async function updateDentalService(
   id: string,
   payload: UpdateDentalServiceRequest,
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${env.apiUrl}/services/${id}`, {
+  const res = await fetch(`${API_BASE}/services/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export async function toggleDentalServiceStatus(
   id: string,
   payload: { organizationId: string; updatedByMembershipId: string },
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${env.apiUrl}/services/${id}/toggle-status`, {
+  const res = await fetch(`${API_BASE}/services/${id}/toggle-status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -191,7 +191,7 @@ export async function deleteDentalService(
   organizationId: string,
 ): Promise<{ success: boolean; message: string }> {
   const res = await fetch(
-    `${env.apiUrl}/services/${id}?organizationId=${organizationId}`,
+    `${API_BASE}/services/${id}?organizationId=${organizationId}`,
     {
       method: "DELETE",
       headers: {

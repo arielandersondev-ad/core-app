@@ -4,6 +4,7 @@ import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { Appointment } from '../domain/entities/appointment.entity.js';
 import {
   AppointmentRepository,
+  AppointmentReferences,
   CheckOverlapParams,
   FindAppointmentsFilters,
 } from '../domain/repositories/appointment.repository.js';
@@ -47,13 +48,14 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       }
     }
 
-    const created = await this.findById(row.id);
+    const created = await this.findById(row.id, appointment.organizationId);
     return created!;
   }
 
-  async findById(id: string): Promise<Appointment | null> {
+  async findById(id: string, organizationId: string): Promise<Appointment | null> {
     const row = (await this.prisma.orm.dentistry.Appointment.first({
       id: toUuid36(id),
+      organizationId: toUuid36(organizationId),
     })) as unknown as AppointmentRow | null;
 
     if (!row) {
@@ -88,6 +90,7 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
 
     return rows
       .filter((row) => {
+        if (!filters.authorizedBranchIds.includes(row.branchId)) return false;
         if (filters.branchId && row.branchId !== filters.branchId) return false;
         if (filters.patientId && row.patientId !== filters.patientId) return false;
         if (
@@ -130,9 +133,29 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
     });
   }
 
-  async update(appointment: Appointment): Promise<Appointment> {
+  async referencesBelongToOrganization(params: AppointmentReferences): Promise<boolean> {
+    const organizationId = toUuid36(params.organizationId);
+    const [patient, service, treatment] = await Promise.all([
+      this.prisma.orm.dentistry.Patient.first({
+        id: toUuid36(params.patientId), organizationId, deleted: false,
+      }),
+      this.prisma.orm.dentistry.DentalService.first({
+        id: toUuid36(params.serviceId), organizationId, active: true,
+      }),
+      params.treatmentId
+        ? this.prisma.orm.dentistry.Treatment.first({
+            id: toUuid36(params.treatmentId), organizationId,
+            patientId: toUuid36(params.patientId), serviceId: toUuid36(params.serviceId),
+          })
+        : Promise.resolve(true),
+    ]);
+    return Boolean(patient && service && treatment);
+  }
+
+  async update(appointment: Appointment, organizationId: string): Promise<Appointment | null> {
     await this.prisma.orm.dentistry.Appointment.where({
       id: toUuid36(appointment.id),
+      organizationId: toUuid36(organizationId),
     }).update({
       status: appointment.status,
       notes: appointment.notes,
@@ -144,8 +167,7 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       updatedAt: new Date(),
     });
 
-    const updated = await this.findById(appointment.id);
-    return updated!;
+    return this.findById(appointment.id, organizationId);
   }
 }
 

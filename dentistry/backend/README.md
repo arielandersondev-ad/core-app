@@ -25,6 +25,12 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Autenticación Dentistry
+
+Configurar `JWT_PUBLIC_KEY_PATH`, `JWT_ISSUER` y `JWT_DENTISTRY_AUDIENCE` según `.env.example`. La API solo acepta access tokens RS256 de Core/Auth con audiencia exclusiva `dentistry-api` y duración máxima de 15 minutos. La clave privada permanece en Core/Auth.
+
+Todas las rutas de `/appointments` requieren `Authorization: Bearer <access_token>`. La API toma `organizationId` y el actor del token. Al crear una cita, el `branchId` debe pertenecer a `branchIds` del token, y `patientId`, `serviceId` y `treatmentId` deben corresponder a la misma organización. Actualmente `professionalMembershipId` solo puede ser el `membershipId` del usuario autenticado; asignar a otro profesional requiere un directorio confiable de membresías de la organización. `GET /auth/me` devuelve el identificador del usuario, el contexto y los permisos del token para la interfaz.
+
 ## Project setup
 
 ```bash

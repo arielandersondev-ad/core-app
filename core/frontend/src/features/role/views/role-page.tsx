@@ -8,51 +8,116 @@ import { RoleSelectorPanel } from '../components/role-selector-panel';
 import { PermissionEditorPanel } from '../components/permission-editor-panel';
 import { AccessFormDialog } from '../components/access-form-dialog';
 import { Icons } from '@/shared/components/ui/Icons';
-import { useRolePermissions } from '../hooks/use-role-permission';
+import { usePermissions, useReplaceRolePermissions, useRolePermissions } from '../hooks/use-permissions';
+import { CreateRoleDialog } from '../components/create-role-dialog';
+import { CreatePermissionDialog } from '../components/create-permission-dialog';
+import type { PermissionGroup, PermissionItem } from '../types/role';
+
+function groupPermissions(permissions: readonly PermissionItem[]): PermissionGroup[] {
+  const groups = new Map<string, PermissionItem[]>();
+
+  for (const permission of permissions) {
+    const resource = permission.code.split(':', 1)[0] || 'other';
+    const current = groups.get(resource) ?? [];
+    current.push(permission);
+    groups.set(resource, current);
+  }
+
+  return [...groups.entries()].map(([key, items]) => ({
+    key,
+    permissions: items.sort((a, b) => a.code.localeCompare(b.code)),
+  }));
+}
+
+type PermissionSelection = { roleId: string; ids: Set<string> };
 
 export default function RolePage() {
   const [organizationId, setOrganizationId] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState('');
-  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
-  const [savedCodes, setSavedCodes] = useState<Set<string>>(new Set());
+  const [selection, setSelection] = useState<PermissionSelection | null>(null);
+  const [isEditingPermissions, setIsEditingPermissions] = useState(false);
+  const [isCreatePermissionOpen, setIsCreatePermissionOpen] = useState(false);
   const [dialog, setDialog] = useState<{
     kind: 'role' | 'permission';
-    mode: 'create' | 'edit';
     name?: string;
     code?: string;
   } | null>(null);
 
-  const queryPermissions = useRolePermissions(selectedRoleId)
-  const permissionGroups = queryPermissions.data ?? [];
+  const queryRolePermissions = useRolePermissions(selectedRoleId);
+  const queryPermissions = usePermissions(Boolean(selectedRoleId));
+  const replaceRolePermissions = useReplaceRolePermissions();
+  const permissionGroups = useMemo(
+    () => groupPermissions(queryPermissions.data ?? []),
+    [queryPermissions.data],
+  );
+  const assignedPermissionIds = useMemo(
+    () => new Set(
+      (queryRolePermissions.data ?? []).flatMap((group) =>
+        group.permissions.map((permission) => permission.id),
+      ),
+    ),
+    [queryRolePermissions.data],
+  );
+  const savedPermissionIds = assignedPermissionIds;
+  const selectedPermissionIds = selection?.roleId === selectedRoleId
+    ? selection.ids
+    : savedPermissionIds;
 
   const query = useRoles(organizationId);
   const roles = query.data ?? [];
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const hasChanges = useMemo(
-    () => selectedCodes.size !== savedCodes.size || [...selectedCodes].some((code) => !savedCodes.has(code)),
-    [savedCodes, selectedCodes],
+    () => selectedPermissionIds.size !== savedPermissionIds.size
+      || [...selectedPermissionIds].some((id) => !savedPermissionIds.has(id)),
+    [savedPermissionIds, selectedPermissionIds],
   );
 
+  const [selectedOrganization, setSelectedOrganization] = useState<{ id: string; name: string } | null>(null);
+  const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
   function handleOrganizationChange(nextOrganizationId: string) {
     setOrganizationId(nextOrganizationId);
     setSelectedRoleId('');
-    setSelectedCodes(new Set());
-    setSavedCodes(new Set());
+    setSelection(null);
+    setIsEditingPermissions(false);
+    replaceRolePermissions.reset();
   }
 
   function handleSelectRole(roleId: string) {
     setSelectedRoleId(roleId);
-    setSelectedCodes(new Set());
-    setSavedCodes(new Set());
+    setSelection(null);
+    setIsEditingPermissions(false);
+    replaceRolePermissions.reset();
   }
 
-  function handleTogglePermission(code: string) {
-    setSelectedCodes((current) => {
-      const next = new Set(current);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-      return next;
+  function handleTogglePermission(permissionId: string) {
+    setSelection((current) => {
+      const currentIds = current?.roleId === selectedRoleId ? current.ids : selectedPermissionIds;
+      const next = new Set(currentIds);
+      if (next.has(permissionId)) next.delete(permissionId);
+      else next.add(permissionId);
+      return { roleId: selectedRoleId, ids: next };
     });
+  }
+
+  function handleDiscardPermissions() {
+    setSelection(null);
+    setIsEditingPermissions(false);
+    replaceRolePermissions.reset();
+  }
+
+  async function handleSavePermissions() {
+    if (!selectedRoleId) return;
+
+    try {
+      await replaceRolePermissions.mutateAsync({
+        roleId: selectedRoleId,
+        permissionIds: [...selectedPermissionIds],
+      });
+      setSelection(null);
+      setIsEditingPermissions(false);
+    } catch {
+      // La mutación conserva el error para mostrarlo sin cerrar el modo edición.
+    }
   }
 
   const error = query.isError
@@ -60,6 +125,15 @@ export default function RolePage() {
       typeof query.error.response?.data?.message === 'string'
       ? query.error.response.data.message
       : 'No se pudo cargar el listado de roles.'
+    : null;
+  const permissionsError = queryPermissions.isError || queryRolePermissions.isError
+    ? 'No se pudieron cargar los permisos disponibles para este rol.'
+    : null;
+  const savePermissionsError = replaceRolePermissions.isError
+    ? isAxiosError(replaceRolePermissions.error)
+      && typeof replaceRolePermissions.error.response?.data?.message === 'string'
+      ? replaceRolePermissions.error.response.data.message
+      : 'No se pudieron guardar los permisos del rol.'
     : null;
 
   return (
@@ -74,7 +148,13 @@ export default function RolePage() {
             Configura qué puede consultar y administrar cada rol dentro de la plataforma.
           </p>
         </div>
-        <OrganizationSelect value={organizationId} onChange={handleOrganizationChange} />
+        <OrganizationSelect
+          value={selectedOrganization?.id ?? ''}
+          onChange={(organization) => {
+            setSelectedOrganization(organization);
+            handleOrganizationChange(organization?.id ?? '');
+          }}
+        />
       </header>
 
       {!organizationId && (
@@ -115,29 +195,54 @@ export default function RolePage() {
             roles={roles}
             selectedRoleId={selectedRoleId}
             onSelectRole={handleSelectRole}
-            onCreateRole={() => setDialog({ kind: 'role', mode: 'create' })}
+            onCreateRole={() => setIsCreateRoleOpen(true)}
           />
-          <PermissionEditorPanel
-            roleName={selectedRole?.name}
-            roleCode={selectedRole?.code}
-            readOnly={selectedRole?.organizationId === null}
-            permissionGroups={permissionGroups}
-            selectedCodes={selectedCodes}
-            hasChanges={hasChanges}
-            onToggle={handleTogglePermission}
-            onDiscard={() => setSelectedCodes(new Set(savedCodes))}
-            onSave={() => setSavedCodes(new Set(selectedCodes))}
-            onEditRole={() => setDialog({ kind: 'role', mode: 'edit', name: selectedRole?.name, code: selectedRole?.code })}
-            onCreatePermission={() => setDialog({ kind: 'permission', mode: 'create' })}
-            onEditPermission={(code, name) => setDialog({ kind: 'permission', mode: 'edit', code, name })}
-          />
+          {selectedRole && (queryPermissions.isPending || queryRolePermissions.isPending) ? (
+            <div role="status" className="h-96 animate-pulse rounded-lg border border-border bg-surface">
+              <span className="sr-only">Cargando permisos…</span>
+            </div>
+          ) : selectedRole && permissionsError ? (
+            <div role="alert" className="rounded-md border border-danger/30 bg-danger-subtle p-4 text-sm text-danger">
+              {permissionsError}
+              <button
+                type="button"
+                onClick={() => void Promise.all([queryPermissions.refetch(), queryRolePermissions.refetch()])}
+                className="ml-2 underline"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            <PermissionEditorPanel
+              roleName={selectedRole?.name}
+              roleCode={selectedRole?.code}
+              readOnly={selectedRole?.organizationId === null}
+              isEditing={isEditingPermissions}
+              permissionGroups={permissionGroups}
+              selectedPermissionIds={selectedPermissionIds}
+              totalPermissions={queryPermissions.data?.length ?? 0}
+              hasChanges={hasChanges}
+              isSaving={replaceRolePermissions.isPending}
+              saveError={savePermissionsError}
+              onToggle={handleTogglePermission}
+              onStartEditing={() => {
+                replaceRolePermissions.reset();
+                setIsEditingPermissions(true);
+              }}
+              onDiscard={handleDiscardPermissions}
+              onSave={handleSavePermissions}
+              onEditRole={() => setDialog({ kind: 'role', name: selectedRole?.name, code: selectedRole?.code })}
+              onCreatePermission={() => setIsCreatePermissionOpen(true)}
+              onEditPermission={(code, name) => setDialog({ kind: 'permission', code, name })}
+            />
+          )}
         </div>
       )}
 
-      {organizationId && (
+      {selectedOrganization && (
         <button
           type="button"
-          onClick={() => setDialog({ kind: 'role', mode: 'create' })}
+          onClick={() => setIsCreateRoleOpen(true)}
           className="fixed bottom-20 right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-primary px-5 font-display text-sm font-semibold text-primary-foreground shadow-xl transition-transform active:scale-95 lg:hidden"
         >
           <span aria-hidden="true">{Icons.plus}</span>
@@ -145,11 +250,26 @@ export default function RolePage() {
         </button>
       )}
 
+      {selectedOrganization && (
+        <CreateRoleDialog
+          open={isCreateRoleOpen}
+          organizationId={selectedOrganization.id}
+          organizationName={selectedOrganization.name}
+          onClose={() => setIsCreateRoleOpen(false)}
+        />
+      )}
+
+      {isCreatePermissionOpen && (
+        <CreatePermissionDialog
+          open
+          onClose={() => setIsCreatePermissionOpen(false)}
+        />
+      )}
+
       {dialog && (
         <AccessFormDialog
           open
           kind={dialog.kind}
-          mode={dialog.mode}
           initialName={dialog.name}
           initialCode={dialog.code}
           onClose={() => setDialog(null)}
