@@ -1,4 +1,7 @@
+"use client";
+
 import { useState } from "react";
+import { ClinicalHistoryView } from "@/features/clinical-history/components/clinical-history";
 import {
   getPatientById,
   getAppointmentsByPatient,
@@ -26,22 +29,31 @@ export default function PatientDetail({
   onBack,
   patientId,
   onNavigate,
+  initialTab = "resumen",
 }: {
   onBack: () => void;
   patientId: string;
   onNavigate: (s: string, p?: Record<string, string>) => void;
+  initialTab?: Tab;
 }) {
   const patient = getPatientById(patientId);
-  const [tab, setTab] = useState<Tab>("resumen");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [isApptModalOpen, setIsApptModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
-  if (!patient) return null;
 
   const [appts, setAppts] = useState(() => getAppointmentsByPatient(patientId));
   const [pays, setPays] = useState(() => getPaymentsByPatient(patientId));
   const clinical = getClinicalByPatient(patientId);
   const sessions = getSessionsByPatient(patientId);
+
+  if (!patient) {
+    return (
+      <PageContainer>
+        <p className="text-muted">Paciente no encontrado.</p>
+        <Button variant="outline" onClick={onBack}>Volver a pacientes</Button>
+      </PageContainer>
+    );
+  }
 
   const totalPaid = pays
     .filter((p) => p.status === "pagado")
@@ -89,7 +101,7 @@ export default function PatientDetail({
       />
 
       {/* Alergias en caso de existir */}
-      {patient.allergies.length > 0 && (
+      {tab !== "historial" && patient.allergies.length > 0 && (
         <div className="flex items-center gap-2 p-3 bg-red-50/70 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-xl">
           <span className="text-xs font-mono font-bold text-[var(--danger)] uppercase tracking-wider flex items-center gap-1">
             ⚠ Alergias del paciente:
@@ -112,6 +124,7 @@ export default function PatientDetail({
         {tabs.map((t) => (
           <button
             key={t.key}
+            aria-pressed={tab === t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-xs sm:text-sm font-display font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap -mb-px ${
               tab === t.key
@@ -287,52 +300,7 @@ export default function PatientDetail({
 
       {/* ── Historial clínico ── */}
       {tab === "historial" && (
-        <div className="flex flex-col gap-4 max-w-4xl">
-          {clinical.length === 0 ? (
-            <div className="py-16 text-center text-sm text-[var(--muted)] border border-dashed border-[var(--border)] rounded-xl bg-[var(--surface)]">
-              Sin registros clínicos archivados
-            </div>
-          ) : (
-            clinical.map((entry) => (
-              <div
-                key={entry.id}
-                className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5 shadow-xs"
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div>
-                    <p className="text-sm font-display font-bold text-[var(--foreground)]">
-                      {entry.title}
-                    </p>
-                    <p className="text-xs font-mono text-[var(--muted)] mt-0.5">
-                      {new Date(entry.date).toLocaleDateString("es-PE", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}{" "}
-                      · {getProfessionalById(entry.professionalId)?.name}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-[var(--foreground)] leading-relaxed">
-                  {entry.notes}
-                </p>
-                {entry.tags.length > 0 && (
-                  <div className="flex gap-1.5 mt-3 flex-wrap">
-                    {entry.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] font-mono px-2 py-0.5 bg-[var(--primary-subtle)] text-[var(--primary)] rounded-md uppercase tracking-wide"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+        <ClinicalHistoryView key={patient.id} patient={patient} />
       )}
 
       {/* ── Citas ── */}

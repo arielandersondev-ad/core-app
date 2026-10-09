@@ -5,8 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Patients from "@/modules/clinic/views/Patients";
 import CreatePatient from "@/modules/clinic/views/CreatePatient";
 import PatientDetail from "@/modules/clinic/views/PatientDetail";
+import { patients } from "@/modules/clinic/__mocks__/data";
 
 type PatientSubView = "list" | "crear-paciente" | "paciente-detalle";
+
+// New mock patients exist only in the browser; the server route knows these initial records.
+const initialPatientIds = new Set(patients.map((patient) => patient.id));
 
 function PatientsContent() {
   const router = useRouter();
@@ -21,16 +25,20 @@ function PatientsContent() {
         ? "paciente-detalle"
         : "list",
   );
-  const [selectedPatientId, setSelectedPatientId] = useState<
-    string | undefined
-  >(initialPatientId || undefined);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>(
+    initialPatientId || undefined,
+  );
 
   const handleNavigate = (view: string, params?: Record<string, string>) => {
     if (view === "crear-paciente") {
       setSubView("crear-paciente");
     } else if (view === "paciente-detalle" && params?.patientId) {
-      setSelectedPatientId(params.patientId);
-      setSubView("paciente-detalle");
+      if (initialPatientIds.has(params.patientId)) {
+        router.push(`/patients/${encodeURIComponent(params.patientId)}`);
+      } else {
+        setSelectedPatientId(params.patientId);
+        setSubView("paciente-detalle");
+      }
     } else if (view === "cita-detalle" && params?.citaId) {
       router.push(`/agenda?citaId=${params.citaId}`);
     } else if (view === "nueva-cita") {
@@ -70,6 +78,7 @@ function PatientsContent() {
         )}
         {subView === "paciente-detalle" && selectedPatientId && (
           <PatientDetail
+            key={selectedPatientId}
             patientId={selectedPatientId}
             onBack={() => setSubView("list")}
             onNavigate={handleNavigate}

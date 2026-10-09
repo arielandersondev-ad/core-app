@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { patients, calcAge } from "@/modules/clinic/__mocks__/data";
+import { displayDate } from "@/features/clinical-history/data/history";
 import { PageContainer, PageHeader, FilterToolbar } from "@/shared/components/layout";
 import { StatCard, Button, Input, EmptyState, Icons } from "@/shared/components/ui";
 import { CreatePatientModal } from "@/modules/clinic/components";
@@ -124,9 +125,16 @@ export default function Patients({
                           .join("")}
                       </div>
                       <div>
-                        <p className="text-sm font-display font-semibold text-[var(--foreground)]">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onNavigate("paciente-detalle", { patientId: p.id });
+                          }}
+                          className="text-left text-sm font-display font-semibold text-[var(--foreground)] hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                        >
                           {p.name}
-                        </p>
+                        </button>
                         <p className="text-[11px] font-mono text-[var(--muted)]">
                           {p.email}
                         </p>
@@ -159,11 +167,7 @@ export default function Patients({
                     )}
                   </td>
                   <td className="px-4 py-3.5 text-xs font-mono text-[var(--muted)]">
-                    {new Date(p.lastVisit).toLocaleDateString("es-PE", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {displayDate(p.lastVisit)}
                   </td>
                   <td className="px-4 py-3.5 text-right text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="inline-block transform group-hover:translate-x-0.5 transition-transform">
