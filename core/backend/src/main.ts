@@ -1,3 +1,4 @@
+import { env } from './config/env.js'
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module.js';
@@ -12,8 +13,8 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: env.frontendOrigins,
   });
-  await app.listen(process.env.PORT ?? 3002);
+  await app.listen(env.port);
 }
 void bootstrap();

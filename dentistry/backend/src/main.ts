@@ -1,19 +1,21 @@
-import 'dotenv/config';
+import { env } from './config/env.js'
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin: env.frontendOrigins,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
     }),
   );
-
-  const port = process.env.PORT ?? 3004;
+  
+  const port = env.port;
   await app.listen(port);
   console.log(`[Dentistry Backend] Server running at http://localhost:${port}`);
 }
