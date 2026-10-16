@@ -54,7 +54,7 @@ export function DataTableActions<T>({
               e.stopPropagation();
               action.onClick(row);
             }}
-            className="rounded-[4px] border border-border px-3 py-1 text-xs hover:bg-background"
+            className="rounded-lg border border-border px-3 py-1 text-xs hover:bg-background transition-colors"
           >
             {action.icon}
             {action.label}
@@ -77,11 +77,12 @@ export function DataTableActions<T>({
         className="
           h-8
           w-8
-          rounded-[4px]
+          rounded-lg
           hover:bg-background
           flex
           items-center
           justify-center
+          transition-colors
         "
       >
         ⋮
@@ -95,11 +96,12 @@ export function DataTableActions<T>({
             z-50
             mt-2
             min-w-[180px]
-            rounded-[4px]
+            rounded-xl
             border
             border-border
             bg-surface-elevated
             shadow-lg
+            overflow-hidden
           "
         >
           {visibleActions.map((action, index) => (

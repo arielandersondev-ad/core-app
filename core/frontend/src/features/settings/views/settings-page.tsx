@@ -2,6 +2,7 @@
 
 import { Card, Separator, Toggle, SectionHeader, Icons } from '@/shared/components/ui';
 import { useTheme } from '@/shared/hooks/use-theme';
+import { logoutAction } from '@/features/auth/actions/logout-action';
 
 export default function Settings() {
   const { dark, toggleDark } = useTheme();
@@ -103,10 +104,15 @@ export default function Settings() {
       {/* ── Sesión ── */}
       <SectionHeader>Sesión</SectionHeader>
       <Card className="mx-4 mb-8">
-        <button className="w-full flex items-center gap-3 px-4 py-4 active:opacity-70 text-left hover:bg-muted/5 transition-colors">
-          <span className="text-danger">{Icons.logout}</span>
-          <p className="text-sm font-display font-semibold text-danger">Cerrar sesión</p>
-        </button>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="w-full flex items-center gap-3 px-4 py-4 active:opacity-70 text-left hover:bg-muted/5 transition-colors"
+          >
+            <span className="text-danger">{Icons.logout}</span>
+            <span className="text-sm font-display font-semibold text-danger">Cerrar sesión</span>
+          </button>
+        </form>
       </Card>
     </div>
   );

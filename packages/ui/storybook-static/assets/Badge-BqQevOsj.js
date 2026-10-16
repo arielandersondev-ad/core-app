@@ -1,0 +1,9 @@
+import{j as e}from"./jsx-runtime-D_zvdyIk.js";const u={primary:"bg-[var(--primary-subtle)] text-[var(--primary)]",success:"bg-[var(--success-subtle)] text-[var(--success)]",warning:"bg-[var(--warning-subtle)] text-[var(--warning)]",danger:"bg-[var(--danger-subtle)] text-[var(--danger)]",neutral:"bg-[var(--neutral-subtle)] text-[var(--muted)]",active:"bg-[var(--success-subtle)] text-[var(--success)]",inactive:"bg-[var(--neutral-subtle)] text-[var(--muted)]",suspended:"bg-[var(--warning-subtle)] text-[var(--warning)]",role:"bg-[var(--primary-subtle)] text-[var(--primary)]"},i={sm:"min-h-5 gap-1.5 px-2 py-0.5 text-[10px]",md:"min-h-6 gap-2 px-2.5 py-1 text-xs"};function m({variant:a="neutral",size:r="sm",dot:n=!1,className:s="",children:t,...l}){return e.jsxs("span",{className:`inline-flex w-fit items-center rounded-md font-medium leading-none ${u[a]} ${i[r]} ${s}`,...l,children:[n&&e.jsx("span",{"aria-hidden":"true",className:"size-1.5 shrink-0 rounded-full bg-current"}),t]})}m.__docgenInfo={description:"",methods:[],displayName:"Badge",props:{variant:{required:!1,tsType:{name:"union",raw:`| "primary"
+| "success"
+| "warning"
+| "danger"
+| "neutral"
+| "active"
+| "inactive"
+| "suspended"
+| "role"`,elements:[{name:"literal",value:'"primary"'},{name:"literal",value:'"success"'},{name:"literal",value:'"warning"'},{name:"literal",value:'"danger"'},{name:"literal",value:'"neutral"'},{name:"literal",value:'"active"'},{name:"literal",value:'"inactive"'},{name:"literal",value:'"suspended"'},{name:"literal",value:'"role"'}]},description:"",defaultValue:{value:'"neutral"',computed:!1}},size:{required:!1,tsType:{name:"union",raw:'"sm" | "md"',elements:[{name:"literal",value:'"sm"'},{name:"literal",value:'"md"'}]},description:"",defaultValue:{value:'"sm"',computed:!1}},dot:{required:!1,tsType:{name:"boolean"},description:"",defaultValue:{value:"false",computed:!1}},className:{defaultValue:{value:'""',computed:!1},required:!1}}};export{m as B};

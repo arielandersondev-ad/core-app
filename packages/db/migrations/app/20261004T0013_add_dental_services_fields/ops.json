@@ -1,0 +1,563 @@
+[
+  {
+    "id": "table.appointment_services",
+    "label": "Create table \"appointment_services\"",
+    "summary": "Creates table \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"appointment_services\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"appointment_services\"",
+        "sql": "CREATE TABLE \"dentistry\".\"appointment_services\" (\n  \"appointmentId\" character(36) NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"durationMinutes\" int4,\n  \"id\" character(36) NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"priceMinor\" int4,\n  \"serviceId\" character(36) NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"appointment_services\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.dental_service_supplies",
+    "label": "Create table \"dental_service_supplies\"",
+    "summary": "Creates table \"dental_service_supplies\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "dental_service_supplies"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"dental_service_supplies\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_service_supplies\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"dental_service_supplies\"",
+        "sql": "CREATE TABLE \"dentistry\".\"dental_service_supplies\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"estimatedCostMinor\" int4,\n  \"id\" character(36) NOT NULL,\n  \"inventoryItemId\" character(36),\n  \"name\" text NOT NULL,\n  \"notes\" text,\n  \"organizationId\" character(36) NOT NULL,\n  \"quantity\" int4 DEFAULT 1 NOT NULL,\n  \"serviceId\" character(36) NOT NULL,\n  \"unit\" text DEFAULT 'unidades' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"dental_service_supplies\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_service_supplies\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.dentistry.dental_services.category",
+    "label": "Add column \"category\" to \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "column",
+        "name": "category",
+        "table": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"category\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "dental_services",
+          "category"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"category\"",
+        "sql": "ALTER TABLE \"dentistry\".\"dental_services\" ADD COLUMN \"category\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"category\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "dental_services",
+          "category"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.dentistry.dental_services.labCostMinor",
+    "label": "Add column \"labCostMinor\" to \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "column",
+        "name": "labCostMinor",
+        "table": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"labCostMinor\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "dental_services",
+          "labCostMinor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"labCostMinor\"",
+        "sql": "ALTER TABLE \"dentistry\".\"dental_services\" ADD COLUMN \"labCostMinor\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"labCostMinor\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "dental_services",
+          "labCostMinor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointment_services.appointment_services_appointmentId_idx_682a8b58",
+    "label": "Create index \"appointment_services_appointmentId_idx_682a8b58\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appointment_services_appointmentId_idx_682a8b58",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointment_services_appointmentId_idx_682a8b58\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointment_services_appointmentId_idx_682a8b58\"",
+        "sql": "CREATE INDEX \"appointment_services_appointmentId_idx_682a8b58\" ON \"dentistry\".\"appointment_services\" (\"appointmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointment_services_appointmentId_idx_682a8b58\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services_appointmentId_idx_682a8b58\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointment_services.appointment_services_serviceId_idx_b5d9acbf",
+    "label": "Create index \"appointment_services_serviceId_idx_b5d9acbf\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "appointment_services_serviceId_idx_b5d9acbf",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"appointment_services_serviceId_idx_b5d9acbf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"appointment_services_serviceId_idx_b5d9acbf\"",
+        "sql": "CREATE INDEX \"appointment_services_serviceId_idx_b5d9acbf\" ON \"dentistry\".\"appointment_services\" (\"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"appointment_services_serviceId_idx_b5d9acbf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"appointment_services_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointment_services.apptsvc_org_appt_idx_9087d499",
+    "label": "Create index \"apptsvc_org_appt_idx_9087d499\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "apptsvc_org_appt_idx_9087d499",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"apptsvc_org_appt_idx_9087d499\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"apptsvc_org_appt_idx_9087d499\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"apptsvc_org_appt_idx_9087d499\"",
+        "sql": "CREATE INDEX \"apptsvc_org_appt_idx_9087d499\" ON \"dentistry\".\"appointment_services\" (\"organizationId\", \"appointmentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"apptsvc_org_appt_idx_9087d499\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"apptsvc_org_appt_idx_9087d499\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.appointment_services.apptsvc_org_svc_idx_8c10b794",
+    "label": "Create index \"apptsvc_org_svc_idx_8c10b794\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "apptsvc_org_svc_idx_8c10b794",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"apptsvc_org_svc_idx_8c10b794\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"apptsvc_org_svc_idx_8c10b794\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"apptsvc_org_svc_idx_8c10b794\"",
+        "sql": "CREATE INDEX \"apptsvc_org_svc_idx_8c10b794\" ON \"dentistry\".\"appointment_services\" (\"organizationId\", \"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"apptsvc_org_svc_idx_8c10b794\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"apptsvc_org_svc_idx_8c10b794\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.dental_service_supplies.dental_service_supplies_serviceId_idx_b5d9acbf",
+    "label": "Create index \"dental_service_supplies_serviceId_idx_b5d9acbf\" on \"dental_service_supplies\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "dental_service_supplies_serviceId_idx_b5d9acbf",
+        "table": "dental_service_supplies"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"dental_service_supplies_serviceId_idx_b5d9acbf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_service_supplies_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"dental_service_supplies_serviceId_idx_b5d9acbf\"",
+        "sql": "CREATE INDEX \"dental_service_supplies_serviceId_idx_b5d9acbf\" ON \"dentistry\".\"dental_service_supplies\" (\"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"dental_service_supplies_serviceId_idx_b5d9acbf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dental_service_supplies_serviceId_idx_b5d9acbf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.dental_service_supplies.dss_org_service_idx_8c10b794",
+    "label": "Create index \"dss_org_service_idx_8c10b794\" on \"dental_service_supplies\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "dss_org_service_idx_8c10b794",
+        "table": "dental_service_supplies"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"dss_org_service_idx_8c10b794\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dss_org_service_idx_8c10b794\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"dss_org_service_idx_8c10b794\"",
+        "sql": "CREATE INDEX \"dss_org_service_idx_8c10b794\" ON \"dentistry\".\"dental_service_supplies\" (\"organizationId\", \"serviceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"dss_org_service_idx_8c10b794\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"dss_org_service_idx_8c10b794\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.dental_services.svc_org_category_idx_a0ddcd26",
+    "label": "Create index \"svc_org_category_idx_a0ddcd26\" on \"dental_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "svc_org_category_idx_a0ddcd26",
+        "table": "dental_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"svc_org_category_idx_a0ddcd26\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_category_idx_a0ddcd26\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"svc_org_category_idx_a0ddcd26\"",
+        "sql": "CREATE INDEX \"svc_org_category_idx_a0ddcd26\" ON \"dentistry\".\"dental_services\" (\"organizationId\", \"category\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"svc_org_category_idx_a0ddcd26\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"svc_org_category_idx_a0ddcd26\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointment_services.appointment_services_appointmentId_fkey",
+    "label": "Add foreign key \"appointment_services_appointmentId_fkey\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "appointment_services_appointmentId_fkey",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointment_services_appointmentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointment_services_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointment_services_appointmentId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"appointment_services\"\nADD CONSTRAINT \"appointment_services_appointmentId_fkey\"\nFOREIGN KEY (\"appointmentId\")\nREFERENCES \"dentistry\".\"appointments\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointment_services_appointmentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointment_services_appointmentId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.appointment_services.appointment_services_serviceId_fkey",
+    "label": "Add foreign key \"appointment_services_serviceId_fkey\" on \"appointment_services\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "appointment_services_serviceId_fkey",
+        "table": "appointment_services"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"appointment_services_serviceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointment_services_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"appointment_services_serviceId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"appointment_services\"\nADD CONSTRAINT \"appointment_services_serviceId_fkey\"\nFOREIGN KEY (\"serviceId\")\nREFERENCES \"dentistry\".\"dental_services\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"appointment_services_serviceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "appointment_services_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"appointment_services\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.dental_service_supplies.dental_service_supplies_serviceId_fkey",
+    "label": "Add foreign key \"dental_service_supplies_serviceId_fkey\" on \"dental_service_supplies\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "dental_service_supplies_serviceId_fkey",
+        "table": "dental_service_supplies"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"dental_service_supplies_serviceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "dental_service_supplies_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"dental_service_supplies\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"dental_service_supplies_serviceId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"dental_service_supplies\"\nADD CONSTRAINT \"dental_service_supplies_serviceId_fkey\"\nFOREIGN KEY (\"serviceId\")\nREFERENCES \"dentistry\".\"dental_services\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"dental_service_supplies_serviceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "dental_service_supplies_serviceId_fkey",
+          "dentistry",
+          "\"dentistry\".\"dental_service_supplies\""
+        ]
+      }
+    ]
+  }
+]

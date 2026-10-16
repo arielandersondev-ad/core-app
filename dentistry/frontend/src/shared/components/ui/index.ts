@@ -1,13 +1,40 @@
-export { Avatar } from "./Avatar";
-export { Button } from "./Button";
-export { Card } from "./Card";
-export { Badge } from "./Badge";
-export { EmptyState } from "./EmptyState";
-export { Icons } from "./Icons";
-export { Input } from "./Input";
-export { Label } from "./Label";
-export { SectionHeader } from "./SectionHeader";
-export { Select } from "./Select";
-export { Separator } from "./Separator";
-export { StatCard } from "./StatCard";
-export { Toggle } from "./Toggle";
+// Re-export standardized Design System components from @app/ui
+export {
+  Avatar,
+  Button,
+  Card,
+  Badge,
+  EmptyState,
+  Icons,
+  Input,
+  Label,
+  SectionHeader,
+  Select,
+  Separator,
+  StatCard,
+  Toggle,
+  Modal,
+} from "@app/ui";
+
+export type {
+  BadgeProps,
+  BadgeSize,
+  BadgeVariant,
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+  InputProps,
+  InputSize,
+  SelectProps,
+  SelectOption,
+  StatCardProps,
+  StatCardVariant,
+  ModalProps,
+  ToggleProps,
+  EmptyStateProps,
+  AvatarProps,
+} from "@app/ui";
+
+// Vertical-specific components
+export { PaymentPromptModal } from "./PaymentPromptModal";
+export { WhatsAppModal } from "./WhatsAppModal";

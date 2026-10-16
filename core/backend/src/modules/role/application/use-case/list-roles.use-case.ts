@@ -14,7 +14,7 @@ export class ListRolesByOrganizationScopeUseCase {
     this.logger.log(`Paso 1/2 - Consultando roles disponibles para la organización ${organizationId}`);
     const roles = await this.roleRepository.listByOrganizationScope(organizationId);
 
-    this.logger.log(`Paso 2/2 - ${roles.length} rol(es) encontrados (globales + propios de la organización)`);
+    this.logger.log(`Paso 2/2 - ${roles.length} rol(es) encontrados (propios de la organización)`);
     return roles;
   }
 }

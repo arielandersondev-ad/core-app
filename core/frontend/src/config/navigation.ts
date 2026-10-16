@@ -35,6 +35,14 @@ export const navigationItems = [
     match: "nested",
   },
   {
+    id: "plans",
+    label: "Planes de Suscripcion",
+    mobileLabel: "Plans",
+    href: "/plans",
+    icon: "plans",
+    match: "nested",
+  },
+  {
     id: "settings",
     label: "Configuración",
     mobileLabel: "Config.",

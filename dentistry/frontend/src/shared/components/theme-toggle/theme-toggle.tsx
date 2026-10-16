@@ -68,7 +68,7 @@ export function ThemeToggle({ variant = "pill" }: ThemeToggleProps) {
         type="button"
         onClick={cycleTheme}
         aria-label="Cambiar tema"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-[3px] text-sm text-muted transition-colors hover:bg-background hover:text-foreground w-full"
+        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted transition-colors hover:bg-background hover:text-foreground w-full"
       >
         <span>{preference === "dark" ? Icons.sun : Icons.moon}</span>
         Tema {LABELS[preference]}

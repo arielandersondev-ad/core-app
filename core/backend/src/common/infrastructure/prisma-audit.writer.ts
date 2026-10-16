@@ -1,5 +1,13 @@
-import type { TransactionContext } from "./prisma-tx.js";
-import { toUuid36 } from "./prisma-uuid.js";
+import type { TransactionContext } from './prisma-tx.js';
+import { toUuid36 } from './prisma-uuid.js';
+
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 export type AuditLogEntry = {
   organizationId?: string;
@@ -8,7 +16,7 @@ export type AuditLogEntry = {
   action: string;
   resource: string;
   resourceId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: { [key: string]: JsonValue };
 };
 
 export async function writeAuditLog(
@@ -22,6 +30,6 @@ export async function writeAuditLog(
     action: entry.action,
     resource: entry.resource,
     resourceId: toUuid36(entry.resourceId),
-    //metadata: entry.metadata,
+    metadata: entry.metadata,
   });
 }

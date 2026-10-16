@@ -4,6 +4,7 @@ import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 
 type ModalProps = {
   open: boolean;
+  eyebrow?: string;
   title: string;
   description?: string;
   children: ReactNode;
@@ -25,7 +26,7 @@ function CloseIcon() {
   );
 }
 
-export function Modal({ open, title, description, children, onClose }: ModalProps) {
+export function Modal({ open, eyebrow = "Nueva organización", title, description, children, onClose }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export function Modal({ open, title, description, children, onClose }: ModalProp
         <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
-              Nueva organización
+              {eyebrow}
             </p>
 
             <h2 className="mt-1 text-xl font-semibold text-foreground">

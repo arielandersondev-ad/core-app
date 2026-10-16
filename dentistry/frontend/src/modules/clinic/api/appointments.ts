@@ -1,4 +1,19 @@
-import { env } from "@/infrastructure/config/env";
+const API_BASE = "/api/dentistry";
+
+export class AppointmentApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+export interface AppointmentServiceDto {
+  id?: string;
+  serviceId: string;
+  serviceName?: string;
+  priceMinor?: number | null;
+  durationMinutes?: number | null;
+  notes?: string | null;
+}
 
 export interface AppointmentDto {
   id: string;
@@ -7,6 +22,7 @@ export interface AppointmentDto {
   patientId: string;
   professionalMembershipId: string;
   serviceId: string;
+  serviceIds?: string[];
   treatmentId?: string | null;
   startsAt: string;
   endsAt: string;
@@ -26,24 +42,26 @@ export interface AppointmentDto {
   cancellationReason?: string | null;
   createdAt: string;
   updatedAt: string;
+  services?: AppointmentServiceDto[];
 }
 
 export interface CreateAppointmentRequest {
-  organizationId: string;
+  organizationId?: string;
   branchId: string;
   patientId: string;
   professionalMembershipId: string;
-  serviceId: string;
+  serviceId?: string;
+  serviceIds?: string[];
   treatmentId?: string;
   startsAt: string;
   endsAt: string;
   reason?: string;
   notes?: string;
-  createdByMembershipId: string;
+  createdByMembershipId?: string;
 }
 
 export interface ListAppointmentsParams {
-  organizationId: string;
+  organizationId?: string;
   branchId?: string;
   patientId?: string;
   professionalMembershipId?: string;
@@ -61,7 +79,7 @@ export async function fetchAppointments(
     if (value) query.append(key, value);
   });
 
-  const res = await fetch(`${env.apiUrl}/appointments?${query.toString()}`, {
+  const res = await fetch(`${API_BASE}/appointments?${query.toString()}`, {
     headers: { Accept: "application/json" },
   });
 
@@ -72,12 +90,15 @@ export async function fetchAppointments(
 }
 
 export async function fetchAppointmentById(id: string): Promise<AppointmentDto> {
-  const res = await fetch(`${env.apiUrl}/appointments/${id}`, {
+  const res = await fetch(`${API_BASE}/appointments/${id}`, {
     headers: { Accept: "application/json" },
   });
 
   if (!res.ok) {
-    throw new Error(`Error al obtener detalle de la cita: ${res.statusText}`);
+    throw new AppointmentApiError(
+      res.status === 404 ? "La cita no existe o no está disponible." : "No se pudo cargar el detalle de la cita.",
+      res.status,
+    );
   }
   return res.json();
 }
@@ -85,7 +106,7 @@ export async function fetchAppointmentById(id: string): Promise<AppointmentDto> 
 export async function createAppointment(
   payload: CreateAppointmentRequest,
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${env.apiUrl}/appointments`, {
+  const res = await fetch(`${API_BASE}/appointments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -117,7 +138,7 @@ export async function updateAppointmentStatus(
     notes?: string;
   },
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${env.apiUrl}/appointments/${id}/status`, {
+  const res = await fetch(`${API_BASE}/appointments/${id}/status`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -139,11 +160,11 @@ export async function updateAppointmentStatus(
 export async function cancelAppointment(
   id: string,
   payload: {
-    cancelledByMembershipId: string;
+    cancelledByMembershipId?: string;
     reason: string;
   },
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${env.apiUrl}/appointments/${id}/cancel`, {
+  const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

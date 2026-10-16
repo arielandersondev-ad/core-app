@@ -1,0 +1,11 @@
+import{j as a}from"./jsx-runtime-D_zvdyIk.js";import{r as l}from"./index-BFQ_Q9OP.js";function r({checked:e,onChange:n,disabled:d=!1,className:c=""}){return a.jsx("button",{type:"button",role:"switch","aria-checked":e,disabled:d,onClick:()=>n(!e),className:`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40 disabled:opacity-40 disabled:cursor-not-allowed ${e?"bg-[var(--primary)]":"bg-[var(--muted)]/40"} ${c}`,children:a.jsx("span",{className:`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out translate-y-0.5 ${e?"translate-x-4.5":"translate-x-0.5"}`})})}r.__docgenInfo={description:"",methods:[],displayName:"Toggle",props:{checked:{required:!0,tsType:{name:"boolean"},description:""},onChange:{required:!0,tsType:{name:"signature",type:"function",raw:"(checked: boolean) => void",signature:{arguments:[{type:{name:"boolean"},name:"checked"}],return:{name:"void"}}},description:""},disabled:{required:!1,tsType:{name:"boolean"},description:"",defaultValue:{value:"false",computed:!1}},className:{required:!1,tsType:{name:"string"},description:"",defaultValue:{value:'""',computed:!1}}}};const p={title:"UI/Toggle",component:r,tags:["autodocs"]},t={render:()=>{const[e,n]=l.useState(!1);return a.jsxs("div",{className:"flex items-center gap-3",children:[a.jsx(r,{checked:e,onChange:n}),a.jsx("span",{className:"text-sm font-medium text-[var(--foreground)]",children:e?"Habilitado":"Deshabilitado"})]})}};var s,o,i;t.parameters={...t.parameters,docs:{...(s=t.parameters)==null?void 0:s.docs,source:{originalSource:`{
+  render: () => {
+    const [checked, setChecked] = useState(false);
+    return <div className="flex items-center gap-3">\r
+        <Toggle checked={checked} onChange={setChecked} />\r
+        <span className="text-sm font-medium text-[var(--foreground)]">\r
+          {checked ? "Habilitado" : "Deshabilitado"}\r
+        </span>\r
+      </div>;
+  }
+}`,...(i=(o=t.parameters)==null?void 0:o.docs)==null?void 0:i.source}}};const f=["Interactive"];export{t as Interactive,f as __namedExportsOrder,p as default};

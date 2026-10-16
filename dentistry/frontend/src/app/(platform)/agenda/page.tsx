@@ -94,6 +94,7 @@ function AgendaContent() {
         )}
         {subView === "cita-detalle" && selectedCitaId && (
           <AppointmentDetail
+            key={selectedCitaId}
             citaId={selectedCitaId}
             onNavigate={handleNavigate}
           />

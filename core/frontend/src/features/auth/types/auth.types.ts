@@ -1,0 +1,10 @@
+export type LoginCredentials = {
+  email: string;
+  password: string;
+};
+
+export type AuthResult = {
+  access_token: string;
+  token_type: 'Bearer';
+  expires_in: number;
+};

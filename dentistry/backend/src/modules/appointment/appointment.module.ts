@@ -7,9 +7,10 @@ import { GetAppointmentByIdUseCase } from './application/use-case/get-appointmen
 import { UpdateAppointmentStatusUseCase } from './application/use-case/update-appointment-status.use-case.js';
 import { CancelAppointmentUseCase } from './application/use-case/cancel-appointment.use-case.js';
 import { AppointmentController } from './presentation/http/appointment.controller.js';
+import { DentistryAuthModule } from '../auth/dentistry-auth.module.js';
 
 @Module({
-  imports: [],
+  imports: [DentistryAuthModule],
   controllers: [AppointmentController],
   providers: [
     {

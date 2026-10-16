@@ -1,9 +1,6 @@
 ﻿import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class ListAppointmentsQueryDto {
-  @IsUUID()
-  organizationId: string;
-
   @IsOptional()
   @IsUUID()
   branchId?: string;

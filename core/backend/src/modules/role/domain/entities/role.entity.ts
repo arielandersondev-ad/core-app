@@ -1,7 +1,6 @@
 export type Role = {
   id: string;
 
-  // null => rol global
   organizationId: string | null;
 
   name: string;

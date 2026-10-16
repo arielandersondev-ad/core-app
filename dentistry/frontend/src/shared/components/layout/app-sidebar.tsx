@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./navigation";
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
 import { Icons } from "../icons/icons";
+import { logoutAction } from "@/features/auth/actions/logout-action";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -13,7 +14,7 @@ export function AppSidebar() {
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-surface">
       {/* Logo */}
       <div className="h-14 flex items-center px-5 border-b border-border gap-2.5">
-        <div className="w-7 h-7 bg-primary rounded-[3px] flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
           {Icons.tooth}
         </div>
         <span className="font-display text-sm font-bold tracking-wide text-foreground">
@@ -33,7 +34,7 @@ export function AppSidebar() {
             <Link
               key={section}
               href={href}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[3px] text-left transition-colors text-sm font-display font-medium ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors text-sm font-display font-medium ${
                 active
                   ? "bg-primary-subtle text-primary"
                   : "text-muted hover:bg-background hover:text-foreground"
@@ -51,20 +52,9 @@ export function AppSidebar() {
       {/* Bottom */}
       <div className="border-t border-border p-3 flex flex-col gap-1">
         <ThemeToggle variant="sidebar" />
-
-        <div className="flex items-center gap-2.5 px-3 py-2 rounded-[3px]">
-          <div className="w-7 h-7 rounded-[2px] bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-display font-bold flex-shrink-0">
-            DA
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-display font-semibold text-foreground truncate">
-              Dr. Admin
-            </p>
-            <p className="text-[10px] font-mono text-muted truncate">
-              Administrador
-            </p>
-          </div>
-        </div>
+        <form action={logoutAction}>
+          <button type="submit" className="w-full text-left px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-background rounded-[3px]">Cerrar sesión</button>
+        </form>
       </div>
     </aside>
   );

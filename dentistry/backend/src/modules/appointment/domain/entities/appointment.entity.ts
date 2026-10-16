@@ -7,13 +7,23 @@ export type AppointmentStatus =
   | 'NO_SHOW'
   | 'CANCELLED';
 
+export interface AppointmentServiceItem {
+  id?: string;
+  serviceId: string;
+  serviceName?: string;
+  priceMinor?: number | null;
+  durationMinutes?: number | null;
+  notes?: string | null;
+}
+
 export interface AppointmentProps {
   id?: string;
   organizationId: string;
   branchId: string;
   patientId: string;
   professionalMembershipId: string;
-  serviceId: string;
+  serviceId?: string;
+  serviceIds?: string[];
   treatmentId?: string | null;
   startsAt: Date;
   endsAt: Date;
@@ -26,6 +36,7 @@ export interface AppointmentProps {
   cancellationReason?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  services?: AppointmentServiceItem[];
 }
 
 export class Appointment {
@@ -35,6 +46,7 @@ export class Appointment {
   readonly patientId: string;
   readonly professionalMembershipId: string;
   readonly serviceId: string;
+  readonly serviceIds: string[];
   readonly treatmentId: string | null;
   readonly startsAt: Date;
   readonly endsAt: Date;
@@ -47,6 +59,7 @@ export class Appointment {
   private _cancellationReason: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly services: AppointmentServiceItem[];
 
   constructor(props: AppointmentProps) {
     if (props.startsAt >= props.endsAt) {
@@ -58,7 +71,16 @@ export class Appointment {
     this.branchId = props.branchId;
     this.patientId = props.patientId;
     this.professionalMembershipId = props.professionalMembershipId;
-    this.serviceId = props.serviceId;
+
+    const sIds =
+      props.serviceIds && props.serviceIds.length > 0
+        ? props.serviceIds
+        : props.serviceId
+          ? [props.serviceId]
+          : [];
+    this.serviceIds = sIds;
+    this.serviceId = sIds[0] || props.serviceId || '';
+    this.services = props.services || [];
     this.treatmentId = props.treatmentId ?? null;
     this.startsAt = props.startsAt;
     this.endsAt = props.endsAt;
@@ -136,14 +158,18 @@ export class Appointment {
 
   markNoShow(): void {
     if (this._status === 'COMPLETED') {
-      throw new Error('No se puede marcar como no asistió una cita ya completada.');
+      throw new Error(
+        'No se puede marcar como no asistió una cita ya completada.',
+      );
     }
     this._status = 'NO_SHOW';
   }
 
   schedule(): void {
     if (this._status === 'COMPLETED') {
-      throw new Error('No se puede reprogramar como pendiente una cita ya completada.');
+      throw new Error(
+        'No se puede reprogramar como pendiente una cita ya completada.',
+      );
     }
     this._status = 'SCHEDULED';
   }

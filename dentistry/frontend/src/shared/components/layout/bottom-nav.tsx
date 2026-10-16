@@ -6,11 +6,12 @@ import { NAV_ITEMS } from "./navigation";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const visibleItems = NAV_ITEMS.filter((item) => item.showInBottomNav !== false);
 
   return (
     <div className="flex-shrink-0 border-t border-border bg-surface lg:hidden">
       <div className="flex">
-        {NAV_ITEMS.map(({ section, label, href, icon }) => {
+        {visibleItems.map(({ section, label, href, icon }) => {
           const active =
             href === "/dashboard"
               ? pathname === "/dashboard"
