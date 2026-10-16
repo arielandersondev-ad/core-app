@@ -5,6 +5,7 @@ import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks()
   app.enableCors({
     origin: env.frontendOrigins,
   });
@@ -14,9 +15,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  
+
   const port = env.port;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`[Dentistry Backend] Server running at http://localhost:${port}`);
 }
 void bootstrap();
