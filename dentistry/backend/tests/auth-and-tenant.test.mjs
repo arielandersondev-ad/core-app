@@ -26,7 +26,7 @@ const principal = {
   permissions: ['dentistry:appointments:read'],
 };
 
-async function token(overrides = {}, audience = 'dentistry-api', lifetime = 900) {
+async function token(overrides = {}, audience = 'dentistry-api', lifetime = 1800) {
   return new SignJWT({ ...principal, ...overrides })
     .setProtectedHeader({ alg: 'RS256', typ: 'at+jwt', kid: 'test-key' })
     .setSubject(randomUUID())
@@ -49,7 +49,7 @@ test('rechaza una audiencia Core y una audiencia múltiple', async () => {
   await assert.rejects(verifier.verify(await token({}, ['dentistry-api', 'core-api'])));
 });
 
-test('rechaza permisos de otra API y vigencia mayor de 15 minutos', async () => {
+test('rechaza permisos de otra API y vigencia mayor de 30 minutos', async () => {
   await assert.rejects(verifier.verify(await token({ permissions: ['users:create'] })));
   await assert.rejects(verifier.verify(await token({}, 'dentistry-api', 3600)));
 });

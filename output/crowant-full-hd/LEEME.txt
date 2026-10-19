@@ -1,0 +1,11 @@
+CrowAnt — identidad Full HD
+
+Los SVG contienen curvas vectoriales y se pueden ampliar a cualquier tamaño.
+Las vistas previas PNG tienen 1920 × 1080 píxeles.
+Las dos animaciones HTML tienen composición 1920 × 1080, vectores y tipografía incluidos; funcionan sin conexión en un navegador.
+Haz clic sobre la animación para pausar, continuar o repetirla. También puedes usar Enter o la barra espaciadora.
+
+El encuentro: 6,4 segundos, con la hormiga caminando al llegar y corriendo al salir.
+La firma: 3,8 segundos, con transición suave al monograma.
+
+En la landing pública se muestra únicamente El encuentro.

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { CrowAntMark } from "./CrowAntMark";
 
 type CrowAntBrandProps = {
   compact?: boolean;
@@ -10,28 +10,15 @@ export function CrowAntBrand({
   inverse = false,
 }: CrowAntBrandProps) {
   return (
-    <span className="inline-flex items-center gap-3" aria-label="CrowAnt">
-      <span
-        className={`grid size-10 shrink-0 place-items-center overflow-hidden rounded-md border ${
-          inverse
-            ? "border-primary-foreground/25 bg-primary-foreground/10"
-            : "border-primary/35 bg-primary-subtle/55"
-        }`}
-      >
-        <Image
-          src="/brand/crowant-mark.png"
-          alt=""
-          aria-hidden="true"
-          width={60}
-          height={40}
-          className="h-auto w-full object-contain dark:brightness-150"
-          loading="eager"
-        />
-      </span>
+    <span className="inline-flex items-center gap-3" role="img" aria-label="CrowAnt">
+      <CrowAntMark
+        className={`h-9 w-[54px] shrink-0 ${inverse ? "[&_path]:fill-current" : ""}`}
+      />
 
       {!compact && (
-        <span className="font-display text-xl font-semibold tracking-[0.12em]">
-          CROW<span className={inverse ? "opacity-70" : "text-primary"}>ANT</span>
+        <span className="font-display text-[22px] font-semibold tracking-[-0.055em]">
+          <span className={inverse ? "" : "text-primary"}>Crow</span>
+          <span className={inverse ? "opacity-80" : "text-hazelnut"}>Ant</span>
         </span>
       )}
     </span>

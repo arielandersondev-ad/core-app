@@ -6,6 +6,7 @@ import type { AuthenticatedPrincipal } from '../../../application/contracts/auth
 import { loadJwtKey } from './jwt-key.loader.js';
 import { UUID_PATTERN } from '../../../../../common/validation/uuid-pattern.js';
 import { TOKEN_AUDIENCES } from '../../../application/contracts/token-audience.js';
+import { accessTokenLifetimeSeconds } from '../../../application/contracts/access-token-lifetime.js';
 
 function requiredString(payload: JWTPayload, claim: string): string {
   const value = payload[claim];
@@ -77,7 +78,7 @@ export class JoseAccessTokenVerifier extends AccessTokenVerifier {
     const expiresAt = payload.exp;
     if (typeof issuedAt !== 'number' || typeof expiresAt !== 'number' ||
       !Number.isSafeInteger(issuedAt) || !Number.isSafeInteger(expiresAt) ||
-      expiresAt <= issuedAt || expiresAt - issuedAt > 900) {
+      expiresAt <= issuedAt || expiresAt - issuedAt > accessTokenLifetimeSeconds()) {
       throw new Error('Vigencia del token inválida');
     }
 

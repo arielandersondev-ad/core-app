@@ -13,14 +13,14 @@ import { accessTokenLifetimeSeconds } from '../dist/modules/auth/application/con
 import { CorePermissionService } from '../dist/modules/auth/infrastructure/security/core-permission.service.js';
 import { SignJWT } from 'jose';
 
-test('el TTL configurado no puede superar 900 segundos', () => {
+test('el TTL configurado no puede superar 1800 segundos', () => {
   const previous = process.env.JWT_EXPIRES_IN_SECONDS;
   try {
-    process.env.JWT_EXPIRES_IN_SECONDS = '900';
-    assert.equal(accessTokenLifetimeSeconds(), 900);
-    for (const invalid of ['901', '0', '15m', '900.5']) {
+    process.env.JWT_EXPIRES_IN_SECONDS = '1800';
+    assert.equal(accessTokenLifetimeSeconds(), 1800);
+    for (const invalid of ['1801', '0', '15m', '1800.5']) {
       process.env.JWT_EXPIRES_IN_SECONDS = invalid;
-      assert.throws(accessTokenLifetimeSeconds, /entero entre 1 y 900/);
+      assert.throws(accessTokenLifetimeSeconds, /entero entre 1 y 1800/);
     }
   } finally {
     if (previous === undefined) delete process.env.JWT_EXPIRES_IN_SECONDS;
@@ -137,7 +137,7 @@ test('Core acepta su token y rechaza Dentistry con la misma clave pública', asy
       .sign(privateKey);
     const multiAudience = await signSpecial(['core-api', 'dentistry-api'], '900s');
     await assert.rejects(verifier.verify(multiAudience));
-    const overlong = await signSpecial('core-api', '901s');
+    const overlong = await signSpecial('core-api', '1801s');
     await assert.rejects(verifier.verify(overlong));
     const [header, payload, signature] = core.split('.');
     const tampered = `${header}.${payload}.${signature[0] === 'A' ? 'B' : 'A'}${signature.slice(1)}`;

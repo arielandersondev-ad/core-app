@@ -21,7 +21,6 @@ export async function login(email: string, password: string): Promise<{access_to
     }
     throw new AuthenticationError("No se pudo conectar con el servicio de acceso.");
   }
-  console.log('response: ', response)
   if (response.status === 401) throw new AuthenticationError("Correo o contraseña incorrectos.");
   if (response.status === 403) throw new AuthenticationError("Tu organización no tiene acceso a Dentistry.");
   if (!response.ok) throw new AuthenticationError("No se pudo iniciar sesión. Inténtalo nuevamente.");
@@ -32,7 +31,7 @@ export async function login(email: string, password: string): Promise<{access_to
   const type = (result as Record<string, unknown>).token_type;
   const expiresIn = (result as Record<string, unknown>).expires_in;
   if (typeof token !== "string" || !token || type !== "Bearer" ||
-      typeof expiresIn !== "number" || !Number.isInteger(expiresIn) || expiresIn < 1 || expiresIn > 900) {
+      typeof expiresIn !== "number" || !Number.isInteger(expiresIn) || expiresIn < 1 || expiresIn > 1800) {
     throw new AuthenticationError("Respuesta de acceso inválida.");
   }
   return { access_token: token, expires_in: expiresIn };

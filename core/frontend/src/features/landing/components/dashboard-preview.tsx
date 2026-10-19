@@ -1,15 +1,15 @@
 import { CrowAntBrand } from "@/shared/components/brand/CrowAntBrand";
 
-const organizations = [
-  { name: "Clínica Horizonte", sector: "Dentistry", users: 24 },
-  { name: "Farmacia Central", sector: "Pharma", users: 16 },
-  { name: "Huella Viva", sector: "Petshop", users: 12 },
-  { name: "Visión Norte", sector: "Oftalmología", users: 9 },
+const appointments = [
+  { patient: "Lucía Mendoza", service: "Valoración", time: "09:00" },
+  { patient: "Carlos Rojas", service: "Control", time: "09:45" },
+  { patient: "Ana Martínez", service: "Limpieza", time: "10:30" },
+  { patient: "Diego Vargas", service: "Consulta", time: "11:15" },
 ];
 
 export function DashboardPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-[1120px]" aria-label="Vista previa de CrowAnt Core">
+    <div className="relative mx-auto w-full max-w-[1120px]" aria-label="Vista ilustrativa del panel de Dentistry">
       <div className="absolute -inset-12 -z-10 bg-[radial-gradient(circle_at_center,var(--primary-subtle),transparent_68%)] opacity-40 blur-3xl" />
       <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_30px_100px_rgba(0,0,0,0.24)]">
         <div className="flex h-12 items-center gap-2 border-b border-border px-4 sm:px-6">
@@ -23,42 +23,42 @@ export function DashboardPreview() {
           <aside className="hidden border-r border-border bg-background/35 p-5 md:flex md:flex-col">
             <CrowAntBrand />
             <nav className="mt-10 space-y-2 text-sm text-muted" aria-label="Vista previa del panel">
-              {["Resumen", "Productos", "Organizaciones", "Equipo", "Reportes"].map((item, index) => (
+              {["Resumen", "Agenda", "Pacientes", "Tratamientos", "Reportes"].map((item, index) => (
                 <div
                   key={item}
                   className={`flex items-center gap-3 rounded-md px-3 py-2.5 ${
-                    index === 2 ? "bg-primary-subtle text-foreground" : ""
+                    index === 1 ? "bg-primary-subtle text-foreground" : ""
                   }`}
                 >
-                  <span className={`size-1.5 ${index === 2 ? "bg-primary" : "border border-current"}`} />
+                  <span className={`size-1.5 ${index === 1 ? "bg-primary" : "border border-current"}`} />
                   {item}
                 </div>
               ))}
             </nav>
             <p className="mt-auto font-mono text-xs uppercase leading-5 tracking-[0.24em] text-muted">
-              One ecosystem
-              <br />many industries
+              Una plataforma
+              <br />tu especialidad
             </p>
           </aside>
 
           <div className="min-w-0 p-5 sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">CrowAnt Core</p>
-                <h3 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">Organizaciones</h3>
-                <p className="mt-1 text-sm text-muted">Todo tu ecosistema desde un solo lugar.</p>
+                <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Dentistry</p>
+                <h3 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">Agenda de hoy</h3>
+                <p className="mt-1 text-sm text-muted">Tu equipo y tus pacientes, coordinados.</p>
               </div>
               <div className="hidden items-center gap-3 sm:flex">
                 <div className="size-8 rounded-full bg-primary-subtle" />
                 <div className="text-right text-xs">
-                  <p className="font-medium">Alex Morgan</p>
-                  <p className="text-muted">Administrador</p>
+                  <p className="font-medium">Clínica Horizonte</p>
+                  <p className="text-muted">Mi equipo</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-7 grid grid-cols-3 gap-2 sm:gap-4">
-              {[["Organizaciones", "24"], ["Productos", "05"], ["Usuarios", "186"]].map(([label, value]) => (
+              {[["Citas de hoy", "12"], ["Pacientes", "186"], ["Por confirmar", "03"]].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-border bg-background/45 p-3 sm:p-4">
                   <p className="truncate text-xs text-muted">{label}</p>
                   <p className="mt-2 font-display text-lg font-semibold sm:text-2xl">{value}</p>
@@ -68,21 +68,21 @@ export function DashboardPreview() {
 
             <div className="mt-5 overflow-hidden rounded-md border border-border bg-background/20">
               <div className="grid grid-cols-[1.35fr_0.8fr_0.45fr] border-b border-border px-4 py-3 font-mono text-xs uppercase tracking-[0.12em] text-muted sm:grid-cols-[1.35fr_0.8fr_0.45fr_0.6fr]">
-                <span>Organización</span>
-                <span>Producto</span>
-                <span>Equipo</span>
+                <span>Paciente</span>
+                <span>Consulta</span>
+                <span>Hora</span>
                 <span className="hidden sm:block">Estado</span>
               </div>
-              {organizations.map((organization) => (
+              {appointments.map((appointment) => (
                 <div
-                  key={organization.name}
+                  key={appointment.time}
                   className="grid grid-cols-[1.35fr_0.8fr_0.45fr] items-center border-b border-border/70 px-4 py-3 text-xs last:border-b-0 sm:grid-cols-[1.35fr_0.8fr_0.45fr_0.6fr] sm:text-sm"
                 >
-                  <span className="truncate font-medium">{organization.name}</span>
-                  <span className="truncate text-muted">{organization.sector}</span>
-                  <span>{organization.users}</span>
+                  <span className="truncate font-medium">{appointment.patient}</span>
+                  <span className="truncate text-muted">{appointment.service}</span>
+                  <span>{appointment.time}</span>
                   <span className="hidden items-center gap-2 text-primary sm:flex">
-                    <span className="size-1.5 rounded-full bg-primary" /> Activa
+                    <span className="size-1.5 rounded-full bg-primary" /> Confirmada
                   </span>
                 </div>
               ))}
