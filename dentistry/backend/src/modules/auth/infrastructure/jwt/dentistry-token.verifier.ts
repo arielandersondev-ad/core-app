@@ -41,7 +41,7 @@ export class DentistryTokenVerifier {
     if (payload.aud !== this.audience) {
       throw new Error('El token debe tener una sola audiencia Dentistry');
     }
-    if (typeof payload.iat !== 'number' || typeof payload.exp !== 'number' || payload.exp <= payload.iat || payload.exp - payload.iat > 900) {
+    if (typeof payload.iat !== 'number' || typeof payload.exp !== 'number' || payload.exp <= payload.iat || payload.exp - payload.iat > 1800) {
       throw new Error('Vigencia JWT inválida');
     }
     uuidClaim(payload, 'jti');

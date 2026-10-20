@@ -1,0 +1,10 @@
+Animaciones CrowAnt
+
+1. crowant-encuentro.html — 6,4 segundos.
+   Versión elegida, con el cuerpo de la hormiga corregido y carrera durante la salida.
+2. crowant-firma.html — 3,8 segundos.
+   Alternativa con transición suave al monograma.
+
+Abre cualquiera de los archivos HTML en un navegador. Funcionan sin conexión y tienen botones para reproducir y pausar. No requieren instalar nada.
+
+Estas copias se entregan en el chat. La landing pública solo muestra El encuentro.

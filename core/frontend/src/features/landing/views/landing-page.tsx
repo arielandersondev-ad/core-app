@@ -4,6 +4,8 @@ import { ThemeToggle } from "@/shared/components/theme-toggle/theme-toggle";
 import { DashboardPreview } from "@/features/landing/components/dashboard-preview";
 import { ProductCarousel } from "@/features/landing/components/product-carousel";
 import { ArrowIcon, FeatureIcon } from "@/features/landing/components/landing-icons";
+import { BrandMotion } from "@/features/landing/components/brand-motion";
+import { CrowAntAnimals } from "@/shared/components/brand/CrowAntAnimals";
 
 const principles = [
   {
@@ -63,15 +65,25 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <section className="relative px-6 pb-24 pt-20 sm:px-10 sm:pt-28 lg:px-12 lg:pb-32">
+      <section aria-label="CrowAnt en movimiento" className="relative flex min-h-[calc(100svh-5rem)] flex-col justify-center border-b border-border/70 px-6 pb-7 pt-6 sm:px-10 lg:px-12">
+        <div className="mx-auto flex w-full max-w-7xl flex-1 items-center">
+          <BrandMotion autoPlay />
+        </div>
+        <a href="#presentacion" className="mx-auto mt-5 inline-flex items-center gap-3 rounded-sm px-3 py-2 font-mono text-[10px] uppercase tracking-[.18em] text-muted transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+          Conoce CrowAnt
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="size-4"><path d="M10 3v14m-5-5 5 5 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </a>
+      </section>
+
+      <section id="presentacion" className="relative scroll-mt-8 px-6 pb-24 pt-20 sm:px-10 sm:pt-28 lg:px-12 lg:pb-32">
         <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-5xl text-center">
-            <div className="mx-auto inline-flex items-center gap-3 font-mono text-xs uppercase tracking-[0.22em] text-primary">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="inline-flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-primary sm:text-xs">
               <span className="h-px w-8 bg-primary" />
               Intelligence in collective motion
               <span className="h-px w-8 bg-primary" />
             </div>
-            <h1 className="mt-7 text-balance font-display text-5xl font-semibold leading-[0.98] tracking-[-0.045em] sm:text-6xl lg:text-[86px]">
+            <h1 className="mt-7 text-balance font-display text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-[76px]">
               La precisión del cuervo.
               <span className="block text-primary">La fuerza de la colonia.</span>
             </h1>
@@ -104,7 +116,7 @@ export default function LandingPage() {
               </h2>
             </div>
             <p className="max-w-xl text-base leading-7 text-muted lg:justify-self-end">
-              Desde salud hasta comercio especializado, cada producto CrowAnt conoce el lenguaje, los ritmos y las necesidades reales de su sector.
+              Odontología, salud visual y operación farmacéutica: cada producto CrowAnt conoce el lenguaje, los ritmos y las necesidades reales de su especialidad.
             </p>
           </div>
           <ProductCarousel />
@@ -122,6 +134,8 @@ export default function LandingPage() {
               <p className="mt-6 max-w-md text-base leading-7 text-muted">
                 La elegancia no está en añadir más, sino en coordinar mejor cada parte del sistema.
               </p>
+              <CrowAntAnimals className="mt-10 w-52 max-w-full" />
+              <p className="mt-4 font-mono text-[10px] tracking-[.08em] text-muted">Visión que guía. Trabajo que construye.</p>
             </div>
             <div className="divide-y divide-border border-y border-border">
               {principles.map((principle) => (
@@ -144,12 +158,12 @@ export default function LandingPage() {
       <section id="seguridad" className="relative scroll-mt-20 px-6 pb-24 sm:px-10 lg:px-12 lg:pb-32">
         <div className="mx-auto grid max-w-7xl overflow-hidden rounded-xl border border-border bg-surface lg:grid-cols-2">
           <div className="p-8 sm:p-12 lg:p-16">
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Gobierno central</p>
+            <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Seguridad compartida</p>
             <h2 className="mt-5 text-balance font-display text-4xl font-semibold tracking-[-0.035em] sm:text-5xl">
               Muchos productos. Una operación bajo control.
             </h2>
             <p className="mt-6 max-w-lg text-base leading-7 text-muted">
-              CrowAnt Core conecta organizaciones, productos y equipos sin sacrificar autonomía, trazabilidad ni seguridad.
+              Un acceso centralizado conecta tus productos y equipos, con permisos claros y trazabilidad para mantener cada operación bajo control.
             </p>
             <div className="mt-10 grid grid-cols-3 border-y border-border py-6">
               {[["99.9%", "Disponibilidad"], ["24/7", "Acceso seguro"], ["100%", "Trazabilidad"]].map(([value, label]) => (

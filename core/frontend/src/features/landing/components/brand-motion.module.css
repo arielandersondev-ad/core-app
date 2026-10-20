@@ -1,0 +1,4 @@
+.player { width: 100%; margin: 0; }
+.scene { display: block; width: 100%; height: auto; max-height: max(180px, calc(100svh - 12rem)); overflow: hidden; }
+.surface { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.surface:focus-visible { outline: 2px solid var(--primary); outline-offset: 5px; border-radius: 4px; }
