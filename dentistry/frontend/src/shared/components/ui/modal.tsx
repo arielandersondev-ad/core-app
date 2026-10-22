@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { Icons } from "../icons/icons";
 
 type ModalProps = {
   open: boolean;

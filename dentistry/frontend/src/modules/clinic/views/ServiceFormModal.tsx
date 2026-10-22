@@ -6,8 +6,7 @@ import {
   ServiceSupply,
   formatCurrency,
 } from "@/modules/clinic/__mocks__/data";
-import { Button, Input, Select, Badge } from "@/shared/components/ui";
-import { Icons } from "@/shared/components/ui/Icons";
+import { Button, Input, Select } from "@/shared/components/ui";
 
 const CATEGORIES = [
   "Preventiva",

@@ -29,7 +29,7 @@ function harness() {
     },
   } };
   const prisma = { transaction: async (work) => work({ orm }) };
-  const useCase = new ReplaceRolePermissionsUseCase(new PrismaRoleRepository(prisma, {}));
+  const useCase = new ReplaceRolePermissionsUseCase(new PrismaRoleRepository(prisma));
   return { links, useCase };
 }
 

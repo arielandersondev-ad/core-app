@@ -3,14 +3,12 @@ import { PrismaService } from '../../../common/infrastructure/prisma.service.js'
 import type { CreateRole, Role } from '../domain/entities/role.entity.js';
 import { RoleRepository } from '../domain/repositories/role.repository.js';
 import { toRoleEntity } from './role.mapper.js';
-import { PrismaRoleWriter } from './prisma-role.writer.js';
 import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 
 @Injectable()
 export class PrismaRoleRepository extends RoleRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly writer: PrismaRoleWriter,
   ) {
     super();
   }

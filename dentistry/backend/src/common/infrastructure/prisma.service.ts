@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { db } from "../../prisma/db.js";
 import type { TransactionContext } from "./prisma-tx.js";
 

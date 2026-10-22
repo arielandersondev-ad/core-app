@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 export const Icons = {
   dashboard: (
     <svg

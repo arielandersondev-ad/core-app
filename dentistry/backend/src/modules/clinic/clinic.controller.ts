@@ -38,7 +38,6 @@ export class ClinicController {
 
     if (!memberships || memberships.length === 0) return [];
 
-    const userIds = memberships.map((m) => toUuid36(m.userId));
     const users = (await this.prisma.orm.core.User.where({
       deleted: false,
     }).all()) as any[];
