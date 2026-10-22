@@ -1,0 +1,376 @@
+{
+  "date": "2026-10-22",
+  "baselineCommit": "076dfb7",
+  "localCleanupCommit": "0ed70f1",
+  "frontendRemovalCommit": "1b6a877",
+  "dependencyCleanupCommit": "58f44c5",
+  "method": "AST TypeScript y resolución de módulos con tsconfig; entradas Next, main Nest, scripts/tests, exports y stories. Revisión textual complementaria. Análisis estático, no prueba de ejecución.",
+  "sourceFilesBefore": 565,
+  "sourceFilesAfter": 523,
+  "unresolvedLocalImportsAfter": [],
+  "dynamicImportsWithNonLiteralArguments": [],
+  "removed": [
+    {
+      "file": "core/frontend/src/shared/utils/data.ts",
+      "importers": [
+        {
+          "file": "core/frontend/src/shared/components/ui/Avatar.tsx",
+          "specifier": "@/shared/utils/data"
+        }
+      ],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "core/frontend/src/shared/types/uuid-pattern.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "core/frontend/src/infrastructure/api/endpoints.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/utils/data.ts",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/shared/components/ui/Avatar.tsx",
+          "specifier": "@/shared/utils/data"
+        }
+      ],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/utils/currency.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/Toggle.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/StatCard.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/Separator.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/Select.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/SectionHeader.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/EmptyState.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/Card.tsx",
+      "importers": [
+        {
+          "file": "core/frontend/src/shared/components/ui/StatCard.tsx",
+          "specifier": "./Card"
+        }
+      ],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "core/frontend/src/shared/components/ui/Avatar.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/layouts/ClinicLayout.tsx",
+      "importers": [],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/data/clinic-data.ts",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+          "specifier": "@/shared/data/clinic-data"
+        }
+      ],
+      "reason": "Único consumidor: vista patient-page sin ruta; se conserva modules/clinic/__mocks__/data.ts."
+    },
+    {
+      "file": "core/frontend/src/shared/components/greeting-card/greeting-card.tsx",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "core/frontend/src/features/user/types/branch.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/types.ts",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/shared/components/ui/Badge.tsx",
+          "specifier": "./types"
+        }
+      ],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Toggle.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/StatCard.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Separator.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Select.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/SectionHeader.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/modal.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Label.tsx",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/shared/components/ui/Select.tsx",
+          "specifier": "./Label"
+        },
+        {
+          "file": "dentistry/frontend/src/shared/components/ui/Input.tsx",
+          "specifier": "./Label"
+        }
+      ],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Input.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/EmptyState.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Card.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Button.tsx",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+          "specifier": "@/shared/components/ui/Button"
+        }
+      ],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Badge.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/ui/Avatar.tsx",
+      "importers": [],
+      "reason": "Implementación local sin consumidores; el barrel activo consume @app/ui."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/toolbar.tsx",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+          "specifier": "@/shared/components/layout/toolbar"
+        }
+      ],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/stats-bar.tsx",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+          "specifier": "@/shared/components/layout/stats-bar"
+        }
+      ],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/section-placeholder.tsx",
+      "importers": [],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/PageHeader.tsx",
+      "importers": [],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/PageContainer.tsx",
+      "importers": [],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/FilterToolbar.tsx",
+      "importers": [],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/layout/create-patient-modal.tsx",
+      "importers": [
+        {
+          "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+          "specifier": "@/shared/components/layout/create-patient-modal"
+        }
+      ],
+      "reason": "Layout o adaptador antiguo sin consumidores conservados."
+    },
+    {
+      "file": "dentistry/frontend/src/infrastructure/hooks/useTheme.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/infrastructure/config/clinic.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/infrastructure/api/endpoints.ts",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    },
+    {
+      "file": "dentistry/frontend/src/features/patient/views/patient-page.tsx",
+      "importers": [],
+      "reason": "Sin consumidores en entradas, grafo de imports ni búsquedas de rutas y símbolos."
+    }
+  ],
+  "retained": [
+    {
+      "file": "dentistry/frontend/src/modules/clinic/api/services.ts",
+      "reason": "Cliente preparado para integración; no tiene consumidor actual y no se elimina en este lote."
+    },
+    {
+      "file": "dentistry/frontend/src/modules/clinic/api/professionals.ts",
+      "reason": "Cliente preparado para integración; no tiene consumidor actual y no se elimina en este lote."
+    },
+    {
+      "file": "dentistry/frontend/src/modules/clinic/api/patients.ts",
+      "reason": "Cliente preparado para integración; no tiene consumidor actual y no se elimina en este lote."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/dynamic-table.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/utils/get-nested-value.ts",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/utils/get-density-class.ts",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/utils/format-date.ts",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/types.ts",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/index.ts",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-avatar.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-actions.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-empty.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-pagination.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-toolbar.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/components/data-table-status.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/hooks/use-table-sort.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/hooks/use-table-pagination.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/frontend/src/shared/components/data-table/hooks/use-table-filter.tsx",
+      "reason": "Biblioteca reutilizable con export público interno y roadmap local; se conserva sin cambiar contrato."
+    },
+    {
+      "file": "dentistry/backend/src/common/infrastructure/prisma-audit.writer.ts",
+      "reason": "Escritor de auditoría preparado; no se elimina política de auditoría en esta limpieza."
+    },
+    {
+      "file": "dentistry/backend/src/modules/clinic/clinic.module.ts",
+      "reason": "Módulo de profesionales no registrado en AppModule; requiere decisión funcional independiente, no se activa ni elimina."
+    },
+    {
+      "file": "dentistry/backend/src/modules/clinic/clinic.controller.ts",
+      "reason": "Módulo de profesionales no registrado en AppModule; requiere decisión funcional independiente, no se activa ni elimina."
+    },
+    {
+      "file": "dentistry/frontend/src/features/auth/services/current-session.client.ts",
+      "reason": "Cliente preparado para integración; no tiene consumidor actual y no se elimina en este lote."
+    }
+  ],
+  "dependenciesRemoved": [
+    {
+      "project": "dentistry/backend",
+      "name": "bcryptjs",
+      "reason": "Sin importaciones, require, scripts ni consumidores de Dentistry; Core conserva bcryptjs para credenciales.",
+      "lockfileOtherPackageChanges": 0
+    }
+  ]
+}
