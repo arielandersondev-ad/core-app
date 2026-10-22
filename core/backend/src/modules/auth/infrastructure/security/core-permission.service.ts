@@ -8,7 +8,7 @@ export class CorePermissionService {
   constructor(private readonly prisma: PrismaService) {}
 
   async hasPermission( principal: AuthenticatedPrincipal, code: string ): Promise<boolean> {
-    const membership = await this.prisma.orm.core.Membership.first({
+    const membership = await this.prisma.orm.core.OrganizationMembership.first({
       id: toUuid36(principal.membershipId),
     });
 
@@ -41,7 +41,7 @@ export class CorePermissionService {
     const permission = await this.prisma.orm.core.Permission.first({ code });
     if (!permission) return false;
 
-    const assignedRoles = await this.prisma.orm.core.MembershipRole.where({
+    const assignedRoles = await this.prisma.orm.core.OrganizationMembershipRole.where({
       membershipId: membership.id,
       deleted: false,
     }).all();

@@ -455,6 +455,40 @@ packages/db ──> @app/db ──> core/backend
 - La versión de PostgreSQL debe documentarse en la configuración de despliegue
   cuando esta quede definida; no se debe inferir desde el cliente Prisma.
 
+### Convención de nombres de persistencia y dominio
+
+Esta regla se aplica a Core y Dentistry:
+
+| Elemento | Convención | Ejemplo |
+| --- | --- | --- |
+| Schema PostgreSQL | Minúsculas | `core`, `dentistry` |
+| Modelo y tabla física | Inglés, singular, PascalCase | `Patient`, `OrganizationMembership` |
+| Propiedad y columna física | camelCase | `patientId`, `scheduledStartAt` |
+| Relación | Nombre según contenido y cardinalidad | `patient`, `appointments`, `roleAssignments` |
+| Instante / fecha civil | Sufijo `At` / `Date` | `createdAt`, `birthDate` |
+| Importe y unidades | Unidad explícita | `amountMinor`, `durationMinutes`, `sizeBytes` |
+
+Los identificadores PostgreSQL con mayúsculas se citan con comillas dobles en
+SQL manual, por ejemplo `dentistry."Patient"` y `"firstName"`. Se conserva la
+convención de Core y se extiende a Dentistry; las diferencias actuales se
+migran mediante una tarea coordinada, no mediante cambios incidentales.
+
+El [diccionario objetivo](packages/db/docs/target-schema-dictionary.md) define
+el significado de cada entidad y los nombres acordados. El
+[plan de estandarización](packages/db/docs/semantic-standardization-plan.md)
+guía contrato, migraciones, referencias, imports, API/BFF, clientes y pruebas
+para conservar el comportamiento existente en QA.
+
+Los estados objetivo usan códigos en mayúsculas; la estandarización prevista
+unifica `CANCELED`. Ese cambio nominal no autoriza nuevos estados o
+transiciones. Los nombres de dominio no se aplican por sustitución global a
+protocolos como el header HTTP `Authorization` o el claim JWT `membershipId`.
+
+El diccionario incluye funciones y retiros futuros. Para la entrega nominal
+de QA se mantienen tipos, reglas y columnas cuya retirada cambiaría
+comportamiento, conforme al alcance del plan. No se reescriben migraciones
+históricas ni se modifica una API sin actualizar sus consumidores.
+
 Los comandos principales del paquete son:
 
 | Comando | Responsabilidad |

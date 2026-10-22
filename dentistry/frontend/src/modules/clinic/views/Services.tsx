@@ -34,8 +34,8 @@ export default function Services() {
   const filteredServices = servicesList.filter((s) => {
     if (selectedCategory !== "all" && s.category !== selectedCategory)
       return false;
-    if (statusFilter === "active" && !s.active) return false;
-    if (statusFilter === "inactive" && s.active) return false;
+    if (statusFilter === "active" && !s.isActive) return false;
+    if (statusFilter === "inactive" && s.isActive) return false;
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -51,7 +51,7 @@ export default function Services() {
 
   // Quick stats
   const totalCount = servicesList.length;
-  const activeCount = servicesList.filter((s) => s.active).length;
+  const activeCount = servicesList.filter((s) => s.isActive).length;
   const avgDuration =
     totalCount > 0
       ? Math.round(
@@ -93,7 +93,7 @@ export default function Services() {
         labCost: formData.labCost || 0,
         category: formData.category || "General",
         description: formData.description || "",
-        active: formData.active ?? true,
+        isActive: formData.isActive ?? true,
         supplies: formData.supplies || [],
       };
       setServicesList((prev) => [newSvc, ...prev]);
@@ -102,7 +102,7 @@ export default function Services() {
 
   const handleToggleStatus = (id: string) => {
     setServicesList((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s)),
+      prev.map((s) => (s.id === id ? { ...s, isActive: !s.isActive } : s)),
     );
   };
 
@@ -354,17 +354,17 @@ export default function Services() {
                           onClick={() => handleToggleStatus(s.id)}
                           title="Clic para cambiar estado"
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors ${
-                            s.active
+                            s.isActive
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
                               : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700"
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              s.active ? "bg-emerald-500" : "bg-zinc-400"
+                              s.isActive ? "bg-emerald-500" : "bg-zinc-400"
                             }`}
                           />
-                          {s.active ? "Activo" : "Inactivo"}
+                          {s.isActive ? "Activo" : "Inactivo"}
                         </button>
                       </td>
 

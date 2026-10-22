@@ -26,7 +26,7 @@ export interface DentalServiceRow {
   basePriceMinor: number | null;
   labCostMinor: number | null;
   currency: string | null;
-  active: boolean;
+  isActive: boolean;
   createdByMembershipId: string;
   updatedByMembershipId: string | null;
   createdAt: Date;
@@ -64,7 +64,7 @@ export function toDentalServiceEntity(row: DentalServiceRow): DentalService {
     basePriceMinor: row.basePriceMinor,
     labCostMinor: row.labCostMinor,
     currency: row.currency,
-    active: row.active,
+    isActive: row.isActive,
     createdByMembershipId: row.createdByMembershipId,
     updatedByMembershipId: row.updatedByMembershipId,
     createdAt: row.createdAt,

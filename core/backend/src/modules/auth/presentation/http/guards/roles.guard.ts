@@ -25,7 +25,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const principal = request.user;
-    const membership = await this.prisma.orm.core.Membership.first({
+    const membership = await this.prisma.orm.core.OrganizationMembership.first({
       id: toUuid36(principal.membershipId),
     });
     if (!membership || membership.deleted || membership.status !== 'ACTIVE' ||
@@ -33,7 +33,7 @@ export class RolesGuard implements CanActivate {
       String(membership.organizationId) !== principal.organizationId) {
       throw new ForbiddenException('Membresía inválida');
     }
-    const assigned = await this.prisma.orm.core.MembershipRole.where({
+    const assigned = await this.prisma.orm.core.OrganizationMembershipRole.where({
       membershipId: membership.id,
       deleted: false,
     }).all();

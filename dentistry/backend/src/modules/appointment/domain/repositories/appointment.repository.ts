@@ -5,7 +5,7 @@ export interface FindAppointmentsFilters {
   authorizedBranchIds: string[];
   branchId?: string;
   patientId?: string;
-  professionalMembershipId?: string;
+  practitionerMembershipId?: string;
   startDate?: Date;
   endDate?: Date;
   status?: string;
@@ -14,9 +14,9 @@ export interface FindAppointmentsFilters {
 export interface CheckOverlapParams {
   organizationId: string;
   branchId?: string;
-  professionalMembershipId: string;
-  startsAt: Date;
-  endsAt: Date;
+  practitionerMembershipId: string;
+  scheduledStartAt: Date;
+  scheduledEndAt: Date;
   excludeAppointmentId?: string;
 }
 

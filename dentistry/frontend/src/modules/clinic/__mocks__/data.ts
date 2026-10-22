@@ -42,7 +42,7 @@ export interface Service {
   labCost?: number;
   category: string;
   description: string;
-  active: boolean;
+  isActive: boolean;
   supplies?: ServiceSupply[];
 }
 
@@ -145,7 +145,7 @@ export const services: Service[] = [
     category: "Preventiva",
     description:
       "Destartraje supragingival, pulido coronario y fluoración tópica.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Pasta profiláctica con flúor",
@@ -176,7 +176,7 @@ export const services: Service[] = [
     labCost: 0,
     category: "Operatoria",
     description: "Restauración directa con resina nanohíbrida y grabado ácido.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Resina Nanohíbrida A2 (jeringa)",
@@ -208,7 +208,7 @@ export const services: Service[] = [
     category: "Endodoncia",
     description:
       "Tratamiento de conducto con instrumentación rotatoria y obturación 3D.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Limas rotatorias Protaper Gold",
@@ -240,7 +240,7 @@ export const services: Service[] = [
     category: "Cirugía",
     description:
       "Exodoncia con anestesia local y sutura reabsorbible si aplica.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Anestesia Lidocaína 2% con Epinefrina",
@@ -272,7 +272,7 @@ export const services: Service[] = [
     category: "Estética",
     description:
       "Aclaramiento dental en consultorio con peróxido de hidrógeno activado por luz.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Kit blanqueamiento peróxido 35%",
@@ -298,7 +298,7 @@ export const services: Service[] = [
     category: "Ortodoncia",
     description:
       "Cambio de arcos, ligaduras elásticas y control de fuerza biomecánica.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Arcos NiTi termoactivados",
@@ -324,7 +324,7 @@ export const services: Service[] = [
     category: "Diagnóstico",
     description:
       "Examen clínico intraoral, odontograma digital y plan de tratamiento.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Kit descartable de exploración",
@@ -344,7 +344,7 @@ export const services: Service[] = [
     category: "Urgencia",
     description:
       "Apertura cameral de urgencia, medicación intraconducto y analgésicos.",
-    active: true,
+    isActive: true,
     supplies: [
       {
         name: "Anestesia Lidocaína 2%",

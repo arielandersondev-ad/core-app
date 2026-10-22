@@ -52,7 +52,7 @@ export class CreatePlanDto {
 
   @IsOptional()
   @IsObject()
-  configuration?: { [key: string]: JsonValue };
+  entitlements?: { [key: string]: JsonValue };
 
   @IsOptional()
   @IsInt()
@@ -67,7 +67,7 @@ export class CreatePlanDto {
 
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 }
 
 export class UpdatePlanDto {
@@ -94,7 +94,7 @@ export class UpdatePlanDto {
 
   @IsOptional()
   @IsObject()
-  configuration?: { [key: string]: JsonValue };
+  entitlements?: { [key: string]: JsonValue };
 
   @IsOptional()
   @IsInt()
@@ -109,5 +109,5 @@ export class UpdatePlanDto {
 
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 }

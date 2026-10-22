@@ -5,7 +5,7 @@ export type AppointmentStatus =
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'NO_SHOW'
-  | 'CANCELLED';
+  | 'CANCELED';
 
 export interface AppointmentServiceItem {
   id?: string;
@@ -21,18 +21,18 @@ export interface AppointmentProps {
   organizationId: string;
   branchId: string;
   patientId: string;
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string | null;
-  startsAt: Date;
-  endsAt: Date;
+  scheduledStartAt: Date;
+  scheduledEndAt: Date;
   status?: AppointmentStatus;
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
-  cancelledAt?: Date | null;
-  cancelledByMembershipId?: string | null;
+  canceledAt?: Date | null;
+  canceledByMembershipId?: string | null;
   cancellationReason?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -44,25 +44,25 @@ export class Appointment {
   readonly organizationId: string;
   readonly branchId: string;
   readonly patientId: string;
-  readonly professionalMembershipId: string;
+  readonly practitionerMembershipId: string;
   readonly serviceId: string;
   readonly serviceIds: string[];
   readonly treatmentId: string | null;
-  readonly startsAt: Date;
-  readonly endsAt: Date;
+  readonly scheduledStartAt: Date;
+  readonly scheduledEndAt: Date;
   private _status: AppointmentStatus;
   private _reason: string | null;
   private _notes: string | null;
   readonly createdByMembershipId: string;
-  private _cancelledAt: Date | null;
-  private _cancelledByMembershipId: string | null;
+  private _canceledAt: Date | null;
+  private _canceledByMembershipId: string | null;
   private _cancellationReason: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly services: AppointmentServiceItem[];
 
   constructor(props: AppointmentProps) {
-    if (props.startsAt >= props.endsAt) {
+    if (props.scheduledStartAt >= props.scheduledEndAt) {
       throw new Error('La hora de inicio debe ser anterior a la hora de fin.');
     }
 
@@ -70,7 +70,7 @@ export class Appointment {
     this.organizationId = props.organizationId;
     this.branchId = props.branchId;
     this.patientId = props.patientId;
-    this.professionalMembershipId = props.professionalMembershipId;
+    this.practitionerMembershipId = props.practitionerMembershipId;
 
     const sIds =
       props.serviceIds && props.serviceIds.length > 0
@@ -82,14 +82,14 @@ export class Appointment {
     this.serviceId = sIds[0] || props.serviceId || '';
     this.services = props.services || [];
     this.treatmentId = props.treatmentId ?? null;
-    this.startsAt = props.startsAt;
-    this.endsAt = props.endsAt;
+    this.scheduledStartAt = props.scheduledStartAt;
+    this.scheduledEndAt = props.scheduledEndAt;
     this._status = props.status ?? 'SCHEDULED';
     this._reason = props.reason ?? null;
     this._notes = props.notes ?? null;
     this.createdByMembershipId = props.createdByMembershipId;
-    this._cancelledAt = props.cancelledAt ?? null;
-    this._cancelledByMembershipId = props.cancelledByMembershipId ?? null;
+    this._canceledAt = props.canceledAt ?? null;
+    this._canceledByMembershipId = props.canceledByMembershipId ?? null;
     this._cancellationReason = props.cancellationReason ?? null;
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
@@ -107,12 +107,12 @@ export class Appointment {
     return this._notes;
   }
 
-  get cancelledAt(): Date | null {
-    return this._cancelledAt;
+  get canceledAt(): Date | null {
+    return this._canceledAt;
   }
 
-  get cancelledByMembershipId(): string | null {
-    return this._cancelledByMembershipId;
+  get canceledByMembershipId(): string | null {
+    return this._canceledByMembershipId;
   }
 
   get cancellationReason(): string | null {
@@ -120,7 +120,7 @@ export class Appointment {
   }
 
   confirm(): void {
-    if (this._status === 'CANCELLED') {
+    if (this._status === 'CANCELED') {
       throw new Error('No se puede confirmar una cita cancelada.');
     }
     if (this._status === 'COMPLETED') {
@@ -130,7 +130,7 @@ export class Appointment {
   }
 
   markInWaitingRoom(): void {
-    if (this._status === 'CANCELLED') {
+    if (this._status === 'CANCELED') {
       throw new Error('No se puede marcar en sala una cita cancelada.');
     }
     if (this._status === 'COMPLETED') {
@@ -140,7 +140,7 @@ export class Appointment {
   }
 
   start(): void {
-    if (this._status === 'CANCELLED') {
+    if (this._status === 'CANCELED') {
       throw new Error('No se puede iniciar una cita cancelada.');
     }
     if (this._status === 'COMPLETED') {
@@ -150,7 +150,7 @@ export class Appointment {
   }
 
   complete(): void {
-    if (this._status === 'CANCELLED') {
+    if (this._status === 'CANCELED') {
       throw new Error('No se puede completar una cita cancelada.');
     }
     this._status = 'COMPLETED';
@@ -174,13 +174,13 @@ export class Appointment {
     this._status = 'SCHEDULED';
   }
 
-  cancel(cancelledByMembershipId: string, reason: string): void {
+  cancel(canceledByMembershipId: string, reason: string): void {
     if (this._status === 'COMPLETED') {
       throw new Error('No se puede cancelar una cita completada.');
     }
-    this._status = 'CANCELLED';
-    this._cancelledAt = new Date();
-    this._cancelledByMembershipId = cancelledByMembershipId;
+    this._status = 'CANCELED';
+    this._canceledAt = new Date();
+    this._canceledByMembershipId = canceledByMembershipId;
     this._cancellationReason = reason;
   }
 

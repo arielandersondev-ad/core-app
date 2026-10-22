@@ -29,7 +29,7 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
       basePriceMinor: service.basePriceMinor,
       labCostMinor: service.labCostMinor,
       currency: service.currency,
-      active: service.active,
+      isActive: service.isActive,
       createdByMembershipId: toUuid36(service.createdByMembershipId),
       updatedByMembershipId: service.updatedByMembershipId
         ? toUuid36(service.updatedByMembershipId)
@@ -136,8 +136,8 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
       );
     }
 
-    if (filters.active !== undefined) {
-      filtered = filtered.filter((r) => r.active === filters.active);
+    if (filters.isActive !== undefined) {
+      filtered = filtered.filter((r) => r.isActive === filters.isActive);
     }
 
     if (filters.search) {
@@ -172,7 +172,7 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
       basePriceMinor: service.basePriceMinor,
       labCostMinor: service.labCostMinor,
       currency: service.currency,
-      active: service.active,
+      isActive: service.isActive,
       updatedByMembershipId: service.updatedByMembershipId
         ? toUuid36(service.updatedByMembershipId)
         : null,

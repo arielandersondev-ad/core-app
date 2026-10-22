@@ -69,3 +69,52 @@ test('la lectura exige organización y sucursal autorizadas', async () => {
   );
   assert.equal(requestedOrganization, principal.organizationId);
 });
+
+test('el mapper conserva valores y asociaciones con los nombres nuevos de citas', async () => {
+  const { toAppointmentEntity } = await import('../dist/modules/appointment/infrastructure/appointment.mapper.js');
+  const actor = randomUUID(), serviceId = randomUUID();
+  const row = {
+    id: randomUUID(), organizationId: randomUUID(), branchId: randomUUID(), patientId: randomUUID(),
+    practitionerMembershipId: actor, serviceId, treatmentId: null,
+    scheduledStartAt: new Date('2026-10-22T14:00:00Z'), scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
+    status: 'CANCELED', reason: 'Evaluación', notes: 'Nota original', createdByMembershipId: actor,
+    canceledAt: new Date('2026-10-21T14:00:00Z'), canceledByMembershipId: actor,
+    cancellationReason: 'Reprogramar', createdAt: new Date('2026-10-20T14:00:00Z'), updatedAt: new Date('2026-10-21T14:00:00Z'),
+  };
+  const appointment = toAppointmentEntity(row);
+  assert.equal(appointment.practitionerMembershipId, actor);
+  assert.equal(appointment.scheduledStartAt, row.scheduledStartAt);
+  assert.equal(appointment.scheduledEndAt, row.scheduledEndAt);
+  assert.equal(appointment.canceledAt, row.canceledAt);
+  assert.equal(appointment.canceledByMembershipId, actor);
+  assert.equal(appointment.status, 'CANCELED');
+  assert.equal(appointment.notes, row.notes);
+  assert.equal(appointment.serviceId, serviceId);
+  assert.deepEqual(appointment.serviceIds, [serviceId]);
+  assert.equal('professionalMembershipId' in appointment, false);
+});
+
+test('los nombres nuevos no eliminan el servicio obligatorio ni amplían la autoasignación', async () => {
+  const { CreateAppointmentUseCase } = await import('../dist/modules/appointment/application/use-case/create-appointment.use-case.js');
+  const actor = randomUUID(), branchId = randomUUID();
+  let created;
+  const repository = {
+    referencesBelongToOrganization: async () => true,
+    hasOverlap: async input => { assert.equal(input.practitionerMembershipId, actor); return false; },
+    create: async value => { created = value; return value; },
+  };
+  const useCase = new CreateAppointmentUseCase(repository);
+  const command = {
+    organizationId: randomUUID(), branchId, authorizedBranchIds: [branchId], patientId: randomUUID(),
+    practitionerMembershipId: actor, createdByMembershipId: actor,
+    scheduledStartAt: new Date('2026-10-22T14:00:00Z'), scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
+  };
+  await assert.rejects(useCase.execute(command), { status: 400 });
+  await assert.rejects(useCase.execute({ ...command, serviceId: randomUUID(), practitionerMembershipId: randomUUID() }), { status: 403 });
+  const serviceId = randomUUID();
+  await useCase.execute({ ...command, serviceId });
+  assert.equal(created.serviceId, serviceId);
+  assert.equal(created.practitionerMembershipId, actor);
+  assert.equal(created.scheduledStartAt, command.scheduledStartAt);
+  assert.equal(created.status, 'SCHEDULED');
+});

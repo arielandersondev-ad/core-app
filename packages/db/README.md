@@ -4,7 +4,7 @@ Una sola base Neon. Dos schemas PostgreSQL:
 
 | Schema       | Contenido                        | Antes     |
 | ------------ | -------------------------------- | --------- |
-| `core`       | Tablas del Core (10 modelos)     | `public`  |
+| `core`       | Tablas del Core (14 modelos actuales) | `public` |
 | `dentistry`  | Tablas de la vertical odontología| `dentistry` |
 | `public`     | Solo objetos del framework (`prisma_contract.marker`) | tablas Core |
 
@@ -17,8 +17,24 @@ Una sola base Neon. Dos schemas PostgreSQL:
 3. Las referencias Core ↔ Dentistry son por `id` **sin FK físicas**
    entre schemas; cada vertical valida pertenencia en su API.
 4. Los artefactos generados se versionan:
-   `src/prisma/contract.json`, `src/prisma/contract.d.ts`,
+   `src/prisma/generated/contract.json`, `src/prisma/generated/contract.d.ts`,
    `migrations/**` (grafo, refs y snapshots).
+
+## Nombres y estandarización
+
+Modelos/tablas físicas en inglés, singular y PascalCase; columnas/propiedades
+en camelCase; schemas `core` y `dentistry` en minúsculas. La regla canónica
+está en la sección de nombres de persistencia del README raíz y en AGENTS.md.
+
+- [Diccionario del schema objetivo](docs/target-schema-dictionary.md).
+- [Plan de estandarización con paridad de QA](docs/semantic-standardization-plan.md).
+- [Estado de implementación y verificaciones](docs/semantic-standardization-execution.md).
+
+El diccionario no debe ejecutarse completo como un único refactor. La etapa
+nominal preserva tipos, reglas y datos de QA; retiros de columnas, constraints
+nuevos y funcionalidades se programan aparte. Los backends y sus paquetes
+de contrato deben desplegarse coordinadamente; no reescribir migraciones ya
+aplicadas ni forzar la identidad del contrato para ocultar diferencias.
 
 ## Estructura
 

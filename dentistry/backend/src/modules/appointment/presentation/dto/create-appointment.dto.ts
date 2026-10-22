@@ -8,7 +8,7 @@ export class CreateAppointmentDto {
   patientId: string;
 
   @IsUUID()
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
 
   @IsOptional()
   @IsUUID()
@@ -23,10 +23,10 @@ export class CreateAppointmentDto {
   treatmentId?: string;
 
   @IsISO8601()
-  startsAt: string;
+  scheduledStartAt: string;
 
   @IsISO8601()
-  endsAt: string;
+  scheduledEndAt: string;
 
   @IsOptional()
   @IsString()

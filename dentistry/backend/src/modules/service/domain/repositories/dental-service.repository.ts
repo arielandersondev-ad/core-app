@@ -3,7 +3,7 @@ import { DentalService } from '../entities/dental-service.entity.js';
 export interface FindDentalServicesFilters {
   organizationId: string;
   category?: string;
-  active?: boolean;
+  isActive?: boolean;
   search?: string;
 }
 

@@ -52,7 +52,7 @@ export class UpdateDentalServiceDto {
 
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @IsUUID()
   updatedByMembershipId: string;

@@ -30,9 +30,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'0ebda04f6a9e692ce82d511f100cd78a2f29836b1b82b73e3ecac8963ff6a6e2'>;
+  StorageHashBase<'826ded8772e9b65bde90c34fca480644ba91128c6488fb4760219a138a807945'>;
 export type ExecutionHash =
-  ExecutionHashBase<'c86f7f1825f4e24d0927fffdaefdfac28b4fc364112e94dc8cec87e8b2411109'>;
+  ExecutionHashBase<'75f0a26b5c8a4a7d7a3b6b147f40eccb9b283c9ca5ed9d52292e3399a1ace535'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -207,15 +207,15 @@ export type FieldOutputTypes = {
       readonly metadata: CodecTypes['pg/jsonb@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly Authorization: {
+    readonly AuthSession: {
       readonly id: Char<36>;
       readonly userId: Char<36>;
-      readonly passwordHash: CodecTypes['pg/text@1']['output'];
-      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly failedAttempts: CodecTypes['pg/int4@1']['output'];
-      readonly lockedUntil: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly refreshTokenHash: CodecTypes['pg/text@1']['output'];
+      readonly ipAddress: CodecTypes['pg/text@1']['output'] | null;
+      readonly userAgent: CodecTypes['pg/text@1']['output'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamp@1']['output'];
+      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
@@ -241,33 +241,6 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly Membership: {
-      readonly id: Char<36>;
-      readonly userId: Char<36>;
-      readonly organizationId: Char<36>;
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly joinedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
-    readonly MembershipBranch: {
-      readonly id: Char<36>;
-      readonly membershipId: Char<36>;
-      readonly branchId: Char<36>;
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
-    readonly MembershipRole: {
-      readonly id: Char<36>;
-      readonly membershipId: Char<36>;
-      readonly roleId: Char<36>;
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
     readonly Organization: {
       readonly id: Char<36>;
       readonly name: CodecTypes['pg/text@1']['output'];
@@ -284,7 +257,34 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly OrganizationPlan: {
+    readonly OrganizationMembership: {
+      readonly id: Char<36>;
+      readonly userId: Char<36>;
+      readonly organizationId: Char<36>;
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly joinedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly OrganizationMembershipBranch: {
+      readonly id: Char<36>;
+      readonly membershipId: Char<36>;
+      readonly branchId: Char<36>;
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly OrganizationMembershipRole: {
+      readonly id: Char<36>;
+      readonly membershipId: Char<36>;
+      readonly roleId: Char<36>;
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly OrganizationPlanAssignment: {
       readonly id: Char<36>;
       readonly organizationId: Char<36>;
       readonly planId: Char<36>;
@@ -317,10 +317,10 @@ export type FieldOutputTypes = {
       readonly type: CodecTypes['pg/text@1']['output'];
       readonly vertical: CodecTypes['pg/text@1']['output'];
       readonly durationDays: CodecTypes['pg/int4@1']['output'];
-      readonly configuration: CodecTypes['pg/jsonb@1']['output'];
+      readonly entitlements: CodecTypes['pg/jsonb@1']['output'];
       readonly priceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly currency: CodecTypes['pg/text@1']['output'] | null;
-      readonly active: CodecTypes['pg/bool@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly deleted: CodecTypes['pg/bool@1']['output'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -343,18 +343,6 @@ export type FieldOutputTypes = {
       readonly permissionId: Char<36>;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly Session: {
-      readonly id: Char<36>;
-      readonly userId: Char<36>;
-      readonly refreshTokenHash: CodecTypes['pg/text@1']['output'];
-      readonly ipAddress: CodecTypes['pg/text@1']['output'] | null;
-      readonly userAgent: CodecTypes['pg/text@1']['output'] | null;
-      readonly expiresAt: CodecTypes['pg/timestamp@1']['output'];
-      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly revokedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
     readonly User: {
       readonly id: Char<36>;
       readonly email: CodecTypes['pg/text@1']['output'];
@@ -368,6 +356,18 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
+    readonly UserCredential: {
+      readonly id: Char<36>;
+      readonly userId: Char<36>;
+      readonly passwordHash: CodecTypes['pg/text@1']['output'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly failedAttempts: CodecTypes['pg/int4@1']['output'];
+      readonly lockedUntil: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
   };
   readonly dentistry: {
     readonly Appointment: {
@@ -375,17 +375,17 @@ export type FieldOutputTypes = {
       readonly organizationId: Char<36>;
       readonly branchId: Char<36>;
       readonly patientId: Char<36>;
-      readonly professionalMembershipId: Char<36>;
+      readonly practitionerMembershipId: Char<36>;
       readonly serviceId: Char<36>;
       readonly treatmentId: Char<36> | null;
-      readonly startsAt: CodecTypes['pg/timestamp@1']['output'];
-      readonly endsAt: CodecTypes['pg/timestamp@1']['output'];
+      readonly scheduledStartAt: CodecTypes['pg/timestamp@1']['output'];
+      readonly scheduledEndAt: CodecTypes['pg/timestamp@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly reason: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly createdByMembershipId: Char<36>;
-      readonly cancelledAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly cancelledByMembershipId: Char<36> | null;
+      readonly canceledAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly canceledByMembershipId: Char<36> | null;
       readonly cancellationReason: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -408,14 +408,14 @@ export type FieldOutputTypes = {
       readonly patientId: Char<36>;
       readonly appointmentId: Char<36> | null;
       readonly treatmentId: Char<36> | null;
-      readonly professionalMembershipId: Char<36>;
+      readonly practitionerMembershipId: Char<36>;
       readonly startedAt: CodecTypes['pg/timestamp@1']['output'];
       readonly endedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly chiefComplaint: CodecTypes['pg/text@1']['output'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['output'] | null;
-      readonly procedurePerformed: CodecTypes['pg/text@1']['output'] | null;
-      readonly evolution: CodecTypes['pg/text@1']['output'] | null;
-      readonly recommendations: CodecTypes['pg/text@1']['output'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['output'] | null;
+      readonly procedureSummary: CodecTypes['pg/text@1']['output'] | null;
+      readonly progressNotes: CodecTypes['pg/text@1']['output'] | null;
+      readonly patientInstructions: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly createdByMembershipId: Char<36>;
       readonly updatedByMembershipId: Char<36> | null;
@@ -445,21 +445,6 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly ClinicalHistory: {
-      readonly id: Char<36>;
-      readonly organizationId: Char<36>;
-      readonly patientId: Char<36>;
-      readonly medicalHistory: CodecTypes['pg/text@1']['output'] | null;
-      readonly allergies: CodecTypes['pg/text@1']['output'] | null;
-      readonly currentMedications: CodecTypes['pg/text@1']['output'] | null;
-      readonly dentalHistory: CodecTypes['pg/text@1']['output'] | null;
-      readonly relevantConditions: CodecTypes['pg/text@1']['output'] | null;
-      readonly observations: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdByMembershipId: Char<36>;
-      readonly updatedByMembershipId: Char<36> | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
     readonly DentalService: {
       readonly id: Char<36>;
       readonly organizationId: Char<36>;
@@ -471,7 +456,7 @@ export type FieldOutputTypes = {
       readonly basePriceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly labCostMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly currency: CodecTypes['pg/text@1']['output'] | null;
-      readonly active: CodecTypes['pg/bool@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly createdByMembershipId: Char<36>;
       readonly updatedByMembershipId: Char<36> | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -508,6 +493,21 @@ export type FieldOutputTypes = {
       readonly updatedByMembershipId: Char<36> | null;
       readonly deleted: CodecTypes['pg/bool@1']['output'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly PatientHealthProfile: {
+      readonly id: Char<36>;
+      readonly organizationId: Char<36>;
+      readonly patientId: Char<36>;
+      readonly medicalHistory: CodecTypes['pg/text@1']['output'] | null;
+      readonly allergies: CodecTypes['pg/text@1']['output'] | null;
+      readonly currentMedications: CodecTypes['pg/text@1']['output'] | null;
+      readonly dentalHistory: CodecTypes['pg/text@1']['output'] | null;
+      readonly relevantConditions: CodecTypes['pg/text@1']['output'] | null;
+      readonly observations: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdByMembershipId: Char<36>;
+      readonly updatedByMembershipId: Char<36> | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
@@ -550,14 +550,14 @@ export type FieldOutputTypes = {
       readonly organizationId: Char<36>;
       readonly patientId: Char<36>;
       readonly serviceId: Char<36>;
-      readonly responsibleMembershipId: Char<36> | null;
+      readonly practitionerMembershipId: Char<36> | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamp@1']['output'];
       readonly endedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly estimatedSessions: CodecTypes['pg/int4@1']['output'] | null;
       readonly agreedPriceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly currency: CodecTypes['pg/text@1']['output'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['output'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly createdByMembershipId: Char<36>;
       readonly updatedByMembershipId: Char<36> | null;
@@ -581,15 +581,15 @@ export type FieldInputTypes = {
       readonly metadata: CodecTypes['pg/jsonb@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly Authorization: {
+    readonly AuthSession: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly userId: CodecTypes['sql/char@1']['input'];
-      readonly passwordHash: CodecTypes['pg/text@1']['input'];
-      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly failedAttempts: CodecTypes['pg/int4@1']['input'];
-      readonly lockedUntil: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly refreshTokenHash: CodecTypes['pg/text@1']['input'];
+      readonly ipAddress: CodecTypes['pg/text@1']['input'] | null;
+      readonly userAgent: CodecTypes['pg/text@1']['input'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamp@1']['input'];
+      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
@@ -615,33 +615,6 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly Membership: {
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly userId: CodecTypes['sql/char@1']['input'];
-      readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly joinedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
-    readonly MembershipBranch: {
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly membershipId: CodecTypes['sql/char@1']['input'];
-      readonly branchId: CodecTypes['sql/char@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
-    readonly MembershipRole: {
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly membershipId: CodecTypes['sql/char@1']['input'];
-      readonly roleId: CodecTypes['sql/char@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
     readonly Organization: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
@@ -658,7 +631,34 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly OrganizationPlan: {
+    readonly OrganizationMembership: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+      readonly organizationId: CodecTypes['sql/char@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly joinedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly OrganizationMembershipBranch: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly membershipId: CodecTypes['sql/char@1']['input'];
+      readonly branchId: CodecTypes['sql/char@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly OrganizationMembershipRole: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly membershipId: CodecTypes['sql/char@1']['input'];
+      readonly roleId: CodecTypes['sql/char@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly OrganizationPlanAssignment: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly organizationId: CodecTypes['sql/char@1']['input'];
       readonly planId: CodecTypes['sql/char@1']['input'];
@@ -691,10 +691,10 @@ export type FieldInputTypes = {
       readonly type: CodecTypes['pg/text@1']['input'];
       readonly vertical: CodecTypes['pg/text@1']['input'];
       readonly durationDays: CodecTypes['pg/int4@1']['input'];
-      readonly configuration: CodecTypes['pg/jsonb@1']['input'];
+      readonly entitlements: CodecTypes['pg/jsonb@1']['input'];
       readonly priceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly currency: CodecTypes['pg/text@1']['input'] | null;
-      readonly active: CodecTypes['pg/bool@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly deleted: CodecTypes['pg/bool@1']['input'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -717,18 +717,6 @@ export type FieldInputTypes = {
       readonly permissionId: CodecTypes['sql/char@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly Session: {
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly userId: CodecTypes['sql/char@1']['input'];
-      readonly refreshTokenHash: CodecTypes['pg/text@1']['input'];
-      readonly ipAddress: CodecTypes['pg/text@1']['input'] | null;
-      readonly userAgent: CodecTypes['pg/text@1']['input'] | null;
-      readonly expiresAt: CodecTypes['pg/timestamp@1']['input'];
-      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly revokedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
     readonly User: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
@@ -742,6 +730,18 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
+    readonly UserCredential: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+      readonly passwordHash: CodecTypes['pg/text@1']['input'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly failedAttempts: CodecTypes['pg/int4@1']['input'];
+      readonly lockedUntil: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
   };
   readonly dentistry: {
     readonly Appointment: {
@@ -749,17 +749,17 @@ export type FieldInputTypes = {
       readonly organizationId: CodecTypes['sql/char@1']['input'];
       readonly branchId: CodecTypes['sql/char@1']['input'];
       readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly professionalMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'];
       readonly serviceId: CodecTypes['sql/char@1']['input'];
       readonly treatmentId: CodecTypes['sql/char@1']['input'] | null;
-      readonly startsAt: CodecTypes['pg/timestamp@1']['input'];
-      readonly endsAt: CodecTypes['pg/timestamp@1']['input'];
+      readonly scheduledStartAt: CodecTypes['pg/timestamp@1']['input'];
+      readonly scheduledEndAt: CodecTypes['pg/timestamp@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly reason: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly cancelledAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly cancelledByMembershipId: CodecTypes['sql/char@1']['input'] | null;
+      readonly canceledAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly canceledByMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly cancellationReason: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -782,14 +782,14 @@ export type FieldInputTypes = {
       readonly patientId: CodecTypes['sql/char@1']['input'];
       readonly appointmentId: CodecTypes['sql/char@1']['input'] | null;
       readonly treatmentId: CodecTypes['sql/char@1']['input'] | null;
-      readonly professionalMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamp@1']['input'];
       readonly endedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly chiefComplaint: CodecTypes['pg/text@1']['input'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['input'] | null;
-      readonly procedurePerformed: CodecTypes['pg/text@1']['input'] | null;
-      readonly evolution: CodecTypes['pg/text@1']['input'] | null;
-      readonly recommendations: CodecTypes['pg/text@1']['input'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['input'] | null;
+      readonly procedureSummary: CodecTypes['pg/text@1']['input'] | null;
+      readonly progressNotes: CodecTypes['pg/text@1']['input'] | null;
+      readonly patientInstructions: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
@@ -819,21 +819,6 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly ClinicalHistory: {
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly medicalHistory: CodecTypes['pg/text@1']['input'] | null;
-      readonly allergies: CodecTypes['pg/text@1']['input'] | null;
-      readonly currentMedications: CodecTypes['pg/text@1']['input'] | null;
-      readonly dentalHistory: CodecTypes['pg/text@1']['input'] | null;
-      readonly relevantConditions: CodecTypes['pg/text@1']['input'] | null;
-      readonly observations: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
     readonly DentalService: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly organizationId: CodecTypes['sql/char@1']['input'];
@@ -845,7 +830,7 @@ export type FieldInputTypes = {
       readonly basePriceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly labCostMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly currency: CodecTypes['pg/text@1']['input'] | null;
-      readonly active: CodecTypes['pg/bool@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -882,6 +867,21 @@ export type FieldInputTypes = {
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly deleted: CodecTypes['pg/bool@1']['input'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly PatientHealthProfile: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly organizationId: CodecTypes['sql/char@1']['input'];
+      readonly patientId: CodecTypes['sql/char@1']['input'];
+      readonly medicalHistory: CodecTypes['pg/text@1']['input'] | null;
+      readonly allergies: CodecTypes['pg/text@1']['input'] | null;
+      readonly currentMedications: CodecTypes['pg/text@1']['input'] | null;
+      readonly dentalHistory: CodecTypes['pg/text@1']['input'] | null;
+      readonly relevantConditions: CodecTypes['pg/text@1']['input'] | null;
+      readonly observations: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
@@ -924,14 +924,14 @@ export type FieldInputTypes = {
       readonly organizationId: CodecTypes['sql/char@1']['input'];
       readonly patientId: CodecTypes['sql/char@1']['input'];
       readonly serviceId: CodecTypes['sql/char@1']['input'];
-      readonly responsibleMembershipId: CodecTypes['sql/char@1']['input'] | null;
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamp@1']['input'];
       readonly endedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly estimatedSessions: CodecTypes['pg/int4@1']['input'] | null;
       readonly agreedPriceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly currency: CodecTypes['pg/text@1']['input'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['input'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
@@ -955,16 +955,16 @@ export type StorageColumnTypes = {
       readonly userAgent: CodecTypes['pg/text@1']['output'] | null;
       readonly userId: Char<36> | null;
     };
-    readonly Authorization: {
+    readonly AuthSession: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly failedAttempts: CodecTypes['pg/int4@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamp@1']['output'];
       readonly id: Char<36>;
-      readonly lockedUntil: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly passwordHash: CodecTypes['pg/text@1']['output'];
+      readonly ipAddress: CodecTypes['pg/text@1']['output'] | null;
+      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly refreshTokenHash: CodecTypes['pg/text@1']['output'];
+      readonly revokedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly userAgent: CodecTypes['pg/text@1']['output'] | null;
       readonly userId: Char<36>;
     };
     readonly Branch: {
@@ -989,33 +989,6 @@ export type StorageColumnTypes = {
       readonly timezone: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly Membership: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly id: Char<36>;
-      readonly joinedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly organizationId: Char<36>;
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly userId: Char<36>;
-    };
-    readonly MembershipBranch: {
-      readonly branchId: Char<36>;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly id: Char<36>;
-      readonly membershipId: Char<36>;
-    };
-    readonly MembershipRole: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly deleted: CodecTypes['pg/bool@1']['output'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly id: Char<36>;
-      readonly membershipId: Char<36>;
-      readonly roleId: Char<36>;
-    };
     readonly Organization: {
       readonly country: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -1032,7 +1005,34 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly website: CodecTypes['pg/text@1']['output'] | null;
     };
-    readonly OrganizationPlan: {
+    readonly OrganizationMembership: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly id: Char<36>;
+      readonly joinedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly organizationId: Char<36>;
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly userId: Char<36>;
+    };
+    readonly OrganizationMembershipBranch: {
+      readonly branchId: Char<36>;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly id: Char<36>;
+      readonly membershipId: Char<36>;
+    };
+    readonly OrganizationMembershipRole: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly id: Char<36>;
+      readonly membershipId: Char<36>;
+      readonly roleId: Char<36>;
+    };
+    readonly OrganizationPlanAssignment: {
       readonly canceledAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly endsAt: CodecTypes['pg/timestamp@1']['output'];
@@ -1058,16 +1058,16 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
     readonly Plan: {
-      readonly active: CodecTypes['pg/bool@1']['output'];
       readonly code: CodecTypes['pg/text@1']['output'];
-      readonly configuration: CodecTypes['pg/jsonb@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly currency: CodecTypes['pg/text@1']['output'] | null;
       readonly deleted: CodecTypes['pg/bool@1']['output'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly durationDays: CodecTypes['pg/int4@1']['output'];
+      readonly entitlements: CodecTypes['pg/jsonb@1']['output'];
       readonly id: Char<36>;
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly priceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly type: CodecTypes['pg/text@1']['output'];
@@ -1091,18 +1091,6 @@ export type StorageColumnTypes = {
       readonly permissionId: Char<36>;
       readonly roleId: Char<36>;
     };
-    readonly Session: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly expiresAt: CodecTypes['pg/timestamp@1']['output'];
-      readonly id: Char<36>;
-      readonly ipAddress: CodecTypes['pg/text@1']['output'] | null;
-      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly refreshTokenHash: CodecTypes['pg/text@1']['output'];
-      readonly revokedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly userAgent: CodecTypes['pg/text@1']['output'] | null;
-      readonly userId: Char<36>;
-    };
     readonly User: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly deleted: CodecTypes['pg/bool@1']['output'];
@@ -1116,9 +1104,41 @@ export type StorageColumnTypes = {
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
+    readonly UserCredential: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly deleted: CodecTypes['pg/bool@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly failedAttempts: CodecTypes['pg/int4@1']['output'];
+      readonly id: Char<36>;
+      readonly lockedUntil: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly passwordHash: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly userId: Char<36>;
+    };
   };
   readonly dentistry: {
-    readonly appointment_services: {
+    readonly Appointment: {
+      readonly branchId: Char<36>;
+      readonly canceledAt: CodecTypes['pg/timestamp@1']['output'] | null;
+      readonly canceledByMembershipId: Char<36> | null;
+      readonly cancellationReason: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: Char<36>;
+      readonly id: Char<36>;
+      readonly notes: CodecTypes['pg/text@1']['output'] | null;
+      readonly organizationId: Char<36>;
+      readonly patientId: Char<36>;
+      readonly practitionerMembershipId: Char<36>;
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly scheduledEndAt: CodecTypes['pg/timestamp@1']['output'];
+      readonly scheduledStartAt: CodecTypes['pg/timestamp@1']['output'];
+      readonly serviceId: Char<36>;
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly treatmentId: Char<36> | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly AppointmentService: {
       readonly appointmentId: Char<36>;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly durationMinutes: CodecTypes['pg/int4@1']['output'] | null;
@@ -1129,48 +1149,28 @@ export type StorageColumnTypes = {
       readonly serviceId: Char<36>;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly appointments: {
-      readonly branchId: Char<36>;
-      readonly cancellationReason: CodecTypes['pg/text@1']['output'] | null;
-      readonly cancelledAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly cancelledByMembershipId: Char<36> | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly createdByMembershipId: Char<36>;
-      readonly endsAt: CodecTypes['pg/timestamp@1']['output'];
-      readonly id: Char<36>;
-      readonly notes: CodecTypes['pg/text@1']['output'] | null;
-      readonly organizationId: Char<36>;
-      readonly patientId: Char<36>;
-      readonly professionalMembershipId: Char<36>;
-      readonly reason: CodecTypes['pg/text@1']['output'] | null;
-      readonly serviceId: Char<36>;
-      readonly startsAt: CodecTypes['pg/timestamp@1']['output'];
-      readonly status: CodecTypes['pg/text@1']['output'];
-      readonly treatmentId: Char<36> | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-    };
-    readonly clinical_encounters: {
+    readonly ClinicalEncounter: {
       readonly appointmentId: Char<36> | null;
       readonly branchId: Char<36>;
       readonly chiefComplaint: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdByMembershipId: Char<36>;
-      readonly diagnosis: CodecTypes['pg/text@1']['output'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['output'] | null;
       readonly endedAt: CodecTypes['pg/timestamp@1']['output'] | null;
-      readonly evolution: CodecTypes['pg/text@1']['output'] | null;
       readonly id: Char<36>;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly organizationId: Char<36>;
       readonly patientId: Char<36>;
-      readonly procedurePerformed: CodecTypes['pg/text@1']['output'] | null;
-      readonly professionalMembershipId: Char<36>;
-      readonly recommendations: CodecTypes['pg/text@1']['output'] | null;
+      readonly patientInstructions: CodecTypes['pg/text@1']['output'] | null;
+      readonly practitionerMembershipId: Char<36>;
+      readonly procedureSummary: CodecTypes['pg/text@1']['output'] | null;
+      readonly progressNotes: CodecTypes['pg/text@1']['output'] | null;
       readonly startedAt: CodecTypes['pg/timestamp@1']['output'];
       readonly treatmentId: Char<36> | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedByMembershipId: Char<36> | null;
     };
-    readonly clinical_files: {
+    readonly ClinicalFile: {
       readonly appointmentId: Char<36> | null;
       readonly bucket: CodecTypes['pg/text@1']['output'];
       readonly capturedAt: CodecTypes['pg/timestamp@1']['output'] | null;
@@ -1193,22 +1193,24 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly uploadedByMembershipId: Char<36>;
     };
-    readonly clinical_histories: {
-      readonly allergies: CodecTypes['pg/text@1']['output'] | null;
+    readonly DentalService: {
+      readonly basePriceMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly category: CodecTypes['pg/text@1']['output'] | null;
+      readonly code: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdByMembershipId: Char<36>;
-      readonly currentMedications: CodecTypes['pg/text@1']['output'] | null;
-      readonly dentalHistory: CodecTypes['pg/text@1']['output'] | null;
+      readonly currency: CodecTypes['pg/text@1']['output'] | null;
+      readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly durationMinutes: CodecTypes['pg/int4@1']['output'] | null;
       readonly id: Char<36>;
-      readonly medicalHistory: CodecTypes['pg/text@1']['output'] | null;
-      readonly observations: CodecTypes['pg/text@1']['output'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly labCostMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly name: CodecTypes['pg/text@1']['output'];
       readonly organizationId: Char<36>;
-      readonly patientId: Char<36>;
-      readonly relevantConditions: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedByMembershipId: Char<36> | null;
     };
-    readonly dental_service_supplies: {
+    readonly DentalServiceSupply: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly estimatedCostMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly id: Char<36>;
@@ -1221,24 +1223,7 @@ export type StorageColumnTypes = {
       readonly unit: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly dental_services: {
-      readonly active: CodecTypes['pg/bool@1']['output'];
-      readonly basePriceMinor: CodecTypes['pg/int4@1']['output'] | null;
-      readonly category: CodecTypes['pg/text@1']['output'] | null;
-      readonly code: CodecTypes['pg/text@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly createdByMembershipId: Char<36>;
-      readonly currency: CodecTypes['pg/text@1']['output'] | null;
-      readonly description: CodecTypes['pg/text@1']['output'] | null;
-      readonly durationMinutes: CodecTypes['pg/int4@1']['output'] | null;
-      readonly id: Char<36>;
-      readonly labCostMinor: CodecTypes['pg/int4@1']['output'] | null;
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly organizationId: Char<36>;
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
-      readonly updatedByMembershipId: Char<36> | null;
-    };
-    readonly patients: {
+    readonly Patient: {
       readonly address: CodecTypes['pg/text@1']['output'] | null;
       readonly birthDate: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -1259,7 +1244,22 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedByMembershipId: Char<36> | null;
     };
-    readonly payments: {
+    readonly PatientHealthProfile: {
+      readonly allergies: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: Char<36>;
+      readonly currentMedications: CodecTypes['pg/text@1']['output'] | null;
+      readonly dentalHistory: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: Char<36>;
+      readonly medicalHistory: CodecTypes['pg/text@1']['output'] | null;
+      readonly observations: CodecTypes['pg/text@1']['output'] | null;
+      readonly organizationId: Char<36>;
+      readonly patientId: Char<36>;
+      readonly relevantConditions: CodecTypes['pg/text@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedByMembershipId: Char<36> | null;
+    };
+    readonly Payment: {
       readonly amountMinor: CodecTypes['pg/int4@1']['output'];
       readonly appointmentId: Char<36> | null;
       readonly branchId: Char<36>;
@@ -1280,7 +1280,7 @@ export type StorageColumnTypes = {
       readonly voidedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly voidedByMembershipId: Char<36> | null;
     };
-    readonly radiographs: {
+    readonly Radiograph: {
       readonly clinicalFileId: Char<36>;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly id: Char<36>;
@@ -1293,19 +1293,19 @@ export type StorageColumnTypes = {
       readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
-    readonly treatments: {
+    readonly Treatment: {
       readonly agreedPriceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdByMembershipId: Char<36>;
       readonly currency: CodecTypes['pg/text@1']['output'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['output'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['output'] | null;
       readonly endedAt: CodecTypes['pg/timestamp@1']['output'] | null;
       readonly estimatedSessions: CodecTypes['pg/int4@1']['output'] | null;
       readonly id: Char<36>;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly organizationId: Char<36>;
       readonly patientId: Char<36>;
-      readonly responsibleMembershipId: Char<36> | null;
+      readonly practitionerMembershipId: Char<36> | null;
       readonly serviceId: Char<36>;
       readonly startedAt: CodecTypes['pg/timestamp@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -1330,16 +1330,16 @@ export type StorageColumnInputTypes = {
       readonly userAgent: CodecTypes['pg/text@1']['input'] | null;
       readonly userId: CodecTypes['sql/char@1']['input'] | null;
     };
-    readonly Authorization: {
+    readonly AuthSession: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly failedAttempts: CodecTypes['pg/int4@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamp@1']['input'];
       readonly id: CodecTypes['sql/char@1']['input'];
-      readonly lockedUntil: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly passwordHash: CodecTypes['pg/text@1']['input'];
+      readonly ipAddress: CodecTypes['pg/text@1']['input'] | null;
+      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly refreshTokenHash: CodecTypes['pg/text@1']['input'];
+      readonly revokedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly userAgent: CodecTypes['pg/text@1']['input'] | null;
       readonly userId: CodecTypes['sql/char@1']['input'];
     };
     readonly Branch: {
@@ -1364,33 +1364,6 @@ export type StorageColumnInputTypes = {
       readonly timezone: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly Membership: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly joinedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly userId: CodecTypes['sql/char@1']['input'];
-    };
-    readonly MembershipBranch: {
-      readonly branchId: CodecTypes['sql/char@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly membershipId: CodecTypes['sql/char@1']['input'];
-    };
-    readonly MembershipRole: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly deleted: CodecTypes['pg/bool@1']['input'];
-      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly membershipId: CodecTypes['sql/char@1']['input'];
-      readonly roleId: CodecTypes['sql/char@1']['input'];
-    };
     readonly Organization: {
       readonly country: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -1407,7 +1380,34 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly website: CodecTypes['pg/text@1']['input'] | null;
     };
-    readonly OrganizationPlan: {
+    readonly OrganizationMembership: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly joinedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly organizationId: CodecTypes['sql/char@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+    };
+    readonly OrganizationMembershipBranch: {
+      readonly branchId: CodecTypes['sql/char@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly membershipId: CodecTypes['sql/char@1']['input'];
+    };
+    readonly OrganizationMembershipRole: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly membershipId: CodecTypes['sql/char@1']['input'];
+      readonly roleId: CodecTypes['sql/char@1']['input'];
+    };
+    readonly OrganizationPlanAssignment: {
       readonly canceledAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly endsAt: CodecTypes['pg/timestamp@1']['input'];
@@ -1433,16 +1433,16 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
     readonly Plan: {
-      readonly active: CodecTypes['pg/bool@1']['input'];
       readonly code: CodecTypes['pg/text@1']['input'];
-      readonly configuration: CodecTypes['pg/jsonb@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'] | null;
       readonly deleted: CodecTypes['pg/bool@1']['input'];
       readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly durationDays: CodecTypes['pg/int4@1']['input'];
+      readonly entitlements: CodecTypes['pg/jsonb@1']['input'];
       readonly id: CodecTypes['sql/char@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly priceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly type: CodecTypes['pg/text@1']['input'];
@@ -1466,18 +1466,6 @@ export type StorageColumnInputTypes = {
       readonly permissionId: CodecTypes['sql/char@1']['input'];
       readonly roleId: CodecTypes['sql/char@1']['input'];
     };
-    readonly Session: {
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly expiresAt: CodecTypes['pg/timestamp@1']['input'];
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly ipAddress: CodecTypes['pg/text@1']['input'] | null;
-      readonly lastUsedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly refreshTokenHash: CodecTypes['pg/text@1']['input'];
-      readonly revokedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly userAgent: CodecTypes['pg/text@1']['input'] | null;
-      readonly userId: CodecTypes['sql/char@1']['input'];
-    };
     readonly User: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly deleted: CodecTypes['pg/bool@1']['input'];
@@ -1491,9 +1479,41 @@ export type StorageColumnInputTypes = {
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
+    readonly UserCredential: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly deleted: CodecTypes['pg/bool@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly failedAttempts: CodecTypes['pg/int4@1']['input'];
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly lockedUntil: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly passwordChangedAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly passwordHash: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+    };
   };
   readonly dentistry: {
-    readonly appointment_services: {
+    readonly Appointment: {
+      readonly branchId: CodecTypes['sql/char@1']['input'];
+      readonly canceledAt: CodecTypes['pg/timestamp@1']['input'] | null;
+      readonly canceledByMembershipId: CodecTypes['sql/char@1']['input'] | null;
+      readonly cancellationReason: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly notes: CodecTypes['pg/text@1']['input'] | null;
+      readonly organizationId: CodecTypes['sql/char@1']['input'];
+      readonly patientId: CodecTypes['sql/char@1']['input'];
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly scheduledEndAt: CodecTypes['pg/timestamp@1']['input'];
+      readonly scheduledStartAt: CodecTypes['pg/timestamp@1']['input'];
+      readonly serviceId: CodecTypes['sql/char@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly treatmentId: CodecTypes['sql/char@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly AppointmentService: {
       readonly appointmentId: CodecTypes['sql/char@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly durationMinutes: CodecTypes['pg/int4@1']['input'] | null;
@@ -1504,48 +1524,28 @@ export type StorageColumnInputTypes = {
       readonly serviceId: CodecTypes['sql/char@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly appointments: {
-      readonly branchId: CodecTypes['sql/char@1']['input'];
-      readonly cancellationReason: CodecTypes['pg/text@1']['input'] | null;
-      readonly cancelledAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly cancelledByMembershipId: CodecTypes['sql/char@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly endsAt: CodecTypes['pg/timestamp@1']['input'];
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'] | null;
-      readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly professionalMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly reason: CodecTypes['pg/text@1']['input'] | null;
-      readonly serviceId: CodecTypes['sql/char@1']['input'];
-      readonly startsAt: CodecTypes['pg/timestamp@1']['input'];
-      readonly status: CodecTypes['pg/text@1']['input'];
-      readonly treatmentId: CodecTypes['sql/char@1']['input'] | null;
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-    };
-    readonly clinical_encounters: {
+    readonly ClinicalEncounter: {
       readonly appointmentId: CodecTypes['sql/char@1']['input'] | null;
       readonly branchId: CodecTypes['sql/char@1']['input'];
       readonly chiefComplaint: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly diagnosis: CodecTypes['pg/text@1']['input'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['input'] | null;
       readonly endedAt: CodecTypes['pg/timestamp@1']['input'] | null;
-      readonly evolution: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly organizationId: CodecTypes['sql/char@1']['input'];
       readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly procedurePerformed: CodecTypes['pg/text@1']['input'] | null;
-      readonly professionalMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly recommendations: CodecTypes['pg/text@1']['input'] | null;
+      readonly patientInstructions: CodecTypes['pg/text@1']['input'] | null;
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly procedureSummary: CodecTypes['pg/text@1']['input'] | null;
+      readonly progressNotes: CodecTypes['pg/text@1']['input'] | null;
       readonly startedAt: CodecTypes['pg/timestamp@1']['input'];
       readonly treatmentId: CodecTypes['sql/char@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
     };
-    readonly clinical_files: {
+    readonly ClinicalFile: {
       readonly appointmentId: CodecTypes['sql/char@1']['input'] | null;
       readonly bucket: CodecTypes['pg/text@1']['input'];
       readonly capturedAt: CodecTypes['pg/timestamp@1']['input'] | null;
@@ -1568,22 +1568,24 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly uploadedByMembershipId: CodecTypes['sql/char@1']['input'];
     };
-    readonly clinical_histories: {
-      readonly allergies: CodecTypes['pg/text@1']['input'] | null;
+    readonly DentalService: {
+      readonly basePriceMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly category: CodecTypes['pg/text@1']['input'] | null;
+      readonly code: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly currentMedications: CodecTypes['pg/text@1']['input'] | null;
-      readonly dentalHistory: CodecTypes['pg/text@1']['input'] | null;
+      readonly currency: CodecTypes['pg/text@1']['input'] | null;
+      readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly durationMinutes: CodecTypes['pg/int4@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
-      readonly medicalHistory: CodecTypes['pg/text@1']['input'] | null;
-      readonly observations: CodecTypes['pg/text@1']['input'] | null;
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly labCostMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly name: CodecTypes['pg/text@1']['input'];
       readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly relevantConditions: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
     };
-    readonly dental_service_supplies: {
+    readonly DentalServiceSupply: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly estimatedCostMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
@@ -1596,24 +1598,7 @@ export type StorageColumnInputTypes = {
       readonly unit: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly dental_services: {
-      readonly active: CodecTypes['pg/bool@1']['input'];
-      readonly basePriceMinor: CodecTypes['pg/int4@1']['input'] | null;
-      readonly category: CodecTypes['pg/text@1']['input'] | null;
-      readonly code: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
-      readonly currency: CodecTypes['pg/text@1']['input'] | null;
-      readonly description: CodecTypes['pg/text@1']['input'] | null;
-      readonly durationMinutes: CodecTypes['pg/int4@1']['input'] | null;
-      readonly id: CodecTypes['sql/char@1']['input'];
-      readonly labCostMinor: CodecTypes['pg/int4@1']['input'] | null;
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly organizationId: CodecTypes['sql/char@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
-      readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
-    };
-    readonly patients: {
+    readonly Patient: {
       readonly address: CodecTypes['pg/text@1']['input'] | null;
       readonly birthDate: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -1634,7 +1619,22 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
     };
-    readonly payments: {
+    readonly PatientHealthProfile: {
+      readonly allergies: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
+      readonly currentMedications: CodecTypes['pg/text@1']['input'] | null;
+      readonly dentalHistory: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly medicalHistory: CodecTypes['pg/text@1']['input'] | null;
+      readonly observations: CodecTypes['pg/text@1']['input'] | null;
+      readonly organizationId: CodecTypes['sql/char@1']['input'];
+      readonly patientId: CodecTypes['sql/char@1']['input'];
+      readonly relevantConditions: CodecTypes['pg/text@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
+    };
+    readonly Payment: {
       readonly amountMinor: CodecTypes['pg/int4@1']['input'];
       readonly appointmentId: CodecTypes['sql/char@1']['input'] | null;
       readonly branchId: CodecTypes['sql/char@1']['input'];
@@ -1655,7 +1655,7 @@ export type StorageColumnInputTypes = {
       readonly voidedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly voidedByMembershipId: CodecTypes['sql/char@1']['input'] | null;
     };
-    readonly radiographs: {
+    readonly Radiograph: {
       readonly clinicalFileId: CodecTypes['sql/char@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly id: CodecTypes['sql/char@1']['input'];
@@ -1668,19 +1668,19 @@ export type StorageColumnInputTypes = {
       readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
-    readonly treatments: {
+    readonly Treatment: {
       readonly agreedPriceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdByMembershipId: CodecTypes['sql/char@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'] | null;
-      readonly diagnosis: CodecTypes['pg/text@1']['input'] | null;
+      readonly diagnosisSummary: CodecTypes['pg/text@1']['input'] | null;
       readonly endedAt: CodecTypes['pg/timestamp@1']['input'] | null;
       readonly estimatedSessions: CodecTypes['pg/int4@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly organizationId: CodecTypes['sql/char@1']['input'];
       readonly patientId: CodecTypes['sql/char@1']['input'];
-      readonly responsibleMembershipId: CodecTypes['sql/char@1']['input'] | null;
+      readonly practitionerMembershipId: CodecTypes['sql/char@1']['input'] | null;
       readonly serviceId: CodecTypes['sql/char@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamp@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -1832,7 +1832,7 @@ type ContractBase = Omit<
                 },
               ];
             };
-            readonly Authorization: {
+            readonly AuthSession: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -1846,40 +1846,32 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly typeParams: { readonly length: 36 };
                 };
-                readonly passwordHash: {
+                readonly refreshTokenHash: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly passwordChangedAt: {
+                readonly ipAddress: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly userAgent: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: false;
+                };
+                readonly lastUsedAt: {
                   readonly nativeType: 'timestamp';
                   readonly codecId: 'pg/timestamp@1';
                   readonly nullable: true;
                 };
-                readonly failedAttempts: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
-                  };
-                };
-                readonly lockedUntil: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly deleted: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
-                  };
-                };
-                readonly deletedAt: {
+                readonly revokedAt: {
                   readonly nativeType: 'timestamp';
                   readonly codecId: 'pg/timestamp@1';
                   readonly nullable: true;
@@ -1897,13 +1889,20 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['userId'] }];
-              indexes: readonly [];
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'AuthSession_userId_idx_a489d58a';
+                  readonly prefix: 'AuthSession_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
               foreignKeys: readonly [
                 {
                   readonly source: {
                     readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Authorization';
+                    readonly tableName: 'AuthSession';
                     readonly columns: readonly ['userId'];
                   };
                   readonly target: {
@@ -2053,277 +2052,6 @@ type ContractBase = Omit<
                 },
               ];
             };
-            readonly Membership: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly userId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly organizationId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly status: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'INVITED'>;
-                  };
-                };
-                readonly joinedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly deleted: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
-                  };
-                };
-                readonly deletedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'Membership_userId_idx_a489d58a';
-                  readonly prefix: 'Membership_userId_idx';
-                  readonly columns: readonly ['userId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'Membership_organizationId_idx_2e17ef41';
-                  readonly prefix: 'Membership_organizationId_idx';
-                  readonly columns: readonly ['organizationId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Membership';
-                    readonly columns: readonly ['userId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'User';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Membership';
-                    readonly columns: readonly ['organizationId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Organization';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly MembershipBranch: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly membershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly branchId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly deleted: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
-                  };
-                };
-                readonly deletedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'MembershipBranch_membershipId_idx_fdcfb7b5';
-                  readonly prefix: 'MembershipBranch_membershipId_idx';
-                  readonly columns: readonly ['membershipId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'MembershipBranch_branchId_idx_d04da5bb';
-                  readonly prefix: 'MembershipBranch_branchId_idx';
-                  readonly columns: readonly ['branchId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'MembershipBranch';
-                    readonly columns: readonly ['membershipId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Membership';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'MembershipBranch';
-                    readonly columns: readonly ['branchId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Branch';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly MembershipRole: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly membershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly roleId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly deleted: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
-                  };
-                };
-                readonly deletedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'MembershipRole_membershipId_idx_fdcfb7b5';
-                  readonly prefix: 'MembershipRole_membershipId_idx';
-                  readonly columns: readonly ['membershipId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'MembershipRole_roleId_idx_ffccc9a4';
-                  readonly prefix: 'MembershipRole_roleId_idx';
-                  readonly columns: readonly ['roleId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'MembershipRole';
-                    readonly columns: readonly ['membershipId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Membership';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'MembershipRole';
-                    readonly columns: readonly ['roleId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Role';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
             readonly Organization: {
               columns: {
                 readonly id: {
@@ -2412,7 +2140,278 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
-            readonly OrganizationPlan: {
+            readonly OrganizationMembership: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly userId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'INVITED'>;
+                  };
+                };
+                readonly joinedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly deleted: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly deletedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'OrganizationMembership_userId_idx_a489d58a';
+                  readonly prefix: 'OrganizationMembership_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'OrganizationMembership_organizationId_idx_2e17ef41';
+                  readonly prefix: 'OrganizationMembership_organizationId_idx';
+                  readonly columns: readonly ['organizationId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembership';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembership';
+                    readonly columns: readonly ['organizationId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'Organization';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly OrganizationMembershipBranch: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly membershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly branchId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly deleted: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly deletedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'OrganizationMembershipBranch_membershipId_idx_fdcfb7b5';
+                  readonly prefix: 'OrganizationMembershipBranch_membershipId_idx';
+                  readonly columns: readonly ['membershipId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'OrganizationMembershipBranch_branchId_idx_d04da5bb';
+                  readonly prefix: 'OrganizationMembershipBranch_branchId_idx';
+                  readonly columns: readonly ['branchId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembershipBranch';
+                    readonly columns: readonly ['membershipId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembership';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembershipBranch';
+                    readonly columns: readonly ['branchId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'Branch';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly OrganizationMembershipRole: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly membershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly roleId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly deleted: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly deletedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'OrganizationMembershipRole_membershipId_idx_fdcfb7b5';
+                  readonly prefix: 'OrganizationMembershipRole_membershipId_idx';
+                  readonly columns: readonly ['membershipId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'OrganizationMembershipRole_roleId_idx_ffccc9a4';
+                  readonly prefix: 'OrganizationMembershipRole_roleId_idx';
+                  readonly columns: readonly ['roleId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembershipRole';
+                    readonly columns: readonly ['membershipId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembership';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'OrganizationMembershipRole';
+                    readonly columns: readonly ['roleId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'Role';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly OrganizationPlanAssignment: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -2522,14 +2521,14 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'OrganizationPlan_organizationId_idx_2e17ef41';
-                  readonly prefix: 'OrganizationPlan_organizationId_idx';
+                  readonly name: 'OrganizationPlanAssignment_organizationId_idx_2e17ef41';
+                  readonly prefix: 'OrganizationPlanAssignment_organizationId_idx';
                   readonly columns: readonly ['organizationId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'OrganizationPlan_planId_idx_5b32079a';
-                  readonly prefix: 'OrganizationPlan_planId_idx';
+                  readonly name: 'OrganizationPlanAssignment_planId_idx_5b32079a';
+                  readonly prefix: 'OrganizationPlanAssignment_planId_idx';
                   readonly columns: readonly ['planId'];
                   readonly unique: false;
                 },
@@ -2538,7 +2537,7 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'OrganizationPlan';
+                    readonly tableName: 'OrganizationPlanAssignment';
                     readonly columns: readonly ['organizationId'];
                   };
                   readonly target: {
@@ -2550,7 +2549,7 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'OrganizationPlan';
+                    readonly tableName: 'OrganizationPlanAssignment';
                     readonly columns: readonly ['planId'];
                   };
                   readonly target: {
@@ -2643,7 +2642,7 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
                 };
-                readonly configuration: {
+                readonly entitlements: {
                   readonly nativeType: 'jsonb';
                   readonly codecId: 'pg/jsonb@1';
                   readonly nullable: false;
@@ -2658,7 +2657,7 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly active: {
+                readonly isActive: {
                   readonly nativeType: 'bool';
                   readonly codecId: 'pg/bool@1';
                   readonly nullable: false;
@@ -2854,87 +2853,6 @@ type ContractBase = Omit<
                 },
               ];
             };
-            readonly Session: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly userId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly refreshTokenHash: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly ipAddress: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly userAgent: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly expiresAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: false;
-                };
-                readonly lastUsedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly revokedAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'Session_userId_idx_a489d58a';
-                  readonly prefix: 'Session_userId_idx';
-                  readonly columns: readonly ['userId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'Session';
-                    readonly columns: readonly ['userId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'core' & NamespaceId;
-                    readonly tableName: 'User';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
             readonly User: {
               columns: {
                 readonly id: {
@@ -3008,6 +2926,88 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly UserCredential: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly userId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly passwordHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly passwordChangedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly failedAttempts: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly lockedUntil: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly deleted: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly deletedAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'UserCredential';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'core' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
         };
       };
@@ -3016,7 +3016,203 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
-            readonly appointment_services: {
+            readonly Appointment: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly branchId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly patientId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly practitionerMembershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly serviceId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly treatmentId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly scheduledStartAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: false;
+                };
+                readonly scheduledEndAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: false;
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'SCHEDULED'>;
+                  };
+                };
+                readonly reason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly notes: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly canceledAt: {
+                  readonly nativeType: 'timestamp';
+                  readonly codecId: 'pg/timestamp@1';
+                  readonly nullable: true;
+                };
+                readonly canceledByMembershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly cancellationReason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'appt_org_start_idx_5a65ff85';
+                  readonly prefix: 'appt_org_start_idx';
+                  readonly columns: readonly ['organizationId', 'scheduledStartAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'appt_org_branch_start_idx_4ed245ce';
+                  readonly prefix: 'appt_org_branch_start_idx';
+                  readonly columns: readonly ['organizationId', 'branchId', 'scheduledStartAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'appt_org_prof_start_idx_88b66a83';
+                  readonly prefix: 'appt_org_prof_start_idx';
+                  readonly columns: readonly [
+                    'organizationId',
+                    'practitionerMembershipId',
+                    'scheduledStartAt',
+                  ];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'appt_patient_start_idx_f2accb68';
+                  readonly prefix: 'appt_patient_start_idx';
+                  readonly columns: readonly ['patientId', 'scheduledStartAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Appointment_patientId_idx_e5f07e88';
+                  readonly prefix: 'Appointment_patientId_idx';
+                  readonly columns: readonly ['patientId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Appointment_serviceId_idx_b5d9acbf';
+                  readonly prefix: 'Appointment_serviceId_idx';
+                  readonly columns: readonly ['serviceId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Appointment_treatmentId_idx_18e96195';
+                  readonly prefix: 'Appointment_treatmentId_idx';
+                  readonly columns: readonly ['treatmentId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Appointment';
+                    readonly columns: readonly ['patientId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Patient';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Appointment';
+                    readonly columns: readonly ['serviceId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'DentalService';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Appointment';
+                    readonly columns: readonly ['treatmentId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Treatment';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly AppointmentService: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -3085,14 +3281,14 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'appointment_services_appointmentId_idx_682a8b58';
-                  readonly prefix: 'appointment_services_appointmentId_idx';
+                  readonly name: 'AppointmentService_appointmentId_idx_682a8b58';
+                  readonly prefix: 'AppointmentService_appointmentId_idx';
                   readonly columns: readonly ['appointmentId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'appointment_services_serviceId_idx_b5d9acbf';
-                  readonly prefix: 'appointment_services_serviceId_idx';
+                  readonly name: 'AppointmentService_serviceId_idx_b5d9acbf';
+                  readonly prefix: 'AppointmentService_serviceId_idx';
                   readonly columns: readonly ['serviceId'];
                   readonly unique: false;
                 },
@@ -3101,226 +3297,30 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointment_services';
+                    readonly tableName: 'AppointmentService';
                     readonly columns: readonly ['appointmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
+                    readonly tableName: 'Appointment';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointment_services';
+                    readonly tableName: 'AppointmentService';
                     readonly columns: readonly ['serviceId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'dental_services';
+                    readonly tableName: 'DentalService';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly appointments: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly organizationId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly branchId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly patientId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly professionalMembershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly serviceId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly treatmentId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: true;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly startsAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: false;
-                };
-                readonly endsAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: false;
-                };
-                readonly status: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'SCHEDULED'>;
-                  };
-                };
-                readonly reason: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly createdByMembershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly cancelledAt: {
-                  readonly nativeType: 'timestamp';
-                  readonly codecId: 'pg/timestamp@1';
-                  readonly nullable: true;
-                };
-                readonly cancelledByMembershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: true;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly cancellationReason: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'appt_org_start_idx_4d98ff60';
-                  readonly prefix: 'appt_org_start_idx';
-                  readonly columns: readonly ['organizationId', 'startsAt'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appt_org_branch_start_idx_dd7b9f0f';
-                  readonly prefix: 'appt_org_branch_start_idx';
-                  readonly columns: readonly ['organizationId', 'branchId', 'startsAt'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appt_org_prof_start_idx_9d9d088f';
-                  readonly prefix: 'appt_org_prof_start_idx';
-                  readonly columns: readonly [
-                    'organizationId',
-                    'professionalMembershipId',
-                    'startsAt',
-                  ];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appt_patient_start_idx_e7cd3706';
-                  readonly prefix: 'appt_patient_start_idx';
-                  readonly columns: readonly ['patientId', 'startsAt'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appointments_patientId_idx_e5f07e88';
-                  readonly prefix: 'appointments_patientId_idx';
-                  readonly columns: readonly ['patientId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appointments_serviceId_idx_b5d9acbf';
-                  readonly prefix: 'appointments_serviceId_idx';
-                  readonly columns: readonly ['serviceId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'appointments_treatmentId_idx_18e96195';
-                  readonly prefix: 'appointments_treatmentId_idx';
-                  readonly columns: readonly ['treatmentId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
-                    readonly columns: readonly ['patientId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
-                    readonly columns: readonly ['serviceId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'dental_services';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
-                    readonly columns: readonly ['treatmentId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly clinical_encounters: {
+            readonly ClinicalEncounter: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -3358,7 +3358,7 @@ type ContractBase = Omit<
                   readonly nullable: true;
                   readonly typeParams: { readonly length: 36 };
                 };
-                readonly professionalMembershipId: {
+                readonly practitionerMembershipId: {
                   readonly nativeType: 'character';
                   readonly codecId: 'sql/char@1';
                   readonly nullable: false;
@@ -3379,22 +3379,22 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly diagnosis: {
+                readonly diagnosisSummary: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly procedurePerformed: {
+                readonly procedureSummary: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly evolution: {
+                readonly progressNotes: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly recommendations: {
+                readonly patientInstructions: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
@@ -3438,24 +3438,24 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'enc_org_prof_start_idx_ccff3a92';
+                  readonly name: 'enc_org_prof_start_idx_3b92be85';
                   readonly prefix: 'enc_org_prof_start_idx';
                   readonly columns: readonly [
                     'organizationId',
-                    'professionalMembershipId',
+                    'practitionerMembershipId',
                     'startedAt',
                   ];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'clinical_encounters_patientId_idx_e5f07e88';
-                  readonly prefix: 'clinical_encounters_patientId_idx';
+                  readonly name: 'ClinicalEncounter_patientId_idx_e5f07e88';
+                  readonly prefix: 'ClinicalEncounter_patientId_idx';
                   readonly columns: readonly ['patientId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'clinical_encounters_treatmentId_idx_18e96195';
-                  readonly prefix: 'clinical_encounters_treatmentId_idx';
+                  readonly name: 'ClinicalEncounter_treatmentId_idx_18e96195';
+                  readonly prefix: 'ClinicalEncounter_treatmentId_idx';
                   readonly columns: readonly ['treatmentId'];
                   readonly unique: false;
                 },
@@ -3464,42 +3464,42 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_encounters';
+                    readonly tableName: 'ClinicalEncounter';
                     readonly columns: readonly ['patientId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
+                    readonly tableName: 'Patient';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_encounters';
+                    readonly tableName: 'ClinicalEncounter';
                     readonly columns: readonly ['appointmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
+                    readonly tableName: 'Appointment';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_encounters';
+                    readonly tableName: 'ClinicalEncounter';
                     readonly columns: readonly ['treatmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
+                    readonly tableName: 'Treatment';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly clinical_files: {
+            readonly ClinicalFile: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -3641,20 +3641,20 @@ type ContractBase = Omit<
                   readonly unique: true;
                 },
                 {
-                  readonly name: 'clinical_files_patientId_idx_e5f07e88';
-                  readonly prefix: 'clinical_files_patientId_idx';
+                  readonly name: 'ClinicalFile_patientId_idx_e5f07e88';
+                  readonly prefix: 'ClinicalFile_patientId_idx';
                   readonly columns: readonly ['patientId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'clinical_files_treatmentId_idx_18e96195';
-                  readonly prefix: 'clinical_files_treatmentId_idx';
+                  readonly name: 'ClinicalFile_treatmentId_idx_18e96195';
+                  readonly prefix: 'ClinicalFile_treatmentId_idx';
                   readonly columns: readonly ['treatmentId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'clinical_files_appointmentId_idx_682a8b58';
-                  readonly prefix: 'clinical_files_appointmentId_idx';
+                  readonly name: 'ClinicalFile_appointmentId_idx_682a8b58';
+                  readonly prefix: 'ClinicalFile_appointmentId_idx';
                   readonly columns: readonly ['appointmentId'];
                   readonly unique: false;
                 },
@@ -3663,54 +3663,54 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_files';
+                    readonly tableName: 'ClinicalFile';
                     readonly columns: readonly ['patientId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
+                    readonly tableName: 'Patient';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_files';
+                    readonly tableName: 'ClinicalFile';
                     readonly columns: readonly ['clinicalEncounterId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_encounters';
+                    readonly tableName: 'ClinicalEncounter';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_files';
+                    readonly tableName: 'ClinicalFile';
                     readonly columns: readonly ['treatmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
+                    readonly tableName: 'Treatment';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_files';
+                    readonly tableName: 'ClinicalFile';
                     readonly columns: readonly ['appointmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
+                    readonly tableName: 'Appointment';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly clinical_histories: {
+            readonly DentalService: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -3724,41 +3724,54 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly typeParams: { readonly length: 36 };
                 };
-                readonly patientId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
+                readonly code: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly name: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
                   readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
                 };
-                readonly medicalHistory: {
+                readonly category: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly allergies: {
+                readonly description: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly currentMedications: {
+                readonly durationMinutes: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly basePriceMinor: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly labCostMinor: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly currency: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly dentalHistory: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly relevantConditions: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly observations: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
                 };
                 readonly createdByMembershipId: {
                   readonly nativeType: 'character';
@@ -3785,31 +3798,30 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['patientId'] }];
+              uniques: readonly [];
               indexes: readonly [
                 {
-                  readonly name: 'ch_org_idx_2e17ef41';
-                  readonly prefix: 'ch_org_idx';
-                  readonly columns: readonly ['organizationId'];
+                  readonly name: 'svc_org_active_idx_c89f2a48';
+                  readonly prefix: 'svc_org_active_idx';
+                  readonly columns: readonly ['organizationId', 'isActive'];
                   readonly unique: false;
                 },
-              ];
-              foreignKeys: readonly [
                 {
-                  readonly source: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_histories';
-                    readonly columns: readonly ['patientId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
-                    readonly columns: readonly ['id'];
-                  };
+                  readonly name: 'svc_org_category_idx_a0ddcd26';
+                  readonly prefix: 'svc_org_category_idx';
+                  readonly columns: readonly ['organizationId', 'category'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'svc_org_code_uidx_e11c0273';
+                  readonly prefix: 'svc_org_code_uidx';
+                  readonly columns: readonly ['organizationId', 'code'];
+                  readonly unique: true;
                 },
               ];
+              foreignKeys: readonly [];
             };
-            readonly dental_service_supplies: {
+            readonly DentalServiceSupply: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -3890,8 +3902,8 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'dental_service_supplies_serviceId_idx_b5d9acbf';
-                  readonly prefix: 'dental_service_supplies_serviceId_idx';
+                  readonly name: 'DentalServiceSupply_serviceId_idx_b5d9acbf';
+                  readonly prefix: 'DentalServiceSupply_serviceId_idx';
                   readonly columns: readonly ['serviceId'];
                   readonly unique: false;
                 },
@@ -3900,129 +3912,18 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'dental_service_supplies';
+                    readonly tableName: 'DentalServiceSupply';
                     readonly columns: readonly ['serviceId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'dental_services';
+                    readonly tableName: 'DentalService';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly dental_services: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly organizationId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly code: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly name: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly category: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly description: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly durationMinutes: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly basePriceMinor: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly labCostMinor: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly currency: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly active: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
-                  };
-                };
-                readonly createdByMembershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: false;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly updatedByMembershipId: {
-                  readonly nativeType: 'character';
-                  readonly codecId: 'sql/char@1';
-                  readonly nullable: true;
-                  readonly typeParams: { readonly length: 36 };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'svc_org_active_idx_0c9a1852';
-                  readonly prefix: 'svc_org_active_idx';
-                  readonly columns: readonly ['organizationId', 'active'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'svc_org_category_idx_a0ddcd26';
-                  readonly prefix: 'svc_org_category_idx';
-                  readonly columns: readonly ['organizationId', 'category'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'svc_org_code_uidx_e11c0273';
-                  readonly prefix: 'svc_org_code_uidx';
-                  readonly columns: readonly ['organizationId', 'code'];
-                  readonly unique: true;
-                },
-              ];
-              foreignKeys: readonly [];
-            };
-            readonly patients: {
+            readonly Patient: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -4157,7 +4058,106 @@ type ContractBase = Omit<
               ];
               foreignKeys: readonly [];
             };
-            readonly payments: {
+            readonly PatientHealthProfile: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly patientId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly medicalHistory: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly allergies: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly currentMedications: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly dentalHistory: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly relevantConditions: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly observations: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly updatedByMembershipId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['patientId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'ch_org_idx_2e17ef41';
+                  readonly prefix: 'ch_org_idx';
+                  readonly columns: readonly ['organizationId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'PatientHealthProfile';
+                    readonly columns: readonly ['patientId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Patient';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly Payment: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -4291,26 +4291,26 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'payments_patientId_idx_e5f07e88';
-                  readonly prefix: 'payments_patientId_idx';
+                  readonly name: 'Payment_patientId_idx_e5f07e88';
+                  readonly prefix: 'Payment_patientId_idx';
                   readonly columns: readonly ['patientId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'payments_treatmentId_idx_18e96195';
-                  readonly prefix: 'payments_treatmentId_idx';
+                  readonly name: 'Payment_treatmentId_idx_18e96195';
+                  readonly prefix: 'Payment_treatmentId_idx';
                   readonly columns: readonly ['treatmentId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'payments_appointmentId_idx_682a8b58';
-                  readonly prefix: 'payments_appointmentId_idx';
+                  readonly name: 'Payment_appointmentId_idx_682a8b58';
+                  readonly prefix: 'Payment_appointmentId_idx';
                   readonly columns: readonly ['appointmentId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'payments_clinicalEncounterId_idx_2139e386';
-                  readonly prefix: 'payments_clinicalEncounterId_idx';
+                  readonly name: 'Payment_clinicalEncounterId_idx_2139e386';
+                  readonly prefix: 'Payment_clinicalEncounterId_idx';
                   readonly columns: readonly ['clinicalEncounterId'];
                   readonly unique: false;
                 },
@@ -4319,54 +4319,54 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'payments';
+                    readonly tableName: 'Payment';
                     readonly columns: readonly ['patientId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
+                    readonly tableName: 'Patient';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'payments';
+                    readonly tableName: 'Payment';
                     readonly columns: readonly ['treatmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
+                    readonly tableName: 'Treatment';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'payments';
+                    readonly tableName: 'Payment';
                     readonly columns: readonly ['appointmentId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'appointments';
+                    readonly tableName: 'Appointment';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'payments';
+                    readonly tableName: 'Payment';
                     readonly columns: readonly ['clinicalEncounterId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_encounters';
+                    readonly tableName: 'ClinicalEncounter';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly radiographs: {
+            readonly Radiograph: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -4442,18 +4442,18 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'radiographs';
+                    readonly tableName: 'Radiograph';
                     readonly columns: readonly ['clinicalFileId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'clinical_files';
+                    readonly tableName: 'ClinicalFile';
                     readonly columns: readonly ['id'];
                   };
                 },
               ];
             };
-            readonly treatments: {
+            readonly Treatment: {
               columns: {
                 readonly id: {
                   readonly nativeType: 'character';
@@ -4479,7 +4479,7 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly typeParams: { readonly length: 36 };
                 };
-                readonly responsibleMembershipId: {
+                readonly practitionerMembershipId: {
                   readonly nativeType: 'character';
                   readonly codecId: 'sql/char@1';
                   readonly nullable: true;
@@ -4519,7 +4519,7 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
-                readonly diagnosis: {
+                readonly diagnosisSummary: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
@@ -4569,14 +4569,14 @@ type ContractBase = Omit<
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'treatments_patientId_idx_e5f07e88';
-                  readonly prefix: 'treatments_patientId_idx';
+                  readonly name: 'Treatment_patientId_idx_e5f07e88';
+                  readonly prefix: 'Treatment_patientId_idx';
                   readonly columns: readonly ['patientId'];
                   readonly unique: false;
                 },
                 {
-                  readonly name: 'treatments_serviceId_idx_b5d9acbf';
-                  readonly prefix: 'treatments_serviceId_idx';
+                  readonly name: 'Treatment_serviceId_idx_b5d9acbf';
+                  readonly prefix: 'Treatment_serviceId_idx';
                   readonly columns: readonly ['serviceId'];
                   readonly unique: false;
                 },
@@ -4585,24 +4585,24 @@ type ContractBase = Omit<
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
+                    readonly tableName: 'Treatment';
                     readonly columns: readonly ['patientId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'patients';
+                    readonly tableName: 'Patient';
                     readonly columns: readonly ['id'];
                   };
                 },
                 {
                   readonly source: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'treatments';
+                    readonly tableName: 'Treatment';
                     readonly columns: readonly ['serviceId'];
                   };
                   readonly target: {
                     readonly namespaceId: 'dentistry' & NamespaceId;
-                    readonly tableName: 'dental_services';
+                    readonly tableName: 'DentalService';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -4625,25 +4625,31 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly User: { readonly namespace: 'core' & NamespaceId; readonly model: 'User' };
-    readonly Authorization: {
+    readonly UserCredential: {
       readonly namespace: 'core' & NamespaceId;
-      readonly model: 'Authorization';
+      readonly model: 'UserCredential';
     };
-    readonly Session: { readonly namespace: 'core' & NamespaceId; readonly model: 'Session' };
+    readonly AuthSession: {
+      readonly namespace: 'core' & NamespaceId;
+      readonly model: 'AuthSession';
+    };
     readonly Organization: {
       readonly namespace: 'core' & NamespaceId;
       readonly model: 'Organization';
     };
     readonly Plan: { readonly namespace: 'core' & NamespaceId; readonly model: 'Plan' };
-    readonly OrganizationPlan: {
+    readonly OrganizationPlanAssignment: {
       readonly namespace: 'core' & NamespaceId;
-      readonly model: 'OrganizationPlan';
+      readonly model: 'OrganizationPlanAssignment';
     };
     readonly Branch: { readonly namespace: 'core' & NamespaceId; readonly model: 'Branch' };
-    readonly Membership: { readonly namespace: 'core' & NamespaceId; readonly model: 'Membership' };
-    readonly MembershipBranch: {
+    readonly OrganizationMembership: {
       readonly namespace: 'core' & NamespaceId;
-      readonly model: 'MembershipBranch';
+      readonly model: 'OrganizationMembership';
+    };
+    readonly OrganizationMembershipBranch: {
+      readonly namespace: 'core' & NamespaceId;
+      readonly model: 'OrganizationMembershipBranch';
     };
     readonly Role: { readonly namespace: 'core' & NamespaceId; readonly model: 'Role' };
     readonly Permission: { readonly namespace: 'core' & NamespaceId; readonly model: 'Permission' };
@@ -4651,46 +4657,46 @@ type ContractBase = Omit<
       readonly namespace: 'core' & NamespaceId;
       readonly model: 'RolePermission';
     };
-    readonly MembershipRole: {
+    readonly OrganizationMembershipRole: {
       readonly namespace: 'core' & NamespaceId;
-      readonly model: 'MembershipRole';
+      readonly model: 'OrganizationMembershipRole';
     };
     readonly AuditLog: { readonly namespace: 'core' & NamespaceId; readonly model: 'AuditLog' };
-    readonly patients: { readonly namespace: 'dentistry' & NamespaceId; readonly model: 'Patient' };
-    readonly clinical_histories: {
+    readonly Patient: { readonly namespace: 'dentistry' & NamespaceId; readonly model: 'Patient' };
+    readonly PatientHealthProfile: {
       readonly namespace: 'dentistry' & NamespaceId;
-      readonly model: 'ClinicalHistory';
+      readonly model: 'PatientHealthProfile';
     };
-    readonly dental_services: {
+    readonly DentalService: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'DentalService';
     };
-    readonly dental_service_supplies: {
+    readonly DentalServiceSupply: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'DentalServiceSupply';
     };
-    readonly treatments: {
+    readonly Treatment: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'Treatment';
     };
-    readonly appointments: {
+    readonly Appointment: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'Appointment';
     };
-    readonly appointment_services: {
+    readonly AppointmentService: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'AppointmentService';
     };
-    readonly clinical_encounters: {
+    readonly ClinicalEncounter: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'ClinicalEncounter';
     };
-    readonly payments: { readonly namespace: 'dentistry' & NamespaceId; readonly model: 'Payment' };
-    readonly clinical_files: {
+    readonly Payment: { readonly namespace: 'dentistry' & NamespaceId; readonly model: 'Payment' };
+    readonly ClinicalFile: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'ClinicalFile';
     };
-    readonly radiographs: {
+    readonly Radiograph: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'Radiograph';
     };
@@ -4809,7 +4815,7 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly Authorization: {
+          readonly AuthSession: {
             readonly fields: {
               readonly id: {
                 readonly nullable: false;
@@ -4827,27 +4833,27 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly passwordHash: {
+              readonly refreshTokenHash: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly passwordChangedAt: {
+              readonly ipAddress: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly userAgent: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly lastUsedAt: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
               };
-              readonly failedAttempts: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly lockedUntil: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly deleted: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly deletedAt: {
+              readonly revokedAt: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
               };
@@ -4871,17 +4877,17 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'Authorization';
+              readonly table: 'AuthSession';
               readonly namespaceId: 'core';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly userId: { readonly column: 'userId' };
-                readonly passwordHash: { readonly column: 'passwordHash' };
-                readonly passwordChangedAt: { readonly column: 'passwordChangedAt' };
-                readonly failedAttempts: { readonly column: 'failedAttempts' };
-                readonly lockedUntil: { readonly column: 'lockedUntil' };
-                readonly deleted: { readonly column: 'deleted' };
-                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly refreshTokenHash: { readonly column: 'refreshTokenHash' };
+                readonly ipAddress: { readonly column: 'ipAddress' };
+                readonly userAgent: { readonly column: 'userAgent' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly lastUsedAt: { readonly column: 'lastUsedAt' };
+                readonly revokedAt: { readonly column: 'revokedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -4993,7 +4999,7 @@ type ContractBase = Omit<
               readonly membershipBranches: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'MembershipBranch';
+                  readonly model: 'OrganizationMembershipBranch';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -5037,262 +5043,6 @@ type ContractBase = Omit<
                 readonly deletedAt: { readonly column: 'deletedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly Membership: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly userId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly organizationId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly status: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly joinedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly deleted: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly deletedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: {
-              readonly user: {
-                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'User' };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['userId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly organization: {
-                readonly to: {
-                  readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Organization';
-                };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['organizationId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly branches: {
-                readonly to: {
-                  readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'MembershipBranch';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['membershipId'];
-                };
-              };
-              readonly roles: {
-                readonly to: {
-                  readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'MembershipRole';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['membershipId'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'Membership';
-              readonly namespaceId: 'core';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly userId: { readonly column: 'userId' };
-                readonly organizationId: { readonly column: 'organizationId' };
-                readonly status: { readonly column: 'status' };
-                readonly joinedAt: { readonly column: 'joinedAt' };
-                readonly deleted: { readonly column: 'deleted' };
-                readonly deletedAt: { readonly column: 'deletedAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly MembershipBranch: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly membershipId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly branchId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly deleted: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly deletedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: {
-              readonly membership: {
-                readonly to: {
-                  readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Membership';
-                };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['membershipId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly branch: {
-                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'Branch' };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['branchId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'MembershipBranch';
-              readonly namespaceId: 'core';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly membershipId: { readonly column: 'membershipId' };
-                readonly branchId: { readonly column: 'branchId' };
-                readonly deleted: { readonly column: 'deleted' };
-                readonly deletedAt: { readonly column: 'deletedAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
-              };
-            };
-          };
-          readonly MembershipRole: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly membershipId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly roleId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly deleted: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
-              readonly deletedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: {
-              readonly membership: {
-                readonly to: {
-                  readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Membership';
-                };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['membershipId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly role: {
-                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'Role' };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['roleId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'MembershipRole';
-              readonly namespaceId: 'core';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly membershipId: { readonly column: 'membershipId' };
-                readonly roleId: { readonly column: 'roleId' };
-                readonly deleted: { readonly column: 'deleted' };
-                readonly deletedAt: { readonly column: 'deletedAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
               };
             };
           };
@@ -5371,7 +5121,7 @@ type ContractBase = Omit<
               readonly memberships: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Membership';
+                  readonly model: 'OrganizationMembership';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -5387,10 +5137,10 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['organizationId'];
                 };
               };
-              readonly plans: {
+              readonly planAssignments: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'OrganizationPlan';
+                  readonly model: 'OrganizationPlanAssignment';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -5431,7 +5181,263 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly OrganizationPlan: {
+          readonly OrganizationMembership: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly joinedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly deleted: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly deletedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly organization: {
+                readonly to: {
+                  readonly namespace: 'core' & NamespaceId;
+                  readonly model: 'Organization';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['organizationId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly branchAssignments: {
+                readonly to: {
+                  readonly namespace: 'core' & NamespaceId;
+                  readonly model: 'OrganizationMembershipBranch';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['membershipId'];
+                };
+              };
+              readonly roleAssignments: {
+                readonly to: {
+                  readonly namespace: 'core' & NamespaceId;
+                  readonly model: 'OrganizationMembershipRole';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['membershipId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'OrganizationMembership';
+              readonly namespaceId: 'core';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly status: { readonly column: 'status' };
+                readonly joinedAt: { readonly column: 'joinedAt' };
+                readonly deleted: { readonly column: 'deleted' };
+                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly OrganizationMembershipBranch: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly membershipId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly branchId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly deleted: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly deletedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly membership: {
+                readonly to: {
+                  readonly namespace: 'core' & NamespaceId;
+                  readonly model: 'OrganizationMembership';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['membershipId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly branch: {
+                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'Branch' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['branchId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'OrganizationMembershipBranch';
+              readonly namespaceId: 'core';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly membershipId: { readonly column: 'membershipId' };
+                readonly branchId: { readonly column: 'branchId' };
+                readonly deleted: { readonly column: 'deleted' };
+                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
+          readonly OrganizationMembershipRole: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly membershipId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly roleId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly deleted: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly deletedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly membership: {
+                readonly to: {
+                  readonly namespace: 'core' & NamespaceId;
+                  readonly model: 'OrganizationMembership';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['membershipId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly role: {
+                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'Role' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['roleId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'OrganizationMembershipRole';
+              readonly namespaceId: 'core';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly membershipId: { readonly column: 'membershipId' };
+                readonly roleId: { readonly column: 'roleId' };
+                readonly deleted: { readonly column: 'deleted' };
+                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
+          readonly OrganizationPlanAssignment: {
             readonly fields: {
               readonly id: {
                 readonly nullable: false;
@@ -5528,7 +5534,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'OrganizationPlan';
+              readonly table: 'OrganizationPlanAssignment';
               readonly namespaceId: 'core';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -5640,7 +5646,7 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
-              readonly configuration: {
+              readonly entitlements: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/jsonb@1' };
               };
@@ -5652,7 +5658,7 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly active: {
+              readonly isActive: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
               };
@@ -5674,10 +5680,10 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly organizations: {
+              readonly organizationAssignments: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'OrganizationPlan';
+                  readonly model: 'OrganizationPlanAssignment';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -5697,10 +5703,10 @@ type ContractBase = Omit<
                 readonly type: { readonly column: 'type' };
                 readonly vertical: { readonly column: 'vertical' };
                 readonly durationDays: { readonly column: 'durationDays' };
-                readonly configuration: { readonly column: 'configuration' };
+                readonly entitlements: { readonly column: 'entitlements' };
                 readonly priceMinor: { readonly column: 'priceMinor' };
                 readonly currency: { readonly column: 'currency' };
-                readonly active: { readonly column: 'active' };
+                readonly isActive: { readonly column: 'isActive' };
                 readonly deleted: { readonly column: 'deleted' };
                 readonly deletedAt: { readonly column: 'deletedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
@@ -5770,7 +5776,7 @@ type ContractBase = Omit<
               readonly membershipRoles: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'MembershipRole';
+                  readonly model: 'OrganizationMembershipRole';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -5869,84 +5875,6 @@ type ContractBase = Omit<
               };
             };
           };
-          readonly Session: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly userId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly refreshTokenHash: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly ipAddress: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly userAgent: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly expiresAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly lastUsedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly revokedAt: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: {
-              readonly user: {
-                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'User' };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['userId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'Session';
-              readonly namespaceId: 'core';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly userId: { readonly column: 'userId' };
-                readonly refreshTokenHash: { readonly column: 'refreshTokenHash' };
-                readonly ipAddress: { readonly column: 'ipAddress' };
-                readonly userAgent: { readonly column: 'userAgent' };
-                readonly expiresAt: { readonly column: 'expiresAt' };
-                readonly lastUsedAt: { readonly column: 'lastUsedAt' };
-                readonly revokedAt: { readonly column: 'revokedAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
           readonly User: {
             readonly fields: {
               readonly id: {
@@ -5999,10 +5927,10 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly authorization: {
+              readonly credential: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Authorization';
+                  readonly model: 'UserCredential';
                 };
                 readonly cardinality: '1:1';
                 readonly on: {
@@ -6010,10 +5938,10 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['userId'];
                 };
               };
-              readonly sessions: {
+              readonly authSessions: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Session';
+                  readonly model: 'AuthSession';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -6024,7 +5952,7 @@ type ContractBase = Omit<
               readonly memberships: {
                 readonly to: {
                   readonly namespace: 'core' & NamespaceId;
-                  readonly model: 'Membership';
+                  readonly model: 'OrganizationMembership';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -6055,6 +5983,84 @@ type ContractBase = Omit<
                 readonly phone: { readonly column: 'phone' };
                 readonly status: { readonly column: 'status' };
                 readonly emailVerifiedAt: { readonly column: 'emailVerifiedAt' };
+                readonly deleted: { readonly column: 'deleted' };
+                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly UserCredential: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly passwordHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly passwordChangedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly failedAttempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly lockedUntil: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly deleted: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly deletedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'core' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'UserCredential';
+              readonly namespaceId: 'core';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly passwordHash: { readonly column: 'passwordHash' };
+                readonly passwordChangedAt: { readonly column: 'passwordChangedAt' };
+                readonly failedAttempts: { readonly column: 'failedAttempts' };
+                readonly lockedUntil: { readonly column: 'lockedUntil' };
                 readonly deleted: { readonly column: 'deleted' };
                 readonly deletedAt: { readonly column: 'deletedAt' };
                 readonly createdAt: { readonly column: 'createdAt' };
@@ -6100,7 +6106,7 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly professionalMembershipId: {
+              readonly practitionerMembershipId: {
                 readonly nullable: false;
                 readonly type: {
                   readonly kind: 'scalar';
@@ -6124,11 +6130,11 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly startsAt: {
+              readonly scheduledStartAt: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
               };
-              readonly endsAt: {
+              readonly scheduledEndAt: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
               };
@@ -6152,11 +6158,11 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly cancelledAt: {
+              readonly canceledAt: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamp@1' };
               };
-              readonly cancelledByMembershipId: {
+              readonly canceledByMembershipId: {
                 readonly nullable: true;
                 readonly type: {
                   readonly kind: 'scalar';
@@ -6257,24 +6263,24 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'appointments';
+              readonly table: 'Appointment';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly branchId: { readonly column: 'branchId' };
                 readonly patientId: { readonly column: 'patientId' };
-                readonly professionalMembershipId: { readonly column: 'professionalMembershipId' };
+                readonly practitionerMembershipId: { readonly column: 'practitionerMembershipId' };
                 readonly serviceId: { readonly column: 'serviceId' };
                 readonly treatmentId: { readonly column: 'treatmentId' };
-                readonly startsAt: { readonly column: 'startsAt' };
-                readonly endsAt: { readonly column: 'endsAt' };
+                readonly scheduledStartAt: { readonly column: 'scheduledStartAt' };
+                readonly scheduledEndAt: { readonly column: 'scheduledEndAt' };
                 readonly status: { readonly column: 'status' };
                 readonly reason: { readonly column: 'reason' };
                 readonly notes: { readonly column: 'notes' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
-                readonly cancelledAt: { readonly column: 'cancelledAt' };
-                readonly cancelledByMembershipId: { readonly column: 'cancelledByMembershipId' };
+                readonly canceledAt: { readonly column: 'canceledAt' };
+                readonly canceledByMembershipId: { readonly column: 'canceledByMembershipId' };
                 readonly cancellationReason: { readonly column: 'cancellationReason' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
@@ -6361,7 +6367,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'appointment_services';
+              readonly table: 'AppointmentService';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -6426,7 +6432,7 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly professionalMembershipId: {
+              readonly practitionerMembershipId: {
                 readonly nullable: false;
                 readonly type: {
                   readonly kind: 'scalar';
@@ -6446,19 +6452,19 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly diagnosis: {
+              readonly diagnosisSummary: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly procedurePerformed: {
+              readonly procedureSummary: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly evolution: {
+              readonly progressNotes: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly recommendations: {
+              readonly patientInstructions: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
@@ -6549,7 +6555,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'clinical_encounters';
+              readonly table: 'ClinicalEncounter';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -6558,14 +6564,14 @@ type ContractBase = Omit<
                 readonly patientId: { readonly column: 'patientId' };
                 readonly appointmentId: { readonly column: 'appointmentId' };
                 readonly treatmentId: { readonly column: 'treatmentId' };
-                readonly professionalMembershipId: { readonly column: 'professionalMembershipId' };
+                readonly practitionerMembershipId: { readonly column: 'practitionerMembershipId' };
                 readonly startedAt: { readonly column: 'startedAt' };
                 readonly endedAt: { readonly column: 'endedAt' };
                 readonly chiefComplaint: { readonly column: 'chiefComplaint' };
-                readonly diagnosis: { readonly column: 'diagnosis' };
-                readonly procedurePerformed: { readonly column: 'procedurePerformed' };
-                readonly evolution: { readonly column: 'evolution' };
-                readonly recommendations: { readonly column: 'recommendations' };
+                readonly diagnosisSummary: { readonly column: 'diagnosisSummary' };
+                readonly procedureSummary: { readonly column: 'procedureSummary' };
+                readonly progressNotes: { readonly column: 'progressNotes' };
+                readonly patientInstructions: { readonly column: 'patientInstructions' };
                 readonly notes: { readonly column: 'notes' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
@@ -6747,7 +6753,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'clinical_files';
+              readonly table: 'ClinicalFile';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -6769,114 +6775,6 @@ type ContractBase = Omit<
                 readonly uploadedByMembershipId: { readonly column: 'uploadedByMembershipId' };
                 readonly deleted: { readonly column: 'deleted' };
                 readonly deletedAt: { readonly column: 'deletedAt' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly ClinicalHistory: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly organizationId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly patientId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly medicalHistory: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly allergies: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly currentMedications: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly dentalHistory: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly relevantConditions: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly observations: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly createdByMembershipId: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly updatedByMembershipId: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 36 };
-                };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
-              };
-            };
-            readonly relations: {
-              readonly patient: {
-                readonly to: {
-                  readonly namespace: 'dentistry' & NamespaceId;
-                  readonly model: 'Patient';
-                };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['patientId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'clinical_histories';
-              readonly namespaceId: 'dentistry';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly organizationId: { readonly column: 'organizationId' };
-                readonly patientId: { readonly column: 'patientId' };
-                readonly medicalHistory: { readonly column: 'medicalHistory' };
-                readonly allergies: { readonly column: 'allergies' };
-                readonly currentMedications: { readonly column: 'currentMedications' };
-                readonly dentalHistory: { readonly column: 'dentalHistory' };
-                readonly relevantConditions: { readonly column: 'relevantConditions' };
-                readonly observations: { readonly column: 'observations' };
-                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
-                readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -6932,7 +6830,7 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly active: {
+              readonly isActive: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
               };
@@ -7008,7 +6906,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'dental_services';
+              readonly table: 'DentalService';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -7021,7 +6919,7 @@ type ContractBase = Omit<
                 readonly basePriceMinor: { readonly column: 'basePriceMinor' };
                 readonly labCostMinor: { readonly column: 'labCostMinor' };
                 readonly currency: { readonly column: 'currency' };
-                readonly active: { readonly column: 'active' };
+                readonly isActive: { readonly column: 'isActive' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
                 readonly createdAt: { readonly column: 'createdAt' };
@@ -7106,7 +7004,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'dental_service_supplies';
+              readonly table: 'DentalServiceSupply';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -7219,10 +7117,10 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly clinicalHistory: {
+              readonly healthProfile: {
                 readonly to: {
                   readonly namespace: 'dentistry' & NamespaceId;
-                  readonly model: 'ClinicalHistory';
+                  readonly model: 'PatientHealthProfile';
                 };
                 readonly cardinality: '1:1';
                 readonly on: {
@@ -7287,7 +7185,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'patients';
+              readonly table: 'Patient';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -7307,6 +7205,114 @@ type ContractBase = Omit<
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
                 readonly deleted: { readonly column: 'deleted' };
                 readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly PatientHealthProfile: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly patientId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly medicalHistory: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly allergies: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly currentMedications: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly dentalHistory: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly relevantConditions: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly observations: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdByMembershipId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly updatedByMembershipId: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly patient: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'Patient';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['patientId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'PatientHealthProfile';
+              readonly namespaceId: 'dentistry';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly patientId: { readonly column: 'patientId' };
+                readonly medicalHistory: { readonly column: 'medicalHistory' };
+                readonly allergies: { readonly column: 'allergies' };
+                readonly currentMedications: { readonly column: 'currentMedications' };
+                readonly dentalHistory: { readonly column: 'dentalHistory' };
+                readonly relevantConditions: { readonly column: 'relevantConditions' };
+                readonly observations: { readonly column: 'observations' };
+                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
+                readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -7474,7 +7480,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'payments';
+              readonly table: 'Payment';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -7572,7 +7578,7 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'radiographs';
+              readonly table: 'Radiograph';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
@@ -7623,7 +7629,7 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
-              readonly responsibleMembershipId: {
+              readonly practitionerMembershipId: {
                 readonly nullable: true;
                 readonly type: {
                   readonly kind: 'scalar';
@@ -7655,7 +7661,7 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly diagnosis: {
+              readonly diagnosisSummary: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
@@ -7757,21 +7763,21 @@ type ContractBase = Omit<
               };
             };
             readonly storage: {
-              readonly table: 'treatments';
+              readonly table: 'Treatment';
               readonly namespaceId: 'dentistry';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly patientId: { readonly column: 'patientId' };
                 readonly serviceId: { readonly column: 'serviceId' };
-                readonly responsibleMembershipId: { readonly column: 'responsibleMembershipId' };
+                readonly practitionerMembershipId: { readonly column: 'practitionerMembershipId' };
                 readonly status: { readonly column: 'status' };
                 readonly startedAt: { readonly column: 'startedAt' };
                 readonly endedAt: { readonly column: 'endedAt' };
                 readonly estimatedSessions: { readonly column: 'estimatedSessions' };
                 readonly agreedPriceMinor: { readonly column: 'agreedPriceMinor' };
                 readonly currency: { readonly column: 'currency' };
-                readonly diagnosis: { readonly column: 'diagnosis' };
+                readonly diagnosisSummary: { readonly column: 'diagnosisSummary' };
                 readonly notes: { readonly column: 'notes' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
@@ -7810,7 +7816,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'appointment_services';
+            readonly table: 'Appointment';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7818,7 +7824,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'appointment_services';
+            readonly table: 'Appointment';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7827,7 +7833,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'appointments';
+            readonly table: 'AppointmentService';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7835,7 +7841,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'appointments';
+            readonly table: 'AppointmentService';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7852,7 +7858,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'core';
-            readonly table: 'Authorization';
+            readonly table: 'AuthSession';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7860,7 +7866,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'core';
-            readonly table: 'Authorization';
+            readonly table: 'AuthSession';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7886,7 +7892,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_encounters';
+            readonly table: 'ClinicalEncounter';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7894,7 +7900,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_encounters';
+            readonly table: 'ClinicalEncounter';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7903,7 +7909,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_files';
+            readonly table: 'ClinicalFile';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7911,7 +7917,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_files';
+            readonly table: 'ClinicalFile';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7920,7 +7926,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_histories';
+            readonly table: 'DentalService';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7928,7 +7934,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'clinical_histories';
+            readonly table: 'DentalService';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -7937,7 +7943,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'dental_service_supplies';
+            readonly table: 'DentalServiceSupply';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -7945,61 +7951,11 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'dental_service_supplies';
+            readonly table: 'DentalServiceSupply';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
           readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'dentistry';
-            readonly table: 'dental_services';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'dentistry';
-            readonly table: 'dental_services';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'Membership';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'Membership';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'MembershipBranch';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'MembershipRole';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
         },
         {
           readonly ref: {
@@ -8021,7 +7977,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'core';
-            readonly table: 'OrganizationPlan';
+            readonly table: 'OrganizationMembership';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -8029,7 +7985,40 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'core';
-            readonly table: 'OrganizationPlan';
+            readonly table: 'OrganizationMembership';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'OrganizationMembershipBranch';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'OrganizationMembershipRole';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'OrganizationPlanAssignment';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'OrganizationPlanAssignment';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -8038,7 +8027,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'patients';
+            readonly table: 'Patient';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -8046,7 +8035,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'patients';
+            readonly table: 'Patient';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -8055,7 +8044,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'payments';
+            readonly table: 'PatientHealthProfile';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -8063,7 +8052,24 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'payments';
+            readonly table: 'PatientHealthProfile';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'Payment';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'Payment';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -8106,7 +8112,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'radiographs';
+            readonly table: 'Radiograph';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -8114,7 +8120,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'radiographs';
+            readonly table: 'Radiograph';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -8147,25 +8153,8 @@ type ContractBase = Omit<
         },
         {
           readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'Session';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'core';
-            readonly table: 'Session';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'treatments';
+            readonly table: 'Treatment';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
@@ -8173,7 +8162,7 @@ type ContractBase = Omit<
         {
           readonly ref: {
             readonly namespace: 'dentistry';
-            readonly table: 'treatments';
+            readonly table: 'Treatment';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -8191,6 +8180,23 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'core';
             readonly table: 'User';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'UserCredential';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'core';
+            readonly table: 'UserCredential';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };

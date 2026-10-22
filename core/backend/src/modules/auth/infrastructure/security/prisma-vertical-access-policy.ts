@@ -8,7 +8,7 @@ export class PrismaVerticalAccessPolicy extends VerticalAccessPolicy {
   constructor(private readonly prisma: PrismaService) { super(); }
 
   async canAccessDentistry(organizationId: string, now: Date): Promise<boolean> {
-    const assignment = await this.prisma.orm.core.OrganizationPlan.where({
+    const assignment = await this.prisma.orm.core.OrganizationPlanAssignment.where({
       organizationId: toUuid36(organizationId),
       vertical: 'DENTISTRY',
     }).first();
@@ -20,6 +20,6 @@ export class PrismaVerticalAccessPolicy extends VerticalAccessPolicy {
     ) return false;
 
     const plan = await this.prisma.orm.core.Plan.first({ id: assignment.planId });
-    return Boolean(plan && plan.vertical === 'DENTISTRY' && plan.active && !plan.deleted);
+    return Boolean(plan && plan.vertical === 'DENTISTRY' && plan.isActive && !plan.deleted);
   }
 }

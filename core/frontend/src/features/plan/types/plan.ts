@@ -10,17 +10,17 @@ export type Plan = Readonly<{
   type: PlanType;
   vertical: PlanVertical;
   durationDays: number;
-  configuration: Record<string, unknown>;
+  entitlements: Record<string, unknown>;
   priceMinor: number | null;
   currency: string | null;
-  active: boolean;
+  isActive: boolean;
   deleted: boolean;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }>;
 
-export type PlanAssignment = Readonly<{
+export type OrganizationPlanAssignment = Readonly<{
   id: string;
   organizationId: string;
   organizationName: string;
@@ -48,13 +48,13 @@ export type CreatePlanPayload = {
   type: PlanType;
   vertical: PlanVertical;
   durationDays: number;
-  configuration: Record<string, never>;
+  entitlements: Record<string, never>;
   priceMinor?: number;
   currency?: string;
 };
 
-export type UpdatePlanPayload = Partial<Omit<CreatePlanPayload, 'code' | 'vertical' | 'configuration'>> & {
-  active?: boolean;
+export type UpdatePlanPayload = Partial<Omit<CreatePlanPayload, 'code' | 'vertical' | 'entitlements'>> & {
+  isActive?: boolean;
 };
 
 export type AssignPlanPayload = {planId: string; status: 'ACTIVE' | 'TRIALING'; startsAt: string};

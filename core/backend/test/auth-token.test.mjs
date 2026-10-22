@@ -38,7 +38,7 @@ test('Core no autoriza permisos cuando la organización está inactiva', async (
     permissions: ['users:read'],
   };
   const prisma = { orm: { core: {
-    Membership: { first: async () => ({
+    OrganizationMembership: { first: async () => ({
       id: principal.membershipId,
       userId: principal.sub,
       organizationId: principal.organizationId,
@@ -69,10 +69,10 @@ test('Dentistry requiere asignación vigente y plan activo', async () => {
     startsAt: new Date('2026-09-01T00:00:00Z'),
     endsAt: new Date('2026-10-01T00:00:00Z'),
   };
-  const plan = { vertical: 'DENTISTRY', active: true, deleted: false };
+  const plan = { vertical: 'DENTISTRY', isActive: true, deleted: false };
   const prisma = {
     orm: { core: {
-      OrganizationPlan: { where: () => ({ first: async () => assignment }) },
+      OrganizationPlanAssignment: { where: () => ({ first: async () => assignment }) },
       Plan: { first: async () => plan },
     } },
   };
@@ -85,7 +85,7 @@ test('Dentistry requiere asignación vigente y plan activo', async () => {
   assignment.endsAt = new Date('2026-09-29T12:00:00Z');
   assert.equal(await policy.canAccessDentistry(org, now), false);
   assignment.endsAt = new Date('2026-10-01T00:00:00Z');
-  plan.active = false;
+  plan.isActive = false;
   assert.equal(await policy.canAccessDentistry(org, now), false);
 });
 

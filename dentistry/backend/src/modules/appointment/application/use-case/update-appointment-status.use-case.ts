@@ -37,7 +37,7 @@ export class UpdateAppointmentStatusUseCase {
       appointment.markNoShow();
     } else if (command.status === 'SCHEDULED') {
       appointment.schedule();
-    } else if (command.status === 'CANCELLED') {
+    } else if (command.status === 'CANCELED') {
       throw new BadRequestException(
         'Para cancelar una cita utilice el endpoint de cancelación.',
       );

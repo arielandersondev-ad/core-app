@@ -20,12 +20,12 @@ export interface AppointmentDto {
   organizationId: string;
   branchId: string;
   patientId: string;
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
   serviceId: string;
   serviceIds?: string[];
   treatmentId?: string | null;
-  startsAt: string;
-  endsAt: string;
+  scheduledStartAt: string;
+  scheduledEndAt: string;
   status:
     | "SCHEDULED"
     | "CONFIRMED"
@@ -33,12 +33,12 @@ export interface AppointmentDto {
     | "IN_PROGRESS"
     | "COMPLETED"
     | "NO_SHOW"
-    | "CANCELLED";
+    | "CANCELED";
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
-  cancelledAt?: string | null;
-  cancelledByMembershipId?: string | null;
+  canceledAt?: string | null;
+  canceledByMembershipId?: string | null;
   cancellationReason?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -49,12 +49,12 @@ export interface CreateAppointmentRequest {
   organizationId?: string;
   branchId: string;
   patientId: string;
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string;
-  startsAt: string;
-  endsAt: string;
+  scheduledStartAt: string;
+  scheduledEndAt: string;
   reason?: string;
   notes?: string;
   createdByMembershipId?: string;
@@ -64,7 +64,7 @@ export interface ListAppointmentsParams {
   organizationId?: string;
   branchId?: string;
   patientId?: string;
-  professionalMembershipId?: string;
+  practitionerMembershipId?: string;
   date?: string;
   startDate?: string;
   endDate?: string;
@@ -160,7 +160,7 @@ export async function updateAppointmentStatus(
 export async function cancelAppointment(
   id: string,
   payload: {
-    cancelledByMembershipId?: string;
+    canceledByMembershipId?: string;
     reason: string;
   },
 ): Promise<AppointmentDto> {

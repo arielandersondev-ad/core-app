@@ -4,37 +4,73 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "Appointment": {
+      "model": "Appointment",
+      "namespace": "dentistry"
+    },
+    "AppointmentService": {
+      "model": "AppointmentService",
+      "namespace": "dentistry"
+    },
     "AuditLog": {
       "model": "AuditLog",
       "namespace": "core"
     },
-    "Authorization": {
-      "model": "Authorization",
+    "AuthSession": {
+      "model": "AuthSession",
       "namespace": "core"
     },
     "Branch": {
       "model": "Branch",
       "namespace": "core"
     },
-    "Membership": {
-      "model": "Membership",
-      "namespace": "core"
+    "ClinicalEncounter": {
+      "model": "ClinicalEncounter",
+      "namespace": "dentistry"
     },
-    "MembershipBranch": {
-      "model": "MembershipBranch",
-      "namespace": "core"
+    "ClinicalFile": {
+      "model": "ClinicalFile",
+      "namespace": "dentistry"
     },
-    "MembershipRole": {
-      "model": "MembershipRole",
-      "namespace": "core"
+    "DentalService": {
+      "model": "DentalService",
+      "namespace": "dentistry"
+    },
+    "DentalServiceSupply": {
+      "model": "DentalServiceSupply",
+      "namespace": "dentistry"
     },
     "Organization": {
       "model": "Organization",
       "namespace": "core"
     },
-    "OrganizationPlan": {
-      "model": "OrganizationPlan",
+    "OrganizationMembership": {
+      "model": "OrganizationMembership",
       "namespace": "core"
+    },
+    "OrganizationMembershipBranch": {
+      "model": "OrganizationMembershipBranch",
+      "namespace": "core"
+    },
+    "OrganizationMembershipRole": {
+      "model": "OrganizationMembershipRole",
+      "namespace": "core"
+    },
+    "OrganizationPlanAssignment": {
+      "model": "OrganizationPlanAssignment",
+      "namespace": "core"
+    },
+    "Patient": {
+      "model": "Patient",
+      "namespace": "dentistry"
+    },
+    "PatientHealthProfile": {
+      "model": "PatientHealthProfile",
+      "namespace": "dentistry"
+    },
+    "Payment": {
+      "model": "Payment",
+      "namespace": "dentistry"
     },
     "Permission": {
       "model": "Permission",
@@ -44,6 +80,10 @@
       "model": "Plan",
       "namespace": "core"
     },
+    "Radiograph": {
+      "model": "Radiograph",
+      "namespace": "dentistry"
+    },
     "Role": {
       "model": "Role",
       "namespace": "core"
@@ -52,57 +92,17 @@
       "model": "RolePermission",
       "namespace": "core"
     },
-    "Session": {
-      "model": "Session",
-      "namespace": "core"
+    "Treatment": {
+      "model": "Treatment",
+      "namespace": "dentistry"
     },
     "User": {
       "model": "User",
       "namespace": "core"
     },
-    "appointment_services": {
-      "model": "AppointmentService",
-      "namespace": "dentistry"
-    },
-    "appointments": {
-      "model": "Appointment",
-      "namespace": "dentistry"
-    },
-    "clinical_encounters": {
-      "model": "ClinicalEncounter",
-      "namespace": "dentistry"
-    },
-    "clinical_files": {
-      "model": "ClinicalFile",
-      "namespace": "dentistry"
-    },
-    "clinical_histories": {
-      "model": "ClinicalHistory",
-      "namespace": "dentistry"
-    },
-    "dental_service_supplies": {
-      "model": "DentalServiceSupply",
-      "namespace": "dentistry"
-    },
-    "dental_services": {
-      "model": "DentalService",
-      "namespace": "dentistry"
-    },
-    "patients": {
-      "model": "Patient",
-      "namespace": "dentistry"
-    },
-    "payments": {
-      "model": "Payment",
-      "namespace": "dentistry"
-    },
-    "radiographs": {
-      "model": "Radiograph",
-      "namespace": "dentistry"
-    },
-    "treatments": {
-      "model": "Treatment",
-      "namespace": "dentistry"
+    "UserCredential": {
+      "model": "UserCredential",
+      "namespace": "core"
     }
   },
   "domain": {
@@ -288,7 +288,7 @@
               "table": "AuditLog"
             }
           },
-          "Authorization": {
+          "AuthSession": {
             "fields": {
               "createdAt": {
                 "nullable": false,
@@ -297,24 +297,10 @@
                   "kind": "scalar"
                 }
               },
-              "deleted": {
+              "expiresAt": {
                 "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
-              "deletedAt": {
-                "nullable": true,
                 "type": {
                   "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "failedAttempts": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -328,24 +314,31 @@
                   }
                 }
               },
-              "lockedUntil": {
+              "ipAddress": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastUsedAt": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/timestamp@1",
                   "kind": "scalar"
                 }
               },
-              "passwordChangedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "passwordHash": {
+              "refreshTokenHash": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "revokedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
                   "kind": "scalar"
                 }
               },
@@ -353,6 +346,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "userAgent": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -389,36 +389,36 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
-                "deleted": {
-                  "column": "deleted"
-                },
-                "deletedAt": {
-                  "column": "deletedAt"
-                },
-                "failedAttempts": {
-                  "column": "failedAttempts"
+                "expiresAt": {
+                  "column": "expiresAt"
                 },
                 "id": {
                   "column": "id"
                 },
-                "lockedUntil": {
-                  "column": "lockedUntil"
+                "ipAddress": {
+                  "column": "ipAddress"
                 },
-                "passwordChangedAt": {
-                  "column": "passwordChangedAt"
+                "lastUsedAt": {
+                  "column": "lastUsedAt"
                 },
-                "passwordHash": {
-                  "column": "passwordHash"
+                "refreshTokenHash": {
+                  "column": "refreshTokenHash"
+                },
+                "revokedAt": {
+                  "column": "revokedAt"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
+                },
+                "userAgent": {
+                  "column": "userAgent"
                 },
                 "userId": {
                   "column": "userId"
                 }
               },
               "namespaceId": "core",
-              "table": "Authorization"
+              "table": "AuthSession"
             }
           },
           "Branch": {
@@ -597,7 +597,7 @@
                   ]
                 },
                 "to": {
-                  "model": "MembershipBranch",
+                  "model": "OrganizationMembershipBranch",
                   "namespace": "core"
                 }
               },
@@ -682,399 +682,6 @@
               },
               "namespaceId": "core",
               "table": "Branch"
-            }
-          },
-          "Membership": {
-            "fields": {
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "deleted": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
-              "deletedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "joinedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "organizationId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "status": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "updatedAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "userId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              }
-            },
-            "relations": {
-              "branches": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "membershipId"
-                  ]
-                },
-                "to": {
-                  "model": "MembershipBranch",
-                  "namespace": "core"
-                }
-              },
-              "organization": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "organizationId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Organization",
-                  "namespace": "core"
-                }
-              },
-              "roles": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "membershipId"
-                  ]
-                },
-                "to": {
-                  "model": "MembershipRole",
-                  "namespace": "core"
-                }
-              },
-              "user": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "userId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "User",
-                  "namespace": "core"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "deleted": {
-                  "column": "deleted"
-                },
-                "deletedAt": {
-                  "column": "deletedAt"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "joinedAt": {
-                  "column": "joinedAt"
-                },
-                "organizationId": {
-                  "column": "organizationId"
-                },
-                "status": {
-                  "column": "status"
-                },
-                "updatedAt": {
-                  "column": "updatedAt"
-                },
-                "userId": {
-                  "column": "userId"
-                }
-              },
-              "namespaceId": "core",
-              "table": "Membership"
-            }
-          },
-          "MembershipBranch": {
-            "fields": {
-              "branchId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "deleted": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
-              "deletedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "membershipId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              }
-            },
-            "relations": {
-              "branch": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "branchId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Branch",
-                  "namespace": "core"
-                }
-              },
-              "membership": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "membershipId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Membership",
-                  "namespace": "core"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "branchId": {
-                  "column": "branchId"
-                },
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "deleted": {
-                  "column": "deleted"
-                },
-                "deletedAt": {
-                  "column": "deletedAt"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "membershipId": {
-                  "column": "membershipId"
-                }
-              },
-              "namespaceId": "core",
-              "table": "MembershipBranch"
-            }
-          },
-          "MembershipRole": {
-            "fields": {
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "deleted": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
-              "deletedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "membershipId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "roleId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              }
-            },
-            "relations": {
-              "membership": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "membershipId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Membership",
-                  "namespace": "core"
-                }
-              },
-              "role": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "roleId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Role",
-                  "namespace": "core"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "deleted": {
-                  "column": "deleted"
-                },
-                "deletedAt": {
-                  "column": "deletedAt"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "membershipId": {
-                  "column": "membershipId"
-                },
-                "roleId": {
-                  "column": "roleId"
-                }
-              },
-              "namespaceId": "core",
-              "table": "MembershipRole"
             }
           },
           "Organization": {
@@ -1223,11 +830,11 @@
                   ]
                 },
                 "to": {
-                  "model": "Membership",
+                  "model": "OrganizationMembership",
                   "namespace": "core"
                 }
               },
-              "plans": {
+              "planAssignments": {
                 "cardinality": "1:N",
                 "on": {
                   "localFields": [
@@ -1238,7 +845,7 @@
                   ]
                 },
                 "to": {
-                  "model": "OrganizationPlan",
+                  "model": "OrganizationPlanAssignment",
                   "namespace": "core"
                 }
               },
@@ -1307,7 +914,400 @@
               "table": "Organization"
             }
           },
-          "OrganizationPlan": {
+          "OrganizationMembership": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "deleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "joinedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "branchAssignments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "membershipId"
+                  ]
+                },
+                "to": {
+                  "model": "OrganizationMembershipBranch",
+                  "namespace": "core"
+                }
+              },
+              "organization": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "organizationId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Organization",
+                  "namespace": "core"
+                }
+              },
+              "roleAssignments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "membershipId"
+                  ]
+                },
+                "to": {
+                  "model": "OrganizationMembershipRole",
+                  "namespace": "core"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "core"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deleted": {
+                  "column": "deleted"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "joinedAt": {
+                  "column": "joinedAt"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "core",
+              "table": "OrganizationMembership"
+            }
+          },
+          "OrganizationMembershipBranch": {
+            "fields": {
+              "branchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "deleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "membershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "branch": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "branchId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Branch",
+                  "namespace": "core"
+                }
+              },
+              "membership": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "membershipId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "OrganizationMembership",
+                  "namespace": "core"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "branchId": {
+                  "column": "branchId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deleted": {
+                  "column": "deleted"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "membershipId": {
+                  "column": "membershipId"
+                }
+              },
+              "namespaceId": "core",
+              "table": "OrganizationMembershipBranch"
+            }
+          },
+          "OrganizationMembershipRole": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "deleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "membershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "roleId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "membership": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "membershipId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "OrganizationMembership",
+                  "namespace": "core"
+                }
+              },
+              "role": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "roleId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Role",
+                  "namespace": "core"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deleted": {
+                  "column": "deleted"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "membershipId": {
+                  "column": "membershipId"
+                },
+                "roleId": {
+                  "column": "roleId"
+                }
+              },
+              "namespaceId": "core",
+              "table": "OrganizationMembershipRole"
+            }
+          },
+          "OrganizationPlanAssignment": {
             "fields": {
               "canceledAt": {
                 "nullable": true,
@@ -1505,7 +1505,7 @@
                 }
               },
               "namespaceId": "core",
-              "table": "OrganizationPlan"
+              "table": "OrganizationPlanAssignment"
             }
           },
           "Permission": {
@@ -1600,24 +1600,10 @@
           },
           "Plan": {
             "fields": {
-              "active": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
               "code": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "configuration": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/jsonb@1",
                   "kind": "scalar"
                 }
               },
@@ -1663,6 +1649,13 @@
                   "kind": "scalar"
                 }
               },
+              "entitlements": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/jsonb@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -1671,6 +1664,13 @@
                   "typeParams": {
                     "length": 36
                   }
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
                 }
               },
               "name": {
@@ -1710,7 +1710,7 @@
               }
             },
             "relations": {
-              "organizations": {
+              "organizationAssignments": {
                 "cardinality": "1:N",
                 "on": {
                   "localFields": [
@@ -1721,21 +1721,15 @@
                   ]
                 },
                 "to": {
-                  "model": "OrganizationPlan",
+                  "model": "OrganizationPlanAssignment",
                   "namespace": "core"
                 }
               }
             },
             "storage": {
               "fields": {
-                "active": {
-                  "column": "active"
-                },
                 "code": {
                   "column": "code"
-                },
-                "configuration": {
-                  "column": "configuration"
                 },
                 "createdAt": {
                   "column": "createdAt"
@@ -1755,8 +1749,14 @@
                 "durationDays": {
                   "column": "durationDays"
                 },
+                "entitlements": {
+                  "column": "entitlements"
+                },
                 "id": {
                   "column": "id"
+                },
+                "isActive": {
+                  "column": "isActive"
                 },
                 "name": {
                   "column": "name"
@@ -1862,7 +1862,7 @@
                   ]
                 },
                 "to": {
-                  "model": "MembershipRole",
+                  "model": "OrganizationMembershipRole",
                   "namespace": "core"
                 }
               },
@@ -2022,139 +2022,6 @@
               "table": "RolePermission"
             }
           },
-          "Session": {
-            "fields": {
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "expiresAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "ipAddress": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "lastUsedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "refreshTokenHash": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "revokedAt": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "updatedAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "userAgent": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "userId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              }
-            },
-            "relations": {
-              "user": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "userId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "User",
-                  "namespace": "core"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "expiresAt": {
-                  "column": "expiresAt"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "ipAddress": {
-                  "column": "ipAddress"
-                },
-                "lastUsedAt": {
-                  "column": "lastUsedAt"
-                },
-                "refreshTokenHash": {
-                  "column": "refreshTokenHash"
-                },
-                "revokedAt": {
-                  "column": "revokedAt"
-                },
-                "updatedAt": {
-                  "column": "updatedAt"
-                },
-                "userAgent": {
-                  "column": "userAgent"
-                },
-                "userId": {
-                  "column": "userId"
-                }
-              },
-              "namespaceId": "core",
-              "table": "Session"
-            }
-          },
           "User": {
             "fields": {
               "createdAt": {
@@ -2254,7 +2121,22 @@
                   "namespace": "core"
                 }
               },
-              "authorization": {
+              "authSessions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "AuthSession",
+                  "namespace": "core"
+                }
+              },
+              "credential": {
                 "cardinality": "1:1",
                 "on": {
                   "localFields": [
@@ -2265,7 +2147,7 @@
                   ]
                 },
                 "to": {
-                  "model": "Authorization",
+                  "model": "UserCredential",
                   "namespace": "core"
                 }
               },
@@ -2280,22 +2162,7 @@
                   ]
                 },
                 "to": {
-                  "model": "Membership",
-                  "namespace": "core"
-                }
-              },
-              "sessions": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "userId"
-                  ]
-                },
-                "to": {
-                  "model": "Session",
+                  "model": "OrganizationMembership",
                   "namespace": "core"
                 }
               }
@@ -2339,6 +2206,139 @@
               "namespaceId": "core",
               "table": "User"
             }
+          },
+          "UserCredential": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "deleted": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "failedAttempts": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "lockedUntil": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordChangedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "core"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deleted": {
+                  "column": "deleted"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "failedAttempts": {
+                  "column": "failedAttempts"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "lockedUntil": {
+                  "column": "lockedUntil"
+                },
+                "passwordChangedAt": {
+                  "column": "passwordChangedAt"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "core",
+              "table": "UserCredential"
+            }
           }
         }
       },
@@ -2356,21 +2356,14 @@
                   }
                 }
               },
-              "cancellationReason": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "cancelledAt": {
+              "canceledAt": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/timestamp@1",
                   "kind": "scalar"
                 }
               },
-              "cancelledByMembershipId": {
+              "canceledByMembershipId": {
                 "nullable": true,
                 "type": {
                   "codecId": "sql/char@1",
@@ -2378,6 +2371,13 @@
                   "typeParams": {
                     "length": 36
                   }
+                }
+              },
+              "cancellationReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
                 }
               },
               "createdAt": {
@@ -2395,13 +2395,6 @@
                   "typeParams": {
                     "length": 36
                   }
-                }
-              },
-              "endsAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
                 }
               },
               "id": {
@@ -2441,7 +2434,7 @@
                   }
                 }
               },
-              "professionalMembershipId": {
+              "practitionerMembershipId": {
                 "nullable": false,
                 "type": {
                   "codecId": "sql/char@1",
@@ -2458,6 +2451,20 @@
                   "kind": "scalar"
                 }
               },
+              "scheduledEndAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
+              "scheduledStartAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp@1",
+                  "kind": "scalar"
+                }
+              },
               "serviceId": {
                 "nullable": false,
                 "type": {
@@ -2466,13 +2473,6 @@
                   "typeParams": {
                     "length": 36
                   }
-                }
-              },
-              "startsAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
                 }
               },
               "status": {
@@ -2612,23 +2612,20 @@
                 "branchId": {
                   "column": "branchId"
                 },
+                "canceledAt": {
+                  "column": "canceledAt"
+                },
+                "canceledByMembershipId": {
+                  "column": "canceledByMembershipId"
+                },
                 "cancellationReason": {
                   "column": "cancellationReason"
-                },
-                "cancelledAt": {
-                  "column": "cancelledAt"
-                },
-                "cancelledByMembershipId": {
-                  "column": "cancelledByMembershipId"
                 },
                 "createdAt": {
                   "column": "createdAt"
                 },
                 "createdByMembershipId": {
                   "column": "createdByMembershipId"
-                },
-                "endsAt": {
-                  "column": "endsAt"
                 },
                 "id": {
                   "column": "id"
@@ -2642,17 +2639,20 @@
                 "patientId": {
                   "column": "patientId"
                 },
-                "professionalMembershipId": {
-                  "column": "professionalMembershipId"
+                "practitionerMembershipId": {
+                  "column": "practitionerMembershipId"
                 },
                 "reason": {
                   "column": "reason"
                 },
+                "scheduledEndAt": {
+                  "column": "scheduledEndAt"
+                },
+                "scheduledStartAt": {
+                  "column": "scheduledStartAt"
+                },
                 "serviceId": {
                   "column": "serviceId"
-                },
-                "startsAt": {
-                  "column": "startsAt"
                 },
                 "status": {
                   "column": "status"
@@ -2665,7 +2665,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "appointments"
+              "table": "Appointment"
             }
           },
           "AppointmentService": {
@@ -2809,7 +2809,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "appointment_services"
+              "table": "AppointmentService"
             }
           },
           "ClinicalEncounter": {
@@ -2858,7 +2858,7 @@
                   }
                 }
               },
-              "diagnosis": {
+              "diagnosisSummary": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
@@ -2869,13 +2869,6 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/timestamp@1",
-                  "kind": "scalar"
-                }
-              },
-              "evolution": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -2916,14 +2909,14 @@
                   }
                 }
               },
-              "procedurePerformed": {
+              "patientInstructions": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
-              "professionalMembershipId": {
+              "practitionerMembershipId": {
                 "nullable": false,
                 "type": {
                   "codecId": "sql/char@1",
@@ -2933,7 +2926,14 @@
                   }
                 }
               },
-              "recommendations": {
+              "procedureSummary": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "progressNotes": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
@@ -3069,14 +3069,11 @@
                 "createdByMembershipId": {
                   "column": "createdByMembershipId"
                 },
-                "diagnosis": {
-                  "column": "diagnosis"
+                "diagnosisSummary": {
+                  "column": "diagnosisSummary"
                 },
                 "endedAt": {
                   "column": "endedAt"
-                },
-                "evolution": {
-                  "column": "evolution"
                 },
                 "id": {
                   "column": "id"
@@ -3090,14 +3087,17 @@
                 "patientId": {
                   "column": "patientId"
                 },
-                "procedurePerformed": {
-                  "column": "procedurePerformed"
+                "patientInstructions": {
+                  "column": "patientInstructions"
                 },
-                "professionalMembershipId": {
-                  "column": "professionalMembershipId"
+                "practitionerMembershipId": {
+                  "column": "practitionerMembershipId"
                 },
-                "recommendations": {
-                  "column": "recommendations"
+                "procedureSummary": {
+                  "column": "procedureSummary"
+                },
+                "progressNotes": {
+                  "column": "progressNotes"
                 },
                 "startedAt": {
                   "column": "startedAt"
@@ -3113,7 +3113,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "clinical_encounters"
+              "table": "ClinicalEncounter"
             }
           },
           "ClinicalFile": {
@@ -3431,190 +3431,11 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "clinical_files"
-            }
-          },
-          "ClinicalHistory": {
-            "fields": {
-              "allergies": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "createdAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "createdByMembershipId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "currentMedications": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "dentalHistory": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "id": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "medicalHistory": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "observations": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "organizationId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "patientId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "relevantConditions": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "updatedAt": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/timestamptz@1",
-                  "kind": "scalar"
-                }
-              },
-              "updatedByMembershipId": {
-                "nullable": true,
-                "type": {
-                  "codecId": "sql/char@1",
-                  "kind": "scalar",
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              }
-            },
-            "relations": {
-              "patient": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "patientId"
-                  ],
-                  "targetFields": [
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Patient",
-                  "namespace": "dentistry"
-                }
-              }
-            },
-            "storage": {
-              "fields": {
-                "allergies": {
-                  "column": "allergies"
-                },
-                "createdAt": {
-                  "column": "createdAt"
-                },
-                "createdByMembershipId": {
-                  "column": "createdByMembershipId"
-                },
-                "currentMedications": {
-                  "column": "currentMedications"
-                },
-                "dentalHistory": {
-                  "column": "dentalHistory"
-                },
-                "id": {
-                  "column": "id"
-                },
-                "medicalHistory": {
-                  "column": "medicalHistory"
-                },
-                "observations": {
-                  "column": "observations"
-                },
-                "organizationId": {
-                  "column": "organizationId"
-                },
-                "patientId": {
-                  "column": "patientId"
-                },
-                "relevantConditions": {
-                  "column": "relevantConditions"
-                },
-                "updatedAt": {
-                  "column": "updatedAt"
-                },
-                "updatedByMembershipId": {
-                  "column": "updatedByMembershipId"
-                }
-              },
-              "namespaceId": "dentistry",
-              "table": "clinical_histories"
+              "table": "ClinicalFile"
             }
           },
           "DentalService": {
             "fields": {
-              "active": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/bool@1",
-                  "kind": "scalar"
-                }
-              },
               "basePriceMinor": {
                 "nullable": true,
                 "type": {
@@ -3682,6 +3503,13 @@
                   "typeParams": {
                     "length": 36
                   }
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
                 }
               },
               "labCostMinor": {
@@ -3790,9 +3618,6 @@
             },
             "storage": {
               "fields": {
-                "active": {
-                  "column": "active"
-                },
                 "basePriceMinor": {
                   "column": "basePriceMinor"
                 },
@@ -3820,6 +3645,9 @@
                 "id": {
                   "column": "id"
                 },
+                "isActive": {
+                  "column": "isActive"
+                },
                 "labCostMinor": {
                   "column": "labCostMinor"
                 },
@@ -3837,7 +3665,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "dental_services"
+              "table": "DentalService"
             }
           },
           "DentalServiceSupply": {
@@ -3986,7 +3814,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "dental_service_supplies"
+              "table": "DentalServiceSupply"
             }
           },
           "Patient": {
@@ -4183,7 +4011,7 @@
                   "namespace": "dentistry"
                 }
               },
-              "clinicalHistory": {
+              "healthProfile": {
                 "cardinality": "1:1",
                 "on": {
                   "localFields": [
@@ -4194,7 +4022,7 @@
                   ]
                 },
                 "to": {
-                  "model": "ClinicalHistory",
+                  "model": "PatientHealthProfile",
                   "namespace": "dentistry"
                 }
               },
@@ -4290,7 +4118,179 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "patients"
+              "table": "Patient"
+            }
+          },
+          "PatientHealthProfile": {
+            "fields": {
+              "allergies": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdByMembershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "currentMedications": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "dentalHistory": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "medicalHistory": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "observations": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "patientId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "relevantConditions": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedByMembershipId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "patient": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "patientId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Patient",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "allergies": {
+                  "column": "allergies"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdByMembershipId": {
+                  "column": "createdByMembershipId"
+                },
+                "currentMedications": {
+                  "column": "currentMedications"
+                },
+                "dentalHistory": {
+                  "column": "dentalHistory"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "medicalHistory": {
+                  "column": "medicalHistory"
+                },
+                "observations": {
+                  "column": "observations"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "patientId": {
+                  "column": "patientId"
+                },
+                "relevantConditions": {
+                  "column": "relevantConditions"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "updatedByMembershipId": {
+                  "column": "updatedByMembershipId"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "PatientHealthProfile"
             }
           },
           "Payment": {
@@ -4579,7 +4579,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "payments"
+              "table": "Payment"
             }
           },
           "Radiograph": {
@@ -4725,7 +4725,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "radiographs"
+              "table": "Radiograph"
             }
           },
           "Treatment": {
@@ -4761,7 +4761,7 @@
                   "kind": "scalar"
                 }
               },
-              "diagnosis": {
+              "diagnosisSummary": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
@@ -4819,7 +4819,7 @@
                   }
                 }
               },
-              "responsibleMembershipId": {
+              "practitionerMembershipId": {
                 "nullable": true,
                 "type": {
                   "codecId": "sql/char@1",
@@ -4977,8 +4977,8 @@
                 "currency": {
                   "column": "currency"
                 },
-                "diagnosis": {
-                  "column": "diagnosis"
+                "diagnosisSummary": {
+                  "column": "diagnosisSummary"
                 },
                 "endedAt": {
                   "column": "endedAt"
@@ -4998,8 +4998,8 @@
                 "patientId": {
                   "column": "patientId"
                 },
-                "responsibleMembershipId": {
-                  "column": "responsibleMembershipId"
+                "practitionerMembershipId": {
+                  "column": "practitionerMembershipId"
                 },
                 "serviceId": {
                   "column": "serviceId"
@@ -5018,7 +5018,7 @@
                 }
               },
               "namespaceId": "dentistry",
-              "table": "treatments"
+              "table": "Treatment"
             }
           }
         }
@@ -5187,7 +5187,7 @@
               },
               "uniques": []
             },
-            "Authorization": {
+            "AuthSession": {
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz@1",
@@ -5198,27 +5198,9 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
-                "deleted": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "deletedAt": {
+                "expiresAt": {
                   "codecId": "pg/timestamp@1",
                   "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "failedAttempts": {
-                  "codecId": "pg/int4@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": 0
-                  },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "id": {
@@ -5229,25 +5211,35 @@
                     "length": 36
                   }
                 },
-                "lockedUntil": {
+                "ipAddress": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "lastUsedAt": {
                   "codecId": "pg/timestamp@1",
                   "nativeType": "timestamp",
                   "nullable": true
                 },
-                "passwordChangedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "passwordHash": {
+                "refreshTokenHash": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "revokedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz@1",
                   "nativeType": "timestamptz",
                   "nullable": false
+                },
+                "userAgent": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "userId": {
                   "codecId": "sql/char@1",
@@ -5265,7 +5257,7 @@
                       "userId"
                     ],
                     "namespaceId": "core",
-                    "tableName": "Authorization"
+                    "tableName": "AuthSession"
                   },
                   "target": {
                     "columns": [
@@ -5276,19 +5268,22 @@
                   }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "AuthSession_userId_idx_a489d58a",
+                  "prefix": "AuthSession_userId_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
                 ]
               },
-              "uniques": [
-                {
-                  "columns": [
-                    "userId"
-                  ]
-                }
-              ]
+              "uniques": []
             },
             "Branch": {
               "columns": {
@@ -5446,352 +5441,6 @@
               },
               "uniques": []
             },
-            "Membership": {
-              "columns": {
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "deleted": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "deletedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "joinedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "organizationId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "status": {
-                  "codecId": "pg/text@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": "INVITED"
-                  },
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "userId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "userId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Membership"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "User"
-                  }
-                },
-                {
-                  "source": {
-                    "columns": [
-                      "organizationId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Membership"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Organization"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "organizationId"
-                  ],
-                  "name": "Membership_organizationId_idx_2e17ef41",
-                  "prefix": "Membership_organizationId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "userId"
-                  ],
-                  "name": "Membership_userId_idx_a489d58a",
-                  "prefix": "Membership_userId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
-            "MembershipBranch": {
-              "columns": {
-                "branchId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "deleted": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "deletedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "membershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "membershipId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "MembershipBranch"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Membership"
-                  }
-                },
-                {
-                  "source": {
-                    "columns": [
-                      "branchId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "MembershipBranch"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Branch"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "branchId"
-                  ],
-                  "name": "MembershipBranch_branchId_idx_d04da5bb",
-                  "prefix": "MembershipBranch_branchId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "membershipId"
-                  ],
-                  "name": "MembershipBranch_membershipId_idx_fdcfb7b5",
-                  "prefix": "MembershipBranch_membershipId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
-            "MembershipRole": {
-              "columns": {
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "deleted": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "deletedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "membershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "roleId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "membershipId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "MembershipRole"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Membership"
-                  }
-                },
-                {
-                  "source": {
-                    "columns": [
-                      "roleId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "MembershipRole"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Role"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "membershipId"
-                  ],
-                  "name": "MembershipRole_membershipId_idx_fdcfb7b5",
-                  "prefix": "MembershipRole_membershipId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "roleId"
-                  ],
-                  "name": "MembershipRole_roleId_idx_ffccc9a4",
-                  "prefix": "MembershipRole_roleId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
             "Organization": {
               "columns": {
                 "country": {
@@ -5889,7 +5538,353 @@
               },
               "uniques": []
             },
-            "OrganizationPlan": {
+            "OrganizationMembership": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deleted": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "joinedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "INVITED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembership"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "User"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "organizationId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembership"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "Organization"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "organizationId"
+                  ],
+                  "name": "OrganizationMembership_organizationId_idx_2e17ef41",
+                  "prefix": "OrganizationMembership_organizationId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "OrganizationMembership_userId_idx_a489d58a",
+                  "prefix": "OrganizationMembership_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "OrganizationMembershipBranch": {
+              "columns": {
+                "branchId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deleted": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "membershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "membershipId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembershipBranch"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembership"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "branchId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembershipBranch"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "Branch"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "branchId"
+                  ],
+                  "name": "OrganizationMembershipBranch_branchId_idx_d04da5bb",
+                  "prefix": "OrganizationMembershipBranch_branchId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "membershipId"
+                  ],
+                  "name": "OrganizationMembershipBranch_membershipId_idx_fdcfb7b5",
+                  "prefix": "OrganizationMembershipBranch_membershipId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "OrganizationMembershipRole": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deleted": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "membershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "roleId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "membershipId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembershipRole"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembership"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "roleId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "OrganizationMembershipRole"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "Role"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "membershipId"
+                  ],
+                  "name": "OrganizationMembershipRole_membershipId_idx_fdcfb7b5",
+                  "prefix": "OrganizationMembershipRole_membershipId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "roleId"
+                  ],
+                  "name": "OrganizationMembershipRole_roleId_idx_ffccc9a4",
+                  "prefix": "OrganizationMembershipRole_roleId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "OrganizationPlanAssignment": {
               "columns": {
                 "canceledAt": {
                   "codecId": "pg/timestamp@1",
@@ -5999,7 +5994,7 @@
                       "organizationId"
                     ],
                     "namespaceId": "core",
-                    "tableName": "OrganizationPlan"
+                    "tableName": "OrganizationPlanAssignment"
                   },
                   "target": {
                     "columns": [
@@ -6015,7 +6010,7 @@
                       "planId"
                     ],
                     "namespaceId": "core",
-                    "tableName": "OrganizationPlan"
+                    "tableName": "OrganizationPlanAssignment"
                   },
                   "target": {
                     "columns": [
@@ -6031,16 +6026,16 @@
                   "columns": [
                     "organizationId"
                   ],
-                  "name": "OrganizationPlan_organizationId_idx_2e17ef41",
-                  "prefix": "OrganizationPlan_organizationId_idx",
+                  "name": "OrganizationPlanAssignment_organizationId_idx_2e17ef41",
+                  "prefix": "OrganizationPlanAssignment_organizationId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "planId"
                   ],
-                  "name": "OrganizationPlan_planId_idx_5b32079a",
-                  "prefix": "OrganizationPlan_planId_idx",
+                  "name": "OrganizationPlanAssignment_planId_idx_5b32079a",
+                  "prefix": "OrganizationPlanAssignment_planId_idx",
                   "unique": false
                 },
                 {
@@ -6126,23 +6121,9 @@
             },
             "Plan": {
               "columns": {
-                "active": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": true
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
                 "code": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
-                  "nullable": false
-                },
-                "configuration": {
-                  "codecId": "pg/jsonb@1",
-                  "nativeType": "jsonb",
                   "nullable": false
                 },
                 "createdAt": {
@@ -6183,6 +6164,11 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "entitlements": {
+                  "codecId": "pg/jsonb@1",
+                  "nativeType": "jsonb",
+                  "nullable": false
+                },
                 "id": {
                   "codecId": "sql/char@1",
                   "nativeType": "character",
@@ -6190,6 +6176,15 @@
                   "typeParams": {
                     "length": 36
                   }
+                },
+                "isActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
                 },
                 "name": {
                   "codecId": "pg/text@1",
@@ -6437,104 +6432,6 @@
               },
               "uniques": []
             },
-            "Session": {
-              "columns": {
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "expiresAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": false
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "ipAddress": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "lastUsedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "refreshTokenHash": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "revokedAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "userAgent": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "userId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "userId"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "Session"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "core",
-                    "tableName": "User"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "userId"
-                  ],
-                  "name": "Session_userId_idx_a489d58a",
-                  "prefix": "Session_userId_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
             "User": {
               "columns": {
                 "createdAt": {
@@ -6622,6 +6519,109 @@
                   ]
                 }
               ]
+            },
+            "UserCredential": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deleted": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "failedAttempts": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "lockedUntil": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "passwordChangedAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "UserCredential"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "core",
+                    "tableName": "User"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "userId"
+                  ]
+                }
+              ]
             }
           }
         },
@@ -6631,7 +6631,256 @@
       "dentistry": {
         "entries": {
           "table": {
-            "appointment_services": {
+            "Appointment": {
+              "columns": {
+                "branchId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "canceledAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": true
+                },
+                "canceledByMembershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "cancellationReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "patientId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "practitionerMembershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "scheduledEndAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": false
+                },
+                "scheduledStartAt": {
+                  "codecId": "pg/timestamp@1",
+                  "nativeType": "timestamp",
+                  "nullable": false
+                },
+                "serviceId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "SCHEDULED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "treatmentId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "patientId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Appointment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Patient"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "serviceId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Appointment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "DentalService"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "treatmentId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Appointment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Treatment"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "patientId"
+                  ],
+                  "name": "Appointment_patientId_idx_e5f07e88",
+                  "prefix": "Appointment_patientId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "serviceId"
+                  ],
+                  "name": "Appointment_serviceId_idx_b5d9acbf",
+                  "prefix": "Appointment_serviceId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "treatmentId"
+                  ],
+                  "name": "Appointment_treatmentId_idx_18e96195",
+                  "prefix": "Appointment_treatmentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "branchId",
+                    "scheduledStartAt"
+                  ],
+                  "name": "appt_org_branch_start_idx_4ed245ce",
+                  "prefix": "appt_org_branch_start_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "practitionerMembershipId",
+                    "scheduledStartAt"
+                  ],
+                  "name": "appt_org_prof_start_idx_88b66a83",
+                  "prefix": "appt_org_prof_start_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "scheduledStartAt"
+                  ],
+                  "name": "appt_org_start_idx_5a65ff85",
+                  "prefix": "appt_org_start_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "patientId",
+                    "scheduledStartAt"
+                  ],
+                  "name": "appt_patient_start_idx_f2accb68",
+                  "prefix": "appt_patient_start_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "AppointmentService": {
               "columns": {
                 "appointmentId": {
                   "codecId": "sql/char@1",
@@ -6702,14 +6951,14 @@
                       "appointmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointment_services"
+                    "tableName": "AppointmentService"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointments"
+                    "tableName": "Appointment"
                   }
                 },
                 {
@@ -6718,14 +6967,14 @@
                       "serviceId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointment_services"
+                    "tableName": "AppointmentService"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "dental_services"
+                    "tableName": "DentalService"
                   }
                 }
               ],
@@ -6734,16 +6983,16 @@
                   "columns": [
                     "appointmentId"
                   ],
-                  "name": "appointment_services_appointmentId_idx_682a8b58",
-                  "prefix": "appointment_services_appointmentId_idx",
+                  "name": "AppointmentService_appointmentId_idx_682a8b58",
+                  "prefix": "AppointmentService_appointmentId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "serviceId"
                   ],
-                  "name": "appointment_services_serviceId_idx_b5d9acbf",
-                  "prefix": "appointment_services_serviceId_idx",
+                  "name": "AppointmentService_serviceId_idx_b5d9acbf",
+                  "prefix": "AppointmentService_serviceId_idx",
                   "unique": false
                 },
                 {
@@ -6772,256 +7021,7 @@
               },
               "uniques": []
             },
-            "appointments": {
-              "columns": {
-                "branchId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "cancellationReason": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "cancelledAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "cancelledByMembershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": true,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "createdByMembershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "endsAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": false
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "notes": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "organizationId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "patientId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "professionalMembershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "reason": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "serviceId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "startsAt": {
-                  "codecId": "pg/timestamp@1",
-                  "nativeType": "timestamp",
-                  "nullable": false
-                },
-                "status": {
-                  "codecId": "pg/text@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": "SCHEDULED"
-                  },
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "treatmentId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": true,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                }
-              },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "patientId"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "appointments"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "patients"
-                  }
-                },
-                {
-                  "source": {
-                    "columns": [
-                      "serviceId"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "appointments"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "dental_services"
-                  }
-                },
-                {
-                  "source": {
-                    "columns": [
-                      "treatmentId"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "appointments"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "treatments"
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "columns": [
-                    "patientId"
-                  ],
-                  "name": "appointments_patientId_idx_e5f07e88",
-                  "prefix": "appointments_patientId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "serviceId"
-                  ],
-                  "name": "appointments_serviceId_idx_b5d9acbf",
-                  "prefix": "appointments_serviceId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "treatmentId"
-                  ],
-                  "name": "appointments_treatmentId_idx_18e96195",
-                  "prefix": "appointments_treatmentId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "organizationId",
-                    "branchId",
-                    "startsAt"
-                  ],
-                  "name": "appt_org_branch_start_idx_dd7b9f0f",
-                  "prefix": "appt_org_branch_start_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "organizationId",
-                    "professionalMembershipId",
-                    "startsAt"
-                  ],
-                  "name": "appt_org_prof_start_idx_9d9d088f",
-                  "prefix": "appt_org_prof_start_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "organizationId",
-                    "startsAt"
-                  ],
-                  "name": "appt_org_start_idx_4d98ff60",
-                  "prefix": "appt_org_start_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "patientId",
-                    "startsAt"
-                  ],
-                  "name": "appt_patient_start_idx_e7cd3706",
-                  "prefix": "appt_patient_start_idx",
-                  "unique": false
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
-            "clinical_encounters": {
+            "ClinicalEncounter": {
               "columns": {
                 "appointmentId": {
                   "codecId": "sql/char@1",
@@ -7061,7 +7061,7 @@
                     "length": 36
                   }
                 },
-                "diagnosis": {
+                "diagnosisSummary": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -7069,11 +7069,6 @@
                 "endedAt": {
                   "codecId": "pg/timestamp@1",
                   "nativeType": "timestamp",
-                  "nullable": true
-                },
-                "evolution": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
                   "nullable": true
                 },
                 "id": {
@@ -7105,12 +7100,12 @@
                     "length": 36
                   }
                 },
-                "procedurePerformed": {
+                "patientInstructions": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
                 },
-                "professionalMembershipId": {
+                "practitionerMembershipId": {
                   "codecId": "sql/char@1",
                   "nativeType": "character",
                   "nullable": false,
@@ -7118,7 +7113,12 @@
                     "length": 36
                   }
                 },
-                "recommendations": {
+                "procedureSummary": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "progressNotes": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -7157,14 +7157,14 @@
                       "patientId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_encounters"
+                    "tableName": "ClinicalEncounter"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "patients"
+                    "tableName": "Patient"
                   }
                 },
                 {
@@ -7173,14 +7173,14 @@
                       "appointmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_encounters"
+                    "tableName": "ClinicalEncounter"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointments"
+                    "tableName": "Appointment"
                   }
                 },
                 {
@@ -7189,14 +7189,14 @@
                       "treatmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_encounters"
+                    "tableName": "ClinicalEncounter"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "treatments"
+                    "tableName": "Treatment"
                   }
                 }
               ],
@@ -7205,16 +7205,16 @@
                   "columns": [
                     "patientId"
                   ],
-                  "name": "clinical_encounters_patientId_idx_e5f07e88",
-                  "prefix": "clinical_encounters_patientId_idx",
+                  "name": "ClinicalEncounter_patientId_idx_e5f07e88",
+                  "prefix": "ClinicalEncounter_patientId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "treatmentId"
                   ],
-                  "name": "clinical_encounters_treatmentId_idx_18e96195",
-                  "prefix": "clinical_encounters_treatmentId_idx",
+                  "name": "ClinicalEncounter_treatmentId_idx_18e96195",
+                  "prefix": "ClinicalEncounter_treatmentId_idx",
                   "unique": false
                 },
                 {
@@ -7230,10 +7230,10 @@
                 {
                   "columns": [
                     "organizationId",
-                    "professionalMembershipId",
+                    "practitionerMembershipId",
                     "startedAt"
                   ],
-                  "name": "enc_org_prof_start_idx_ccff3a92",
+                  "name": "enc_org_prof_start_idx_3b92be85",
                   "prefix": "enc_org_prof_start_idx",
                   "unique": false
                 }
@@ -7251,7 +7251,7 @@
                 }
               ]
             },
-            "clinical_files": {
+            "ClinicalFile": {
               "columns": {
                 "appointmentId": {
                   "codecId": "sql/char@1",
@@ -7395,14 +7395,14 @@
                       "patientId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_files"
+                    "tableName": "ClinicalFile"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "patients"
+                    "tableName": "Patient"
                   }
                 },
                 {
@@ -7411,14 +7411,14 @@
                       "clinicalEncounterId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_files"
+                    "tableName": "ClinicalFile"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_encounters"
+                    "tableName": "ClinicalEncounter"
                   }
                 },
                 {
@@ -7427,14 +7427,14 @@
                       "treatmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_files"
+                    "tableName": "ClinicalFile"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "treatments"
+                    "tableName": "Treatment"
                   }
                 },
                 {
@@ -7443,18 +7443,42 @@
                       "appointmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_files"
+                    "tableName": "ClinicalFile"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointments"
+                    "tableName": "Appointment"
                   }
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "appointmentId"
+                  ],
+                  "name": "ClinicalFile_appointmentId_idx_682a8b58",
+                  "prefix": "ClinicalFile_appointmentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "patientId"
+                  ],
+                  "name": "ClinicalFile_patientId_idx_e5f07e88",
+                  "prefix": "ClinicalFile_patientId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "treatmentId"
+                  ],
+                  "name": "ClinicalFile_treatmentId_idx_18e96195",
+                  "prefix": "ClinicalFile_treatmentId_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "bucket",
@@ -7480,30 +7504,6 @@
                   "name": "cf_org_patient_idx_7c150195",
                   "prefix": "cf_org_patient_idx",
                   "unique": false
-                },
-                {
-                  "columns": [
-                    "appointmentId"
-                  ],
-                  "name": "clinical_files_appointmentId_idx_682a8b58",
-                  "prefix": "clinical_files_appointmentId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "patientId"
-                  ],
-                  "name": "clinical_files_patientId_idx_e5f07e88",
-                  "prefix": "clinical_files_patientId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "treatmentId"
-                  ],
-                  "name": "clinical_files_treatmentId_idx_18e96195",
-                  "prefix": "clinical_files_treatmentId_idx",
-                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -7513,9 +7513,19 @@
               },
               "uniques": []
             },
-            "clinical_histories": {
+            "DentalService": {
               "columns": {
-                "allergies": {
+                "basePriceMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "category": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "code": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -7537,14 +7547,19 @@
                     "length": 36
                   }
                 },
-                "currentMedications": {
+                "currency": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
                 },
-                "dentalHistory": {
+                "description": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
+                  "nullable": true
+                },
+                "durationMinutes": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
                   "nullable": true
                 },
                 "id": {
@@ -7555,15 +7570,24 @@
                     "length": 36
                   }
                 },
-                "medicalHistory": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
+                "isActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "labCostMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
                   "nullable": true
                 },
-                "observations": {
+                "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
-                  "nullable": true
+                  "nullable": false
                 },
                 "organizationId": {
                   "codecId": "sql/char@1",
@@ -7572,19 +7596,6 @@
                   "typeParams": {
                     "length": 36
                   }
-                },
-                "patientId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "relevantConditions": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz@1",
@@ -7600,32 +7611,34 @@
                   }
                 }
               },
-              "foreignKeys": [
-                {
-                  "source": {
-                    "columns": [
-                      "patientId"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "clinical_histories"
-                  },
-                  "target": {
-                    "columns": [
-                      "id"
-                    ],
-                    "namespaceId": "dentistry",
-                    "tableName": "patients"
-                  }
-                }
-              ],
+              "foreignKeys": [],
               "indexes": [
                 {
                   "columns": [
-                    "organizationId"
+                    "organizationId",
+                    "isActive"
                   ],
-                  "name": "ch_org_idx_2e17ef41",
-                  "prefix": "ch_org_idx",
+                  "name": "svc_org_active_idx_c89f2a48",
+                  "prefix": "svc_org_active_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "category"
+                  ],
+                  "name": "svc_org_category_idx_a0ddcd26",
+                  "prefix": "svc_org_category_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "code"
+                  ],
+                  "name": "svc_org_code_uidx_e11c0273",
+                  "prefix": "svc_org_code_uidx",
+                  "unique": true
                 }
               ],
               "primaryKey": {
@@ -7633,15 +7646,9 @@
                   "id"
                 ]
               },
-              "uniques": [
-                {
-                  "columns": [
-                    "patientId"
-                  ]
-                }
-              ]
+              "uniques": []
             },
-            "dental_service_supplies": {
+            "DentalServiceSupply": {
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz@1",
@@ -7730,14 +7737,14 @@
                       "serviceId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "dental_service_supplies"
+                    "tableName": "DentalServiceSupply"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "dental_services"
+                    "tableName": "DentalService"
                   }
                 }
               ],
@@ -7746,8 +7753,8 @@
                   "columns": [
                     "serviceId"
                   ],
-                  "name": "dental_service_supplies_serviceId_idx_b5d9acbf",
-                  "prefix": "dental_service_supplies_serviceId_idx",
+                  "name": "DentalServiceSupply_serviceId_idx_b5d9acbf",
+                  "prefix": "DentalServiceSupply_serviceId_idx",
                   "unique": false
                 },
                 {
@@ -7767,142 +7774,7 @@
               },
               "uniques": []
             },
-            "dental_services": {
-              "columns": {
-                "active": {
-                  "codecId": "pg/bool@1",
-                  "default": {
-                    "kind": "literal",
-                    "value": true
-                  },
-                  "nativeType": "bool",
-                  "nullable": false
-                },
-                "basePriceMinor": {
-                  "codecId": "pg/int4@1",
-                  "nativeType": "int4",
-                  "nullable": true
-                },
-                "category": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "code": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "createdAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "default": {
-                    "expression": "now()",
-                    "kind": "function"
-                  },
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "createdByMembershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "currency": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "description": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "durationMinutes": {
-                  "codecId": "pg/int4@1",
-                  "nativeType": "int4",
-                  "nullable": true
-                },
-                "id": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "labCostMinor": {
-                  "codecId": "pg/int4@1",
-                  "nativeType": "int4",
-                  "nullable": true
-                },
-                "name": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "organizationId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": false,
-                  "typeParams": {
-                    "length": 36
-                  }
-                },
-                "updatedAt": {
-                  "codecId": "pg/timestamptz@1",
-                  "nativeType": "timestamptz",
-                  "nullable": false
-                },
-                "updatedByMembershipId": {
-                  "codecId": "sql/char@1",
-                  "nativeType": "character",
-                  "nullable": true,
-                  "typeParams": {
-                    "length": 36
-                  }
-                }
-              },
-              "foreignKeys": [],
-              "indexes": [
-                {
-                  "columns": [
-                    "organizationId",
-                    "active"
-                  ],
-                  "name": "svc_org_active_idx_0c9a1852",
-                  "prefix": "svc_org_active_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "organizationId",
-                    "category"
-                  ],
-                  "name": "svc_org_category_idx_a0ddcd26",
-                  "prefix": "svc_org_category_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "organizationId",
-                    "code"
-                  ],
-                  "name": "svc_org_code_uidx_e11c0273",
-                  "prefix": "svc_org_code_uidx",
-                  "unique": true
-                }
-              ],
-              "primaryKey": {
-                "columns": [
-                  "id"
-                ]
-              },
-              "uniques": []
-            },
-            "patients": {
+            "Patient": {
               "columns": {
                 "address": {
                   "codecId": "pg/text@1",
@@ -8061,7 +7933,135 @@
               },
               "uniques": []
             },
-            "payments": {
+            "PatientHealthProfile": {
+              "columns": {
+                "allergies": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "currentMedications": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "dentalHistory": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "medicalHistory": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "observations": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "patientId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "relevantConditions": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "updatedByMembershipId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "patientId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "PatientHealthProfile"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Patient"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "organizationId"
+                  ],
+                  "name": "ch_org_idx_2e17ef41",
+                  "prefix": "ch_org_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "patientId"
+                  ]
+                }
+              ]
+            },
+            "Payment": {
               "columns": {
                 "amountMinor": {
                   "codecId": "pg/int4@1",
@@ -8201,14 +8201,14 @@
                       "patientId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "payments"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "patients"
+                    "tableName": "Patient"
                   }
                 },
                 {
@@ -8217,14 +8217,14 @@
                       "treatmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "payments"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "treatments"
+                    "tableName": "Treatment"
                   }
                 },
                 {
@@ -8233,14 +8233,14 @@
                       "appointmentId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "payments"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "appointments"
+                    "tableName": "Appointment"
                   }
                 },
                 {
@@ -8249,18 +8249,50 @@
                       "clinicalEncounterId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "payments"
+                    "tableName": "Payment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_encounters"
+                    "tableName": "ClinicalEncounter"
                   }
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "appointmentId"
+                  ],
+                  "name": "Payment_appointmentId_idx_682a8b58",
+                  "prefix": "Payment_appointmentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "clinicalEncounterId"
+                  ],
+                  "name": "Payment_clinicalEncounterId_idx_2139e386",
+                  "prefix": "Payment_clinicalEncounterId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "patientId"
+                  ],
+                  "name": "Payment_patientId_idx_e5f07e88",
+                  "prefix": "Payment_patientId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "treatmentId"
+                  ],
+                  "name": "Payment_treatmentId_idx_18e96195",
+                  "prefix": "Payment_treatmentId_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "organizationId",
@@ -8288,38 +8320,6 @@
                   "name": "pay_patient_paid_idx_c631bb8a",
                   "prefix": "pay_patient_paid_idx",
                   "unique": false
-                },
-                {
-                  "columns": [
-                    "appointmentId"
-                  ],
-                  "name": "payments_appointmentId_idx_682a8b58",
-                  "prefix": "payments_appointmentId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "clinicalEncounterId"
-                  ],
-                  "name": "payments_clinicalEncounterId_idx_2139e386",
-                  "prefix": "payments_clinicalEncounterId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "patientId"
-                  ],
-                  "name": "payments_patientId_idx_e5f07e88",
-                  "prefix": "payments_patientId_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
-                    "treatmentId"
-                  ],
-                  "name": "payments_treatmentId_idx_18e96195",
-                  "prefix": "payments_treatmentId_idx",
-                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -8329,7 +8329,7 @@
               },
               "uniques": []
             },
-            "radiographs": {
+            "Radiograph": {
               "columns": {
                 "clinicalFileId": {
                   "codecId": "sql/char@1",
@@ -8407,14 +8407,14 @@
                       "clinicalFileId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "radiographs"
+                    "tableName": "Radiograph"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "clinical_files"
+                    "tableName": "ClinicalFile"
                   }
                 }
               ],
@@ -8442,7 +8442,7 @@
                 }
               ]
             },
-            "treatments": {
+            "Treatment": {
               "columns": {
                 "agreedPriceMinor": {
                   "codecId": "pg/int4@1",
@@ -8471,7 +8471,7 @@
                   "nativeType": "text",
                   "nullable": true
                 },
-                "diagnosis": {
+                "diagnosisSummary": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -8515,7 +8515,7 @@
                     "length": 36
                   }
                 },
-                "responsibleMembershipId": {
+                "practitionerMembershipId": {
                   "codecId": "sql/char@1",
                   "nativeType": "character",
                   "nullable": true,
@@ -8566,14 +8566,14 @@
                       "patientId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "treatments"
+                    "tableName": "Treatment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "patients"
+                    "tableName": "Patient"
                   }
                 },
                 {
@@ -8582,14 +8582,14 @@
                       "serviceId"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "treatments"
+                    "tableName": "Treatment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "dentistry",
-                    "tableName": "dental_services"
+                    "tableName": "DentalService"
                   }
                 }
               ],
@@ -8598,16 +8598,16 @@
                   "columns": [
                     "patientId"
                   ],
-                  "name": "treatments_patientId_idx_e5f07e88",
-                  "prefix": "treatments_patientId_idx",
+                  "name": "Treatment_patientId_idx_e5f07e88",
+                  "prefix": "Treatment_patientId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "serviceId"
                   ],
-                  "name": "treatments_serviceId_idx_b5d9acbf",
-                  "prefix": "treatments_serviceId_idx",
+                  "name": "Treatment_serviceId_idx_b5d9acbf",
+                  "prefix": "Treatment_serviceId_idx",
                   "unique": false
                 },
                 {
@@ -8649,10 +8649,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "0ebda04f6a9e692ce82d511f100cd78a2f29836b1b82b73e3ecac8963ff6a6e2"
+    "storageHash": "826ded8772e9b65bde90c34fca480644ba91128c6488fb4760219a138a807945"
   },
   "execution": {
-    "executionHash": "c86f7f1825f4e24d0927fffdaefdfac28b4fc364112e94dc8cec87e8b2411109",
+    "executionHash": "75f0a26b5c8a4a7d7a3b6b147f40eccb9b283c9ca5ed9d52292e3399a1ace535",
     "mutations": {
       "defaults": [
         {
@@ -8663,7 +8663,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "appointment_services"
+            "table": "Appointment"
           }
         },
         {
@@ -8678,7 +8678,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "appointment_services"
+            "table": "Appointment"
           }
         },
         {
@@ -8689,7 +8689,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "appointments"
+            "table": "AppointmentService"
           }
         },
         {
@@ -8704,7 +8704,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "appointments"
+            "table": "AppointmentService"
           }
         },
         {
@@ -8726,7 +8726,7 @@
           "ref": {
             "column": "id",
             "namespace": "core",
-            "table": "Authorization"
+            "table": "AuthSession"
           }
         },
         {
@@ -8741,7 +8741,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "core",
-            "table": "Authorization"
+            "table": "AuthSession"
           }
         },
         {
@@ -8751,34 +8751,34 @@
           },
           "ref": {
             "column": "id",
+            "namespace": "core",
+            "table": "Branch"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
             "namespace": "core",
             "table": "Branch"
           }
         },
         {
           "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "core",
-            "table": "Branch"
-          }
-        },
-        {
-          "onCreate": {
             "id": "uuidv7",
             "kind": "generator"
           },
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "clinical_encounters"
+            "table": "ClinicalEncounter"
           }
         },
         {
@@ -8793,7 +8793,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "clinical_encounters"
+            "table": "ClinicalEncounter"
           }
         },
         {
@@ -8804,7 +8804,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "clinical_files"
+            "table": "ClinicalFile"
           }
         },
         {
@@ -8819,7 +8819,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "clinical_files"
+            "table": "ClinicalFile"
           }
         },
         {
@@ -8830,7 +8830,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "clinical_histories"
+            "table": "DentalService"
           }
         },
         {
@@ -8845,7 +8845,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "clinical_histories"
+            "table": "DentalService"
           }
         },
         {
@@ -8856,7 +8856,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "dental_service_supplies"
+            "table": "DentalServiceSupply"
           }
         },
         {
@@ -8871,81 +8871,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "dental_service_supplies"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv7",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
-            "namespace": "dentistry",
-            "table": "dental_services"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "dentistry",
-            "table": "dental_services"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv7",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
-            "namespace": "core",
-            "table": "Membership"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "core",
-            "table": "Membership"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv7",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
-            "namespace": "core",
-            "table": "MembershipBranch"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv7",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
-            "namespace": "core",
-            "table": "MembershipRole"
+            "table": "DentalServiceSupply"
           }
         },
         {
@@ -8982,7 +8908,7 @@
           "ref": {
             "column": "id",
             "namespace": "core",
-            "table": "OrganizationPlan"
+            "table": "OrganizationMembership"
           }
         },
         {
@@ -8997,7 +8923,55 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "core",
-            "table": "OrganizationPlan"
+            "table": "OrganizationMembership"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "core",
+            "table": "OrganizationMembershipBranch"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "core",
+            "table": "OrganizationMembershipRole"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "core",
+            "table": "OrganizationPlanAssignment"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "core",
+            "table": "OrganizationPlanAssignment"
           }
         },
         {
@@ -9008,7 +8982,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "patients"
+            "table": "Patient"
           }
         },
         {
@@ -9023,7 +8997,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "patients"
+            "table": "Patient"
           }
         },
         {
@@ -9034,7 +9008,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "payments"
+            "table": "PatientHealthProfile"
           }
         },
         {
@@ -9049,7 +9023,33 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "payments"
+            "table": "PatientHealthProfile"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "Payment"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "Payment"
           }
         },
         {
@@ -9112,7 +9112,7 @@
           "ref": {
             "column": "id",
             "namespace": "dentistry",
-            "table": "radiographs"
+            "table": "Radiograph"
           }
         },
         {
@@ -9127,7 +9127,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "radiographs"
+            "table": "Radiograph"
           }
         },
         {
@@ -9174,34 +9174,8 @@
           },
           "ref": {
             "column": "id",
-            "namespace": "core",
-            "table": "Session"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "onUpdate": {
-            "id": "timestampNow",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "updatedAt",
-            "namespace": "core",
-            "table": "Session"
-          }
-        },
-        {
-          "onCreate": {
-            "id": "uuidv7",
-            "kind": "generator"
-          },
-          "ref": {
-            "column": "id",
             "namespace": "dentistry",
-            "table": "treatments"
+            "table": "Treatment"
           }
         },
         {
@@ -9216,7 +9190,7 @@
           "ref": {
             "column": "updatedAt",
             "namespace": "dentistry",
-            "table": "treatments"
+            "table": "Treatment"
           }
         },
         {
@@ -9243,6 +9217,32 @@
             "column": "updatedAt",
             "namespace": "core",
             "table": "User"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "core",
+            "table": "UserCredential"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "core",
+            "table": "UserCredential"
           }
         }
       ]

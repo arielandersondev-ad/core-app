@@ -63,7 +63,7 @@ export async function proxyToDentistry(request: NextRequest, segments: string[])
 
   const backendUrl = new URL(`/${path}`, serverEnv.dentistryApiUrl);
   if (method === "GET" && path === "appointments") {
-    const allowed = new Set(["branchId", "patientId", "professionalMembershipId", "date", "startDate", "endDate", "status"]);
+    const allowed = new Set(["branchId", "patientId", "practitionerMembershipId", "date", "startDate", "endDate", "status"]);
     for (const [key, value] of request.nextUrl.searchParams) {
       if (!allowed.has(key) || value.length > 100) return jsonError("Filtro de citas inválido.", 400);
       backendUrl.searchParams.append(key, value);

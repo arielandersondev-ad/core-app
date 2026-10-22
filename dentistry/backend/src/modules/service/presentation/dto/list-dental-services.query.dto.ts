@@ -10,7 +10,7 @@ export class ListDentalServicesQueryDto {
 
   @IsOptional()
   @IsString()
-  active?: string;
+  isActive?: string;
 
   @IsOptional()
   @IsString()

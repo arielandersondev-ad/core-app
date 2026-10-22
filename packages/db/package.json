@@ -8,6 +8,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node ./scripts/copy-artifacts.mjs",
+    "test:semantic": "node --test tests/semantic-standardization.test.mjs",
     "contract:emit": "prisma-cli contract emit",
     "db:init": "prisma-cli db init",
     "db:update": "prisma-cli db update",

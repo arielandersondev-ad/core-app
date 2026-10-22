@@ -1,6 +1,6 @@
 export type AssignmentStatus = 'TRIALING' | 'ACTIVE' | 'SUSPENDED' | 'CANCELED';
 
-export type PlanAssignment = {
+export type OrganizationPlanAssignment = {
   id: string;
   organizationId: string;
   organizationName: string;

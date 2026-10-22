@@ -11,7 +11,7 @@ export class ListAppointmentsQueryDto {
 
   @IsOptional()
   @IsUUID()
-  professionalMembershipId?: string;
+  practitionerMembershipId?: string;
 
   @IsOptional()
   @IsDateString()

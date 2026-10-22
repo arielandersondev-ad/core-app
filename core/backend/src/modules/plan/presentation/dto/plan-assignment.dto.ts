@@ -38,7 +38,7 @@ export class VerticalParamDto {
   vertical!: string;
 }
 
-export class OrganizationPlanParamsDto extends VerticalParamDto {
+export class OrganizationPlanAssignmentParamsDto extends VerticalParamDto {
   @Matches(UUID_PATTERN)
   organizationId!: string;
 }

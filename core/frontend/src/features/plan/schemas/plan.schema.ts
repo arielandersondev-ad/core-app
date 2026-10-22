@@ -11,7 +11,7 @@ export const planFormSchema = z.object({
   durationDays: z.coerce.number().int().min(1, 'La duración debe ser mayor a cero.').max(3650),
   price: optionalMoney,
   currency: z.string().trim().length(3, 'Usa un código ISO de 3 letras.'),
-  active: z.boolean(),
+  isActive: z.boolean(),
 });
 
 export type PlanFormInput = z.input<typeof planFormSchema>;

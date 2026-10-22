@@ -31,7 +31,7 @@ export class ClinicController {
   ): Promise<ProfessionalDto[]> {
     if (!organizationId) return [];
 
-    const memberships = (await this.prisma.orm.core.Membership.where({
+    const memberships = (await this.prisma.orm.core.OrganizationMembership.where({
       organizationId: toUuid36(organizationId),
       deleted: false,
     }).all()) as any[];

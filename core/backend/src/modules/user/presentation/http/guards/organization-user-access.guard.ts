@@ -39,7 +39,7 @@ export class OrganizationUserAccessGuard implements CanActivate {
       throw new ForbiddenException('No tiene permisos para consultar usuarios');
     }
 
-    const links = await this.prisma.orm.core.MembershipBranch.where({
+    const links = await this.prisma.orm.core.OrganizationMembershipBranch.where({
       membershipId: toUuid36(principal.membershipId),
       deleted: false,
     }).all();

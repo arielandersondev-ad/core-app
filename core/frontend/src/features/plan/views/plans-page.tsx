@@ -7,7 +7,7 @@ import { Modal } from '@/shared/components/ui/Modal';
 import { PlanFormDialog } from '../components/plan-form-dialog';
 import { AssignPlanDialog } from '../components/assign-plan-dialog';
 import { useDeletePlan, usePlanAssignments, usePlans, useUpdateAssignmentStatus } from '../hooks/use-plans';
-import type { AssignmentStatus, Plan, PlanAssignment } from '../types/plan';
+import type { AssignmentStatus, Plan, OrganizationPlanAssignment } from '../types/plan';
 
 const dateFormat = new Intl.DateTimeFormat('es-BO', { dateStyle: 'medium' });
 const moneyFormat = (currency: string) => new Intl.NumberFormat('es-BO', { style: 'currency', currency });
@@ -23,7 +23,7 @@ export default function PlansPage() {
   const remove = useDeletePlan();
   const statusMutation = useUpdateAssignmentStatus();
   const [editing, setEditing] = useState<Plan | null | undefined>(undefined);
-  const [assigning, setAssigning] = useState<PlanAssignment | null | undefined>(undefined);
+  const [assigning, setAssigning] = useState<OrganizationPlanAssignment | null | undefined>(undefined);
   const [deleting, setDeleting] = useState<Plan | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const plans = plansQuery.data ?? [];
@@ -35,7 +35,7 @@ export default function PlansPage() {
     catch (error) { setActionError(errorMessage(error, 'No se pudo eliminar el plan.')); }
   }
 
-  async function changeStatus(assignment: PlanAssignment, status: 'ACTIVE' | 'SUSPENDED' | 'CANCELED') {
+  async function changeStatus(assignment: OrganizationPlanAssignment, status: 'ACTIVE' | 'SUSPENDED' | 'CANCELED') {
     let reason: string | undefined;
     if (status === 'SUSPENDED') {
       reason = window.prompt('Motivo de la suspensión:')?.trim();
@@ -61,7 +61,7 @@ export default function PlansPage() {
       : plans.length === 0 ? <EmptyState title="Aún no hay planes" body="Crea el primer plan para comenzar a asignar acceso a Dentistry." />
       : <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{plans.map((plan) => (
         <article key={plan.id} className="flex flex-col rounded-xl border border-border bg-surface p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-[10px] tracking-wider text-primary">{plan.code}</p><h3 className="mt-1 text-lg font-semibold">{plan.name}</h3></div><Badge variant={plan.active ? 'success' : 'neutral'} dot>{plan.active ? 'Activo' : 'Inactivo'}</Badge></div>
+          <div className="flex items-start justify-between gap-3"><div><p className="font-mono text-[10px] tracking-wider text-primary">{plan.code}</p><h3 className="mt-1 text-lg font-semibold">{plan.name}</h3></div><Badge variant={plan.isActive ? 'success' : 'neutral'} dot>{plan.isActive ? 'Activo' : 'Inactivo'}</Badge></div>
           <p className="mt-3 min-h-10 text-sm text-muted">{plan.description || 'Sin descripción.'}</p>
           <dl className="mt-5 grid grid-cols-2 gap-3 border-y border-border py-4 text-sm"><div><dt className="text-xs text-muted">Precio</dt><dd className="mt-1 font-semibold">{plan.priceMinor == null || !plan.currency ? 'Sin precio' : moneyFormat(plan.currency).format(plan.priceMinor / 100)}</dd></div><div><dt className="text-xs text-muted">Duración</dt><dd className="mt-1 font-semibold">{plan.durationDays} días</dd></div><div><dt className="text-xs text-muted">Vertical</dt><dd className="mt-1">Dentistry</dd></div><div><dt className="text-xs text-muted">Tipo</dt><dd className="mt-1">{plan.type === 'PUBLIC' ? 'Público' : 'Personalizado'}</dd></div></dl>
           <div className="mt-4 flex justify-end gap-2"><Button size="sm" variant="ghost" onClick={() => setEditing(plan)}>Editar</Button><Button size="sm" variant="danger" onClick={() => { setActionError(null); setDeleting(plan); }}>Eliminar</Button></div>

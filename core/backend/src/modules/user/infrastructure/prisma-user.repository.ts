@@ -63,12 +63,12 @@ export class PrismaUserRepository extends UserRepository {
   async listUsers(): Promise<UserListItem[]> {
     const [users, memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
       this.prisma.orm.core.User.all(),
-      this.prisma.orm.core.Membership.all(),
+      this.prisma.orm.core.OrganizationMembership.all(),
       this.prisma.orm.core.Organization.all(),
       this.prisma.orm.core.Branch.all(),
-      this.prisma.orm.core.MembershipBranch.all(),
+      this.prisma.orm.core.OrganizationMembershipBranch.all(),
       this.prisma.orm.core.Role.all(),
-      this.prisma.orm.core.MembershipRole.all(),
+      this.prisma.orm.core.OrganizationMembershipRole.all(),
     ]);
     const organizationsById = new Map(organizations.filter((item) => !item.deleted).map((item) => [String(item.id), item]));
     const branchesById = new Map(branches.filter((item) => !item.deleted).map((item) => [String(item.id), item]));
@@ -107,7 +107,7 @@ export class PrismaUserRepository extends UserRepository {
       return [];
     }
 
-    const memberships = await this.prisma.orm.core.Membership.where({
+    const memberships = await this.prisma.orm.core.OrganizationMembership.where({
       organizationId: toUuid36(scope.organizationId),
       deleted: false,
       status: 'ACTIVE',
@@ -117,7 +117,7 @@ export class PrismaUserRepository extends UserRepository {
       : new Set(scope.branchIds);
 
     const items = await Promise.all(memberships.map(async (membership) => {
-      const membershipBranches = await this.prisma.orm.core.MembershipBranch.where({
+      const membershipBranches = await this.prisma.orm.core.OrganizationMembershipBranch.where({
         membershipId: membership.id,
         deleted: false,
       }).all();
@@ -142,7 +142,7 @@ export class PrismaUserRepository extends UserRepository {
       const user = await this.prisma.orm.core.User.first({ id: membership.userId });
       if (!user || user.deleted) return null;
 
-      const membershipRoles = await this.prisma.orm.core.MembershipRole.where({
+      const membershipRoles = await this.prisma.orm.core.OrganizationMembershipRole.where({
         membershipId: membership.id,
         deleted: false,
       }).all();
@@ -191,7 +191,7 @@ export class PrismaUserRepository extends UserRepository {
       return null;
     }
 
-    const auth = await this.prisma.orm.core.Authorization.where({
+    const auth = await this.prisma.orm.core.UserCredential.where({
       userId: toUuid36(userRow.id),
     }).first();
 
@@ -204,7 +204,7 @@ export class PrismaUserRepository extends UserRepository {
       return null;
     }
 
-    const memberships = await this.prisma.orm.core.Membership.where({
+    const memberships = await this.prisma.orm.core.OrganizationMembership.where({
       userId: toUuid36(userRow.id),
       deleted: false,
     }).all();
@@ -232,7 +232,7 @@ export class PrismaUserRepository extends UserRepository {
 
     const branchIds = new Set<string>();
     const membershipBranches =
-      await this.prisma.orm.core.MembershipBranch.where({
+      await this.prisma.orm.core.OrganizationMembershipBranch.where({
         membershipId: membership.id,
         deleted: false,
       }).all();
@@ -252,7 +252,7 @@ export class PrismaUserRepository extends UserRepository {
     }
 
     const permissions = new Set<string>();
-    const membershipRoles = await this.prisma.orm.core.MembershipRole.where({
+    const membershipRoles = await this.prisma.orm.core.OrganizationMembershipRole.where({
       membershipId: membership.id,
       deleted: false,
     }).all();
@@ -363,12 +363,12 @@ export class PrismaUserRepository extends UserRepository {
           phone: input.phone,
         });
 
-        await tx.orm.core.Authorization.create({
+        await tx.orm.core.UserCredential.create({
           userId: toUuid36(userRow.id),
           passwordHash,
         });
 
-        const existingMembership = await tx.orm.core.Membership.where({
+        const existingMembership = await tx.orm.core.OrganizationMembership.where({
           userId: toUuid36(userRow.id),
           organizationId: toUuid36(input.organizationId),
           deleted: false,
@@ -377,7 +377,7 @@ export class PrismaUserRepository extends UserRepository {
           throw new MembershipAlreadyExistsError();
         }
 
-        const membershipRow = await tx.orm.core.Membership.create({
+        const membershipRow = await tx.orm.core.OrganizationMembership.create({
           userId: toUuid36(userRow.id),
           organizationId: toUuid36(input.organizationId),
           status: 'ACTIVE',
@@ -387,7 +387,7 @@ export class PrismaUserRepository extends UserRepository {
         const membershipBranchRows: { id: string; branchId: string }[] = [];
         for (const branchId of input.branchIds) {
           membershipBranchRows.push(
-            await tx.orm.core.MembershipBranch.create({
+            await tx.orm.core.OrganizationMembershipBranch.create({
               membershipId: membershipRow.id,
               branchId: toUuid36(branchId),
             }),
@@ -397,7 +397,7 @@ export class PrismaUserRepository extends UserRepository {
         const membershipRoleRows: { id: string; roleId: string }[] = [];
         for (const roleId of input.roleIds) {
           membershipRoleRows.push(
-            await tx.orm.core.MembershipRole.create({
+            await tx.orm.core.OrganizationMembershipRole.create({
               membershipId: membershipRow.id,
               roleId: toUuid36(roleId),
             }),
@@ -417,7 +417,7 @@ export class PrismaUserRepository extends UserRepository {
           organizationId: input.organizationId,
           userId: userRow.id,
           action: 'MEMBERSHIP_CREATED',
-          resource: 'Membership',
+          resource: 'OrganizationMembership',
           resourceId: membershipRow.id,
           metadata: {
             branchesLinked: membershipBranchRows.length,

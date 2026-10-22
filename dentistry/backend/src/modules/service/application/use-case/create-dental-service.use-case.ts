@@ -22,7 +22,7 @@ export interface CreateDentalServiceCommand {
   basePriceMinor?: number;
   labCostMinor?: number;
   currency?: string;
-  active?: boolean;
+  isActive?: boolean;
   createdByMembershipId: string;
   supplies?: CreateDentalServiceSupplyDto[];
 }
@@ -67,7 +67,7 @@ export class CreateDentalServiceUseCase {
       basePriceMinor: command.basePriceMinor,
       labCostMinor: command.labCostMinor,
       currency: command.currency,
-      active: command.active ?? true,
+      isActive: command.isActive ?? true,
       createdByMembershipId: command.createdByMembershipId,
       supplies,
     });

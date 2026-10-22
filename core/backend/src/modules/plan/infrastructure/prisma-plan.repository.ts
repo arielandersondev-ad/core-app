@@ -13,8 +13,8 @@ import type {
   AssignPlan,
   AssignmentStatus,
   ChangeAssignmentStatus,
-  PlanAssignment,
-} from '../domain/entities/plan-assignment.entity.js';
+  OrganizationPlanAssignment,
+} from '../domain/entities/organization-plan-assignment.entity.js';
 import { PlanRepository } from '../domain/repositories/plan.repository.js';
 import { toPlanEntity } from './plan.mapper.js';
 
@@ -81,13 +81,13 @@ export class PrismaPlanRepository extends PlanRepository {
       const current = await tx.orm.core.Plan.first({ id: toUuid36(planId) });
       if (!current || current.deleted) throw new NotFoundException('Plan no encontrado');
 
-      const assignments = await tx.orm.core.OrganizationPlan.where({ planId: current.id }).all();
+      const assignments = await tx.orm.core.OrganizationPlanAssignment.where({ planId: current.id }).all();
       if (assignments.some((assignment) => assignment.status !== 'CANCELED')) {
         throw new ConflictException('El plan tiene asignaciones vigentes; cancélelas antes de eliminarlo');
       }
 
       const row = await tx.orm.core.Plan.where({ id: current.id }).update({
-        active: false,
+        isActive: false,
         deleted: true,
         deletedAt: new Date(),
       });
@@ -100,14 +100,14 @@ export class PrismaPlanRepository extends PlanRepository {
     });
   }
 
-  async listAssignments(organizationId?: string): Promise<PlanAssignment[]> {
+  async listAssignments(organizationId?: string): Promise<OrganizationPlanAssignment[]> {
     const rows = organizationId
-      ? await this.prisma.orm.core.OrganizationPlan.where({ organizationId: toUuid36(organizationId) }).all()
-      : await this.prisma.orm.core.OrganizationPlan.all();
+      ? await this.prisma.orm.core.OrganizationPlanAssignment.where({ organizationId: toUuid36(organizationId) }).all()
+      : await this.prisma.orm.core.OrganizationPlanAssignment.all();
     return Promise.all(rows.map((row) => this.enrichAssignment(this.prisma.orm.core, row)));
   }
 
-  async assign(input: AssignPlan): Promise<PlanAssignment> {
+  async assign(input: AssignPlan): Promise<OrganizationPlanAssignment> {
     try {
       return await this.prisma.transaction(async (tx) => {
         const organization = await tx.orm.core.Organization.first({ id: toUuid36(input.organizationId) });
@@ -116,13 +116,13 @@ export class PrismaPlanRepository extends PlanRepository {
 
         const plan = await tx.orm.core.Plan.first({ id: toUuid36(input.planId) });
         if (!plan || plan.deleted) throw new NotFoundException('Plan no encontrado');
-        if (!plan.active) throw new ConflictException('El plan no está activo');
+        if (!plan.isActive) throw new ConflictException('El plan no está activo');
         if (plan.vertical !== input.vertical) {
           throw new BadRequestException('El plan no corresponde a la vertical indicada');
         }
 
         const endsAt = new Date(input.startsAt.getTime() + plan.durationDays * 86_400_000);
-        const existing = await tx.orm.core.OrganizationPlan.where({
+        const existing = await tx.orm.core.OrganizationPlanAssignment.where({
           organizationId: organization.id,
           vertical: input.vertical,
         }).first();
@@ -141,14 +141,14 @@ export class PrismaPlanRepository extends PlanRepository {
           canceledAt: null,
         };
         const row = existing
-          ? await tx.orm.core.OrganizationPlan.where({ id: existing.id }).update(values)
-          : await tx.orm.core.OrganizationPlan.create({ organizationId: organization.id, ...values });
+          ? await tx.orm.core.OrganizationPlanAssignment.where({ id: existing.id }).update(values)
+          : await tx.orm.core.OrganizationPlanAssignment.create({ organizationId: organization.id, ...values });
         if (!row) throw new ConflictException('No se pudo actualizar la asignación');
 
         await writeAuditLog(tx, {
           organizationId: organization.id,
           action: existing ? 'ORGANIZATION_PLAN_REPLACED' : 'ORGANIZATION_PLAN_ASSIGNED',
-          resource: 'OrganizationPlan', resourceId: row.id,
+          resource: 'OrganizationPlanAssignment', resourceId: row.id,
           metadata: { planId: String(plan.id), vertical: input.vertical, status: input.status },
         });
         return this.toAssignment(row, organization.name, plan.code, plan.name);
@@ -161,9 +161,9 @@ export class PrismaPlanRepository extends PlanRepository {
     }
   }
 
-  async changeAssignmentStatus(input: ChangeAssignmentStatus): Promise<PlanAssignment> {
+  async changeAssignmentStatus(input: ChangeAssignmentStatus): Promise<OrganizationPlanAssignment> {
     return this.prisma.transaction(async (tx) => {
-      const row = await tx.orm.core.OrganizationPlan.where({
+      const row = await tx.orm.core.OrganizationPlanAssignment.where({
         organizationId: toUuid36(input.organizationId), vertical: input.vertical,
       }).first();
       if (!row) throw new NotFoundException('Asignación de plan no encontrada');
@@ -178,7 +178,7 @@ export class PrismaPlanRepository extends PlanRepository {
         throw new ConflictException('No se puede activar una asignación vencida; reasigne el plan');
       }
       const now = new Date();
-      const updated = await tx.orm.core.OrganizationPlan.where({ id: row.id }).update({
+      const updated = await tx.orm.core.OrganizationPlanAssignment.where({ id: row.id }).update({
         status: input.status,
         suspendedAt: input.status === 'SUSPENDED' ? now : null,
         suspensionReason: input.status === 'SUSPENDED' ? input.reason?.trim() : null,
@@ -188,7 +188,7 @@ export class PrismaPlanRepository extends PlanRepository {
       await writeAuditLog(tx, {
         organizationId: input.organizationId,
         action: 'ORGANIZATION_PLAN_STATUS_CHANGED',
-        resource: 'OrganizationPlan', resourceId: updated.id,
+        resource: 'OrganizationPlanAssignment', resourceId: updated.id,
         metadata: { vertical: input.vertical, status: input.status, reason: input.reason ?? null },
       });
       return this.enrichAssignment(tx.orm.core, updated);
@@ -201,7 +201,7 @@ export class PrismaPlanRepository extends PlanRepository {
     }
   }
 
-  private async enrichAssignment(core: typeof this.prisma.orm.core, row: Parameters<typeof this.toAssignment>[0]): Promise<PlanAssignment> {
+  private async enrichAssignment(core: typeof this.prisma.orm.core, row: Parameters<typeof this.toAssignment>[0]): Promise<OrganizationPlanAssignment> {
     const organization = await core.Organization.first({ id: toUuid36(row.organizationId) });
     const plan = await core.Plan.first({ id: toUuid36(row.planId) });
     if (!organization || !plan) throw new NotFoundException('La asignación referencia datos inexistentes');
@@ -218,7 +218,7 @@ export class PrismaPlanRepository extends PlanRepository {
     organizationName: string,
     planCode: string,
     planName: string,
-  ): PlanAssignment {
+  ): OrganizationPlanAssignment {
     return {
       ...row,
       organizationId: String(row.organizationId),

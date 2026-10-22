@@ -7,7 +7,7 @@ export interface CancelAppointmentCommand {
   id: string;
   organizationId: string;
   authorizedBranchIds: string[];
-  cancelledByMembershipId: string;
+  canceledByMembershipId: string;
   reason: string;
 }
 
@@ -24,7 +24,7 @@ export class CancelAppointmentUseCase {
     if (!command.authorizedBranchIds.includes(appointment.branchId)) {
       throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
     }
-    appointment.cancel(command.cancelledByMembershipId, command.reason);
+    appointment.cancel(command.canceledByMembershipId, command.reason);
 
     const updated = await this.appointmentRepository.update(appointment, command.organizationId);
     if (!updated) throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);

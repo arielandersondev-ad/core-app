@@ -60,7 +60,7 @@ export function ServiceFormModal({
     price: 0,
     labCost: 0,
     description: "",
-    active: true,
+    isActive: true,
   });
 
   const [supplies, setSupplies] = useState<ServiceSupply[]>([]);
@@ -85,7 +85,7 @@ export function ServiceFormModal({
         price: service.price || 0,
         labCost: service.labCost || 0,
         description: service.description || "",
-        active: service.active ?? true,
+        isActive: service.isActive ?? true,
       });
       setSupplies(service.supplies ? [...service.supplies] : []);
     } else {
@@ -97,7 +97,7 @@ export function ServiceFormModal({
         price: 0,
         labCost: 0,
         description: "",
-        active: true,
+        isActive: true,
       });
       setSupplies([]);
     }
@@ -390,21 +390,21 @@ export function ServiceFormModal({
                     Estado del Servicio
                   </p>
                   <p className="text-[11px] text-[var(--muted)]">
-                    {form.active
+                    {form.isActive
                       ? "Disponible para agendar citas y generar presupuestos"
                       : "Oculto para nuevas citas (los registros históricos se preservan)"}
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, active: !form.active })}
+                  onClick={() => setForm({ ...form, isActive: !form.isActive })}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    form.active
+                    form.isActive
                       ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300"
                       : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-300"
                   }`}
                 >
-                  {form.active ? "Activo" : "Inactivo"}
+                  {form.isActive ? "Activo" : "Inactivo"}
                 </button>
               </div>
             </div>

@@ -28,7 +28,7 @@ export interface Service {
   price: number;
   category: string;
   description: string;
-  active: boolean;
+  isActive: boolean;
 }
 
 export interface Professional {
@@ -93,7 +93,7 @@ export const services: Service[] = [
     price: 80,
     category: "Consultas",
     description: "Evaluación y diagnóstico inicial del paciente.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-2",
@@ -102,7 +102,7 @@ export const services: Service[] = [
     price: 50,
     category: "Consultas",
     description: "Revisión y control de salud dental.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-3",
@@ -111,7 +111,7 @@ export const services: Service[] = [
     price: 65,
     category: "Prevención",
     description: "Limpieza profunda y profilaxis dental.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-4",
@@ -120,7 +120,7 @@ export const services: Service[] = [
     price: 35,
     category: "Prevención",
     description: "Aplicación tópica de fluor para prevención de caries.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-5",
@@ -129,7 +129,7 @@ export const services: Service[] = [
     price: 120,
     category: "Restauración",
     description: "Tratamiento y restauración de caries dental.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-6",
@@ -138,7 +138,7 @@ export const services: Service[] = [
     price: 150,
     category: "Cirugía",
     description: "Extracción de pieza dental.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-7",
@@ -147,7 +147,7 @@ export const services: Service[] = [
     price: 200,
     category: "Estética",
     description: "Blanqueamiento profesional para aclarar el esmalte.",
-    active: true,
+    isActive: true,
   },
   {
     id: "svc-8",
@@ -156,7 +156,7 @@ export const services: Service[] = [
     price: 40,
     category: "Diagnóstico",
     description: "Radiografía panorámica para evaluación completa.",
-    active: true,
+    isActive: true,
   },
 ];
 

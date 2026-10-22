@@ -21,11 +21,11 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       organizationId: toUuid36(appointment.organizationId),
       branchId: toUuid36(appointment.branchId),
       patientId: toUuid36(appointment.patientId),
-      professionalMembershipId: toUuid36(appointment.professionalMembershipId),
+      practitionerMembershipId: toUuid36(appointment.practitionerMembershipId),
       serviceId: toUuid36(appointment.serviceId),
       treatmentId: appointment.treatmentId ? toUuid36(appointment.treatmentId) : null,
-      startsAt: appointment.startsAt,
-      endsAt: appointment.endsAt,
+      scheduledStartAt: appointment.scheduledStartAt,
+      scheduledEndAt: appointment.scheduledEndAt,
       status: appointment.status,
       reason: appointment.reason,
       notes: appointment.notes,
@@ -94,22 +94,22 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
         if (filters.branchId && row.branchId !== filters.branchId) return false;
         if (filters.patientId && row.patientId !== filters.patientId) return false;
         if (
-          filters.professionalMembershipId &&
-          row.professionalMembershipId !== filters.professionalMembershipId
+          filters.practitionerMembershipId &&
+          row.practitionerMembershipId !== filters.practitionerMembershipId
         )
           return false;
         if (filters.status && row.status !== filters.status) return false;
         if (filters.startDate) {
-          const rowStart = new Date(row.startsAt);
+          const rowStart = new Date(row.scheduledStartAt);
           if (rowStart < filters.startDate) return false;
         }
         if (filters.endDate) {
-          const rowStart = new Date(row.startsAt);
+          const rowStart = new Date(row.scheduledStartAt);
           if (rowStart > filters.endDate) return false;
         }
         return true;
       })
-      .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())
+      .sort((a, b) => new Date(a.scheduledStartAt).getTime() - new Date(b.scheduledStartAt).getTime())
       .map((r) => {
         r.services = servicesByAppt.get(r.id) || [];
         return toAppointmentEntity(r);
@@ -119,16 +119,16 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
   async hasOverlap(params: CheckOverlapParams): Promise<boolean> {
     const rows = (await this.prisma.orm.dentistry.Appointment.where({
       organizationId: toUuid36(params.organizationId),
-      professionalMembershipId: toUuid36(params.professionalMembershipId),
+      practitionerMembershipId: toUuid36(params.practitionerMembershipId),
     }).all()) as unknown as AppointmentRow[];
 
     return rows.some((row) => {
-      if (row.status === 'CANCELLED') return false;
+      if (row.status === 'CANCELED') return false;
       if (params.excludeAppointmentId && row.id === params.excludeAppointmentId) return false;
-      const rowStart = new Date(row.startsAt).getTime();
-      const rowEnd = new Date(row.endsAt).getTime();
-      const newStart = params.startsAt.getTime();
-      const newEnd = params.endsAt.getTime();
+      const rowStart = new Date(row.scheduledStartAt).getTime();
+      const rowEnd = new Date(row.scheduledEndAt).getTime();
+      const newStart = params.scheduledStartAt.getTime();
+      const newEnd = params.scheduledEndAt.getTime();
       return rowStart < newEnd && rowEnd > newStart;
     });
   }
@@ -140,7 +140,7 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
         id: toUuid36(params.patientId), organizationId, deleted: false,
       }),
       this.prisma.orm.dentistry.DentalService.first({
-        id: toUuid36(params.serviceId), organizationId, active: true,
+        id: toUuid36(params.serviceId), organizationId, isActive: true,
       }),
       params.treatmentId
         ? this.prisma.orm.dentistry.Treatment.first({
@@ -159,9 +159,9 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
     }).update({
       status: appointment.status,
       notes: appointment.notes,
-      cancelledAt: appointment.cancelledAt,
-      cancelledByMembershipId: appointment.cancelledByMembershipId
-        ? toUuid36(appointment.cancelledByMembershipId)
+      canceledAt: appointment.canceledAt,
+      canceledByMembershipId: appointment.canceledByMembershipId
+        ? toUuid36(appointment.canceledByMembershipId)
         : null,
       cancellationReason: appointment.cancellationReason,
       updatedAt: new Date(),

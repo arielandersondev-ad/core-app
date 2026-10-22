@@ -2,9 +2,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ConflictException } from '@nestjs/common';
 import { PrismaPlanRepository } from '../dist/modules/plan/infrastructure/prisma-plan.repository.js';
+import { PlanController } from '../dist/modules/plan/presentation/http/plan.controller.js';
 
 const organizationId = '00000000-0000-0000-0000-000000000001';
 const planId = '00000000-0000-0000-0000-000000000002';
+
+test('el contrato de planes renombra campos sin reinterpretar el JSON ni el flag', () => {
+  let received;
+  const controller = new PlanController({}, {}, { execute: input => { received = input; return input; } }, {}, {}, {});
+  const entitlements = { customExistingKey: { enabled: true }, legacyLimit: 7 };
+  controller.create({ code: 'DENTISTRY_STARTER', name: 'Starter', type: 'PUBLIC', vertical: 'DENTISTRY', durationDays:30, entitlements, isActive:false });
+  assert.equal(received.entitlements, entitlements);
+  assert.equal(received.isActive, false);
+  assert.equal('configuration' in received, false);
+  assert.equal('active' in received, false);
+  controller.create({ code: 'DENTISTRY_STARTER', name: 'Starter', type: 'PUBLIC', vertical: 'DENTISTRY', durationDays:30 });
+  assert.deepEqual(received.entitlements, {});
+  assert.equal(received.isActive, true);
+});
 
 function harness({ assignmentStatus } = {}) {
   const organization = { id: organizationId, name: 'Clínica Uno', status: 'ACTIVE', deleted: false };
@@ -16,10 +31,10 @@ function harness({ assignmentStatus } = {}) {
     type: 'PUBLIC',
     vertical: 'DENTISTRY',
     durationDays: 30,
-    configuration: {},
+    entitlements: {},
     priceMinor: null,
     currency: null,
-    active: true,
+    isActive: true,
     deleted: false,
     deletedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -59,7 +74,7 @@ function harness({ assignmentStatus } = {}) {
         update: async (values) => filter.id === planId ? Object.assign(plan, values) : null,
       }),
     },
-    OrganizationPlan: {
+    OrganizationPlanAssignment: {
       where: whereAssignments,
       create: async (values) => {
         const row = { id: '00000000-0000-0000-0000-000000000003', ...values, createdAt: new Date(), updatedAt: new Date() };
@@ -101,6 +116,6 @@ test('permite el borrado lógico cuando solo hay asignaciones canceladas', async
   const { repository } = harness({ assignmentStatus: 'CANCELED' });
   const result = await repository.softDelete(planId);
   assert.equal(result.deleted, true);
-  assert.equal(result.active, false);
+  assert.equal(result.isActive, false);
   assert.ok(result.deletedAt instanceof Date);
 });

@@ -78,7 +78,7 @@ export class CreateDentalServiceDto {
 
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @IsUUID()
   createdByMembershipId: string;

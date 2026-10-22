@@ -23,17 +23,17 @@ export interface AppointmentRow {
   organizationId: string;
   branchId: string;
   patientId: string;
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
   serviceId: string;
   treatmentId: string | null;
-  startsAt: Date;
-  endsAt: Date;
+  scheduledStartAt: Date;
+  scheduledEndAt: Date;
   status: string;
   reason: string | null;
   notes: string | null;
   createdByMembershipId: string;
-  cancelledAt: Date | null;
-  cancelledByMembershipId: string | null;
+  canceledAt: Date | null;
+  canceledByMembershipId: string | null;
   cancellationReason: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -60,18 +60,18 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     organizationId: row.organizationId,
     branchId: row.branchId,
     patientId: row.patientId,
-    professionalMembershipId: row.professionalMembershipId,
+    practitionerMembershipId: row.practitionerMembershipId,
     serviceId: row.serviceId,
     serviceIds,
     treatmentId: row.treatmentId,
-    startsAt: row.startsAt,
-    endsAt: row.endsAt,
+    scheduledStartAt: row.scheduledStartAt,
+    scheduledEndAt: row.scheduledEndAt,
     status: row.status as AppointmentStatus,
     reason: row.reason,
     notes: row.notes,
     createdByMembershipId: row.createdByMembershipId,
-    cancelledAt: row.cancelledAt,
-    cancelledByMembershipId: row.cancelledByMembershipId,
+    canceledAt: row.canceledAt,
+    canceledByMembershipId: row.canceledByMembershipId,
     cancellationReason: row.cancellationReason,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

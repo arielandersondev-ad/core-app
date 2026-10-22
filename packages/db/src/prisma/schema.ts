@@ -51,7 +51,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // AUTHORIZATION
   // =========================================================
-  const Authorization = model("Authorization", {
+  const UserCredential = model("UserCredential", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -75,7 +75,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // SESSION
   // =========================================================
-  const Session = model("Session", {
+  const AuthSession = model("AuthSession", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -142,17 +142,17 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
       description: field.text().optional(),
 
       // PUBLIC plans are offered in pricing. CUSTOM plans are assigned
-      // through OrganizationPlan and keep their resolved configuration here.
+      // through OrganizationPlanAssignment and keep their resolved configuration here.
       type: field.text().default("PUBLIC"),
       vertical: field.text(),
       durationDays: field.int(),
-      configuration: field.json(),
+      entitlements: field.json(),
 
       // Optional because a custom plan may have a privately negotiated price.
       priceMinor: field.int().optional(),
       currency: field.text().optional(),
 
-      active: field.boolean().default(true),
+      isActive: field.boolean().default(true),
       deleted: field.boolean().default(false),
       deletedAt: field.temporal.timestamp().optional(),
 
@@ -164,7 +164,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // ORGANIZATION <-> PLAN
   // =========================================================
-  const OrganizationPlan = model("OrganizationPlan", {
+  const OrganizationPlanAssignment = model("OrganizationPlanAssignment", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -243,7 +243,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // MEMBERSHIP
   // =========================================================
-  const Membership = model("Membership", {
+  const OrganizationMembership = model("OrganizationMembership", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -266,7 +266,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // MEMBERSHIP <-> BRANCH
   // =========================================================
-  const MembershipBranch = model("MembershipBranch", {
+  const OrganizationMembershipBranch = model("OrganizationMembershipBranch", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -339,7 +339,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   // =========================================================
   // MEMBERSHIP <-> ROLE
   // =========================================================
-  const MembershipRole = model("MembershipRole", {
+  const OrganizationMembershipRole = model("OrganizationMembershipRole", {
     namespace: CORE_NAMESPACE,
 
     fields: {
@@ -388,15 +388,15 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
   return {
     models: {
       User: User.relations({
-        authorization: rel.hasOne(Authorization, {
+        credential: rel.hasOne(UserCredential, {
           by: "userId",
         }),
 
-        sessions: rel.hasMany(Session, {
+        authSessions: rel.hasMany(AuthSession, {
           by: "userId",
         }),
 
-        memberships: rel.hasMany(Membership, {
+        memberships: rel.hasMany(OrganizationMembership, {
           by: "userId",
         }),
 
@@ -405,7 +405,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         }),
       }),
 
-      Authorization: Authorization.relations({
+      UserCredential: UserCredential.relations({
         user: rel.belongsTo(User, {
           from: "userId",
           to: "id",
@@ -414,7 +414,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         foreignKeys: [constraints.foreignKey(cols.userId, User.refs.id)],
       })),
 
-      Session: Session.relations({
+      AuthSession: AuthSession.relations({
         user: rel.belongsTo(User, {
           from: "userId",
           to: "id",
@@ -428,7 +428,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           by: "organizationId",
         }),
 
-        memberships: rel.hasMany(Membership, {
+        memberships: rel.hasMany(OrganizationMembership, {
           by: "organizationId",
         }),
 
@@ -436,7 +436,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           by: "organizationId",
         }),
 
-        plans: rel.hasMany(OrganizationPlan, {
+        planAssignments: rel.hasMany(OrganizationPlanAssignment, {
           by: "organizationId",
         }),
 
@@ -446,12 +446,12 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
       }),
 
       Plan: Plan.relations({
-        organizations: rel.hasMany(OrganizationPlan, {
+        organizationAssignments: rel.hasMany(OrganizationPlanAssignment, {
           by: "planId",
         }),
       }),
 
-      OrganizationPlan: OrganizationPlan.relations({
+      OrganizationPlanAssignment: OrganizationPlanAssignment.relations({
         organization: rel.belongsTo(Organization, {
           from: "organizationId",
           to: "id",
@@ -483,7 +483,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
 
-        membershipBranches: rel.hasMany(MembershipBranch, {
+        membershipBranches: rel.hasMany(OrganizationMembershipBranch, {
           by: "branchId",
         }),
 
@@ -496,7 +496,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         ],
       })),
 
-      Membership: Membership.relations({
+      OrganizationMembership: OrganizationMembership.relations({
         user: rel.belongsTo(User, {
           from: "userId",
           to: "id",
@@ -507,11 +507,11 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
 
-        branches: rel.hasMany(MembershipBranch, {
+        branchAssignments: rel.hasMany(OrganizationMembershipBranch, {
           by: "membershipId",
         }),
 
-        roles: rel.hasMany(MembershipRole, {
+        roleAssignments: rel.hasMany(OrganizationMembershipRole, {
           by: "membershipId",
         }),
       }).sql(({ cols, constraints }) => ({
@@ -521,8 +521,8 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         ],
       })),
 
-      MembershipBranch: MembershipBranch.relations({
-        membership: rel.belongsTo(Membership, {
+      OrganizationMembershipBranch: OrganizationMembershipBranch.relations({
+        membership: rel.belongsTo(OrganizationMembership, {
           from: "membershipId",
           to: "id",
         }),
@@ -533,7 +533,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         }),
       }).sql(({ cols, constraints }) => ({
         foreignKeys: [
-          constraints.foreignKey(cols.membershipId, Membership.refs.id),
+          constraints.foreignKey(cols.membershipId, OrganizationMembership.refs.id),
           constraints.foreignKey(cols.branchId, Branch.refs.id),
         ],
       })),
@@ -544,7 +544,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
 
-        membershipRoles: rel.hasMany(MembershipRole, {
+        membershipRoles: rel.hasMany(OrganizationMembershipRole, {
           by: "roleId",
         }),
 
@@ -586,8 +586,8 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         ],
       })),
 
-      MembershipRole: MembershipRole.relations({
-        membership: rel.belongsTo(Membership, {
+      OrganizationMembershipRole: OrganizationMembershipRole.relations({
+        membership: rel.belongsTo(OrganizationMembership, {
           from: "membershipId",
           to: "id",
         }),
@@ -598,7 +598,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         }),
       }).sql(({ cols, constraints }) => ({
         foreignKeys: [
-          constraints.foreignKey(cols.membershipId, Membership.refs.id),
+          constraints.foreignKey(cols.membershipId, OrganizationMembership.refs.id),
           constraints.foreignKey(cols.roleId, Role.refs.id),
         ],
       })),
@@ -672,7 +672,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
 
       status: field.text().default("ACTIVE"),
 
-      // External references -> Core.Membership.id
+      // External references -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
       updatedByMembershipId: field.uuidString().optional(),
 
@@ -688,7 +688,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
   // CLINICAL HISTORY
   // =========================================================
 
-  const ClinicalHistory = model("ClinicalHistory", {
+  const PatientHealthProfile = model("PatientHealthProfile", {
     namespace: NAMESPACE,
 
     fields: {
@@ -707,7 +707,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       relevantConditions: field.text().optional(),
       observations: field.text().optional(),
 
-      // External references -> Core.Membership.id
+      // External references -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
       updatedByMembershipId: field.uuidString().optional(),
 
@@ -741,9 +741,9 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       labCostMinor: field.int().optional(),
       currency: field.text().optional(),
 
-      active: field.boolean().default(true),
+      isActive: field.boolean().default(true),
 
-      // External references -> Core.Membership.id
+      // External references -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
       updatedByMembershipId: field.uuidString().optional(),
 
@@ -816,8 +816,8 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       patientId: field.uuidString(),
       serviceId: field.uuidString(),
 
-      // External reference -> Core.Membership.id
-      responsibleMembershipId: field.uuidString().optional(),
+      // External reference -> Core.OrganizationMembership.id
+      practitionerMembershipId: field.uuidString().optional(),
 
       status: field.text().default("ACTIVE"),
 
@@ -829,10 +829,10 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       agreedPriceMinor: field.int().optional(),
       currency: field.text().optional(),
 
-      diagnosis: field.text().optional(),
+      diagnosisSummary: field.text().optional(),
       notes: field.text().optional(),
 
-      // External references -> Core.Membership.id
+      // External references -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
       updatedByMembershipId: field.uuidString().optional(),
 
@@ -857,27 +857,27 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
 
       patientId: field.uuidString(),
 
-      // External reference -> Core.Membership.id
-      professionalMembershipId: field.uuidString(),
+      // External reference -> Core.OrganizationMembership.id
+      practitionerMembershipId: field.uuidString(),
 
       serviceId: field.uuidString(),
       treatmentId: field.uuidString().optional(),
 
-      startsAt: field.temporal.timestamp(),
-      endsAt: field.temporal.timestamp(),
+      scheduledStartAt: field.temporal.timestamp(),
+      scheduledEndAt: field.temporal.timestamp(),
 
       status: field.text().default("SCHEDULED"),
 
       reason: field.text().optional(),
       notes: field.text().optional(),
 
-      // External reference -> Core.Membership.id
+      // External reference -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
 
-      cancelledAt: field.temporal.timestamp().optional(),
+      canceledAt: field.temporal.timestamp().optional(),
 
-      // External reference -> Core.Membership.id
-      cancelledByMembershipId: field.uuidString().optional(),
+      // External reference -> Core.OrganizationMembership.id
+      canceledByMembershipId: field.uuidString().optional(),
 
       cancellationReason: field.text().optional(),
 
@@ -907,20 +907,20 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
 
       treatmentId: field.uuidString().optional(),
 
-      // External reference -> Core.Membership.id
-      professionalMembershipId: field.uuidString(),
+      // External reference -> Core.OrganizationMembership.id
+      practitionerMembershipId: field.uuidString(),
 
       startedAt: field.temporal.timestamp(),
       endedAt: field.temporal.timestamp().optional(),
 
       chiefComplaint: field.text().optional(),
-      diagnosis: field.text().optional(),
-      procedurePerformed: field.text().optional(),
-      evolution: field.text().optional(),
-      recommendations: field.text().optional(),
+      diagnosisSummary: field.text().optional(),
+      procedureSummary: field.text().optional(),
+      progressNotes: field.text().optional(),
+      patientInstructions: field.text().optional(),
       notes: field.text().optional(),
 
-      // External references -> Core.Membership.id
+      // External references -> Core.OrganizationMembership.id
       createdByMembershipId: field.uuidString(),
       updatedByMembershipId: field.uuidString().optional(),
 
@@ -961,12 +961,12 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
 
       paidAt: field.temporal.timestamp(),
 
-      // External reference -> Core.Membership.id
+      // External reference -> Core.OrganizationMembership.id
       receivedByMembershipId: field.uuidString(),
 
       voidedAt: field.temporal.timestamp().optional(),
 
-      // External reference -> Core.Membership.id
+      // External reference -> Core.OrganizationMembership.id
       voidedByMembershipId: field.uuidString().optional(),
 
       createdAt: field.temporal.createdAt(),
@@ -1011,7 +1011,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       capturedAt: field.temporal.timestamp().optional(),
       description: field.text().optional(),
 
-      // External reference -> Core.Membership.id
+      // External reference -> Core.OrganizationMembership.id
       uploadedByMembershipId: field.uuidString(),
 
       deleted: field.boolean().default(false),
@@ -1065,7 +1065,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
   return {
     models: {
       Patient: Patient.relations({
-        clinicalHistory: rel.hasOne(ClinicalHistory, {
+        healthProfile: rel.hasOne(PatientHealthProfile, {
           by: "patientId",
         }),
 
@@ -1089,7 +1089,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "patientId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "patients",
+        table: "Patient",
 
         indexes: [
           constraints.index([cols.organizationId], { name: "pat_org_idx" }),
@@ -1103,13 +1103,13 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
         ],
       })),
 
-      ClinicalHistory: ClinicalHistory.relations({
+      PatientHealthProfile: PatientHealthProfile.relations({
         patient: rel.belongsTo(Patient, {
           from: "patientId",
           to: "id",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "clinical_histories",
+        table: "PatientHealthProfile",
 
         foreignKeys: [constraints.foreignKey(cols.patientId, Patient.refs.id)],
 
@@ -1135,10 +1135,10 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "serviceId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "dental_services",
+        table: "DentalService",
 
         indexes: [
-          constraints.index([cols.organizationId, cols.active], {
+          constraints.index([cols.organizationId, cols.isActive], {
             name: "svc_org_active_idx",
           }),
 
@@ -1161,7 +1161,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "dental_service_supplies",
+        table: "DentalServiceSupply",
 
         foreignKeys: [
           constraints.foreignKey(cols.serviceId, DentalService.refs.id),
@@ -1201,7 +1201,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "treatmentId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "treatments",
+        table: "Treatment",
 
         foreignKeys: [
           constraints.foreignKey(cols.patientId, Patient.refs.id),
@@ -1250,7 +1250,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "appointmentId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "appointments",
+        table: "Appointment",
 
         foreignKeys: [
           constraints.foreignKey(cols.patientId, Patient.refs.id),
@@ -1259,18 +1259,18 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
         ],
 
         indexes: [
-          constraints.index([cols.organizationId, cols.startsAt], {
+          constraints.index([cols.organizationId, cols.scheduledStartAt], {
             name: "appt_org_start_idx",
           }),
           constraints.index(
-            [cols.organizationId, cols.branchId, cols.startsAt],
+            [cols.organizationId, cols.branchId, cols.scheduledStartAt],
             { name: "appt_org_branch_start_idx" },
           ),
           constraints.index(
-            [cols.organizationId, cols.professionalMembershipId, cols.startsAt],
+            [cols.organizationId, cols.practitionerMembershipId, cols.scheduledStartAt],
             { name: "appt_org_prof_start_idx" },
           ),
-          constraints.index([cols.patientId, cols.startsAt], {
+          constraints.index([cols.patientId, cols.scheduledStartAt], {
             name: "appt_patient_start_idx",
           }),
         ],
@@ -1287,7 +1287,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "appointment_services",
+        table: "AppointmentService",
 
         foreignKeys: [
           constraints.foreignKey(cols.appointmentId, Appointment.refs.id),
@@ -1328,7 +1328,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "clinicalEncounterId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "clinical_encounters",
+        table: "ClinicalEncounter",
 
         foreignKeys: [
           constraints.foreignKey(cols.patientId, Patient.refs.id),
@@ -1344,7 +1344,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           constraints.index(
             [
               cols.organizationId,
-              cols.professionalMembershipId,
+              cols.practitionerMembershipId,
               cols.startedAt,
             ],
             { name: "enc_org_prof_start_idx" },
@@ -1373,7 +1373,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "payments",
+        table: "Payment",
 
         foreignKeys: [
           constraints.foreignKey(cols.patientId, Patient.refs.id),
@@ -1423,7 +1423,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           by: "clinicalFileId",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "clinical_files",
+        table: "ClinicalFile",
 
         foreignKeys: [
           constraints.foreignKey(cols.patientId, Patient.refs.id),
@@ -1457,7 +1457,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           to: "id",
         }),
       }).sql(({ cols, constraints }) => ({
-        table: "radiographs",
+        table: "Radiograph",
 
         foreignKeys: [
           constraints.foreignKey(cols.clinicalFileId, ClinicalFile.refs.id),

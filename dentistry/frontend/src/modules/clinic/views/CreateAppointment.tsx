@@ -111,11 +111,11 @@ export default function CreateAppointment({
         organizationId: "018f0000-0000-7000-0000-000000000001",
         branchId: "018f0000-0000-7000-0000-000000000002",
         patientId: form.patientId,
-        professionalMembershipId: form.professionalId,
+        practitionerMembershipId: form.professionalId,
         serviceId: form.serviceIds[0],
         serviceIds: form.serviceIds,
-        startsAt: startIso,
-        endsAt: endIso,
+        scheduledStartAt: startIso,
+        scheduledEndAt: endIso,
         notes: form.notes,
         createdByMembershipId: "018f0000-0000-7000-0000-000000000003",
       });
@@ -283,7 +283,7 @@ export default function CreateAppointment({
               >
                 <option value="">+ Seleccionar y agregar servicio…</option>
                 {services
-                  .filter((s) => s.active && !form.serviceIds.includes(s.id))
+                  .filter((s) => s.isActive && !form.serviceIds.includes(s.id))
                   .map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.durationMin}m · {formatCurrency(s.price)})

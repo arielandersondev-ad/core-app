@@ -10,13 +10,13 @@ import {
 import {
   AssignPlanDto,
   ChangePlanAssignmentStatusDto,
-  OrganizationPlanParamsDto,
+  OrganizationPlanAssignmentParamsDto,
 } from '../dto/plan-assignment.dto.js';
 import { OrganizationParamDto } from '../dto/plan-param.dto.js';
 
 @Controller('organizations')
 @UseGuards(JwtAuthGuard, CoreAccessGuard)
-export class OrganizationPlanController {
+export class OrganizationPlanAssignmentController {
   constructor(
     private readonly listAssignments: ListPlanAssignmentsUseCase,
     private readonly assignPlan: AssignPlanUseCase,
@@ -31,14 +31,14 @@ export class OrganizationPlanController {
 
   @Put(':organizationId/plans/:vertical')
   @RequireCoreAccess('plans:assign')
-  assign(@Param() params: OrganizationPlanParamsDto, @Body() body: AssignPlanDto) {
+  assign(@Param() params: OrganizationPlanAssignmentParamsDto, @Body() body: AssignPlanDto) {
     return this.assignPlan.execute({ ...params, ...body });
   }
 
   @Patch(':organizationId/plans/:vertical/status')
   @RequireCoreAccess('plans:assign')
   status(
-    @Param() params: OrganizationPlanParamsDto,
+    @Param() params: OrganizationPlanAssignmentParamsDto,
     @Body() body: ChangePlanAssignmentStatusDto,
   ) {
     return this.changeStatus.execute({ ...params, ...body });
