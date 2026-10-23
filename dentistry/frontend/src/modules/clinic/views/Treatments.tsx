@@ -14,7 +14,7 @@ export default function Treatments({
   const [search, setSearch] = useState("");
 
   const filtered = services.filter((s) => {
-    const matchActive = showInactive ? true : s.active;
+    const matchActive = showInactive ? true : s.isActive;
     const matchSearch =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.category.toLowerCase().includes(search.toLowerCase());
@@ -22,10 +22,10 @@ export default function Treatments({
   });
 
   const categories = [...new Set(services.map((s) => s.category))];
-  const activeCount = services.filter((s) => s.active).length;
+  const activeCount = services.filter((s) => s.isActive).length;
   const avgPrice =
     activeCount > 0
-      ? services.filter((s) => s.active).reduce((sum, s) => sum + s.price, 0) /
+      ? services.filter((s) => s.isActive).reduce((sum, s) => sum + s.price, 0) /
         activeCount
       : 0;
 
@@ -159,12 +159,12 @@ export default function Treatments({
                           <td className="px-4 py-3.5">
                             <span
                               className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium rounded-md ${
-                                svc.active
+                                svc.isActive
                                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                                   : "bg-stone-100 text-stone-600 dark:bg-stone-900 dark:text-stone-400 border border-stone-200 dark:border-stone-800"
                               }`}
                             >
-                              {svc.active ? "Activo" : "Inactivo"}
+                              {svc.isActive ? "Activo" : "Inactivo"}
                             </span>
                           </td>
                         </tr>

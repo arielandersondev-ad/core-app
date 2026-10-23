@@ -4,7 +4,6 @@ import { DentalServiceSupply } from '../../domain/entities/dental-service-supply
 import { DentalServiceRepository } from '../../domain/repositories/dental-service.repository.js';
 
 export interface CreateDentalServiceSupplyDto {
-  inventoryItemId?: string;
   name: string;
   quantity?: number;
   unit?: string;
@@ -22,7 +21,7 @@ export interface CreateDentalServiceCommand {
   basePriceMinor?: number;
   labCostMinor?: number;
   currency?: string;
-  active?: boolean;
+  isActive?: boolean;
   createdByMembershipId: string;
   supplies?: CreateDentalServiceSupplyDto[];
 }
@@ -48,7 +47,6 @@ export class CreateDentalServiceUseCase {
       (s) =>
         new DentalServiceSupply({
           organizationId: command.organizationId,
-          inventoryItemId: s.inventoryItemId,
           name: s.name,
           quantity: s.quantity,
           unit: s.unit,
@@ -67,7 +65,7 @@ export class CreateDentalServiceUseCase {
       basePriceMinor: command.basePriceMinor,
       labCostMinor: command.labCostMinor,
       currency: command.currency,
-      active: command.active ?? true,
+      isActive: command.isActive ?? true,
       createdByMembershipId: command.createdByMembershipId,
       supplies,
     });

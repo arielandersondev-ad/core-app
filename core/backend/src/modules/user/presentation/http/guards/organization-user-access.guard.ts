@@ -6,7 +6,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../../../../common/infrastructure/prisma-uuid.js';
 import { CorePermissionService } from '../../../../auth/infrastructure/security/core-permission.service.js';
 import type { OrganizationUserRequest } from '../types/organization-user-request.js';
 
@@ -39,9 +38,9 @@ export class OrganizationUserAccessGuard implements CanActivate {
       throw new ForbiddenException('No tiene permisos para consultar usuarios');
     }
 
-    const links = await this.prisma.orm.core.MembershipBranch.where({
-      membershipId: toUuid36(principal.membershipId),
-      deleted: false,
+    const links = await this.prisma.orm.core.OrganizationMembershipBranch.where({
+      membershipId: principal.membershipId,
+      deletedAt: null,
     }).all();
     const branchIds: string[] = [];
 
@@ -49,7 +48,7 @@ export class OrganizationUserAccessGuard implements CanActivate {
       const branch = await this.prisma.orm.core.Branch.first({ id: link.branchId });
       if (
         branch &&
-        !branch.deleted &&
+        !branch.deletedAt &&
         branch.status === 'ACTIVE' &&
         String(branch.organizationId) === principal.organizationId
       ) {

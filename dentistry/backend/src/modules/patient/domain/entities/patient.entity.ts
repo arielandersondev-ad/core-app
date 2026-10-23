@@ -17,7 +17,6 @@ export interface PatientProps {
   status?: PatientStatus;
   createdByMembershipId: string;
   updatedByMembershipId?: string | null;
-  deleted?: boolean;
   deletedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
@@ -39,7 +38,6 @@ export class Patient {
   private _status: PatientStatus;
   readonly createdByMembershipId: string;
   private _updatedByMembershipId: string | null;
-  private _deleted: boolean;
   private _deletedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -60,14 +58,13 @@ export class Patient {
     this._email = props.email?.trim() ?? null;
     this._birthDate = props.birthDate ?? null;
     this._sex = props.sex ?? null;
-    this._documentType = props.documentType?.trim() ?? null;
-    this._documentNumber = props.documentNumber?.trim() ?? null;
+    this._documentType = props.documentType?.trim() || null;
+    this._documentNumber = props.documentNumber?.trim() || null;
     this._address = props.address?.trim() ?? null;
     this._notes = props.notes?.trim() ?? null;
     this._status = props.status ?? 'ACTIVE';
     this.createdByMembershipId = props.createdByMembershipId;
     this._updatedByMembershipId = props.updatedByMembershipId ?? null;
-    this._deleted = props.deleted ?? false;
     this._deletedAt = props.deletedAt ?? null;
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
@@ -126,7 +123,7 @@ export class Patient {
   }
 
   get deleted(): boolean {
-    return this._deleted;
+    return this._deletedAt !== null;
   }
 
   get deletedAt(): Date | null {
@@ -161,9 +158,9 @@ export class Patient {
     if (props.birthDate !== undefined) this._birthDate = props.birthDate;
     if (props.sex !== undefined) this._sex = props.sex;
     if (props.documentType !== undefined)
-      this._documentType = props.documentType?.trim() ?? null;
+      this._documentType = props.documentType?.trim() || null;
     if (props.documentNumber !== undefined)
-      this._documentNumber = props.documentNumber?.trim() ?? null;
+      this._documentNumber = props.documentNumber?.trim() || null;
     if (props.address !== undefined)
       this._address = props.address?.trim() ?? null;
     if (props.notes !== undefined) this._notes = props.notes?.trim() ?? null;
@@ -171,7 +168,6 @@ export class Patient {
   }
 
   softDelete(updatedByMembershipId: string): void {
-    this._deleted = true;
     this._deletedAt = new Date();
     this._updatedByMembershipId = updatedByMembershipId;
   }

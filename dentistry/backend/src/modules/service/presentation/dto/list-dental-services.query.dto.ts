@@ -1,4 +1,4 @@
-import { IsBooleanString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class ListDentalServicesQueryDto {
   @IsUUID()
@@ -10,7 +10,7 @@ export class ListDentalServicesQueryDto {
 
   @IsOptional()
   @IsString()
-  active?: string;
+  isActive?: string;
 
   @IsOptional()
   @IsString()

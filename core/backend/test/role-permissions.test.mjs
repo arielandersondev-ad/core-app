@@ -12,8 +12,8 @@ function harness() {
   const links = [{ id: 'link-1', roleId, permissionId: firstId }];
   const permissions = new Set([firstId, secondId]);
   const orm = { core: {
-    Role: { first: async () => ({ id: roleId, organizationId, deleted: false }) },
-    Organization: { first: async () => ({ id: organizationId, status: 'ACTIVE', deleted: false }) },
+    Role: { first: async () => ({ id: roleId, organizationId, deletedAt: null }) },
+    Organization: { first: async () => ({ id: organizationId, status: 'ACTIVE', deletedAt: null }) },
     Permission: { first: async ({ id }) => permissions.has(id) ? { id } : null },
     RolePermission: {
       where: (filter) => ({
@@ -29,7 +29,7 @@ function harness() {
     },
   } };
   const prisma = { transaction: async (work) => work({ orm }) };
-  const useCase = new ReplaceRolePermissionsUseCase(new PrismaRoleRepository(prisma, {}));
+  const useCase = new ReplaceRolePermissionsUseCase(new PrismaRoleRepository(prisma));
   return { links, useCase };
 }
 

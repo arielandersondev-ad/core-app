@@ -14,6 +14,7 @@ import { UpdatePatientUseCase } from '../../application/use-case/update-patient.
 import { CreatePatientDto } from '../dto/create-patient.dto.js';
 import { PatientResponseDto } from '../dto/patient.response.dto.js';
 import { UpdatePatientDto } from '../dto/update-patient.dto.js';
+import { parseCivilDate } from '../../../../common/validation/civil-date.js';
 
 @Controller('patients')
 export class PatientController {
@@ -58,7 +59,7 @@ export class PatientController {
       lastName: dto.lastName,
       phone: dto.phone,
       email: dto.email,
-      birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+      birthDate: parseCivilDate(dto.birthDate),
       sex: dto.sex,
       documentType: dto.documentType,
       documentNumber: dto.documentNumber,
@@ -81,7 +82,7 @@ export class PatientController {
       lastName: dto.lastName,
       phone: dto.phone,
       email: dto.email,
-      birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
+      birthDate: parseCivilDate(dto.birthDate),
       sex: dto.sex,
       documentType: dto.documentType,
       documentNumber: dto.documentNumber,

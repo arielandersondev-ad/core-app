@@ -1,6 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { PrismaService } from '../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../common/infrastructure/prisma-uuid.js';
 
 export interface ProfessionalDto {
   id: string; // membershipId
@@ -31,16 +30,16 @@ export class ClinicController {
   ): Promise<ProfessionalDto[]> {
     if (!organizationId) return [];
 
-    const memberships = (await this.prisma.orm.core.Membership.where({
-      organizationId: toUuid36(organizationId),
-      deleted: false,
-    }).all()) as any[];
+    const memberships =
+      (await this.prisma.orm.core.OrganizationMembership.where({
+        organizationId: organizationId,
+        deletedAt: null,
+      }).all()) as any[];
 
     if (!memberships || memberships.length === 0) return [];
 
-    const userIds = memberships.map((m) => toUuid36(m.userId));
     const users = (await this.prisma.orm.core.User.where({
-      deleted: false,
+      deletedAt: null,
     }).all()) as any[];
 
     const userMap = new Map<string, any>();

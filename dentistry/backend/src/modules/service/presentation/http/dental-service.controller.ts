@@ -46,7 +46,7 @@ export class DentalServiceController {
       basePriceMinor: dto.basePriceMinor,
       labCostMinor: dto.labCostMinor,
       currency: dto.currency,
-      active: dto.active,
+      isActive: dto.isActive,
       createdByMembershipId: dto.createdByMembershipId,
       supplies: dto.supplies,
     });
@@ -54,15 +54,15 @@ export class DentalServiceController {
 
   @Get()
   async list(@Query() query: ListDentalServicesQueryDto) {
-    let active: boolean | undefined = undefined;
-    if (query.active !== undefined) {
-      active = query.active === 'true';
+    let isActive: boolean | undefined = undefined;
+    if (query.isActive !== undefined) {
+      isActive = query.isActive === 'true';
     }
 
     return this.listServicesUseCase.execute({
       organizationId: query.organizationId,
       category: query.category,
-      active,
+      isActive,
       search: query.search,
     });
   }
@@ -88,7 +88,7 @@ export class DentalServiceController {
       basePriceMinor: dto.basePriceMinor,
       labCostMinor: dto.labCostMinor,
       currency: dto.currency,
-      active: dto.active,
+      isActive: dto.isActive,
       updatedByMembershipId: dto.updatedByMembershipId,
       supplies: dto.supplies,
     });

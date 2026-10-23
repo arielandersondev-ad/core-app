@@ -6,14 +6,14 @@ import { Button, Input, Select } from '@/shared/components/ui';
 import { Modal } from '@/shared/components/ui/Modal';
 import { useOrganizations } from '@/features/organization/hooks/use-organizations';
 import { useAssignPlan } from '../hooks/use-plans';
-import type { Plan, PlanAssignment } from '../types/plan';
+import type { Plan, OrganizationPlanAssignment } from '../types/plan';
 
-type Props = {open: boolean; plans: readonly Plan[]; assignment?: PlanAssignment | null; onClose: () => void};
+type Props = {open: boolean; plans: readonly Plan[]; assignment?: OrganizationPlanAssignment | null; onClose: () => void};
 
 export function AssignPlanDialog({ open, plans, assignment, onClose }: Props) {
   const organizations = useOrganizations();
   const mutation = useAssignPlan();
-  const available = useMemo(() => plans.filter((plan) => plan.active && !plan.deleted), [plans]);
+  const available = useMemo(() => plans.filter((plan) => plan.isActive && !plan.deleted), [plans]);
   const [organizationId, setOrganizationId] = useState(assignment?.organizationId ?? '');
   const [planId, setPlanId] = useState(assignment?.planId ?? available[0]?.id ?? '');
   const [status, setStatus] = useState<'ACTIVE' | 'TRIALING'>(assignment?.status === 'TRIALING' ? 'TRIALING' : 'ACTIVE');

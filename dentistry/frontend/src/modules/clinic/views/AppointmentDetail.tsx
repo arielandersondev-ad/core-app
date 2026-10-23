@@ -37,7 +37,7 @@ const backendStatusMap: Record<
   | "IN_PROGRESS"
   | "COMPLETED"
   | "NO_SHOW"
-  | "CANCELLED"
+  | "CANCELED"
 > = {
   programada: "SCHEDULED",
   confirmada: "CONFIRMED",
@@ -45,7 +45,7 @@ const backendStatusMap: Record<
   en_curso: "IN_PROGRESS",
   completada: "COMPLETED",
   no_asistio: "NO_SHOW",
-  cancelada: "CANCELLED",
+  cancelada: "CANCELED",
 };
 
 const reverseStatusMap: Record<AppointmentDto["status"], AppointmentStatus> = {
@@ -55,7 +55,7 @@ const reverseStatusMap: Record<AppointmentDto["status"], AppointmentStatus> = {
   IN_PROGRESS: "en_curso",
   COMPLETED: "completada",
   NO_SHOW: "no_asistio",
-  CANCELLED: "cancelada",
+  CANCELED: "cancelada",
 };
 
 const statusOptions: AppointmentStatus[] = [
@@ -166,7 +166,7 @@ export default function AppointmentDetail({
     allergies: [],
   } : null);
 
-  const proId = apiAppointment?.professionalMembershipId || mockApt?.professionalId || "";
+  const proId = apiAppointment?.practitionerMembershipId || mockApt?.professionalId || "";
   const mockPro = getProfessionalById(proId);
   const pro = mockPro || {
     id: proId,
@@ -190,7 +190,7 @@ export default function AppointmentDetail({
     name: "Consulta odontológica",
     price: 150,
     durationMin: 30,
-    active: true,
+    isActive: true,
   };
 
   const svc = allServices[0] || fallbackSvc;
@@ -201,11 +201,11 @@ export default function AppointmentDetail({
 
   let dateFormatted = "";
   let timeRangeFormatted = "";
-  if (apiAppointment?.startsAt) {
-    const startDt = new Date(apiAppointment.startsAt);
-    const endDt = new Date(apiAppointment.endsAt);
+  if (apiAppointment?.scheduledStartAt) {
+    const startDt = new Date(apiAppointment.scheduledStartAt);
+    const endDt = new Date(apiAppointment.scheduledEndAt);
     dateFormatted = Number.isNaN(startDt.getTime())
-      ? apiAppointment.startsAt
+      ? apiAppointment.scheduledStartAt
       : startDt.toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long" });
     const startTimeStr = Number.isNaN(startDt.getTime())
       ? ""

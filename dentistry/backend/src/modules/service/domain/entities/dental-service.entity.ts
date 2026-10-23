@@ -11,7 +11,7 @@ export interface DentalServiceProps {
   basePriceMinor?: number | null;
   labCostMinor?: number | null;
   currency?: string | null;
-  active?: boolean;
+  isActive?: boolean;
   createdByMembershipId: string;
   updatedByMembershipId?: string | null;
   createdAt?: Date;
@@ -30,7 +30,7 @@ export class DentalService {
   private _basePriceMinor: number;
   private _labCostMinor: number;
   private _currency: string;
-  private _active: boolean;
+  private _isActive: boolean;
   readonly createdByMembershipId: string;
   private _updatedByMembershipId: string | null;
   readonly createdAt: Date;
@@ -61,7 +61,7 @@ export class DentalService {
         ? props.labCostMinor
         : 0;
     this._currency = props.currency?.trim() || 'BOB';
-    this._active = props.active ?? true;
+    this._isActive = props.isActive ?? true;
     this.createdByMembershipId = props.createdByMembershipId;
     this._updatedByMembershipId = props.updatedByMembershipId ?? null;
     this.createdAt = props.createdAt ?? new Date();
@@ -101,8 +101,8 @@ export class DentalService {
     return this._currency;
   }
 
-  get active(): boolean {
-    return this._active;
+  get isActive(): boolean {
+    return this._isActive;
   }
 
   get updatedByMembershipId(): string | null {
@@ -141,7 +141,7 @@ export class DentalService {
     basePriceMinor?: number | null;
     labCostMinor?: number | null;
     currency?: string | null;
-    active?: boolean;
+    isActive?: boolean;
     updatedByMembershipId: string;
     supplies?: DentalServiceSupply[];
   }) {
@@ -180,8 +180,8 @@ export class DentalService {
       this._currency = props.currency.trim();
     }
 
-    if (props.active !== undefined) {
-      this._active = props.active;
+    if (props.isActive !== undefined) {
+      this._isActive = props.isActive;
     }
 
     if (props.supplies !== undefined) {
@@ -193,9 +193,9 @@ export class DentalService {
   }
 
   toggleActive(updatedByMembershipId: string): boolean {
-    this._active = !this._active;
+    this._isActive = !this._isActive;
     this._updatedByMembershipId = updatedByMembershipId;
     this._updatedAt = new Date();
-    return this._active;
+    return this._isActive;
   }
 }

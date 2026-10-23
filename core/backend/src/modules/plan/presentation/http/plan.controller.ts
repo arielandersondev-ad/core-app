@@ -46,10 +46,10 @@ export class PlanController {
     return this.createPlan.execute({
       ...body,
       description: body.description ?? null,
-      configuration: body.configuration ?? {},
+      entitlements: body.entitlements ?? {},
       priceMinor: body.priceMinor ?? null,
       currency: body.currency ?? null,
-      active: body.active ?? true,
+      isActive: body.isActive ?? true,
     });
   }
 

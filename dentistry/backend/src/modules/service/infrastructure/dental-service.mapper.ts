@@ -5,7 +5,6 @@ export interface DentalServiceSupplyRow {
   id: string;
   organizationId: string;
   serviceId: string;
-  inventoryItemId: string | null;
   name: string;
   quantity: number;
   unit: string;
@@ -26,7 +25,7 @@ export interface DentalServiceRow {
   basePriceMinor: number | null;
   labCostMinor: number | null;
   currency: string | null;
-  active: boolean;
+  isActive: boolean;
   createdByMembershipId: string;
   updatedByMembershipId: string | null;
   createdAt: Date;
@@ -41,7 +40,6 @@ export function toDentalServiceSupplyEntity(
     id: row.id,
     organizationId: row.organizationId,
     serviceId: row.serviceId,
-    inventoryItemId: row.inventoryItemId,
     name: row.name,
     quantity: row.quantity,
     unit: row.unit,
@@ -64,7 +62,7 @@ export function toDentalServiceEntity(row: DentalServiceRow): DentalService {
     basePriceMinor: row.basePriceMinor,
     labCostMinor: row.labCostMinor,
     currency: row.currency,
-    active: row.active,
+    isActive: row.isActive,
     createdByMembershipId: row.createdByMembershipId,
     updatedByMembershipId: row.updatedByMembershipId,
     createdAt: row.createdAt,

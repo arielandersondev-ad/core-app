@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   payments,
   getPatientById,
@@ -23,8 +22,6 @@ export default function Payments({
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentsList, setPaymentsList] = useState(payments);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const router = useRouter();
 
   const filtered = paymentsList.filter((p) => {
     const inRange = p.date >= dateFrom && p.date <= dateTo;

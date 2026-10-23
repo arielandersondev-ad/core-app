@@ -4,7 +4,6 @@ export interface DentalServiceSupplyDto {
   id?: string;
   organizationId: string;
   serviceId?: string;
-  inventoryItemId?: string | null;
   name: string;
   quantity?: number;
   unit?: string;
@@ -23,7 +22,7 @@ export interface DentalServiceDto {
   basePriceMinor: number;
   labCostMinor: number;
   currency: string;
-  active: boolean;
+  isActive: boolean;
   createdByMembershipId: string;
   updatedByMembershipId?: string | null;
   createdAt: string;
@@ -41,10 +40,9 @@ export interface CreateDentalServiceRequest {
   basePriceMinor?: number;
   labCostMinor?: number;
   currency?: string;
-  active?: boolean;
+  isActive?: boolean;
   createdByMembershipId: string;
   supplies?: Array<{
-    inventoryItemId?: string;
     name: string;
     quantity?: number;
     unit?: string;
@@ -63,10 +61,9 @@ export interface UpdateDentalServiceRequest {
   basePriceMinor?: number;
   labCostMinor?: number;
   currency?: string;
-  active?: boolean;
+  isActive?: boolean;
   updatedByMembershipId: string;
   supplies?: Array<{
-    inventoryItemId?: string;
     name: string;
     quantity?: number;
     unit?: string;
@@ -78,7 +75,7 @@ export interface UpdateDentalServiceRequest {
 export interface ListDentalServicesParams {
   organizationId: string;
   category?: string;
-  active?: boolean | string;
+  isActive?: boolean | string;
   search?: string;
 }
 

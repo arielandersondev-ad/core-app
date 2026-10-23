@@ -2,7 +2,6 @@ import {
   IsArray,
   IsBoolean,
   IsInt,
-  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -12,10 +11,6 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateDentalServiceSupplyInput {
-  @IsOptional()
-  @IsUUID()
-  inventoryItemId?: string;
-
   @IsString()
   name: string;
 
@@ -78,7 +73,7 @@ export class CreateDentalServiceDto {
 
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @IsUUID()
   createdByMembershipId: string;

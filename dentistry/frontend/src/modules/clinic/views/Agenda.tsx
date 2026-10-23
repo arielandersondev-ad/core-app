@@ -50,7 +50,7 @@ const statusMap: Record<string, AppointmentStatus> = {
   IN_PROGRESS: "en_curso",
   COMPLETED: "completada",
   NO_SHOW: "no_asistio",
-  CANCELLED: "cancelada",
+  CANCELED: "cancelada",
 };
 
 type QuickStatus = Exclude<AppointmentStatus, "cancelada">;
@@ -83,8 +83,8 @@ const statusDotColors: Record<AppointmentStatus, string> = {
 };
 
 function mapDtoToAppointment(dto: AppointmentDto): Appointment {
-  const startDate = new Date(dto.startsAt);
-  const endDate = new Date(dto.endsAt);
+  const startDate = new Date(dto.scheduledStartAt);
+  const endDate = new Date(dto.scheduledEndAt);
   const startTime = startDate.toLocaleTimeString("es-BO", {
     hour: "2-digit",
     minute: "2-digit",
@@ -106,10 +106,10 @@ function mapDtoToAppointment(dto: AppointmentDto): Appointment {
   return {
     id: dto.id,
     patientId: dto.patientId,
-    professionalId: dto.professionalMembershipId,
+    professionalId: dto.practitionerMembershipId,
     serviceId: dto.serviceId,
     serviceIds,
-    date: dto.startsAt.slice(0, 10),
+    date: dto.scheduledStartAt.slice(0, 10),
     startTime,
     endTime,
     status: statusMap[dto.status] ?? "programada",

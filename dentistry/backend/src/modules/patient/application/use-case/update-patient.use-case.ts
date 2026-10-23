@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Patient } from '../../domain/entities/patient.entity.js';
 import { PatientRepository } from '../../domain/repositories/patient.repository.js';
+import { validatePatient } from '../validate-patient.js';
 
 export interface UpdatePatientCommand {
   id: string;
@@ -46,6 +47,7 @@ export class UpdatePatientUseCase {
       updatedByMembershipId: command.updatedByMembershipId,
     });
 
+    validatePatient(patient);
     return this.patientRepository.update(patient);
   }
 }

@@ -15,11 +15,11 @@ import {
   ListPlanAssignmentsUseCase,
 } from './application/use-case/plan-assignment.use-cases.js';
 import { PlanController } from './presentation/http/plan.controller.js';
-import { OrganizationPlanController } from './presentation/http/organization-plan.controller.js';
+import { OrganizationPlanAssignmentController } from './presentation/http/organization-plan-assignment.controller.js';
 
 @Module({
   imports: [AuthSecurityModule],
-  controllers: [PlanController, OrganizationPlanController],
+  controllers: [PlanController, OrganizationPlanAssignmentController],
   providers: [
     { provide: PlanRepository, useClass: PrismaPlanRepository },
     ListPlansUseCase,

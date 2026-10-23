@@ -1,0 +1,225 @@
+{
+  "startedAt": "2026-10-23T13:20:44.531Z",
+  "fromHash": "826ded8772e9b65bde90c34fca480644ba91128c6488fb4760219a138a807945",
+  "toHash": "a2da18a1e42ff8ae6f0d46751f9a5a2e83a412042830e84417c6b6cec115f99b",
+  "migrationName": "20261023T1300_target_schema",
+  "database": "dev",
+  "mode": "DDL and data rehearsal, mandatory ROLLBACK",
+  "tables": [
+    {
+      "table": "core.AuditLog",
+      "originalRows": 16,
+      "resultingRows": 16,
+      "retainedFactsDigest": "7f8a8ff9caef61b32f7ca223eac5cb5b",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.AuthSession",
+      "originalRows": 0,
+      "resultingRows": 0,
+      "retainedFactsDigest": "d41d8cd98f00b204e9800998ecf8427e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.Branch",
+      "originalRows": 4,
+      "resultingRows": 4,
+      "retainedFactsDigest": "d0a5f292bfa257f4dddd58394901a95e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.Organization",
+      "originalRows": 3,
+      "resultingRows": 3,
+      "retainedFactsDigest": "435aa75ae62a74067765f7a468db23b3",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.OrganizationMembership",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "8e46b05a0e6d75e264ef151a1d93415f",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.OrganizationMembershipBranch",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "9f30afec8f74eed2c144c9a2dbc1fb93",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.OrganizationMembershipRole",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "81e2db874b98b43b4a85c354de493f41",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.OrganizationPlanAssignment",
+      "originalRows": 1,
+      "resultingRows": 1,
+      "retainedFactsDigest": "9ac04770652353b6fc7e8cc7e365f306",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.Permission",
+      "originalRows": 19,
+      "resultingRows": 19,
+      "retainedFactsDigest": "80bacb84e0a57e54290ba4d5ae363ad1",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.Plan",
+      "originalRows": 1,
+      "resultingRows": 1,
+      "retainedFactsDigest": "0a355e71a1f08d40575b38ce83619959",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.Role",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "a076c4a8ca35a62e4da21cae0c8b3ea0",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.RolePermission",
+      "originalRows": 19,
+      "resultingRows": 19,
+      "retainedFactsDigest": "93bee7eebd52e44037767c200834f568",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.User",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "5a9e19d8920856c4e9b3e545f4a49bb3",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.UserCredential",
+      "originalRows": 5,
+      "resultingRows": 5,
+      "retainedFactsDigest": "06b24450ec10ab1f903eba4a2b58117d",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.Appointment",
+      "originalRows": 6,
+      "resultingRows": 6,
+      "retainedFactsDigest": "5875d6643364942abd8fc4bb06bb1723",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.AppointmentService",
+      "originalRows": 0,
+      "resultingRows": 6,
+      "retainedFactsDigest": "d41d8cd98f00b204e9800998ecf8427e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.ClinicalEncounter",
+      "originalRows": 3,
+      "resultingRows": 3,
+      "retainedFactsDigest": "e27323957f72c389011e2c803e9c2b21",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.ClinicalFile",
+      "originalRows": 0,
+      "resultingRows": 0,
+      "retainedFactsDigest": "d41d8cd98f00b204e9800998ecf8427e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.DentalService",
+      "originalRows": 12,
+      "resultingRows": 12,
+      "retainedFactsDigest": "57db4b9680dd56576caab39b94171d9f",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.DentalServiceSupply",
+      "originalRows": 0,
+      "resultingRows": 0,
+      "retainedFactsDigest": "d41d8cd98f00b204e9800998ecf8427e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.Patient",
+      "originalRows": 10,
+      "resultingRows": 10,
+      "retainedFactsDigest": "28329b19f0fa91b9c9a6b8a6a3465ab6",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.PatientHealthProfile",
+      "originalRows": 1,
+      "resultingRows": 1,
+      "retainedFactsDigest": "f8d6775ce757be3e1ad4b5f3f99b47c1",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.Payment",
+      "originalRows": 3,
+      "resultingRows": 3,
+      "retainedFactsDigest": "8dfefd96513c80fb2048ad1033709951",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.Radiograph",
+      "originalRows": 0,
+      "resultingRows": 0,
+      "retainedFactsDigest": "d41d8cd98f00b204e9800998ecf8427e",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "dentistry.Treatment",
+      "originalRows": 3,
+      "resultingRows": 3,
+      "retainedFactsDigest": "55fd4ecead7ef281f67ace002bb652f3",
+      "retainedFactsMatch": true
+    },
+    {
+      "table": "core.OrganizationFeatureTrial",
+      "originalRows": 0,
+      "resultingRows": 0
+    },
+    {
+      "table": "dentistry.BranchSchedulingPolicy",
+      "originalRows": 0,
+      "resultingRows": 0
+    },
+    {
+      "table": "dentistry.PatientBranchAssignment",
+      "originalRows": 0,
+      "resultingRows": 0
+    },
+    {
+      "table": "dentistry.PatientPractitionerAssignment",
+      "originalRows": 0,
+      "resultingRows": 0
+    }
+  ],
+  "checks": [
+    "all retained values match approved projections",
+    "29 tables / 362 columns / 43 validated FK / 65 validated CHECK",
+    "all original entities preserved",
+    "no automatic access or plan grants",
+    "clinical and entitlement mappings match approvals",
+    "marker unchanged by SQL"
+  ],
+  "clinicalStatuses": [
+    {
+      "status": "COMPLETED",
+      "rows": 1
+    },
+    {
+      "status": "IN_PROGRESS",
+      "rows": 2
+    }
+  ],
+  "rolledBack": true,
+  "completedAt": "2026-10-23T13:20:58.961Z"
+}

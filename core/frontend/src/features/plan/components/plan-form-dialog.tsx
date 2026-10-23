@@ -17,7 +17,7 @@ function defaults(plan?: Plan | null): PlanFormValues {
     code: plan?.code ?? '', name: plan?.name ?? '', description: plan?.description ?? '',
     type: plan?.type ?? 'PUBLIC', vertical: 'DENTISTRY', durationDays: plan?.durationDays ?? 30,
     price: plan?.priceMinor == null ? '' : (plan.priceMinor / 100).toFixed(2),
-    currency: plan?.currency ?? 'BOB', active: plan?.active ?? true,
+    currency: plan?.currency ?? 'BOB', isActive: plan?.isActive ?? true,
   };
 }
 
@@ -42,8 +42,8 @@ export function PlanFormDialog({ open, plan, onClose }: Props) {
       durationDays: values.durationDays, priceMinor: values.price === '' ? undefined : Math.round(Number(values.price) * 100),
       currency: values.currency.toUpperCase(),
     };
-    if (plan) await update.mutateAsync({ id: plan.id, payload: { ...common, active: values.active } });
-    else await create.mutateAsync({ ...common, code: values.code.toUpperCase(), vertical: values.vertical, configuration: {} });
+    if (plan) await update.mutateAsync({ id: plan.id, payload: { ...common, isActive: values.isActive } });
+    else await create.mutateAsync({ ...common, code: values.code.toUpperCase(), vertical: values.vertical, entitlements: {} });
     close();
   }
 
@@ -64,7 +64,7 @@ export function PlanFormDialog({ open, plan, onClose }: Props) {
           <Input id="plan-duration" type="number" label="Duración (días)" error={form.formState.errors.durationDays?.message} {...form.register('durationDays')} />
           <Input id="plan-price" inputMode="decimal" label="Precio" placeholder="0.00" error={form.formState.errors.price?.message} {...form.register('price')} />
           <Input id="plan-currency" label="Moneda" maxLength={3} error={form.formState.errors.currency?.message} {...form.register('currency')} />
-          {plan && <label className="sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-4 text-sm"><input type="checkbox" className="size-4 accent-primary" {...form.register('active')} /> Disponible para nuevas asignaciones</label>}
+          {plan && <label className="sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-4 text-sm"><input type="checkbox" className="size-4 accent-primary" {...form.register('isActive')} /> Disponible para nuevas asignaciones</label>}
           {mutation.isError && <p role="alert" className="sm:col-span-2 rounded-md border border-danger/30 bg-danger-subtle p-3 text-sm text-danger">{mutationMessage(mutation.error)}</p>}
         </div>
         <footer className="flex flex-col-reverse gap-2 border-t border-border p-4 sm:flex-row sm:justify-end sm:px-6">

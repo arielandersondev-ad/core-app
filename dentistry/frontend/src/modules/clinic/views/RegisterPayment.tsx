@@ -141,7 +141,7 @@ export default function RegisterPayment({
         >
           <option value="">Sin servicio asociado</option>
           {services
-            .filter((s) => s.active)
+            .filter((s) => s.isActive)
             .map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} - {formatCurrency(s.price)}

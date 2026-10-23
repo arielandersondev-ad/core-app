@@ -1,4 +1,4 @@
-import React, { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Input, Select, Button } from "@/shared/components/ui";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 

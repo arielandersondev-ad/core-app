@@ -18,7 +18,7 @@ interface Props {
   ) => void;
 }
 
-export function DataTableToolbar({ searchTerm, onSearch, columns, visibleColumns, onToggleColumn }: Props) {
+export function DataTableToolbar({ searchTerm, onSearch }: Props) {
   return (
     <div
       className="

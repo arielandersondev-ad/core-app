@@ -12,12 +12,12 @@ export interface CreateAppointmentCommand {
   branchId: string;
   authorizedBranchIds: string[];
   patientId: string;
-  professionalMembershipId: string;
+  practitionerMembershipId: string;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string | null;
-  startsAt: Date;
-  endsAt: Date;
+  scheduledStartAt: Date;
+  scheduledEndAt: Date;
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
@@ -32,45 +32,42 @@ export class CreateAppointmentUseCase {
       throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
     }
     // Sin un directorio confiable de profesionales, solo se permite autoasignación.
-    if (command.professionalMembershipId !== command.createdByMembershipId) {
+    if (command.practitionerMembershipId !== command.createdByMembershipId) {
       throw new ForbiddenException('No puede asignar citas a otra membresía.');
     }
-    if (command.startsAt >= command.endsAt) {
+    if (command.scheduledStartAt >= command.scheduledEndAt) {
       throw new BadRequestException(
         'La hora de inicio debe ser anterior a la hora de fin.',
       );
     }
 
-    if (
-      !command.serviceId &&
-      (!command.serviceIds || command.serviceIds.length === 0)
-    ) {
-      throw new BadRequestException(
-        'Debe seleccionar al menos un servicio para la cita.',
-      );
-    }
-
-    const effectiveServiceId =
-      command.serviceId || command.serviceIds?.[0] || '';
+    const serviceIds = [
+      ...new Set([
+        ...(command.serviceId ? [command.serviceId] : []),
+        ...(command.serviceIds ?? []),
+      ]),
+    ];
 
     if (
       !(await this.appointmentRepository.referencesBelongToOrganization({
         organizationId: command.organizationId,
         patientId: command.patientId,
-        serviceId: effectiveServiceId,
+        serviceIds,
         treatmentId: command.treatmentId,
       }))
     ) {
-      throw new BadRequestException('Paciente, servicio o tratamiento inválido para la organización.');
+      throw new BadRequestException(
+        'Paciente, servicio o tratamiento inválido para la organización.',
+      );
     }
 
     // Comprobar que no exista solapamiento de horario para el profesional
     const hasOverlap = await this.appointmentRepository.hasOverlap({
       organizationId: command.organizationId,
       branchId: command.branchId,
-      professionalMembershipId: command.professionalMembershipId,
-      startsAt: command.startsAt,
-      endsAt: command.endsAt,
+      practitionerMembershipId: command.practitionerMembershipId,
+      scheduledStartAt: command.scheduledStartAt,
+      scheduledEndAt: command.scheduledEndAt,
     });
 
     if (hasOverlap) {
@@ -83,12 +80,11 @@ export class CreateAppointmentUseCase {
       organizationId: command.organizationId,
       branchId: command.branchId,
       patientId: command.patientId,
-      professionalMembershipId: command.professionalMembershipId,
-      serviceId: command.serviceId,
-      serviceIds: command.serviceIds,
+      practitionerMembershipId: command.practitionerMembershipId,
+      serviceIds,
       treatmentId: command.treatmentId,
-      startsAt: command.startsAt,
-      endsAt: command.endsAt,
+      scheduledStartAt: command.scheduledStartAt,
+      scheduledEndAt: command.scheduledEndAt,
       reason: command.reason,
       notes: command.notes,
       createdByMembershipId: command.createdByMembershipId,

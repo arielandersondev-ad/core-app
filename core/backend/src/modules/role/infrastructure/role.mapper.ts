@@ -6,7 +6,6 @@ export type RoleRow = {
   name: string;
   code: string;
   description: string | null;
-  deleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +18,7 @@ export function toRoleEntity(row: RoleRow): Role {
     name: row.name,
     code: row.code,
     description: row.description,
-    deleted: row.deleted,
+    deleted: row.deletedAt !== null,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

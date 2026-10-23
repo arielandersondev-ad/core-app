@@ -1,5 +1,4 @@
 import type { TransactionContext } from './prisma-tx.js';
-import { toUuid36 } from './prisma-uuid.js';
 
 type JsonValue =
   | string
@@ -13,6 +12,7 @@ export type AuditLogEntry = {
   organizationId?: string;
   branchId?: string;
   userId?: string;
+  actorMembershipId?: string;
   action: string;
   resource: string;
   resourceId?: string;
@@ -24,12 +24,13 @@ export async function writeAuditLog(
   entry: AuditLogEntry,
 ): Promise<void> {
   await tx.orm.core.AuditLog.create({
-    organizationId: toUuid36(entry.organizationId),
-    branchId: toUuid36(entry.branchId),
-    userId: toUuid36(entry.userId),
+    organizationId: entry.organizationId,
+    branchId: entry.branchId,
+    userId: entry.userId,
+    actorMembershipId: entry.actorMembershipId,
     action: entry.action,
     resource: entry.resource,
-    resourceId: toUuid36(entry.resourceId),
+    resourceId: entry.resourceId,
     metadata: entry.metadata,
   });
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AssignmentStatus } from '../../domain/entities/plan-assignment.entity.js';
+import type { AssignmentStatus } from '../../domain/entities/organization-plan-assignment.entity.js';
 import { PlanRepository } from '../../domain/repositories/plan.repository.js';
 
 @Injectable()

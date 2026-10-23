@@ -3,8 +3,8 @@ export type JsonValue =
   | number
   | boolean
   | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
 
 export type PlanType = 'PUBLIC' | 'CUSTOM';
 
@@ -16,10 +16,10 @@ export type Plan = {
   type: PlanType;
   vertical: string;
   durationDays: number;
-  configuration: JsonValue;
+  entitlements: JsonValue;
   priceMinor: number | null;
   currency: string | null;
-  active: boolean;
+  isActive: boolean;
   deleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
@@ -38,9 +38,9 @@ export type UpdatePlan = Partial<
     | 'description'
     | 'type'
     | 'durationDays'
-    | 'configuration'
+    | 'entitlements'
     | 'priceMinor'
     | 'currency'
-    | 'active'
+    | 'isActive'
   >
 >;

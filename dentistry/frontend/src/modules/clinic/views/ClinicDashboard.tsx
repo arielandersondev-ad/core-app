@@ -341,7 +341,7 @@ export default function ClinicDashboard({
       <CreatePatientModal
         open={isPatientModalOpen}
         onClose={() => setIsPatientModalOpen(false)}
-        onSuccess={(newPat) => {
+        onSuccess={() => {
           onNavigate("pacientes");
         }}
       />

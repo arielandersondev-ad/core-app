@@ -7,7 +7,6 @@ import {
   OrganizationRepository,
   type OrganizationWithBranches,
 } from '../domain/repositories/organization.repository.js';
-import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { toOrganizationEntity } from './organization.mapper.js';
 import { PrismaOrganizationWriter } from './prisma-organization.writer.js';
 import { PrismaBranchWriter } from './prisma-branch.writer.js';
@@ -59,7 +58,7 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
 
   async findAll(): Promise<Organization[]> {
     const rows = await this.prisma.orm.core.Organization.where({
-      deleted: false,
+      deletedAt: null,
     }).all();
 
     return rows.map(toOrganizationEntity);
@@ -67,10 +66,10 @@ export class PrismaOrganizationRepository extends OrganizationRepository {
 
   async findById(id: string): Promise<Organization | null> {
     const row = await this.prisma.orm.core.Organization.first({
-      id: toUuid36(id),
+      id: id,
     });
 
-    if (!row || row.deleted) {
+    if (!row || row.deletedAt) {
       return null;
     }
 

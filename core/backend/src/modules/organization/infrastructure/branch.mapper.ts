@@ -17,7 +17,6 @@ export type BranchRow = {
   longitude: number | null;
   timezone: string;
   status: string;
-  deleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -41,7 +40,7 @@ export function toBranchEntity(row: BranchRow): Branch {
     longitude: row.longitude,
     timezone: row.timezone,
     status: row.status,
-    deleted: row.deleted,
+    deleted: row.deletedAt !== null,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
