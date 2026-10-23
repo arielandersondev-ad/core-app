@@ -63,7 +63,6 @@ export class UpdateDentalServiceUseCase {
           new DentalServiceSupply({
             organizationId: command.organizationId,
             serviceId: command.id,
-            inventoryItemId: s.inventoryItemId,
             name: s.name,
             quantity: s.quantity,
             unit: s.unit,

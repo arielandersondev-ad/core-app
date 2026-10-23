@@ -11,6 +11,7 @@ export interface AppointmentServiceDto {
   serviceId: string;
   serviceName?: string;
   priceMinor?: number | null;
+  currency?: string | null;
   durationMinutes?: number | null;
   notes?: string | null;
 }
@@ -37,6 +38,8 @@ export interface AppointmentDto {
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
+  updatedByMembershipId?: string | null;
+  rowVersion?: number;
   canceledAt?: string | null;
   canceledByMembershipId?: string | null;
   cancellationReason?: string | null;

@@ -30,7 +30,7 @@ export type Branch = {
 
 export type CreateBranch = {
   // Opcional: en create-organization se asigna dentro de la tx; en
-  // create-branch se valida y convierte con toUuid36.
+  // Los UUID nativos se representan como strings en el contrato compartido.
   organizationId?: string;
 
   name: string;

@@ -1,16 +1,24 @@
 # Diccionario del schema objetivo — Core y Dentistry
 
-Fecha inicial: 2026-10-21. Actualización: 2026-10-22. Versión del documento: 0.2.
+Fecha inicial: 2026-10-21. Actualización: 2026-10-23. Versión del documento: 0.8.
 
-Estado: diseño propuesto para revisión. Este documento no aplica cambios al contrato, a los backends, al frontend ni a PostgreSQL. Las decisiones acordadas se distinguen de las propuestas técnicas y de los puntos pendientes.
+Estado: schema objetivo implementado en packages/db, contrato y tipos regenerados; aplicado a QA el 23/10/2026 mediante `20261023T1300_target_schema`. El ensayo con rollback, las reglas de datos aprobadas y la verificación estricta están en [target-schema-migration.md](target-schema-migration.md). Los endpoints existentes de ambos backends están adaptados localmente, con cambios mínimos de tipos de transporte en Dentistry frontend. Los flujos nuevos del plan base siguen pendientes conforme al alcance confirmado. Véanse el [registro del schema](target-schema-implementation.md) y la [adaptación de backends](backend-schema-adaptation.md) para sus entregas originales. Las decisiones acordadas se distinguen de las propuestas técnicas y de los puntos pendientes.
 
 **Condición de ejecución actualizada:** el usuario confirmó que el proyecto ya funciona en QA y debe conservar ese comportamiento; hay seis horas de mantenimiento y los únicos consumidores están en este repositorio. El [plan de estandarización](semantic-standardization-plan.md) separa la entrega nominal de retiros de columnas, cambios de tipos, reglas y funcionalidades. Este diccionario sigue siendo el objetivo de producto; no es la lista de cambios que deba aplicarse completa durante el refactor nominal. En particular, los 14 retiros propuestos quedan diferidos y la semántica actual de acceso de planes se conserva durante esa entrega.
 
-Fuentes: `packages/db/src/prisma/schema.ts`, contrato generado, repositorios y entidades de Core/Dentistry, configuración de planes, pantallas de pacientes/agenda/historial y decisiones de la conversación. No se ha inspeccionado el contenido de la base desplegada.
+Después de completar la entrega nominal, el usuario autorizó expresamente implementar el schema completo del diccionario, incluidos retiros y tipos, antes de adaptar los backends. Esa implementación local es incompatible con los backends anteriores y no autoriza aplicar el borrador de migración ni resetear QA. Las reglas de acceso y los puntos pendientes siguen requiriendo implementación de aplicación.
+
+Fuentes: `packages/db/src/prisma/schema.ts`, contrato generado, repositorios y entidades de Core/Dentistry, configuración de planes, pantallas de pacientes/agenda/historial y decisiones de la conversación. El 23/10 se inspeccionaron metadatos y datos agregados de QA, se ensayó la migración con rollback y se verificó su aplicación; no se exportaron datos personales ni textos clínicos.
 
 ## 1. Alcance y leyenda
 
 La versión 0.1 prioriza filiación, antecedentes fijos, agenda interna, citas y registro narrativo de atenciones/procedimientos. Incluye una sucursal, dos odontólogos —propietario y empleado— y hasta 300 pacientes por organización. Inventario y soporte son secundarios. Tratamientos, odontograma y archivos pertenecen al siguiente alcance; la prueba de esas funciones solo podrá activarse cuando estén implementadas.
+
+Decisión confirmada: el empleado consulta solo pacientes asignados explícitamente y sus historias clínicas. Un mismo paciente puede tener varios odontólogos autorizados, con un único expediente institucional. Esto añade PatientPractitionerAssignment al diseño funcional; no se deduce autorización de createdByMembershipId, citas o atenciones.
+
+Alta y asignación confirmadas: propietario y empleado pueden registrar pacientes nuevos. El empleado solo puede asignarse a sí mismo durante esa alta; para obtener acceso a un paciente existente debe asignarlo el propietario. El propietario puede asignarse y asignar a otros odontólogos de la organización.
+
+Sucursales confirmadas: un Patient pertenece a una sola Organization y puede vincularse con varias Branch de esa misma organización mediante PatientBranchAssignment. No se comparte una identidad ni expediente entre organizaciones independientes. El vínculo a sucursal y la asignación a odontólogo representan relaciones diferentes y no se sustituyen.
 
 | Marca | Significado |
 |---|---|
@@ -57,7 +65,9 @@ La fila `Campos comunes` de cada entidad enumera exactamente cuáles aplica. Los
 
 ## 2. Inventario completo de tablas
 
-El contrato actual declara **14 modelos Core y 11 Dentistry**. El objetivo documentado añade dos tablas: una política de agenda y una prueba de funciones. La estandarización inventaría 27 tablas, sin crear módulos futuros adicionales.
+La línea base de QA tras la estandarización declara **14 modelos Core y 11 Dentistry**. El contrato objetivo local ya declara **15 Core y 14 Dentistry**, con cuatro tablas nuevas: vínculo de pacientes con sucursales, asignación explícita de pacientes a odontólogos, política de agenda y prueba de funciones. El total es 29 tablas; las cuatro ampliaciones todavía no se crearon en PostgreSQL. Las tres primeras corresponden a la base clínica y agenda; la prueba de funciones se habilitará cuando sus módulos estén implementados.
+
+Las columnas de nombres actuales de la tabla siguiente conservan la línea base anterior a la estandarización. Sus renombres nominales ya se ejecutaron según el reporte de ejecución; las modificaciones funcionales y tablas nuevas siguen siendo diseño.
 
 | Schema | Modelo actual | Tabla física actual | Modelo y tabla objetivo | Marca | Alcance |
 |---|---|---|---|---|---|
@@ -77,6 +87,8 @@ El contrato actual declara **14 modelos Core y 11 Dentistry**. El objetivo docum
 | core | AuditLog | AuditLog | AuditLog | M | Plataforma/base |
 | core | — | — | OrganizationFeatureTrial | A | Prueba del plan siguiente |
 | dentistry | Patient | patients | Patient | R+M físico | Base |
+| dentistry | — | — | PatientPractitionerAssignment | A | Base; asignación clínica explícita |
+| dentistry | — | — | PatientBranchAssignment | A | Base; vínculo a sucursales de la misma organización |
 | dentistry | ClinicalHistory | clinical_histories | PatientHealthProfile | R+M | Base |
 | dentistry | DentalService | dental_services | DentalService | R+M físico | Existente; catálogo fuera del base |
 | dentistry | DentalServiceSupply | dental_service_supplies | DentalServiceSupply | R+M físico | Existente; secundario/futuro |
@@ -189,7 +201,7 @@ Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`, `deletedAt`; r
 | `timezone` | text | M | Zona IANA para presentación y agenda local. |
 | `status` | text | M | Propuesta `ACTIVE`, `INACTIVE`. |
 
-Relaciones: `organization`, `membershipBranches`, `auditLogs`. `BranchSchedulingPolicy` se resuelve desde Dentistry por `branchId`, sin FK entre schemas.
+Relaciones: `organization`, `membershipBranches`, `auditLogs`. `BranchSchedulingPolicy` y los vínculos PatientBranchAssignment se resuelven desde Dentistry por `branchId`, sin FK entre schemas.
 
 ### 3.6 OrganizationMembership
 <!-- source: Membership -->
@@ -397,7 +409,9 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembe
 | `notes` | text? | M | Notas de filiación/contacto; no reemplaza antecedentes, diagnóstico o procedimiento. |
 | `status` | text | C | `ACTIVE`, `INACTIVE`; inactivar no elimina expediente ni libera cupo. |
 
-Relaciones: `healthProfile` 0..1 (antes clinicalHistory), `appointments` 0..N, `clinicalEncounters` 0..N. Relaciones existentes a módulos posteriores: `treatments`, `payments`, `clinicalFiles`.
+Relaciones: `healthProfile` 0..1 (antes clinicalHistory), `branchAssignments` 0..N (filas de PatientBranchAssignment), `practitionerAssignments` 0..N (filas de PatientPractitionerAssignment), `appointments` 0..N, `clinicalEncounters` 0..N. Relaciones existentes a módulos posteriores: `treatments`, `payments`, `clinicalFiles`.
+
+El expediente pertenece a la organización; el acceso del empleado depende de una asignación clínica activa y de su membresía/permisos vigentes. El autor del alta no determina por sí solo quién puede consultar. Compartir un paciente entre odontólogos no duplica Patient ni PatientHealthProfile.
 
 Restricciones: UNIQUE `(organizationId, id)` para FK compuestas. Propuesta de unicidad de documento informado: `(organizationId, documentType, documentNumber)` entre registros no eliminados; normalización y tipos documentales deben definirse antes de activarla. Pacientes sin documento son válidos. No hacer obligatorio teléfono o email para impedir registrar a quien carece de ellos.
 
@@ -539,6 +553,59 @@ Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
 No requiere campos configurables de agenda. Permitir dos citas simultáneas aplica a odontólogos diferentes: el mismo profesional no se duplica. En el futuro, recursos físicos podrán complementar/reemplazar la validación agregada mediante migración, sin cambiar Patient/Appointment.
 
 Cambiar capacidad debe verificar reservas futuras existentes: rechazar una reducción incompatible o solicitar resolver sus conflictos; no invalidarlas silenciosamente. Ausencia inicial de fila se resuelve con política conservadora de capacidad 1 y aprovisionamiento explícito.
+
+### 4.6 PatientPractitionerAssignment
+<!-- added: PatientPractitionerAssignment -->
+
+**A — tabla nueva. Decisión de negocio confirmada:** asignación explícita de un paciente a uno o varios odontólogos autorizados. Un empleado solo consulta pacientes e historias con asignación activa. El diseño de campos y restricciones siguiente es la propuesta técnica que implementa esa decisión.
+
+Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `patientId` | UUID | A | Paciente de la misma organización. |
+| `practitionerMembershipId` | UUID | A | Membresía del odontólogo autorizado; no User.id. |
+| `assignedAt` | TIMESTAMPTZ | A | Instante de inicio del acceso concedido. |
+| `assignedByMembershipId` | UUID | A | Actor autorizado que concede acceso; obtenido de la sesión. |
+| `revokedAt` | TIMESTAMPTZ? | A | Fin de esta asignación; NULL mientras siga concedida. |
+| `revokedByMembershipId` | UUID? | A | Actor que revoca; obligatorio cuando revokedAt está informado. |
+
+Relaciones literales: Patient 1:N PatientPractitionerAssignment mediante patientId; OrganizationMembership 1:N PatientPractitionerAssignment mediante practitionerMembershipId. Por tanto, paciente y odontólogo se relacionan N:M a través de asignaciones. La segunda relación es lógica entre schemas, sin FK física Core↔Dentistry. También organizationId y los actores se validan contra Core desde la API.
+
+FK física compuesta `(organizationId, patientId) → Patient(organizationId, id)`. Propuesta de índice único parcial `(organizationId, patientId, practitionerMembershipId) WHERE revokedAt IS NULL`, para impedir concesiones activas duplicadas y conservar episodios históricos. No admitir assignedAt futuro en 0.1; revokedAt no puede ser anterior a assignedAt y sus datos de autoría deben ser coherentes. Una reincorporación crea otra fila; no borra ni reabre la asignación revocada.
+
+La lectura requiere asignación no revocada y ya iniciada, más organización, membresía, permisos y plan vigentes. Revocar la asignación retira ese acceso del empleado, sin eliminar pacientes, antecedentes ni atenciones previas. La autoría de cada atención permanece en ClinicalEncounter.practitionerMembershipId. Compartir lectura no concede por sí solo edición de atenciones de otro profesional; las correcciones siguen sujetas a sus permisos y reglas clínicas.
+
+Crear/reprogramar una cita o registrar una atención no debe conceder acceso clínico implícito. El actor debe tener el alcance necesario y el profesional responsable debe tener asignación activa; cualquier concesión necesaria será una operación explícita autorizada. No usar una FK obligatoria desde atenciones históricas a la asignación activa, porque su revocación no invalida la historia.
+
+Regla P8 confirmada: ambos roles pueden registrar pacientes. Como propuesta de implementación, el alta por empleado crea Patient y su PatientPractitionerAssignment en la misma transacción. Patient.createdByMembershipId, assignedByMembershipId y practitionerMembershipId corresponden a su membresía autenticada; el servidor no acepta que el empleado elija otra membresía responsable. Esto es una concesión explícita registrada durante el alta, no una autorización deducida posteriormente del creador del paciente.
+
+Para pacientes existentes, solo el propietario concede asignaciones nuevas, tanto a sí mismo como a otros odontólogos de la organización. Un empleado no puede autoasignarse un paciente existente aunque conozca su id. Si el alta se resuelve contra un expediente ya existente, no convertirla en un upsert que conceda acceso al empleado ni duplicar el expediente para eludir la regla; remitir al flujo autorizado del propietario. No exponer un buscador global ni un endpoint de asignación irrestricto como atajo.
+
+Asignar varios odontólogos no consume varios cupos de paciente: se cuenta Patient, no sus asignaciones. Los permisos de revocación y la transición de pacientes al salir un profesional quedan por concretar en P9; no se consideran concedidos al empleado por poder registrar pacientes nuevos.
+
+### 4.7 PatientBranchAssignment
+<!-- added: PatientBranchAssignment -->
+
+**A — tabla nueva. Decisión de negocio confirmada:** un paciente puede estar vinculado a varias sucursales de su propia organización. No relaciona al paciente con varias organizaciones ni concede acceso clínico a sus empleados. Los campos siguientes son la propuesta técnica para esta relación.
+
+Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `patientId` | UUID | A | Paciente cuyo expediente pertenece a organizationId. |
+| `branchId` | UUID | A | Sucursal de esa misma organización; referencia externa a Core. |
+| `createdByMembershipId` | UUID | A | Actor que registra el vínculo; obtenido de la sesión. |
+
+Relaciones literales: Patient 1:N PatientBranchAssignment mediante patientId y Branch 1:N PatientBranchAssignment mediante branchId. Paciente y sucursal forman una relación N:M; Organization 1:N Patient permanece sin cambios. La relación con Branch es lógica entre schemas, sin FK física Core↔Dentistry.
+
+FK física compuesta `(organizationId, patientId) → Patient(organizationId, id)`. Propuesta UNIQUE `(organizationId, patientId, branchId)` e índice `(organizationId, branchId, patientId)` para listar pacientes vinculados. La API comprueba que Branch.organizationId coincida con el paciente y que el actor tenga el alcance necesario; conocer branchId no acredita autorización.
+
+Propuesta de alta: crear Patient, el vínculo a la sucursal autorizada de registro y, cuando lo registra un empleado, su PatientPractitionerAssignment en una misma transacción. Una sucursal adicional reutiliza Patient.id y su único PatientHealthProfile. El paciente consume un solo cupo organizacional, aunque tenga varios vínculos de sucursal y varios odontólogos asignados.
+
+La asignación al odontólogo sigue siendo organizacional, sin duplicarse por cada sucursal. PatientBranchAssignment por sí solo no permite leer el expediente: el empleado requiere además su PatientPractitionerAssignment vigente y los permisos correspondientes. Appointment.branchId y ClinicalEncounter.branchId identifican dónde se agenda o realiza cada atención; validar también el vínculo del paciente con esa sucursal y la habilitación del profesional allí.
+
+No introducir un Patient.branchId singular ni copiar la historia por establecimiento. Vincular una segunda sucursal requiere que el plan permita esa sucursal; el base sigue limitado a una. La estructura N:M prepara el crecimiento de plan sin habilitar más sucursales por sí sola. La gestión y eventual retiro de vínculos se concretan en P10; retirar un vínculo no debe borrar atenciones ni alterar sus sucursales históricas.
 
 ## 5. Dentistry — módulos existentes fuera del flujo base
 
@@ -716,12 +783,14 @@ erDiagram
     Organization ||--o{ OrganizationFeatureTrial : featureTrials
     Plan ||--o{ OrganizationFeatureTrial : sourcePlan
     Patient ||--o| PatientHealthProfile : healthProfile
+    Patient ||--o{ PatientBranchAssignment : branchAssignments
+    Patient ||--o{ PatientPractitionerAssignment : practitionerAssignments
     Patient ||--o{ Appointment : appointments
     Patient ||--o{ ClinicalEncounter : clinicalEncounters
     Appointment o|--o| ClinicalEncounter : clinicalEncounter
 ```
 
-El diagrama omite referencias Core↔Dentistry a propósito: son referencias externas validadas por API, no FK físicas. BranchSchedulingPolicy pertenece a Dentistry y referencia la sucursal de Core por id. Tablas de módulos posteriores conservan sus relaciones internas descritas en la sección 5.
+El diagrama omite referencias Core↔Dentistry a propósito: son referencias externas validadas por API, no FK físicas. BranchSchedulingPolicy y PatientBranchAssignment pertenecen a Dentistry y referencian la sucursal de Core por branchId. PatientPractitionerAssignment referencia OrganizationMembership mediante practitionerMembershipId y los actores mediante sus MembershipId. Organization 1:N Patient continúa representada por organizationId, sin FK cruzada; las sucursales del paciente siempre pertenecen a esa organización. Tablas de módulos posteriores conservan sus relaciones internas descritas en la sección 5.
 
 | Concepto | Fuente de verdad |
 |---|---|
@@ -731,6 +800,8 @@ El diagrama omite referencias Core↔Dentistry a propósito: son referencias ext
 | Ampliación temporal | OrganizationFeatureTrial.featureSnapshot vigente |
 | Capacidad simultánea del establecimiento | BranchSchedulingPolicy |
 | Identidad del paciente | Patient |
+| Sucursales vinculadas al paciente | PatientBranchAssignment, siempre dentro de Patient.organizationId |
+| Pacientes e historias consultables por un empleado | PatientPractitionerAssignment vigente, membresía y permisos |
 | Antecedentes vigentes | PatientHealthProfile |
 | Agenda | Appointment; no crear otra tabla Agenda |
 | Trabajo realizado y contexto histórico | ClinicalEncounter e historySnapshot |
@@ -777,6 +848,10 @@ Cupos y ocupación se verifican bajo exclusión transaccional sobre la misma org
 
 | Operación | Propietario odontólogo | Empleado odontólogo |
 |---|---|---|
+| Registrar paciente nuevo | Sí | Sí |
+| Asignarse al registrar paciente nuevo | Sí | Sí, solo a sí mismo |
+| Asignar paciente nuevo a otros odontólogos | Sí | No |
+| Conceder asignaciones a un paciente existente | Sí, a sí mismo y a otros | No; requiere asignación por propietario |
 | Ver detalles de citas propias | Sí | Sí |
 | Ver detalles de citas de otros | Sí | No |
 | Ver intervalos ocupados de establecimiento | Sí | Sí, sin identidad ni motivo ajeno |
@@ -784,9 +859,11 @@ Cupos y ocupación se verifican bajo exclusión transaccional sobre la misma org
 | Crear/gestionar citas de empleado | Sí | No como política inicial |
 | Configurar capacidad simultánea | Sí | No |
 | Activar prueba de funciones | Sí | No |
-| Consultar expediente clínico ajeno | Alcance organizacional autorizado | P — requiere decisión expresa |
+| Buscar/consultar pacientes y sus historias | Alcance organizacional autorizado | Solo pacientes con asignación clínica activa explícita |
 
 El empleado no recibe pacienteId, nombre, motivo, notas ni ids de citas ajenas en la respuesta de disponibilidad. Exponer una proyección con intervalos/capacidad, separada de la respuesta completa de citas. El filtrado debe ocurrir en backend y en cada recurso, no solo en componentes visuales.
+
+Un paciente compartido tiene un único expediente accesible por sus odontólogos asignados, incluidas las atenciones históricas que lo componen. Esto no amplía el permiso de detalles de citas ajenas ni autoriza a modificar atenciones de otro profesional. Proteger listados, búsqueda, acceso por id y recursos clínicos anidados con la misma regla de asignación; pertenecer a una sucursal o conocer un patientId no concede acceso.
 
 ### 7.3 Capacidad y solapamientos
 
@@ -795,7 +872,7 @@ El empleado no recibe pacienteId, nombre, motivo, notas ni ids de citas ajenas e
 - Para profesionales distintos, permitir simultaneidad hasta maxConcurrentAppointments de la sucursal.
 - Comprobar el máximo simultáneo real a lo largo del intervalo; contar todas las citas que lo intersectan puede sobrerrestringir intervalos largos.
 - Propietario que crea para empleado registra practitionerMembershipId del empleado y createdByMembershipId del propietario.
-- Validar sucursal, membresía activa, asignación a sucursal, permiso y vigencia del plan en servidor.
+- Validar sucursal, membresía activa, asignación del profesional a sucursal, vínculo del paciente a esa sucursal, asignación clínica del paciente al profesional, permiso y vigencia del plan en servidor.
 - Cambiar profesional, horario, sucursal o estado que vuelva a ocupar capacidad reejecuta validaciones.
 - Política propuesta: un odontólogo no se duplica aunque la sucursal admita 2. Cambiar esta regla exige una decisión explícita, no un segundo significado para el mismo campo.
 
@@ -826,7 +903,7 @@ Subir de plan modifica asignación/snapshot y conserva ids clínicos. Un descens
 |---|---|
 | Contrato/migraciones | Nombres físicos PascalCase, renombres semánticos, nulabilidad, campos nuevos, FK/índices/checks y artefactos regenerados. |
 | Core backend | Credencial, sesión, membresías y asignaciones con nombres objetivo; snapshot de entitlements; límites y prueba; auditoría; permisos de propietario/empleado. |
-| Dentistry backend | Token como fuente de organización/autor, servicios opcionales en cita, acceso propio/global, proyección de disponibilidad, capacidad atómica, perfil y atención persistidos. |
+| Dentistry backend | Token como fuente de organización/autor, servicios opcionales en cita, acceso clínico por asignación explícita, acceso propio/global a citas, proyección de disponibilidad, capacidad atómica, perfil y atención persistidos. |
 | BFF Dentistry | Su allowlist actual se centra en citas: añadir endpoints necesarios de pacientes/perfil/atenciones/política, con sesión y validaciones. |
 | Frontend | Sustituir ids/pacientes mock y localStorage clínico por API; no enviar notas ajenas ni depender de filtros visuales; ocultar funciones no contratadas/no implementadas. |
 | DTO/API | Vocabulario objetivo; relaciones credential/authSessions/planAssignments/healthProfile; estados CANCELED; fechas DATE como YYYY-MM-DD y timestamps ISO. |
@@ -844,7 +921,7 @@ Esta secuencia describe la evolución completa del producto. Para la estandariza
 4. Normalizar nombres de Core y tablas físicas de Dentistry; regenerar contrato y actualizar referencias en aplicación/tests.
 5. Migrar serviceId a AppointmentService cuando falte; verificar duplicados/moneda antes de retirar la columna singular. No eliminar datos desconocidos para satisfacer una restricción.
 6. Consolidar deletedAt y la fecha de adquisición radiográfica con reglas explícitas; convertir birthDate y normalizar instantes. Reconciliar antes de aplicar unicidad/checks.
-7. Añadir estado/versiones/snapshot de atención y antecedentes, política de agenda, snapshot contractual y estructura de prueba. No activar módulos futuros todavía.
+7. Añadir estado/versiones/snapshot de atención y antecedentes, vínculos paciente-sucursal, asignaciones explícitas de pacientes a odontólogos, política de agenda, snapshot contractual y estructura de prueba. No inferir asignaciones de registros previos sin una regla revisada. No activar módulos futuros todavía.
 8. Completar API/BFF/frontend base y auditoría. Habilitar permisos y límites en backend.
 9. Verificar los flujos de aceptación antes del primer feedback. Implementar módulos medio por separado; habilitar prueba solo después de verificar su persistencia y límites.
 
@@ -854,6 +931,9 @@ Para filas actuales no inferir estados clínicos nuevos solo porque endedAt es N
 
 - Crear paciente, guardar perfil, reservar cita, registrar atención y consultar el expediente desde otra sesión autorizada, sin depender de mock/localStorage.
 - El propietario puede agendar al empleado; el empleado solo ve detalles propios y ocupación ajena anonimizada.
+- Un empleado sin asignación no puede listar, buscar ni consultar por id al paciente o su historia. Dos odontólogos con asignación activa pueden consultar el mismo expediente sin duplicarlo; revocar una asignación retira ese acceso sin borrar registros clínicos.
+- El empleado puede registrar un paciente nuevo y quedar asignado en la misma transacción; no puede asignar a otro odontólogo ni autoasignarse un paciente existente por id, por upsert o al reservar una cita. El propietario puede asignarse y asignar a otros odontólogos.
+- Un paciente vinculado a dos sucursales de su organización conserva id, expediente y un solo cupo; no se permite vincularlo a una sucursal de otra organización. El vínculo a sucursal no concede acceso a empleados sin asignación clínica. En base, el límite comercial sigue siendo una sucursal.
 - Capacidad 1 rechaza dos profesionales simultáneos; capacidad 2 los admite; el mismo profesional no puede duplicarse.
 - Dos reservas concurrentes no exceden capacidad, y dos altas no exceden cupo. Reprogramaciones también validan.
 - Una cita funciona sin servicios/tratamiento; una atención funciona sin cita; no se enlazan pacientes/organizaciones distintos.
@@ -868,13 +948,15 @@ Para filas actuales no inferir estados clínicos nuevos solo porque endedAt es N
 
 | Id | Tema | Estado / impacto |
 |---|---|---|
-| P1 | Alcance clínico del empleado | Pregunta enviada: pacientes asignados mediante sus citas/atenciones o todos los de la organización. Hasta resolver, no conceder acceso clínico global por su rol. |
+| P1 | Alcance clínico del empleado | Resuelto por usuario: solo pacientes e historias con asignación explícita; un paciente puede tener varios odontólogos autorizados. PatientPractitionerAssignment modela la relación N:M. No derivar acceso de citas, atenciones ni autor del alta. |
 | P2 | Formulario clínico fijo | Propuesta mínima: seis campos de PatientHealthProfile y campos narrativos de ClinicalEncounter. Validar con odontólogo si debe conservar alguna sección adicional del prototipo. |
 | P3 | Correcciones clínicas | Propuesta de 0.1: antes/después auditados, sin firma digital/adendas especializadas. Confirmar UX y responsables autorizados antes de exponer edición finalizada. |
 | P4 | Cuotas de archivos de prueba | El diagrama indica 250 MB y 70 imágenes; precisar MB decimal o MiB y qué archivos cuentan como imagen, incluido PDF radiográfico. No activar cargas con cuota indefinida. |
 | P5 | Datos QA / migraciones | QA ya funciona; ventana confirmada de seis horas y consumidores internos. Verificar revisión desplegada, respaldo, ensayo y recuperación conforme al plan nominal; no se asume autorización de reset. |
 | P6 | Retirada/comercialización de planes | Propuesta: isActive controla nuevas asignaciones, no revoca vigentes. Ajustar política actual de acceso, que consulta plan.active. |
 | P7 | Catálogos administrativos | Core usa varios status como texto libre. Los valores cerrados propuestos necesitan reconciliación de datos/seeds; no son hechos del contrato actual. |
-| P8 | Visibilidad del padrón y altas por empleado | Se derivará de P1, incluyendo búsqueda/creación de pacientes nuevos antes de su primera cita. No exponer un buscador global como atajo a la restricción clínica. |
+| P8 | Altas y concesión de asignaciones | Resuelto por usuario: ambos registran pacientes nuevos; empleado solo se asigna a sí mismo durante el alta. Solo propietario concede asignaciones para pacientes existentes y puede asignarse o asignar a otros odontólogos. La visibilidad sigue limitada por P1. |
+| P9 | Revocación y salida de profesionales | Falta concretar quién puede revocar asignaciones y cómo se reasignan pacientes al salir un odontólogo. Propuesta a revisar: propietario administra revocaciones; suspender una membresía retira acceso sin alterar autoría ni eliminar registros. |
+| P10 | Gestión de vínculos a sucursales | Relación N:M dentro de la misma organización confirmada. Falta concretar quién vincula un paciente existente a otra sucursal y cómo se retira o deshabilita el vínculo sin perder historia. No inferir esta facultad de poder registrar un paciente nuevo. |
 
 Definir estas políticas no requiere crear todas las tablas futuras. El objetivo es una versión 0.1 operativa y un vocabulario estable que permita añadir relaciones y módulos después.

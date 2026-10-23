@@ -1,4 +1,8 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Appointment } from '../../domain/entities/appointment.entity.js';
 import { ForbiddenException } from '@nestjs/common';
 import { AppointmentRepository } from '../../domain/repositories/appointment.repository.js';
@@ -16,7 +20,12 @@ export class CancelAppointmentUseCase {
   constructor(private readonly appointmentRepository: AppointmentRepository) {}
 
   async execute(command: CancelAppointmentCommand): Promise<Appointment> {
-    const appointment = await this.appointmentRepository.findById(command.id, command.organizationId);
+    if (!command.reason.trim())
+      throw new BadRequestException('El motivo de cancelación es obligatorio.');
+    const appointment = await this.appointmentRepository.findById(
+      command.id,
+      command.organizationId,
+    );
     if (!appointment) {
       throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
     }
@@ -25,9 +34,14 @@ export class CancelAppointmentUseCase {
       throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
     }
     appointment.cancel(command.canceledByMembershipId, command.reason);
+    appointment.updatedByMembershipId = command.canceledByMembershipId;
 
-    const updated = await this.appointmentRepository.update(appointment, command.organizationId);
-    if (!updated) throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
+    const updated = await this.appointmentRepository.update(
+      appointment,
+      command.organizationId,
+    );
+    if (!updated)
+      throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
     return updated;
   }
 }

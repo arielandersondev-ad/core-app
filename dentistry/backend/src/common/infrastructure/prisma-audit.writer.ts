@@ -1,27 +1,36 @@
-import type { TransactionContext } from "./prisma-tx.js";
-import { toUuid36 } from "./prisma-uuid.js";
+import type { TransactionContext } from './prisma-tx.js';
 
 export type AuditLogEntry = {
   organizationId?: string;
   branchId?: string;
   userId?: string;
+  actorMembershipId?: string;
   action: string;
   resource: string;
   resourceId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: { [key: string]: JsonValue };
 };
+
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 export async function writeAuditLog(
   tx: TransactionContext,
   entry: AuditLogEntry,
 ): Promise<void> {
   await tx.orm.core.AuditLog.create({
-    organizationId: toUuid36(entry.organizationId),
-    branchId: toUuid36(entry.branchId),
-    userId: toUuid36(entry.userId),
+    organizationId: entry.organizationId,
+    branchId: entry.branchId,
+    userId: entry.userId,
+    actorMembershipId: entry.actorMembershipId,
     action: entry.action,
     resource: entry.resource,
-    resourceId: toUuid36(entry.resourceId),
-    //metadata: entry.metadata,
+    resourceId: entry.resourceId,
+    metadata: entry.metadata,
   });
 }

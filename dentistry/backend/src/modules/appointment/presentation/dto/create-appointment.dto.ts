@@ -1,4 +1,10 @@
-import { IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsArray,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateAppointmentDto {
   @IsUUID()
@@ -15,7 +21,8 @@ export class CreateAppointmentDto {
   serviceId?: string;
 
   @IsOptional()
-  @IsUUID('4', { each: true })
+  @IsArray()
+  @IsUUID('all', { each: true })
   serviceIds?: string[];
 
   @IsOptional()
@@ -35,5 +42,4 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsString()
   notes?: string;
-
 }

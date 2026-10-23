@@ -11,7 +11,6 @@ export type OrganizationRow = {
   country: string;
   timezone: string;
   status: string;
-  deleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +28,7 @@ export function toOrganizationEntity(row: OrganizationRow): Organization {
     country: row.country,
     timezone: row.timezone,
     status: row.status,
-    deleted: row.deleted,
+    deleted: row.deletedAt !== null,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

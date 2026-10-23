@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/require-roles.decorator.js';
 import type { AuthenticatedRequest } from '../types/authenticated-request.js';
 import { PrismaService } from '../../../../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../../../../common/infrastructure/prisma-uuid.js';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -26,20 +25,20 @@ export class RolesGuard implements CanActivate {
 
     const principal = request.user;
     const membership = await this.prisma.orm.core.OrganizationMembership.first({
-      id: toUuid36(principal.membershipId),
+      id: principal.membershipId,
     });
-    if (!membership || membership.deleted || membership.status !== 'ACTIVE' ||
+    if (!membership || membership.deletedAt || membership.status !== 'ACTIVE' ||
       String(membership.userId) !== principal.sub ||
       String(membership.organizationId) !== principal.organizationId) {
       throw new ForbiddenException('Membresía inválida');
     }
     const assigned = await this.prisma.orm.core.OrganizationMembershipRole.where({
       membershipId: membership.id,
-      deleted: false,
+      deletedAt: null,
     }).all();
     for (const link of assigned) {
       const role = await this.prisma.orm.core.Role.first({ id: link.roleId });
-      if (role && !role.deleted &&
+      if (role && !role.deletedAt &&
         (role.organizationId === null || String(role.organizationId) === principal.organizationId) &&
         requiredRoles.includes(role.code.trim().toUpperCase())) {
         return true;

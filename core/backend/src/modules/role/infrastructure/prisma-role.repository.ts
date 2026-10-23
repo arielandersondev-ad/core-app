@@ -3,7 +3,6 @@ import { PrismaService } from '../../../common/infrastructure/prisma.service.js'
 import type { CreateRole, Role } from '../domain/entities/role.entity.js';
 import { RoleRepository } from '../domain/repositories/role.repository.js';
 import { toRoleEntity } from './role.mapper.js';
-import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 
 @Injectable()
 export class PrismaRoleRepository extends RoleRepository {
@@ -19,7 +18,7 @@ export class PrismaRoleRepository extends RoleRepository {
     return rows
       .filter(
         (row) =>
-          !row.deleted &&
+          !row.deletedAt &&
           (row.organizationId === null ||
             row.organizationId === organizationId),
       )
@@ -29,7 +28,7 @@ export class PrismaRoleRepository extends RoleRepository {
   async existsByCodeInScope( code: string, organizationId: string | null ): Promise<boolean> {
     const rows = await this.prisma.orm.core.Role.where({
       code,
-      deleted: false,
+      deletedAt: null,
     }).all();
 
     return rows.some((row) => row.organizationId === organizationId);
@@ -41,7 +40,7 @@ export class PrismaRoleRepository extends RoleRepository {
         code: role.code,
         description: role.description,
         name: role.name,
-        organizationId: toUuid36(role.organizationId),
+        organizationId: role.organizationId,
       });
 
       return {
@@ -50,7 +49,7 @@ export class PrismaRoleRepository extends RoleRepository {
         name: row.name,
         code: row.code,
         description: row.description,
-        deleted: row.deleted,
+        deleted: row.deletedAt !== null,
         deletedAt: row.deletedAt,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -62,18 +61,18 @@ export class PrismaRoleRepository extends RoleRepository {
 
   async replacePermissions(roleId: string, permissionIds: string[]) {
     return this.prisma.transaction(async (tx) => {
-      const role = await tx.orm.core.Role.first({ id: toUuid36(roleId) });
-      if (!role || role.deleted) throw new NotFoundException('Rol no encontrado');
+      const role = await tx.orm.core.Role.first({ id: roleId });
+      if (!role || role.deletedAt) throw new NotFoundException('Rol no encontrado');
       if (role.organizationId === null) {
         throw new ForbiddenException('No se pueden modificar permisos de un rol sin organizacion');
       }
       const organization = await tx.orm.core.Organization.first({ id: role.organizationId });
-      if (!organization || organization.deleted || organization.status !== 'ACTIVE') {
+      if (!organization || organization.deletedAt || organization.status !== 'ACTIVE') {
         throw new ForbiddenException('La organización del rol no está activa');
       }
 
       for (const permissionId of permissionIds) {
-        const permission = await tx.orm.core.Permission.first({ id: toUuid36(permissionId) });
+        const permission = await tx.orm.core.Permission.first({ id: permissionId });
         if (!permission) throw new BadRequestException(`El permiso ${permissionId} no existe`);
       }
 
@@ -89,7 +88,7 @@ export class PrismaRoleRepository extends RoleRepository {
         if (!previous.has(permissionId)) {
           await tx.orm.core.RolePermission.create({
             roleId: role.id,
-            permissionId: toUuid36(permissionId),
+            permissionId: permissionId,
           });
         }
       }

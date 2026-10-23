@@ -27,7 +27,7 @@ export class PatientResponseDto {
     dto.fullName = patient.fullName;
     dto.phone = patient.phone;
     dto.email = patient.email;
-    dto.birthDate = patient.birthDate ? patient.birthDate.toISOString() : null;
+    dto.birthDate = patient.birthDate?.toISOString().slice(0, 10) ?? null;
     dto.sex = patient.sex;
     dto.documentType = patient.documentType;
     dto.documentNumber = patient.documentNumber;

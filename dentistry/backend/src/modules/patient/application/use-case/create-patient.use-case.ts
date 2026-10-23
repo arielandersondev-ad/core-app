@@ -5,6 +5,7 @@ import {
   PatientStatus,
 } from '../../domain/entities/patient.entity.js';
 import { PatientRepository } from '../../domain/repositories/patient.repository.js';
+import { validatePatient } from '../validate-patient.js';
 
 export interface CreatePatientCommand {
   organizationId: string;
@@ -50,6 +51,7 @@ export class CreatePatientUseCase {
       createdByMembershipId: command.createdByMembershipId,
     });
 
+    validatePatient(patient);
     return this.patientRepository.create(patient);
   }
 }

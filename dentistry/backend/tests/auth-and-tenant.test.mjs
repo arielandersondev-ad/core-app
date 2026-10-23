@@ -7,7 +7,9 @@ import { join } from 'node:path';
 import { SignJWT } from 'jose';
 
 const directory = mkdtempSync(join(tmpdir(), 'dentistry-auth-test-'));
-const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+});
 const publicKeyPath = join(directory, 'public.pem');
 writeFileSync(publicKeyPath, publicKey.export({ type: 'spki', format: 'pem' }));
 process.env.JWT_PUBLIC_KEY_PATH = publicKeyPath;
@@ -15,8 +17,12 @@ process.env.JWT_ISSUER = 'core-auth';
 process.env.JWT_DENTISTRY_AUDIENCE = 'dentistry-api';
 after(() => rmSync(directory, { recursive: true, force: true }));
 
-const { DentistryTokenVerifier } = await import('../dist/modules/auth/infrastructure/jwt/dentistry-token.verifier.js');
-const { GetAppointmentByIdUseCase } = await import('../dist/modules/appointment/application/use-case/get-appointment-by-id.use-case.js');
+const { DentistryTokenVerifier } = await import(
+  '../dist/modules/auth/infrastructure/jwt/dentistry-token.verifier.js'
+);
+const { GetAppointmentByIdUseCase } = await import(
+  '../dist/modules/appointment/application/use-case/get-appointment-by-id.use-case.js'
+);
 const verifier = new DentistryTokenVerifier();
 
 const principal = {
@@ -26,7 +32,11 @@ const principal = {
   permissions: ['dentistry:appointments:read'],
 };
 
-async function token(overrides = {}, audience = 'dentistry-api', lifetime = 1800) {
+async function token(
+  overrides = {},
+  audience = 'dentistry-api',
+  lifetime = 1800,
+) {
   return new SignJWT({ ...principal, ...overrides })
     .setProtectedHeader({ alg: 'RS256', typ: 'at+jwt', kid: 'test-key' })
     .setSubject(randomUUID())
@@ -46,11 +56,15 @@ test('acepta un access token Dentistry válido', async () => {
 
 test('rechaza una audiencia Core y una audiencia múltiple', async () => {
   await assert.rejects(verifier.verify(await token({}, 'core-api')));
-  await assert.rejects(verifier.verify(await token({}, ['dentistry-api', 'core-api'])));
+  await assert.rejects(
+    verifier.verify(await token({}, ['dentistry-api', 'core-api'])),
+  );
 });
 
 test('rechaza permisos de otra API y vigencia mayor de 30 minutos', async () => {
-  await assert.rejects(verifier.verify(await token({ permissions: ['users:create'] })));
+  await assert.rejects(
+    verifier.verify(await token({ permissions: ['users:create'] })),
+  );
   await assert.rejects(verifier.verify(await token({}, 'dentistry-api', 3600)));
 });
 
@@ -64,22 +78,52 @@ test('la lectura exige organización y sucursal autorizadas', async () => {
   };
   const useCase = new GetAppointmentByIdUseCase(repository);
   await assert.rejects(
-    useCase.execute(randomUUID(), principal.organizationId, principal.branchIds),
+    useCase.execute(
+      randomUUID(),
+      principal.organizationId,
+      principal.branchIds,
+    ),
     { status: 403 },
   );
   assert.equal(requestedOrganization, principal.organizationId);
 });
 
 test('el mapper conserva valores y asociaciones con los nombres nuevos de citas', async () => {
-  const { toAppointmentEntity } = await import('../dist/modules/appointment/infrastructure/appointment.mapper.js');
-  const actor = randomUUID(), serviceId = randomUUID();
+  const { toAppointmentEntity } = await import(
+    '../dist/modules/appointment/infrastructure/appointment.mapper.js'
+  );
+  const actor = randomUUID(),
+    serviceId = randomUUID();
   const row = {
-    id: randomUUID(), organizationId: randomUUID(), branchId: randomUUID(), patientId: randomUUID(),
-    practitionerMembershipId: actor, serviceId, treatmentId: null,
-    scheduledStartAt: new Date('2026-10-22T14:00:00Z'), scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
-    status: 'CANCELED', reason: 'Evaluación', notes: 'Nota original', createdByMembershipId: actor,
-    canceledAt: new Date('2026-10-21T14:00:00Z'), canceledByMembershipId: actor,
-    cancellationReason: 'Reprogramar', createdAt: new Date('2026-10-20T14:00:00Z'), updatedAt: new Date('2026-10-21T14:00:00Z'),
+    id: randomUUID(),
+    organizationId: randomUUID(),
+    branchId: randomUUID(),
+    patientId: randomUUID(),
+    practitionerMembershipId: actor,
+    treatmentId: null,
+    updatedByMembershipId: actor,
+    rowVersion: 2,
+    services: [
+      {
+        id: randomUUID(),
+        serviceId,
+        priceMinor: 1000,
+        currency: 'BOB',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+    scheduledStartAt: new Date('2026-10-22T14:00:00Z'),
+    scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
+    status: 'CANCELED',
+    reason: 'Evaluación',
+    notes: 'Nota original',
+    createdByMembershipId: actor,
+    canceledAt: new Date('2026-10-21T14:00:00Z'),
+    canceledByMembershipId: actor,
+    cancellationReason: 'Reprogramar',
+    createdAt: new Date('2026-10-20T14:00:00Z'),
+    updatedAt: new Date('2026-10-21T14:00:00Z'),
   };
   const appointment = toAppointmentEntity(row);
   assert.equal(appointment.practitionerMembershipId, actor);
@@ -91,28 +135,58 @@ test('el mapper conserva valores y asociaciones con los nombres nuevos de citas'
   assert.equal(appointment.notes, row.notes);
   assert.equal(appointment.serviceId, serviceId);
   assert.deepEqual(appointment.serviceIds, [serviceId]);
+  assert.equal(appointment.services[0].currency, 'BOB');
+  assert.equal(appointment.rowVersion, 2);
   assert.equal('professionalMembershipId' in appointment, false);
 });
 
-test('los nombres nuevos no eliminan el servicio obligatorio ni amplían la autoasignación', async () => {
-  const { CreateAppointmentUseCase } = await import('../dist/modules/appointment/application/use-case/create-appointment.use-case.js');
-  const actor = randomUUID(), branchId = randomUUID();
+test('las citas admiten cero o varios servicios sin ampliar la autoasignación existente', async () => {
+  const { CreateAppointmentUseCase } = await import(
+    '../dist/modules/appointment/application/use-case/create-appointment.use-case.js'
+  );
+  const actor = randomUUID(),
+    branchId = randomUUID();
   let created;
   const repository = {
     referencesBelongToOrganization: async () => true,
-    hasOverlap: async input => { assert.equal(input.practitionerMembershipId, actor); return false; },
-    create: async value => { created = value; return value; },
+    hasOverlap: async (input) => {
+      assert.equal(input.practitionerMembershipId, actor);
+      return false;
+    },
+    create: async (value) => {
+      created = value;
+      return value;
+    },
   };
   const useCase = new CreateAppointmentUseCase(repository);
   const command = {
-    organizationId: randomUUID(), branchId, authorizedBranchIds: [branchId], patientId: randomUUID(),
-    practitionerMembershipId: actor, createdByMembershipId: actor,
-    scheduledStartAt: new Date('2026-10-22T14:00:00Z'), scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
+    organizationId: randomUUID(),
+    branchId,
+    authorizedBranchIds: [branchId],
+    patientId: randomUUID(),
+    practitionerMembershipId: actor,
+    createdByMembershipId: actor,
+    scheduledStartAt: new Date('2026-10-22T14:00:00Z'),
+    scheduledEndAt: new Date('2026-10-22T14:30:00Z'),
   };
-  await assert.rejects(useCase.execute(command), { status: 400 });
-  await assert.rejects(useCase.execute({ ...command, serviceId: randomUUID(), practitionerMembershipId: randomUUID() }), { status: 403 });
+  await useCase.execute(command);
+  assert.deepEqual(created.serviceIds, []);
+  assert.equal(created.serviceId, '');
+  await assert.rejects(
+    useCase.execute({
+      ...command,
+      serviceId: randomUUID(),
+      practitionerMembershipId: randomUUID(),
+    }),
+    { status: 403 },
+  );
   const serviceId = randomUUID();
-  await useCase.execute({ ...command, serviceId });
+  await useCase.execute({
+    ...command,
+    serviceId,
+    serviceIds: [serviceId, serviceId],
+  });
+  assert.deepEqual(created.serviceIds, [serviceId]);
   assert.equal(created.serviceId, serviceId);
   assert.equal(created.practitionerMembershipId, actor);
   assert.equal(created.scheduledStartAt, command.scheduledStartAt);

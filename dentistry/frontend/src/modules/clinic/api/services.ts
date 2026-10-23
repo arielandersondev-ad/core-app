@@ -4,7 +4,6 @@ export interface DentalServiceSupplyDto {
   id?: string;
   organizationId: string;
   serviceId?: string;
-  inventoryItemId?: string | null;
   name: string;
   quantity?: number;
   unit?: string;
@@ -44,7 +43,6 @@ export interface CreateDentalServiceRequest {
   isActive?: boolean;
   createdByMembershipId: string;
   supplies?: Array<{
-    inventoryItemId?: string;
     name: string;
     quantity?: number;
     unit?: string;
@@ -66,7 +64,6 @@ export interface UpdateDentalServiceRequest {
   isActive?: boolean;
   updatedByMembershipId: string;
   supplies?: Array<{
-    inventoryItemId?: string;
     name: string;
     quantity?: number;
     unit?: string;

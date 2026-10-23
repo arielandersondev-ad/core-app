@@ -4,7 +4,6 @@ import { DentalServiceSupply } from '../../domain/entities/dental-service-supply
 import { DentalServiceRepository } from '../../domain/repositories/dental-service.repository.js';
 
 export interface CreateDentalServiceSupplyDto {
-  inventoryItemId?: string;
   name: string;
   quantity?: number;
   unit?: string;
@@ -48,7 +47,6 @@ export class CreateDentalServiceUseCase {
       (s) =>
         new DentalServiceSupply({
           organizationId: command.organizationId,
-          inventoryItemId: s.inventoryItemId,
           name: s.name,
           quantity: s.quantity,
           unit: s.unit,

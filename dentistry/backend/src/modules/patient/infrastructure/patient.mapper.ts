@@ -19,7 +19,6 @@ export interface PatientRow {
   status: string;
   createdByMembershipId: string;
   updatedByMembershipId: string | null;
-  deleted: boolean;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -42,7 +41,6 @@ export function toPatientEntity(row: PatientRow): Patient {
     status: row.status as PatientStatus,
     createdByMembershipId: row.createdByMembershipId,
     updatedByMembershipId: row.updatedByMembershipId,
-    deleted: row.deleted,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

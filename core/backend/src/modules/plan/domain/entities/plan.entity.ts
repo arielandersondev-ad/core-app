@@ -3,8 +3,8 @@ export type JsonValue =
   | number
   | boolean
   | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
 
 export type PlanType = 'PUBLIC' | 'CUSTOM';
 

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../../../common/infrastructure/prisma-uuid.js';
 import type { AuthenticatedPrincipal } from '../../application/contracts/authenticated-principal.js';
 
 @Injectable()
@@ -9,12 +8,12 @@ export class CorePermissionService {
 
   async hasPermission( principal: AuthenticatedPrincipal, code: string ): Promise<boolean> {
     const membership = await this.prisma.orm.core.OrganizationMembership.first({
-      id: toUuid36(principal.membershipId),
+      id: principal.membershipId,
     });
 
     if (
       !membership ||
-      membership.deleted ||
+      membership.deletedAt ||
       membership.status !== 'ACTIVE' ||
       String(membership.userId) !== principal.sub ||
       String(membership.organizationId) !== principal.organizationId
@@ -23,10 +22,10 @@ export class CorePermissionService {
     }
 
     const user = await this.prisma.orm.core.User.first({
-      id: toUuid36(principal.sub),
+      id: principal.sub,
     });
 
-    if (!user || user.deleted || user.status !== 'ACTIVE') {
+    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
       return false;
     }
 
@@ -34,7 +33,7 @@ export class CorePermissionService {
       id: membership.organizationId,
     });
 
-    if (!organization || organization.deleted || organization.status !== 'ACTIVE') {
+    if (!organization || organization.deletedAt || organization.status !== 'ACTIVE') {
       return false;
     }
 
@@ -43,7 +42,7 @@ export class CorePermissionService {
 
     const assignedRoles = await this.prisma.orm.core.OrganizationMembershipRole.where({
       membershipId: membership.id,
-      deleted: false,
+      deletedAt: null,
     }).all();
 
     for (const assignedRole of assignedRoles) {
@@ -53,7 +52,7 @@ export class CorePermissionService {
 
       if (
         !role ||
-        role.deleted ||
+        role.deletedAt ||
         (role.organizationId !== null &&
           String(role.organizationId) !== principal.organizationId)
       ) {

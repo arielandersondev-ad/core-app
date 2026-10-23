@@ -41,27 +41,24 @@ export class CreateAppointmentUseCase {
       );
     }
 
-    if (
-      !command.serviceId &&
-      (!command.serviceIds || command.serviceIds.length === 0)
-    ) {
-      throw new BadRequestException(
-        'Debe seleccionar al menos un servicio para la cita.',
-      );
-    }
-
-    const effectiveServiceId =
-      command.serviceId || command.serviceIds?.[0] || '';
+    const serviceIds = [
+      ...new Set([
+        ...(command.serviceId ? [command.serviceId] : []),
+        ...(command.serviceIds ?? []),
+      ]),
+    ];
 
     if (
       !(await this.appointmentRepository.referencesBelongToOrganization({
         organizationId: command.organizationId,
         patientId: command.patientId,
-        serviceId: effectiveServiceId,
+        serviceIds,
         treatmentId: command.treatmentId,
       }))
     ) {
-      throw new BadRequestException('Paciente, servicio o tratamiento inválido para la organización.');
+      throw new BadRequestException(
+        'Paciente, servicio o tratamiento inválido para la organización.',
+      );
     }
 
     // Comprobar que no exista solapamiento de horario para el profesional
@@ -84,8 +81,7 @@ export class CreateAppointmentUseCase {
       branchId: command.branchId,
       patientId: command.patientId,
       practitionerMembershipId: command.practitionerMembershipId,
-      serviceId: command.serviceId,
-      serviceIds: command.serviceIds,
+      serviceIds,
       treatmentId: command.treatmentId,
       scheduledStartAt: command.scheduledStartAt,
       scheduledEndAt: command.scheduledEndAt,

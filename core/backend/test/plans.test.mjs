@@ -7,7 +7,7 @@ import { PlanController } from '../dist/modules/plan/presentation/http/plan.cont
 const organizationId = '00000000-0000-0000-0000-000000000001';
 const planId = '00000000-0000-0000-0000-000000000002';
 
-test('el contrato de planes renombra campos sin reinterpretar el JSON ni el flag', () => {
+test('el controlador conserva el payload comercial que el repositorio versiona', () => {
   let received;
   const controller = new PlanController({}, {}, { execute: input => { received = input; return input; } }, {}, {}, {});
   const entitlements = { customExistingKey: { enabled: true }, legacyLimit: 7 };
@@ -22,7 +22,7 @@ test('el contrato de planes renombra campos sin reinterpretar el JSON ni el flag
 });
 
 function harness({ assignmentStatus } = {}) {
-  const organization = { id: organizationId, name: 'Clínica Uno', status: 'ACTIVE', deleted: false };
+  const organization = { id: organizationId, name: 'Clínica Uno', status: 'ACTIVE', deletedAt: null };
   const plan = {
     id: planId,
     code: 'DENTISTRY_STARTER',
@@ -35,7 +35,6 @@ function harness({ assignmentStatus } = {}) {
     priceMinor: null,
     currency: null,
     isActive: true,
-    deleted: false,
     deletedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -99,6 +98,26 @@ test('asigna un plan y deriva endsAt desde durationDays', async () => {
   assert.equal(result.planCode, 'DENTISTRY_STARTER');
 });
 
+test('captura los derechos versionados sin mutar el catálogo y conserva el snapshot al suspender', async () => {
+  const { repository, plan } = harness();
+  plan.entitlements = { limits: { patients: 300 }, features: { files: false } };
+  const result = await repository.assign({ organizationId, planId, vertical: 'DENTISTRY', status: 'ACTIVE', startsAt: new Date() });
+  assert.deepEqual(result.entitlementsSnapshot, { ...plan.entitlements, schemaVersion: 1 });
+  assert.equal(plan.entitlements.schemaVersion, undefined);
+  plan.entitlements.limits.patients = 900;
+  plan.entitlements.features.files = true;
+  const suspended = await repository.changeAssignmentStatus({ organizationId, vertical: 'DENTISTRY', status: 'SUSPENDED', reason: 'Solicitud' });
+  assert.equal(suspended.entitlementsSnapshot.limits.patients, 300);
+  assert.equal(suspended.entitlementsSnapshot.features.files, false);
+});
+
+test('rechaza snapshots con una versión explícita inválida', async () => {
+  const { normalizeEntitlements } = await import('../dist/modules/plan/domain/entitlements.js');
+  for (const schemaVersion of ['1', null, 0, -1, 1.5]) assert.throws(() => normalizeEntitlements({ schemaVersion }), { status: 400 });
+  assert.throws(() => normalizeEntitlements([]), { status: 400 });
+  assert.throws(() => normalizeEntitlements(null), { status: 400 });
+});
+
 test('rechaza asignar un plan de otra vertical', async () => {
   const { repository } = harness();
   await assert.rejects(repository.assign({
@@ -109,7 +128,7 @@ test('rechaza asignar un plan de otra vertical', async () => {
 test('impide eliminar lógicamente un plan con una asignación vigente', async () => {
   const { repository, plan } = harness({ assignmentStatus: 'ACTIVE' });
   await assert.rejects(repository.softDelete(planId), ConflictException);
-  assert.equal(plan.deleted, false);
+  assert.equal(plan.deletedAt, null);
 });
 
 test('permite el borrado lógico cuando solo hay asignaciones canceladas', async () => {

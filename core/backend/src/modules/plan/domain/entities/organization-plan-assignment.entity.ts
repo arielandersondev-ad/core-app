@@ -1,3 +1,5 @@
+import type { JsonValue } from './plan.entity.js';
+
 export type AssignmentStatus = 'TRIALING' | 'ACTIVE' | 'SUSPENDED' | 'CANCELED';
 
 export type OrganizationPlanAssignment = {
@@ -8,6 +10,7 @@ export type OrganizationPlanAssignment = {
   planCode: string;
   planName: string;
   vertical: string;
+  entitlementsSnapshot: JsonValue;
   status: AssignmentStatus;
   startsAt: Date;
   endsAt: Date;

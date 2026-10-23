@@ -11,10 +11,6 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateDentalServiceSupplyInput {
-  @IsOptional()
-  @IsUUID()
-  inventoryItemId?: string;
-
   @IsString()
   name: string;
 

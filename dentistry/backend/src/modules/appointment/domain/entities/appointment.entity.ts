@@ -12,6 +12,7 @@ export interface AppointmentServiceItem {
   serviceId: string;
   serviceName?: string;
   priceMinor?: number | null;
+  currency?: string | null;
   durationMinutes?: number | null;
   notes?: string | null;
 }
@@ -31,6 +32,8 @@ export interface AppointmentProps {
   reason?: string | null;
   notes?: string | null;
   createdByMembershipId: string;
+  updatedByMembershipId?: string | null;
+  rowVersion?: number;
   canceledAt?: Date | null;
   canceledByMembershipId?: string | null;
   cancellationReason?: string | null;
@@ -54,6 +57,8 @@ export class Appointment {
   private _reason: string | null;
   private _notes: string | null;
   readonly createdByMembershipId: string;
+  updatedByMembershipId: string | null;
+  readonly rowVersion: number;
   private _canceledAt: Date | null;
   private _canceledByMembershipId: string | null;
   private _cancellationReason: string | null;
@@ -78,8 +83,9 @@ export class Appointment {
         : props.serviceId
           ? [props.serviceId]
           : [];
-    this.serviceIds = sIds;
-    this.serviceId = sIds[0] || props.serviceId || '';
+    this.serviceIds = [...new Set(sIds)];
+    // Compatibility projection for existing clients; AppointmentService owns persistence.
+    this.serviceId = this.serviceIds[0] ?? '';
     this.services = props.services || [];
     this.treatmentId = props.treatmentId ?? null;
     this.scheduledStartAt = props.scheduledStartAt;
@@ -88,6 +94,8 @@ export class Appointment {
     this._reason = props.reason ?? null;
     this._notes = props.notes ?? null;
     this.createdByMembershipId = props.createdByMembershipId;
+    this.updatedByMembershipId = props.updatedByMembershipId ?? null;
+    this.rowVersion = props.rowVersion ?? 1;
     this._canceledAt = props.canceledAt ?? null;
     this._canceledByMembershipId = props.canceledByMembershipId ?? null;
     this._cancellationReason = props.cancellationReason ?? null;
@@ -175,13 +183,15 @@ export class Appointment {
   }
 
   cancel(canceledByMembershipId: string, reason: string): void {
+    if (!reason.trim())
+      throw new Error('El motivo de cancelación es obligatorio.');
     if (this._status === 'COMPLETED') {
       throw new Error('No se puede cancelar una cita completada.');
     }
     this._status = 'CANCELED';
     this._canceledAt = new Date();
     this._canceledByMembershipId = canceledByMembershipId;
-    this._cancellationReason = reason;
+    this._cancellationReason = reason.trim();
   }
 
   updateNotes(notes: string): void {

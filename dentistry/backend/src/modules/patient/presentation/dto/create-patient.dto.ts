@@ -1,5 +1,7 @@
 import {
   IsDateString,
+  IsIn,
+  Matches,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -28,11 +30,13 @@ export class CreatePatientDto {
   email?: string;
 
   @IsOptional()
-  @IsDateString()
-  birthDate?: string;
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  birthDate?: string | null;
 
   @IsOptional()
   @IsString()
+  @IsIn(['MALE', 'FEMALE', 'OTHER'])
   sex?: string;
 
   @IsOptional()

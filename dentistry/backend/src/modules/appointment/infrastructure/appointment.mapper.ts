@@ -9,6 +9,7 @@ export interface AppointmentServiceRow {
   appointmentId: string;
   serviceId: string;
   priceMinor: number | null;
+  currency: string | null;
   durationMinutes: number | null;
   notes: string | null;
   createdAt: Date;
@@ -24,7 +25,6 @@ export interface AppointmentRow {
   branchId: string;
   patientId: string;
   practitionerMembershipId: string;
-  serviceId: string;
   treatmentId: string | null;
   scheduledStartAt: Date;
   scheduledEndAt: Date;
@@ -32,6 +32,8 @@ export interface AppointmentRow {
   reason: string | null;
   notes: string | null;
   createdByMembershipId: string;
+  updatedByMembershipId: string | null;
+  rowVersion: number;
   canceledAt: Date | null;
   canceledByMembershipId: string | null;
   cancellationReason: string | null;
@@ -41,19 +43,23 @@ export interface AppointmentRow {
 }
 
 export function toAppointmentEntity(row: AppointmentRow): Appointment {
-  const serviceItems = (row.services || []).map((s) => ({
-    id: s.id,
-    serviceId: s.serviceId,
-    serviceName: s.service?.name,
-    priceMinor: s.priceMinor,
-    durationMinutes: s.durationMinutes,
-    notes: s.notes,
-  }));
+  const serviceItems = [...(row.services ?? [])]
+    .sort(
+      (a, b) =>
+        a.createdAt.getTime() - b.createdAt.getTime() ||
+        a.id.localeCompare(b.id),
+    )
+    .map((s) => ({
+      id: s.id,
+      serviceId: s.serviceId,
+      serviceName: s.service?.name,
+      priceMinor: s.priceMinor,
+      currency: s.currency,
+      durationMinutes: s.durationMinutes,
+      notes: s.notes,
+    }));
 
-  const serviceIds =
-    serviceItems.length > 0
-      ? serviceItems.map((s) => s.serviceId)
-      : [row.serviceId];
+  const serviceIds = serviceItems.map((s) => s.serviceId);
 
   return new Appointment({
     id: row.id,
@@ -61,7 +67,6 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     branchId: row.branchId,
     patientId: row.patientId,
     practitionerMembershipId: row.practitionerMembershipId,
-    serviceId: row.serviceId,
     serviceIds,
     treatmentId: row.treatmentId,
     scheduledStartAt: row.scheduledStartAt,
@@ -70,6 +75,8 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     reason: row.reason,
     notes: row.notes,
     createdByMembershipId: row.createdByMembershipId,
+    updatedByMembershipId: row.updatedByMembershipId,
+    rowVersion: row.rowVersion,
     canceledAt: row.canceledAt,
     canceledByMembershipId: row.canceledByMembershipId,
     cancellationReason: row.cancellationReason,

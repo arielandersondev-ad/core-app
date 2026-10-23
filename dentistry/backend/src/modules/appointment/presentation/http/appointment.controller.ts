@@ -38,7 +38,10 @@ export class AppointmentController {
 
   @Post()
   @RequirePermission('dentistry:appointments:create')
-  async create(@CurrentPrincipal() principal: DentistryPrincipal, @Body() dto: CreateAppointmentDto) {
+  async create(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Body() dto: CreateAppointmentDto,
+  ) {
     return this.createAppointmentUseCase.execute({
       organizationId: principal.organizationId,
       branchId: dto.branchId,
@@ -58,7 +61,10 @@ export class AppointmentController {
 
   @Get()
   @RequirePermission('dentistry:appointments:read')
-  async list(@CurrentPrincipal() principal: DentistryPrincipal, @Query() query: ListAppointmentsQueryDto) {
+  async list(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Query() query: ListAppointmentsQueryDto,
+  ) {
     if (query.branchId && !principal.branchIds.includes(query.branchId)) {
       throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
     }
@@ -85,8 +91,15 @@ export class AppointmentController {
 
   @Get(':id')
   @RequirePermission('dentistry:appointments:read')
-  async getById(@CurrentPrincipal() principal: DentistryPrincipal, @Param('id', ParseUUIDPipe) id: string) {
-    return this.getAppointmentByIdUseCase.execute(id, principal.organizationId, principal.branchIds);
+  async getById(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getAppointmentByIdUseCase.execute(
+      id,
+      principal.organizationId,
+      principal.branchIds,
+    );
   }
 
   @Patch(':id/status')
@@ -102,6 +115,7 @@ export class AppointmentController {
       authorizedBranchIds: principal.branchIds,
       status: dto.status,
       notes: dto.notes,
+      updatedByMembershipId: principal.membershipId,
     });
   }
 

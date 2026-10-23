@@ -6,7 +6,8 @@ import { preservedColumns } from '../scripts/semantic-standardization-map.mjs';
 
 const read = relative => JSON.parse(fs.readFileSync(new URL(relative, import.meta.url), 'utf8'));
 const before = read(`../migrations/snapshots/${baselineStorageHash}/contract.json`);
-const after = read('../src/prisma/generated/contract.json');
+// This suite protects the already-applied nominal migration, not later product changes.
+const after = read('../migrations/snapshots/826ded8772e9b65bde90c34fca480644ba91128c6488fb4760219a138a807945/contract.json');
 
 test('the 25 existing tables, 318 fields and 76 relationships retain their definitions', () => {
   assert.deepEqual(assertNominalParity(before, after), { tableCount:25, fieldCount:318, relationCount:76 });

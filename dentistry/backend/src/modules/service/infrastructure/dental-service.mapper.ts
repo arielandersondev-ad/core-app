@@ -5,7 +5,6 @@ export interface DentalServiceSupplyRow {
   id: string;
   organizationId: string;
   serviceId: string;
-  inventoryItemId: string | null;
   name: string;
   quantity: number;
   unit: string;
@@ -41,7 +40,6 @@ export function toDentalServiceSupplyEntity(
     id: row.id,
     organizationId: row.organizationId,
     serviceId: row.serviceId,
-    inventoryItemId: row.inventoryItemId,
     name: row.name,
     quantity: row.quantity,
     unit: row.unit,

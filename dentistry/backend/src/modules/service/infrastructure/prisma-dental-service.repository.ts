@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { hasPostgresCode } from '../../../common/infrastructure/postgres-error.js';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { DentalService } from '../domain/entities/dental-service.entity.js';
 import {
   DentalServiceRepository,
   FindDentalServicesFilters,
 } from '../domain/repositories/dental-service.repository.js';
 import {
-  DentalServiceRow,
   DentalServiceSupplyRow,
   toDentalServiceEntity,
 } from './dental-service.mapper.js';
@@ -19,104 +22,95 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
   }
 
   async create(service: DentalService): Promise<DentalService> {
-    const row = (await this.prisma.orm.dentistry.DentalService.create({
-      organizationId: toUuid36(service.organizationId),
-      code: service.code,
-      name: service.name,
-      category: service.category,
-      description: service.description,
-      durationMinutes: service.durationMinutes,
-      basePriceMinor: service.basePriceMinor,
-      labCostMinor: service.labCostMinor,
-      currency: service.currency,
-      isActive: service.isActive,
-      createdByMembershipId: toUuid36(service.createdByMembershipId),
-      updatedByMembershipId: service.updatedByMembershipId
-        ? toUuid36(service.updatedByMembershipId)
-        : null,
-    })) as unknown as DentalServiceRow;
+    return this.prisma.transaction(async (tx) => {
+      const row = await tx.orm.dentistry.DentalService.create({
+        organizationId: service.organizationId,
+        code: service.code,
+        name: service.name,
+        category: service.category,
+        description: service.description,
+        durationMinutes: service.durationMinutes,
+        basePriceMinor: service.basePriceMinor,
+        labCostMinor: service.labCostMinor,
+        currency: service.currency,
+        isActive: service.isActive,
+        createdByMembershipId: service.createdByMembershipId,
+        updatedByMembershipId: service.updatedByMembershipId
+          ? service.updatedByMembershipId
+          : null,
+      });
 
-    // Create supplies if any
-    const suppliesRows: DentalServiceSupplyRow[] = [];
-    if (service.supplies && service.supplies.length > 0) {
-      for (const supply of service.supplies) {
-        const sRow =
-          (await this.prisma.orm.dentistry.DentalServiceSupply.create({
-            organizationId: toUuid36(service.organizationId),
-            serviceId: toUuid36(row.id),
-            inventoryItemId: supply.inventoryItemId
-              ? toUuid36(supply.inventoryItemId)
-              : null,
+      // Create supplies if any
+      const suppliesRows: DentalServiceSupplyRow[] = [];
+      if (service.supplies && service.supplies.length > 0) {
+        for (const supply of service.supplies) {
+          const sRow = await tx.orm.dentistry.DentalServiceSupply.create({
+            organizationId: service.organizationId,
+            serviceId: row.id,
             name: supply.name,
             quantity: supply.quantity,
             unit: supply.unit,
             estimatedCostMinor: supply.estimatedCostMinor,
             notes: supply.notes,
-          })) as unknown as DentalServiceSupplyRow;
-        suppliesRows.push(sRow);
+          });
+          suppliesRows.push(sRow);
+        }
       }
-    }
 
-    row.supplies = suppliesRows;
-    return toDentalServiceEntity(row);
+      return toDentalServiceEntity({ ...row, supplies: suppliesRows });
+    });
   }
 
   async findById(
     id: string,
     organizationId: string,
   ): Promise<DentalService | null> {
-    const row = (await this.prisma.orm.dentistry.DentalService.first({
-      id: toUuid36(id),
-      organizationId: toUuid36(organizationId),
-    })) as unknown as DentalServiceRow | null;
+    const row = await this.prisma.orm.dentistry.DentalService.first({
+      id: id,
+      organizationId: organizationId,
+    });
 
     if (!row) return null;
 
     // Load supplies
-    const supplies = (await this.prisma.orm.dentistry.DentalServiceSupply.where(
-      {
-        organizationId: toUuid36(organizationId),
-        serviceId: toUuid36(id),
-      },
-    ).all()) as unknown as DentalServiceSupplyRow[];
+    const supplies = await this.prisma.orm.dentistry.DentalServiceSupply.where({
+      organizationId: organizationId,
+      serviceId: id,
+    }).all();
 
-    row.supplies = supplies;
-    return toDentalServiceEntity(row);
+    return toDentalServiceEntity({ ...row, supplies: supplies });
   }
 
   async findByCode(
     code: string,
     organizationId: string,
   ): Promise<DentalService | null> {
-    const row = (await this.prisma.orm.dentistry.DentalService.first({
+    const row = await this.prisma.orm.dentistry.DentalService.first({
       code,
-      organizationId: toUuid36(organizationId),
-    })) as unknown as DentalServiceRow | null;
+      organizationId: organizationId,
+    });
 
     if (!row) return null;
 
-    const supplies = (await this.prisma.orm.dentistry.DentalServiceSupply.where(
-      {
-        organizationId: toUuid36(organizationId),
-        serviceId: toUuid36(row.id),
-      },
-    ).all()) as unknown as DentalServiceSupplyRow[];
+    const supplies = await this.prisma.orm.dentistry.DentalServiceSupply.where({
+      organizationId: organizationId,
+      serviceId: row.id,
+    }).all();
 
-    row.supplies = supplies;
-    return toDentalServiceEntity(row);
+    return toDentalServiceEntity({ ...row, supplies: supplies });
   }
 
   async findByFilters(
     filters: FindDentalServicesFilters,
   ): Promise<DentalService[]> {
-    const rows = (await this.prisma.orm.dentistry.DentalService.where({
-      organizationId: toUuid36(filters.organizationId),
-    }).all()) as unknown as DentalServiceRow[];
+    const rows = await this.prisma.orm.dentistry.DentalService.where({
+      organizationId: filters.organizationId,
+    }).all();
 
     const allSupplies =
-      (await this.prisma.orm.dentistry.DentalServiceSupply.where({
-        organizationId: toUuid36(filters.organizationId),
-      }).all()) as unknown as DentalServiceSupplyRow[];
+      await this.prisma.orm.dentistry.DentalServiceSupply.where({
+        organizationId: filters.organizationId,
+      }).all();
 
     // Map supplies by serviceId
     const suppliesByService = new Map<string, DentalServiceSupplyRow[]>();
@@ -154,86 +148,96 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
     return filtered
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((r) => {
-        r.supplies = suppliesByService.get(r.id) || [];
-        return toDentalServiceEntity(r);
+        return toDentalServiceEntity({
+          ...r,
+          supplies: suppliesByService.get(r.id) || [],
+        });
       });
   }
 
   async update(service: DentalService): Promise<DentalService> {
-    await this.prisma.orm.dentistry.DentalService.where({
-      id: toUuid36(service.id),
-      organizationId: toUuid36(service.organizationId),
-    }).update({
-      code: service.code,
-      name: service.name,
-      category: service.category,
-      description: service.description,
-      durationMinutes: service.durationMinutes,
-      basePriceMinor: service.basePriceMinor,
-      labCostMinor: service.labCostMinor,
-      currency: service.currency,
-      isActive: service.isActive,
-      updatedByMembershipId: service.updatedByMembershipId
-        ? toUuid36(service.updatedByMembershipId)
-        : null,
+    return this.prisma.transaction(async (tx) => {
+      const row = await tx.orm.dentistry.DentalService.where({
+        id: service.id,
+        organizationId: service.organizationId,
+      }).update({
+        code: service.code,
+        name: service.name,
+        category: service.category,
+        description: service.description,
+        durationMinutes: service.durationMinutes,
+        basePriceMinor: service.basePriceMinor,
+        labCostMinor: service.labCostMinor,
+        currency: service.currency,
+        isActive: service.isActive,
+        updatedByMembershipId: service.updatedByMembershipId
+          ? service.updatedByMembershipId
+          : null,
+      });
+
+      if (!row) throw new NotFoundException('Servicio no encontrado');
+      // Update supplies: remove old and insert new ones
+      if (service.supplies !== undefined) {
+        const existing = await tx.orm.dentistry.DentalServiceSupply.where({
+          serviceId: service.id,
+          organizationId: service.organizationId,
+        }).all();
+
+        for (const e of existing) {
+          await tx.orm.dentistry.DentalServiceSupply.where({
+            id: e.id,
+          }).delete();
+        }
+
+        for (const s of service.supplies) {
+          await tx.orm.dentistry.DentalServiceSupply.create({
+            organizationId: service.organizationId,
+            serviceId: service.id,
+            name: s.name,
+            quantity: s.quantity,
+            unit: s.unit,
+            estimatedCostMinor: s.estimatedCostMinor,
+            notes: s.notes,
+          });
+        }
+      }
+
+      const supplies = await tx.orm.dentistry.DentalServiceSupply.where({
+        organizationId: service.organizationId,
+        serviceId: service.id,
+      }).all();
+      return toDentalServiceEntity({ ...row, supplies });
     });
-
-    // Update supplies: remove old and insert new ones
-    if (service.supplies !== undefined) {
-      const existing =
-        (await this.prisma.orm.dentistry.DentalServiceSupply.where({
-          serviceId: toUuid36(service.id),
-          organizationId: toUuid36(service.organizationId),
-        }).all()) as unknown as DentalServiceSupplyRow[];
-
-      for (const e of existing) {
-        await this.prisma.orm.dentistry.DentalServiceSupply.where({
-          id: toUuid36(e.id),
-        }).delete();
-      }
-
-      for (const s of service.supplies) {
-        await this.prisma.orm.dentistry.DentalServiceSupply.create({
-          organizationId: toUuid36(service.organizationId),
-          serviceId: toUuid36(service.id),
-          inventoryItemId: s.inventoryItemId
-            ? toUuid36(s.inventoryItemId)
-            : null,
-          name: s.name,
-          quantity: s.quantity,
-          unit: s.unit,
-          estimatedCostMinor: s.estimatedCostMinor,
-          notes: s.notes,
-        });
-      }
-    }
-
-    return this.findById(
-      service.id,
-      service.organizationId,
-    ) as Promise<DentalService>;
   }
 
   async delete(id: string, organizationId: string): Promise<boolean> {
-    // Delete supplies first
-    const supplies = (await this.prisma.orm.dentistry.DentalServiceSupply.where(
-      {
-        serviceId: toUuid36(id),
-        organizationId: toUuid36(organizationId),
-      },
-    ).all()) as unknown as DentalServiceSupplyRow[];
+    try {
+      return await this.prisma.transaction(async (tx) => {
+        // Delete supplies first
+        const supplies = await tx.orm.dentistry.DentalServiceSupply.where({
+          serviceId: id,
+          organizationId: organizationId,
+        }).all();
 
-    for (const s of supplies) {
-      await this.prisma.orm.dentistry.DentalServiceSupply.where({
-        id: toUuid36(s.id),
-      }).delete();
+        for (const s of supplies) {
+          await tx.orm.dentistry.DentalServiceSupply.where({
+            id: s.id,
+          }).delete();
+        }
+
+        await tx.orm.dentistry.DentalService.where({
+          id: id,
+          organizationId: organizationId,
+        }).delete();
+
+        return true;
+      });
+    } catch (error) {
+      if (hasPostgresCode(error, '23503'))
+        throw new ConflictException(
+          'El servicio está referenciado; desactívelo para conservar el historial.',
+        );
+      throw error;
     }
-
-    await this.prisma.orm.dentistry.DentalService.where({
-      id: toUuid36(id),
-      organizationId: toUuid36(organizationId),
-    }).delete();
-
-    return true;
   }
 }

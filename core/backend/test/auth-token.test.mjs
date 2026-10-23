@@ -29,7 +29,7 @@ test('el TTL configurado no puede superar 1800 segundos', () => {
 });
 
 test('Core no autoriza permisos cuando la organización está inactiva', async () => {
-  const organization = { deleted: false, status: 'SUSPENDED' };
+  const organization = { deletedAt: null, status: 'SUSPENDED' };
   const principal = {
     sub: '00000000-0000-0000-0000-000000000001',
     membershipId: '00000000-0000-0000-0000-000000000002',
@@ -42,16 +42,16 @@ test('Core no autoriza permisos cuando la organización está inactiva', async (
       id: principal.membershipId,
       userId: principal.sub,
       organizationId: principal.organizationId,
-      deleted: false,
+      deletedAt: null,
       status: 'ACTIVE',
     }) },
-    User: { first: async () => ({ deleted: false, status: 'ACTIVE' }) },
+    User: { first: async () => ({ deletedAt: null, status: 'ACTIVE' }) },
     Organization: { first: async () => organization },
   } } };
   const service = new CorePermissionService(prisma);
   assert.equal(await service.hasPermission(principal, 'users:read'), false);
   organization.status = 'ACTIVE';
-  organization.deleted = true;
+  organization.deletedAt = new Date();
   assert.equal(await service.hasPermission(principal, 'users:read'), false);
 });
 
@@ -61,15 +61,16 @@ test('filtra y deduplica permisos por audiencia', () => {
   assert.deepEqual(permissionsForAudience(granted, TOKEN_AUDIENCES.dentistry), ['dentistry:patients:read']);
 });
 
-test('Dentistry requiere asignación vigente y plan activo', async () => {
+test('Dentistry requiere asignación vigente y snapshot, independiente del catálogo retirado', async () => {
   const now = new Date('2026-09-29T12:00:00Z');
   const assignment = {
     planId: '00000000-0000-0000-0000-000000000005',
+    entitlementsSnapshot: { schemaVersion: 1 },
     status: 'ACTIVE',
     startsAt: new Date('2026-09-01T00:00:00Z'),
     endsAt: new Date('2026-10-01T00:00:00Z'),
   };
-  const plan = { vertical: 'DENTISTRY', isActive: true, deleted: false };
+  const plan = { vertical: 'DENTISTRY', isActive: true, deletedAt: null };
   const prisma = {
     orm: { core: {
       OrganizationPlanAssignment: { where: () => ({ first: async () => assignment }) },
@@ -86,6 +87,9 @@ test('Dentistry requiere asignación vigente y plan activo', async () => {
   assert.equal(await policy.canAccessDentistry(org, now), false);
   assignment.endsAt = new Date('2026-10-01T00:00:00Z');
   plan.isActive = false;
+  plan.deletedAt = new Date();
+  assert.equal(await policy.canAccessDentistry(org, now), true);
+  assignment.entitlementsSnapshot = null;
   assert.equal(await policy.canAccessDentistry(org, now), false);
 });
 

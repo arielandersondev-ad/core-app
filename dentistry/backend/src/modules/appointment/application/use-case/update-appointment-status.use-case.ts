@@ -1,5 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Appointment, AppointmentStatus } from '../../domain/entities/appointment.entity.js';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  Appointment,
+  AppointmentStatus,
+} from '../../domain/entities/appointment.entity.js';
 import { ForbiddenException } from '@nestjs/common';
 import { AppointmentRepository } from '../../domain/repositories/appointment.repository.js';
 
@@ -9,6 +16,7 @@ export interface UpdateAppointmentStatusCommand {
   authorizedBranchIds: string[];
   status: AppointmentStatus;
   notes?: string;
+  updatedByMembershipId: string;
 }
 
 @Injectable()
@@ -16,7 +24,10 @@ export class UpdateAppointmentStatusUseCase {
   constructor(private readonly appointmentRepository: AppointmentRepository) {}
 
   async execute(command: UpdateAppointmentStatusCommand): Promise<Appointment> {
-    const appointment = await this.appointmentRepository.findById(command.id, command.organizationId);
+    const appointment = await this.appointmentRepository.findById(
+      command.id,
+      command.organizationId,
+    );
     if (!appointment) {
       throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
     }
@@ -47,8 +58,13 @@ export class UpdateAppointmentStatusUseCase {
       appointment.updateNotes(command.notes);
     }
 
-    const updated = await this.appointmentRepository.update(appointment, command.organizationId);
-    if (!updated) throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
+    appointment.updatedByMembershipId = command.updatedByMembershipId;
+    const updated = await this.appointmentRepository.update(
+      appointment,
+      command.organizationId,
+    );
+    if (!updated)
+      throw new NotFoundException(`Cita con ID "${command.id}" no encontrada.`);
     return updated;
   }
 }

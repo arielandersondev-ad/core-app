@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { hasPostgresCode } from '../../../common/infrastructure/postgres-error.js';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
-import { toUuid36 } from '../../../common/infrastructure/prisma-uuid.js';
 import { Patient } from '../domain/entities/patient.entity.js';
 import {
   PatientRepository,
   FindPatientsFilters,
 } from '../domain/repositories/patient.repository.js';
-import { PatientRow, toPatientEntity } from './patient.mapper.js';
+import { toPatientEntity } from './patient.mapper.js';
 
 @Injectable()
 export class PrismaPatientRepository extends PatientRepository {
@@ -15,8 +19,8 @@ export class PrismaPatientRepository extends PatientRepository {
   }
 
   async create(patient: Patient): Promise<Patient> {
-    const row = (await this.prisma.orm.dentistry.Patient.create({
-      organizationId: toUuid36(patient.organizationId),
+    const row = await this.prisma.orm.dentistry.Patient.create({
+      organizationId: patient.organizationId,
       firstName: patient.firstName,
       lastName: patient.lastName,
       phone: patient.phone,
@@ -28,27 +32,23 @@ export class PrismaPatientRepository extends PatientRepository {
       address: patient.address,
       notes: patient.notes,
       status: patient.status,
-      createdByMembershipId: toUuid36(patient.createdByMembershipId),
+      createdByMembershipId: patient.createdByMembershipId,
       updatedByMembershipId: patient.updatedByMembershipId
-        ? toUuid36(patient.updatedByMembershipId)
+        ? patient.updatedByMembershipId
         : null,
-      deleted: patient.deleted,
       deletedAt: patient.deletedAt,
-    })) as unknown as PatientRow;
+    }).catch(rethrowPatientConflict);
 
     return toPatientEntity(row);
   }
 
-  async findById(
-    id: string,
-    organizationId: string,
-  ): Promise<Patient | null> {
-    const row = (await this.prisma.orm.dentistry.Patient.first({
-      id: toUuid36(id),
-      organizationId: toUuid36(organizationId),
-    })) as unknown as PatientRow | null;
+  async findById(id: string, organizationId: string): Promise<Patient | null> {
+    const row = await this.prisma.orm.dentistry.Patient.first({
+      id: id,
+      organizationId: organizationId,
+    });
 
-    if (!row || row.deleted) {
+    if (!row || row.deletedAt) {
       return null;
     }
 
@@ -56,10 +56,10 @@ export class PrismaPatientRepository extends PatientRepository {
   }
 
   async findByFilters(filters: FindPatientsFilters): Promise<Patient[]> {
-    const rows = (await this.prisma.orm.dentistry.Patient.where({
-      organizationId: toUuid36(filters.organizationId),
-      deleted: false,
-    }).all()) as unknown as PatientRow[];
+    const rows = await this.prisma.orm.dentistry.Patient.where({
+      organizationId: filters.organizationId,
+      deletedAt: null,
+    }).all();
 
     let filtered = rows;
 
@@ -85,28 +85,39 @@ export class PrismaPatientRepository extends PatientRepository {
   }
 
   async update(patient: Patient): Promise<Patient> {
-    const row = (await this.prisma.orm.dentistry.Patient.where({
-      id: toUuid36(patient.id),
-      organizationId: toUuid36(patient.organizationId),
-    }).update({
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      phone: patient.phone,
-      email: patient.email,
-      birthDate: patient.birthDate,
-      sex: patient.sex,
-      documentType: patient.documentType,
-      documentNumber: patient.documentNumber,
-      address: patient.address,
-      notes: patient.notes,
-      status: patient.status,
-      updatedByMembershipId: patient.updatedByMembershipId
-        ? toUuid36(patient.updatedByMembershipId)
-        : null,
-      deleted: patient.deleted,
-      deletedAt: patient.deletedAt,
-    })) as unknown as PatientRow;
+    const row = await this.prisma.orm.dentistry.Patient.where({
+      id: patient.id,
+      organizationId: patient.organizationId,
+    })
+      .update({
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        phone: patient.phone,
+        email: patient.email,
+        birthDate: patient.birthDate,
+        sex: patient.sex,
+        documentType: patient.documentType,
+        documentNumber: patient.documentNumber,
+        address: patient.address,
+        notes: patient.notes,
+        status: patient.status,
+        updatedByMembershipId: patient.updatedByMembershipId
+          ? patient.updatedByMembershipId
+          : null,
+        deletedAt: patient.deletedAt,
+      })
+      .catch(rethrowPatientConflict);
 
+    if (!row) throw new NotFoundException('Paciente no encontrado');
     return toPatientEntity(row);
   }
+}
+
+function rethrowPatientConflict(error: unknown): never {
+  if (hasPostgresCode(error, '23505')) {
+    throw new ConflictException(
+      'Ya existe un paciente con ese documento en la organización.',
+    );
+  }
+  throw error;
 }
