@@ -93,16 +93,15 @@ Las cuatro tablas nuevas siguen ausentes en QA: `OrganizationFeatureTrial`, `Pat
 
 Crear las tablas no concede derechos. Los 10 pacientes necesitarán asignaciones clínicas explícitas cuando se implemente ese flujo; no se deben deducir de `createdByMembershipId`, citas o sucursales. No se crearon pruebas de planes ni se fabricaron relaciones.
 
-## Repetición y siguiente paso
+## Conservación del inventario
 
-Script: [audit-target-readiness.mjs](../scripts/audit-target-readiness.mjs).
+La herramienta puntual de auditoría y su comando npm se retiraron durante la limpieza
+posterior. Su estado previo quedó guardado en `8dd6354`. El script exigía una base llamada
+`dev`, abría una transacción de solo lectura y validaba ese modo antes de consultar.
+El JSON enlazado conserva la instantánea anterior a la migración; no es un respaldo
+ni una comprobación del estado actual de QA.
 
-```powershell
-npm.cmd --prefix packages/db run audit:qa
-# Otra evidencia local, sin sobrescribir el archivo por fecha:
-npm.cmd --prefix packages/db run audit:qa -- --output packages/db/docs/qa-readiness-recheck.json
-```
-
-El script exige una base llamada `dev`, abre una transacción de solo lectura y valida ese modo antes de consultar. La salida por defecto reemplaza el reporte de la misma fecha. Cada ejecución representa una instantánea consistente propia; los conteos pueden cambiar si se sigue usando QA. No es un respaldo ni un ensayo de migración.
-
-El siguiente paso autorizado por separado será preparar el respaldo y comprobar la recuperación. Antes de generar SQL definitivo también deben cerrarse las decisiones sobre cumpleaños, timestamps, cierre de las 3 atenciones y derechos/organizaciones comerciales. El borrador actual continúa bloqueado y fuera del grafo ejecutable.
+Las reglas de cumpleaños, timestamps, cierre de las tres atenciones y derechos fueron
+aprobadas posteriormente. El resultado de la migración definitiva está en
+[target-schema-migration.md](target-schema-migration.md). El borrador inicial se retiró
+sin ejecutarse.

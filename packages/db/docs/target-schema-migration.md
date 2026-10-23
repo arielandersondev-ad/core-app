@@ -14,7 +14,7 @@ Se conservan las 25 tablas y todas sus entidades. Se crean las cuatro tablas pre
 se retiran las 14 columnas del diccionario y se realizan las 128 conversiones de tipo.
 Las FK e índices secundarios se reconstruyen para admitir UUID nativos y las claves
 compuestas del objetivo. No se eliminan tablas, PK, organizaciones ni pacientes.
-No se reescribe ninguna migración aplicada. El borrador de placeholders no se ejecuta.
+No se reescribe ninguna migración aplicada. El borrador de placeholders nunca se ejecutó y se retiró durante la limpieza posterior.
 
 La operación SQL es un bloque atómico con lock de las tablas, espera máxima de lock
 de 10 segundos y comprobación del marcador de origen. No toca el marcador ni el ledger:
@@ -59,27 +59,26 @@ El ensayo conserva las 131 filas originales y agrega seis asociaciones dentro de
 transacción, que también se revierten. No equivale a restaurar el respaldo USB ni a
 probar la navegación HTTP de los frontends.
 
-## Comandos canónicos
+## Comprobaciones actuales y aplicación del paquete
 
 Desde la raíz del repositorio:
 
 ```powershell
 npm.cmd --prefix packages/db run test:migration
-npm.cmd --prefix packages/db run migration:rehearse
 npm.cmd --prefix packages/db run migrate -- --to a2da18a1e42ff8ae6f0d46751f9a5a2e83a412042830e84417c6b6cec115f99b --advance-ref db
 npm.cmd --prefix packages/db run db:verify -- --strict
 npm.cmd --prefix packages/db run migration:status
-npm.cmd --prefix packages/db run migration:verify-data
 ```
 
-El ensayo requiere todavía el marcador nominal; después de aplicar no se vuelve a
-ensayar contra la misma base. `migrate --to` es el comando para aplicar el paquete ya
-emitido; no hace falta generar otra migración ni emitir de nuevo los tipos.
-No ejecutar `db:update`, `db sign`, reset ni el borrador con placeholders.
+`migrate --to` aplica el paquete ya emitido cuando corresponde al estado de la base;
+en esta QA ya está aplicado. No hace falta generar otra migración ni emitir de nuevo
+los tipos. No ejecutar `db:update`, `db sign` ni reset para alterar ese estado.
 
-Para autoría se usó `scripts/prepare-target-migration.mjs` y luego el self-emit del
-`migration.ts` con el CLI instalado. El generador se niega a reescribir un paquete ya
-emitido. Las pruebas comparan SQL legible, operación emitida y ambos snapshots.
+Para autoría se usó un generador de una sola ejecución y luego el self-emit del
+`migration.ts` con el CLI instalado. El generador y los scripts puntuales de ensayo
+y comparación de QA fueron retirados después de guardar el estado en `8dd6354`.
+Sus informes JSON se conservan como evidencia histórica. Las pruebas siguen comparando
+SQL legible, operación emitida y ambos snapshots mediante los helpers conservados.
 
 ## Compatibilidad y recuperación
 
@@ -116,8 +115,9 @@ local por el mecanismo del CLI, sin editar markers ni forzar firmas.
   de filas, nunca sus contenidos.
 
 Evidencia posterior: [target-schema-applied-2026-10-23.json](target-schema-applied-2026-10-23.json).
-`migration:verify-data` compara una instantánea con el ensayo; si QA se sigue usando,
-sus conteos/huellas cambiarán legítimamente. No es un test funcional permanente.
+La comparación posterior contrastó una instantánea con el ensayo; los conteos/huellas
+pueden cambiar legítimamente con el uso de QA. Su script y comando npm se retiraron
+en la limpieza posterior: no eran un test funcional permanente.
 
 No hace falta generar/aplicar otra migración ni regenerar los tipos por este paso.
 Falta reiniciar/probar ambos backends y realizar el recorrido HTTP de login, pacientes,

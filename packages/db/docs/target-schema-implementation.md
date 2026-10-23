@@ -3,7 +3,8 @@
 **Actualización 23/10/2026:** las decisiones de datos ya fueron aprobadas y la migración
 definitiva se ensayó con rollback en QA. Consultar [target-schema-migration.md](target-schema-migration.md)
 para el paquete ejecutable, comandos y estado real. Las advertencias siguientes sobre
-ausencia de paquete seguro describen la entrega inicial del 22/10; el borrador sigue sin ejecutarse.
+ausencia de paquete seguro describen la entrega inicial del 22/10. El borrador inicial
+se retiró sin ejecutarse durante la limpieza posterior.
 
 Fecha: 2026-10-22. Rama: dev. Alcance confirmado por usuario: solo schema completo, incluidos retiros de columnas y cambios de tipos; adaptación de backends posterior. No se ejecutaron migraciones ni consultas contra QA durante esta tarea.
 
@@ -45,7 +46,10 @@ El CLI se ejecutó offline con --from explícito al contrato 826ded8 para evitar
 
 El resultado tiene 501 operaciones propuestas y 262 llamadas placeholder para conversiones/relleno. Es un esquema de trabajo, no una migración lista. Sus primeras operaciones de retiro tampoco incorporan la reconciliación requerida de los datos anteriores.
 
-Se conserva en [migration-drafts/target-schema.draft.ts](migration-drafts/target-schema.draft.ts), con bloqueo explícito de ejecución, fuera de migrations/app. No se dejó un paquete ejecutable con ops.json vacío que pudiera adelantar el marcador sin cambiar la estructura. El snapshot objetivo se conserva en migrations/snapshots para preparar la migración definitiva.
+El borrador se mantuvo bloqueado fuera de migrations/app y fue retirado durante la
+limpieza posterior; su versión previa está en `8dd6354`. No se dejó un paquete ejecutable
+con ops.json vacío que pudiera adelantar el marcador sin cambiar la estructura.
+El snapshot objetivo y la migración definitiva aplicada se conservan en migrations.
 
 No volver a ejecutar migration:plan por defecto ni aplicar el borrador como si fuese el refactor nominal. El planificador requiere siempre el --from correcto y revisión; en este caso no resuelve automáticamente la conversión de tipos y los datos clínicos.
 

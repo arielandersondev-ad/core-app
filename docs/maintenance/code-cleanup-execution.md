@@ -2,6 +2,35 @@
 
 Fecha: 2026-10-22. Rama: dev. Trabajo local; sin push ni despliegue.
 
+## Limpieza posterior de herramientas y temporales — 23/10/2026
+
+El usuario autorizó retirar los candidatos claros del sondeo y las cinco herramientas
+históricas, conservando el resto. Antes de cualquier eliminación se creó el commit
+`8dd6354`, con el schema objetivo, la migración aplicada, las adaptaciones de backends,
+las pruebas y la evidencia de QA. Las copias y logs ignorados por Git eran temporales,
+no parte de ese respaldo versionado.
+
+Se eliminaron 99 archivos (1 101 592 bytes): 93 temporales ignorados por Git y seis
+archivos versionados. Se retiraron cuatro carpetas de tareas de `.tmp`, los cinco
+scripts de transformación/sondeo y los nueve logs sueltos aprobados. Los seis archivos
+versionados retirados son el borrador no ejecutable y los cinco scripts de preparación,
+auditoría, ensayo y comparación puntual de la migración. También se retiraron los tres
+comandos npm que llamaban a esas herramientas y se actualizaron enlaces e instrucciones.
+
+Se conservan las migraciones/snapshots sin cambios, los contratos generados, las pruebas,
+sus helpers, los informes JSON/Markdown y el código funcional. Se preservaron los otros
+temporales de historial clínico, resolución de stash y marca. No se ejecutó SQL contra
+QA, se modificaron sus datos ni se desplegaron servicios durante esta limpieza.
+
+Verificación posterior: build de `@app/db` y 29 pruebas pasan (schema, migración nominal,
+migración objetivo e integración de los repositorios compilados en PostgreSQL aislado).
+No hay enlaces Markdown locales rotos en la documentación de DB/mantenimiento ni
+referencias activas a los scripts/comandos retirados en los directorios revisados.
+`git diff --check` pasa. La revisión del diff confirma que el código funcional, los
+contratos y el grafo de migraciones no cambiaron respecto de `8dd6354`.
+
+Los apartados siguientes conservan el registro de la limpieza anterior del 22/10.
+
 ## Resultado
 
 - La estandarización previa quedó separada en el commit 076dfb7.

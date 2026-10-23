@@ -60,7 +60,12 @@ La prueba de paridad verifica tipos, nulabilidad, defaults, PK, UNIQUE, FK, defi
 | Ensayo SQL/recuperación y comparación de datos | No realizado por el agente | Sin evidencia aportada de ensayo ni comparación antes/después. |
 | Docker local | Motor Linux de Docker Desktop no iniciado | No se pudo usar para ensayo aislado. |
 
-Los logs de baseline y copias de fuente/contrato están en `.tmp/semantic-standardization/baseline/`, ignorado por Git. El agente no obtuvo un respaldo de datos de QA: su conexión no llegó a establecerse. No se ha confirmado si el usuario realizó un respaldo por otro mecanismo.
+Los logs de baseline y las copias temporales de fuente/contrato estuvieron en una
+carpeta ignorada por Git y se retiraron durante la limpieza posterior. Los snapshots,
+la migración y las pruebas nominales permanecen versionados. Durante esta etapa nominal
+el agente no obtuvo un respaldo de datos de QA: su conexión no llegó a establecerse.
+El respaldo confirmado y las verificaciones posteriores corresponden a la entrega
+documentada en [target-schema-migration.md](target-schema-migration.md).
 
 Pruebas adicionales relevantes:
 
@@ -84,13 +89,10 @@ node core/frontend/node_modules/typescript/bin/tsc --noEmit --incremental false 
 node dentistry/frontend/node_modules/typescript/bin/tsc --noEmit --incremental false -p dentistry/frontend/tsconfig.json
 ```
 
-El generador `node packages/db/scripts/prepare-semantic-standardization.mjs` valida paridad y prepara migration.ts. Para volver a emitir sus metadatos se ejecuta, **desde packages/db**:
-
-```powershell
-node migrations/app/20261022T1348_semantic_standardization/migration.ts
-```
-
-Estos comandos no aplican la migración. No repetir migration:plan con la referencia db antigua como si fuera la versión actual. Si hay que regenerar el paquete desde cero, especificar `--from 0ebda04f6a9e692ce82d511f100cd78a2f29836b1b82b73e3ecac8963ff6a6e2` y revisar el resultado; el plan automático no reconoce todos los renombres.
+El generador puntual usado para preparar esta migración fue retirado después de guardar
+su estado en `8dd6354`. Se conservan el paquete ya aplicado, ambos snapshots y las
+pruebas de paridad con su mapa de nombres. No regenerar ni reescribir este paquete
+histórico usando el contrato actual; cualquier cambio posterior requiere otra migración.
 
 ## Estado por etapa
 

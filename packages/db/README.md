@@ -29,12 +29,12 @@ está en la sección de nombres de persistencia del README raíz y en AGENTS.md.
 - [Diccionario del schema objetivo](docs/target-schema-dictionary.md).
 - [Plan de estandarización con paridad de QA](docs/semantic-standardization-plan.md).
 - [Estado de implementación y verificaciones](docs/semantic-standardization-execution.md).
-- [Schema objetivo completo: estado, borrador y comandos](docs/target-schema-implementation.md).
+- [Schema objetivo completo: registro de implementación](docs/target-schema-implementation.md).
 - [Adaptación de backends: alcance, pruebas y pendientes](docs/backend-schema-adaptation.md).
-- [Inventario de QA y conciliaciones pendientes (23/10/2026)](docs/qa-readiness-2026-10-23.md).
+- [Inventario histórico de QA (23/10/2026)](docs/qa-readiness-2026-10-23.md).
 - [Migración definitiva, reglas aprobadas y ensayo real con rollback](docs/target-schema-migration.md).
 
-Los endpoints existentes de ambos backends están adaptados al contrato objetivo; los flujos nuevos del plan base siguen separados. La migración definitiva `20261023T1300_target_schema` fue ensayada con rollback, aplicada en QA y verificada con `db:verify --strict` el 23/10/2026. La evidencia y las reglas aprobadas están en el documento enlazado. El borrador con placeholders permanece fuera del grafo y no se ejecuta; no usar db:update/sign para saltar migraciones.
+Los endpoints existentes de ambos backends están adaptados al contrato objetivo; los flujos nuevos del plan base siguen separados. La migración definitiva `20261023T1300_target_schema` fue ensayada con rollback, aplicada en QA y verificada con `db:verify --strict` el 23/10/2026. La evidencia y las reglas aprobadas están en el documento enlazado. El borrador con placeholders y las herramientas de preparación/inspección de una sola ejecución fueron retirados después de guardar su estado en el commit `8dd6354`. Se conservan el grafo, los snapshots, las pruebas y sus helpers; no usar db:update/sign para saltar migraciones.
 
 El diccionario no debe ejecutarse completo como un único refactor. La etapa
 nominal preserva tipos, reglas y datos de QA; retiros de columnas, constraints
