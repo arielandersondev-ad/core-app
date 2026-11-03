@@ -1,7 +1,7 @@
 import "server-only";
 
 import { serverEnv } from "@/infrastructure/config/server-env";
-import type { CurrentSession } from "@/features/auth/types/auth.types";
+import type { CurrentSession } from "@/infrastructure/auth/session";
 
 function isCurrentSession(value: unknown): value is CurrentSession {
   if (!value || typeof value !== "object") return false;

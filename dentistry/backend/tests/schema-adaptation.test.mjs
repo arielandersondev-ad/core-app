@@ -2,7 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { parseCivilDate } from '../dist/common/validation/civil-date.js';
-import { Patient } from '../dist/modules/patient/domain/entities/patient.entity.js';
+import { ValidationPipe } from '@nestjs/common';
+import { CreatePatientDto } from '../dist/modules/patient/presentation/dto/create-patient.dto.js';
+import { UpdatePatientDto } from '../dist/modules/patient/presentation/dto/update-patient.dto.js';
+import { ListPatientsQueryDto } from '../dist/modules/patient/presentation/dto/list-patients.query.dto.js';
+import { GetPatientByIdUseCase } from '../dist/modules/patient/application/use-case/get-patient-by-id.use-case.js';
 import { PatientResponseDto } from '../dist/modules/patient/presentation/dto/patient.response.dto.js';
 import { PatientController } from '../dist/modules/patient/presentation/http/patient.controller.js';
 import { UpdatePatientUseCase } from '../dist/modules/patient/application/use-case/update-patient.use-case.js';
@@ -15,14 +19,26 @@ import { validate } from 'class-validator';
 const actor = randomUUID(),
   organizationId = randomUUID();
 function patient() {
-  return new Patient({
+  return {
     id: randomUUID(),
     organizationId,
     createdByMembershipId: actor,
     firstName: 'Ana',
     lastName: 'Pérez',
     birthDate: parseCivilDate('2000-02-29'),
-  });
+    phone: null,
+    email: null,
+    sex: null,
+    documentType: null,
+    documentNumber: null,
+    address: null,
+    notes: null,
+    status: 'ACTIVE',
+    updatedByMembershipId: null,
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 }
 
 test('la fecha civil no admite instantes ni días inexistentes y responde solo YYYY-MM-DD', () => {
@@ -42,10 +58,10 @@ test('la fecha civil no admite instantes ni días inexistentes y responde solo Y
 });
 
 test('PATCH sin birthDate conserva el cumpleaños y null lo borra explícitamente', async () => {
-  const current = patient();
+  let current = patient();
   const repository = {
     findById: async () => current,
-    update: async (value) => value,
+    update: async (value) => (current = value),
   };
   const controller = new PatientController(
     {},
@@ -53,15 +69,12 @@ test('PATCH sin birthDate conserva el cumpleaños y null lo borra explícitament
     {},
     new UpdatePatientUseCase(repository),
   );
-  await controller.update(current.id, {
-    organizationId,
-    updatedByMembershipId: actor,
+  const principal = { organizationId, membershipId: actor };
+  await controller.update(principal, current.id, {
     phone: '123',
   });
   assert.equal(PatientResponseDto.fromEntity(current).birthDate, '2000-02-29');
-  await controller.update(current.id, {
-    organizationId,
-    updatedByMembershipId: actor,
+  await controller.update(principal, current.id, {
     birthDate: null,
   });
   assert.equal(current.birthDate, null);
@@ -84,9 +97,6 @@ test('el alta rechaza un documento incompleto antes de persistir', async () => {
   await assert.rejects(useCase.execute({ ...input, documentNumber: '123' }), {
     status: 400,
   });
-  await assert.rejects(useCase.execute({ ...input, sex: 'UNKNOWN' }), {
-    status: 400,
-  });
   assert.equal(writes, 0);
   const result = await useCase.execute({
     ...input,
@@ -94,6 +104,237 @@ test('el alta rechaza un documento incompleto antes de persistir', async () => {
     documentNumber: '123',
   });
   assert.equal(result.documentNumber, '123');
+});
+
+test('los DTO HTTP validan nombres, sexo, correo y fecha antes de ejecutar el caso de uso', async () => {
+  const pipe = new ValidationPipe({ whitelist: true, transform: true });
+  const create = {
+    firstName: ' Ana ',
+    lastName: ' Pérez ',
+  };
+  const update = {};
+  for (const [metatype, base] of [
+    [CreatePatientDto, create],
+    [UpdatePatientDto, update],
+  ]) {
+    const transform = (value) =>
+      pipe.transform(value, { type: 'body', metatype });
+    for (const key of ['firstName', 'lastName']) {
+      for (const value of ['', '   ', null, 123]) {
+        await assert.rejects(transform({ ...base, [key]: value }), {
+          status: 400,
+        });
+      }
+    }
+    for (const invalid of [
+      { sex: 'UNKNOWN' },
+      { email: 'invalid' },
+      { birthDate: '2025-02-29' },
+      { birthDate: '2000-02-29T00:00:00Z' },
+    ]) {
+      await assert.rejects(transform({ ...base, ...invalid }), { status: 400 });
+    }
+    const result = await transform({
+      ...base,
+      firstName: ' Ana ',
+      lastName: ' Pérez ',
+    });
+    assert.equal(result.firstName, 'Ana');
+    assert.equal(result.lastName, 'Pérez');
+  }
+  const partial = await pipe.transform(update, {
+    type: 'body',
+    metatype: UpdatePatientDto,
+  });
+  assert.equal(partial.firstName, undefined);
+  assert.equal(partial.lastName, undefined);
+});
+
+test('el listado HTTP valida estado y búsqueda sin aceptar organización desde el cliente', async () => {
+  const pipe = new ValidationPipe({ whitelist: true, transform: true });
+  const transform = (value) =>
+    pipe.transform(value, { type: 'query', metatype: ListPatientsQueryDto });
+  for (const invalid of [{ status: 'UNKNOWN' }, { search: ['Ana', 'Luis'] }]) {
+    await assert.rejects(transform(invalid), { status: 400 });
+  }
+  for (const status of ['ACTIVE', 'INACTIVE']) {
+    const query = await transform({ organizationId, status, search: 'Ana' });
+    assert.equal('organizationId' in query, false);
+    assert.equal(query.status, status);
+    assert.equal(query.search, 'Ana');
+  }
+  const query = await transform({ organizationId });
+  assert.equal('organizationId' in query, false);
+  assert.equal(query.search, undefined);
+  assert.equal(query.status, undefined);
+  assert.equal(query.page, 1);
+  assert.equal(query.pageSize, 20);
+});
+
+test('la paginación HTTP convierte enteros y rechaza tamaños o páginas inválidas', async () => {
+  const pipe = new ValidationPipe({ whitelist: true, transform: true });
+  const transform = (value) =>
+    pipe.transform(value, { type: 'query', metatype: ListPatientsQueryDto });
+  const query = await transform({ organizationId, page: '3', pageSize: '100' });
+  assert.equal(query.page, 3);
+  assert.equal(query.pageSize, 100);
+  for (const field of ['page', 'pageSize']) {
+    for (const value of [
+      '0',
+      '-1',
+      '1.5',
+      'abc',
+      '',
+      'Infinity',
+      null,
+      ['1', '2'],
+    ]) {
+      await assert.rejects(transform({ organizationId, [field]: value }), {
+        status: 400,
+      });
+    }
+  }
+  await assert.rejects(transform({ organizationId, pageSize: '101' }), {
+    status: 400,
+  });
+  await assert.rejects(
+    transform({ organizationId, page: '9007199254740992' }),
+    { status: 400 },
+  );
+});
+
+test('el controller entrega los criterios tipados al listado y transforma la respuesta', async () => {
+  const query = {
+    organizationId,
+    status: 'ACTIVE',
+    search: 'Ana',
+    page: 2,
+    pageSize: 10,
+  };
+  const pagination = { page: 2, pageSize: 10, totalItems: 15, totalPages: 2 };
+  let received;
+  const controller = new PatientController(
+    {
+      execute: async (filters) => {
+        received = filters;
+        return { items: [patient()], pagination };
+      },
+    },
+    {},
+    {},
+    {},
+  );
+  const result = await controller.list({ organizationId }, query);
+  assert.deepEqual(received, query);
+  assert.equal(result.items[0].fullName, 'Ana Pérez');
+  assert.deepEqual(result.pagination, pagination);
+});
+
+test('el alta normaliza datos y conserva los valores por defecto sin construir una entidad', async () => {
+  const useCase = new CreatePatientUseCase({
+    create: async (data) => ({
+      ...data,
+      id: randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+  });
+  const result = await useCase.execute({
+    organizationId,
+    createdByMembershipId: actor,
+    firstName: ' Ana ',
+    lastName: ' Pérez ',
+    phone: ' 123 ',
+    documentType: ' ',
+    documentNumber: '',
+  });
+  assert.equal(Object.getPrototypeOf(result), Object.prototype);
+  assert.equal(result.phone, '123');
+  for (const key of [
+    'email',
+    'birthDate',
+    'sex',
+    'documentType',
+    'documentNumber',
+    'address',
+    'notes',
+    'updatedByMembershipId',
+    'deletedAt',
+  ])
+    assert.equal(result[key], null);
+  assert.equal(result.status, 'ACTIVE');
+  const response = PatientResponseDto.fromEntity(result);
+  assert.equal(response.fullName, 'Ana Pérez');
+  assert.equal('fullName' in result, false);
+  assert.equal('deleted' in result, false);
+});
+
+test('PATCH valida el documento combinado con el existente sin mutarlo si falla', async () => {
+  let current = {
+    ...patient(),
+    documentType: 'CI',
+    documentNumber: '123',
+    phone: '123',
+    notes: 'Nota',
+  };
+  let writes = 0;
+  const useCase = new UpdatePatientUseCase({
+    findById: async () => current,
+    update: async (data) => {
+      writes++;
+      current = data;
+      return data;
+    },
+  });
+  const command = {
+    id: current.id,
+    organizationId,
+    updatedByMembershipId: actor,
+  };
+  const original = { ...current };
+  await assert.rejects(useCase.execute({ ...command, documentType: null }), {
+    status: 400,
+  });
+  assert.equal(writes, 0);
+  assert.deepEqual(current, original);
+  const result = await useCase.execute({
+    ...command,
+    documentNumber: ' 456 ',
+    phone: null,
+  });
+  assert.equal(result.documentType, 'CI');
+  assert.equal(result.documentNumber, '456');
+  assert.equal(result.phone, null);
+  assert.equal(result.notes, 'Nota');
+  assert.equal(result.firstName, original.firstName);
+  assert.equal(result.updatedByMembershipId, actor);
+  const cleared = await useCase.execute({
+    ...command,
+    documentType: '',
+    documentNumber: null,
+  });
+  assert.equal(cleared.documentType, null);
+  assert.equal(cleared.documentNumber, null);
+});
+
+test('la lectura y actualización rechazan pacientes eliminados usando deletedAt', async () => {
+  const current = { ...patient(), deletedAt: new Date() };
+  const repository = {
+    findById: async () => current,
+    update: async () => assert.fail('No debe escribir'),
+  };
+  await assert.rejects(
+    new GetPatientByIdUseCase(repository).execute(current.id, organizationId),
+    { status: 404 },
+  );
+  await assert.rejects(
+    new UpdatePatientUseCase(repository).execute({
+      id: current.id,
+      organizationId,
+      updatedByMembershipId: actor,
+    }),
+    { status: 404 },
+  );
 });
 
 test('el DTO admite UUIDv7 en todos los servicios y rechaza un valor que no es lista', async () => {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Patient } from '../../domain/entities/patient.entity.js';
+import type { Patient } from '../../domain/entities/patient.entity.js';
+import type { PaginatedResult } from '../../../../common/pagination/pagination.js';
 import {
   FindPatientsFilters,
   PatientRepository,
@@ -9,7 +10,7 @@ import {
 export class ListPatientsUseCase {
   constructor(private readonly patientRepository: PatientRepository) {}
 
-  async execute(filters: FindPatientsFilters): Promise<Patient[]> {
+  async execute( filters: FindPatientsFilters ): Promise<PaginatedResult<Patient>> {
     return this.patientRepository.findByFilters(filters);
   }
 }

@@ -1,6 +1,7 @@
-import {
+import type {
   Patient,
-  type PatientStatus,
+  PatientSex,
+  PatientStatus,
 } from '../domain/entities/patient.entity.js';
 
 export interface PatientRow {
@@ -25,24 +26,24 @@ export interface PatientRow {
 }
 
 export function toPatientEntity(row: PatientRow): Patient {
-  return new Patient({
+  return {
     id: row.id,
     organizationId: row.organizationId,
-    firstName: row.firstName,
-    lastName: row.lastName,
-    phone: row.phone,
-    email: row.email,
+    firstName: row.firstName.trim(),
+    lastName: row.lastName.trim(),
+    phone: row.phone?.trim() ?? null,
+    email: row.email?.trim() ?? null,
     birthDate: row.birthDate,
-    sex: row.sex,
-    documentType: row.documentType,
-    documentNumber: row.documentNumber,
-    address: row.address,
-    notes: row.notes,
+    sex: row.sex as PatientSex | null,
+    documentType: row.documentType?.trim() || null,
+    documentNumber: row.documentNumber?.trim() || null,
+    address: row.address?.trim() ?? null,
+    notes: row.notes?.trim() ?? null,
     status: row.status as PatientStatus,
     createdByMembershipId: row.createdByMembershipId,
     updatedByMembershipId: row.updatedByMembershipId,
     deletedAt: row.deletedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-  });
+  };
 }

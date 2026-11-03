@@ -7,7 +7,7 @@ import {
   unlinkSync,
   rmdirSync,
 } from 'node:fs';
-import { generateKeyPairSync } from 'node:crypto';
+import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -72,8 +72,8 @@ const { PrismaRoleWriter } = await import(
 const { PrismaPatientRepository } = await import(
   '../../../dentistry/backend/dist/modules/patient/infrastructure/prisma-patient.repository.js'
 );
-const { Patient } = await import(
-  '../../../dentistry/backend/dist/modules/patient/domain/entities/patient.entity.js'
+const { CreatePatientUseCase } = await import(
+  '../../../dentistry/backend/dist/modules/patient/application/use-case/create-patient.use-case.js'
 );
 const { PrismaDentalServiceRepository } = await import(
   '../../../dentistry/backend/dist/modules/service/infrastructure/prisma-dental-service.repository.js'
@@ -224,64 +224,287 @@ test(
         },
       );
       const patients = new PrismaPatientRepository(dentistryDb);
+      const createPatient = new CreatePatientUseCase(patients);
       let patient;
       await t.test(
         'paciente conserva DATE en TZ America/La_Paz y usa solo deletedAt',
         async () => {
-          patient = await patients.create(
-            new Patient({
-              organizationId: organization.id,
-              firstName: 'Paciente',
-              lastName: 'Uno',
-              createdByMembershipId: actor,
-              birthDate: new Date('2000-02-29T00:00:00Z'),
-              documentType: 'CI',
-              documentNumber: '123',
-            }),
-          );
+          patient = await createPatient.execute({
+            organizationId: organization.id,
+            firstName: 'Paciente',
+            lastName: 'Uno',
+            createdByMembershipId: actor,
+            birthDate: new Date('2000-02-29T00:00:00Z'),
+            documentType: 'CI',
+            documentNumber: '123',
+          });
           assert.equal(
             PatientResponseDto.fromEntity(patient).birthDate,
             '2000-02-29',
           );
           await assert.rejects(
-            patients.create(
-              new Patient({
-                organizationId: organization.id,
-                firstName: 'Duplicado',
-                lastName: 'Uno',
-                createdByMembershipId: actor,
-                documentType: 'CI',
-                documentNumber: '123',
-              }),
-            ),
+            createPatient.execute({
+              organizationId: organization.id,
+              firstName: 'Duplicado',
+              lastName: 'Uno',
+              createdByMembershipId: actor,
+              documentType: 'CI',
+              documentNumber: '123',
+            }),
             (error) => error.getStatus?.() === 409,
           );
           assert.equal(
             (await patients.findByFilters({ organizationId: organization.id }))
-              .length,
+              .items.length,
             1,
           );
-          const other = await patients.create(
-            new Patient({
-              organizationId: organization.id,
-              firstName: 'Paciente',
-              lastName: 'Retirado',
-              createdByMembershipId: actor,
-            }),
-          );
-          other.softDelete(actor);
-          await patients.update(other);
+          const other = await createPatient.execute({
+            organizationId: organization.id,
+            firstName: 'Paciente',
+            lastName: 'Retirado',
+            createdByMembershipId: actor,
+          });
+          await patients.update({
+            ...other,
+            deletedAt: new Date(),
+            updatedByMembershipId: actor,
+          });
           assert.equal(
             await patients.findById(other.id, organization.id),
             null,
           );
           assert.equal(
             (await patients.findByFilters({ organizationId: organization.id }))
-              .length,
+              .items.length,
             1,
           );
         },
       );
+      await t.test(
+        'pacientes aplica los mismos filtros SQL a los datos y su conteo',
+        async () => {
+          const organizationId = randomUUID();
+          const create = (data) =>
+            createPatient.execute({
+              organizationId,
+              createdByMembershipId: actor,
+              firstName: 'Luis',
+              lastName: 'Paredes',
+              ...data,
+            });
+          const ana = await create({
+            firstName: 'Ana',
+            lastName: 'Torres',
+            phone: '+591-71234567',
+            email: 'ana@example.test',
+            documentType: 'CI',
+            documentNumber: 'DOC-100',
+          });
+          const luis = await create({});
+          const inactive = await create({
+            firstName: 'ANA',
+            lastName: 'Inactiva',
+            status: 'INACTIVE',
+          });
+          const literal = await create({
+            firstName: 'Literal%_\\',
+            lastName: 'Prueba',
+          });
+          const deleted = await create({
+            firstName: 'Ana',
+            lastName: 'Eliminada',
+          });
+          await patients.update({
+            ...deleted,
+            deletedAt: new Date(),
+            updatedByMembershipId: actor,
+          });
+          await create({
+            organizationId: randomUUID(),
+            firstName: 'Ana',
+            lastName: 'Ajena',
+          });
+          const ids = async (filters) =>
+            (
+              await patients.findByFilters({ organizationId, ...filters })
+            ).items.map((row) => row.id);
+          const all = new Set([ana.id, luis.id, inactive.id, literal.id]);
+          assert.deepEqual(new Set(await ids({})), all);
+          assert.deepEqual(new Set(await ids({ search: '   ' })), all);
+          assert.deepEqual(
+            new Set(await ids({ search: 'aNa' })),
+            new Set([ana.id, inactive.id]),
+          );
+          assert.deepEqual(await ids({ status: 'INACTIVE' }), [inactive.id]);
+          for (const search of ['TORR', '7123', 'EXAMPLE.TEST', 'DOC-1']) {
+            assert.deepEqual(await ids({ search }), [ana.id]);
+          }
+          for (const search of ['%', '_', '\\']) {
+            assert.deepEqual(await ids({ search }), [literal.id]);
+          }
+          assert.deepEqual(await ids({ search: 'Ana Torres' }), []);
+          assert.deepEqual(await ids({ search: "' OR 1=1 --" }), []);
+          for (const organizationId of [undefined, '', '   ']) {
+            await assert.rejects(
+              patients.findByFilters({ organizationId }),
+              /organizationId es obligatorio/,
+            );
+          }
+
+          const statements = [];
+          const originalQuery = isolated.client.query;
+          isolated.client.query = function (config, values) {
+            const text = typeof config === 'string' ? config : config.text;
+            if (/^\s*SELECT\b/i.test(text)) statements.push(text);
+            return originalQuery.call(this, config, values);
+          };
+          try {
+            assert.deepEqual(await ids({ status: 'ACTIVE', search: ' aNa ' }), [
+              ana.id,
+            ]);
+          } finally {
+            isolated.client.query = originalQuery;
+          }
+          assert.equal(statements.length, 2);
+          for (const statement of statements) assert.match(statement, /ILIKE/i);
+          assert.match(statements[0], /COUNT\(/i);
+          assert.match(statements[1], /ORDER BY/i);
+          assert.match(statements[1], /LIMIT/i);
+        },
+      );
+
+      await t.test(
+        'pacientes ordena por modificación y creación recientes, luego apellido, nombre e id',
+        async () => {
+          const organizationId = randomUUID();
+          const records = [];
+          const fixtures = [
+            ['Zoe', 'Zulu', '2026-10-25', '2026-10-24'],
+            ['Zoe', 'Zulu', '2026-10-24', '2026-10-24'],
+            ['Zoe', 'Zulu', '2026-10-24', '2026-10-23'],
+            ['Zoe', 'Alfa', '2026-10-24', '2026-10-23'],
+            ['Ana', 'Alfa', '2026-10-24', '2026-10-23'],
+            ['Ana', 'Alfa', '2026-10-24', '2026-10-23'],
+          ];
+          for (const [firstName, lastName, updatedAt, createdAt] of fixtures) {
+            const row = await createPatient.execute({
+              organizationId,
+              createdByMembershipId: actor,
+              firstName,
+              lastName,
+            });
+            await isolated.database.query(
+              'UPDATE dentistry."Patient" SET "updatedAt" = $1, "createdAt" = $2 WHERE "id" = $3',
+              [updatedAt + 'T00:00:00Z', createdAt + 'T00:00:00Z', row.id],
+            );
+            records.push(row);
+          }
+          const tiedIds = [records[4].id, records[5].id].sort();
+          const result = await patients.findByFilters({ organizationId });
+          assert.deepEqual(
+            result.items.map((row) => row.id),
+            [
+              records[0].id,
+              records[1].id,
+              ...tiedIds,
+              records[3].id,
+              records[2].id,
+            ],
+          );
+        },
+      );
+
+      await t.test(
+        'pacientes pagina en SQL, cuenta solo coincidencias y conserva totales en páginas vacías',
+        async () => {
+          const organizationId = randomUUID();
+          const create = (data) =>
+            createPatient.execute({
+              organizationId,
+              createdByMembershipId: actor,
+              firstName: 'Paginado',
+              lastName: 'Prueba',
+              ...data,
+            });
+          for (let index = 0; index < 45; index++) {
+            await create({
+              lastName: String(index).padStart(3, '0'),
+              status: index < 7 ? 'INACTIVE' : 'ACTIVE',
+            });
+          }
+          await create({ firstName: 'No coincide' });
+          const deleted = await create({});
+          await patients.update({
+            ...deleted,
+            deletedAt: new Date(),
+            updatedByMembershipId: actor,
+          });
+          await create({ organizationId: randomUUID() });
+          const criteria = { organizationId, search: 'Paginado' };
+          const first = await patients.findByFilters(criteria);
+          const second = await patients.findByFilters({ ...criteria, page: 2 });
+          const third = await patients.findByFilters({ ...criteria, page: 3 });
+          assert.equal(first.items.length, 20);
+          assert.equal(second.items.length, 20);
+          assert.equal(third.items.length, 5);
+          assert.deepEqual(first.pagination, {
+            page: 1,
+            pageSize: 20,
+            totalItems: 45,
+            totalPages: 3,
+          });
+          assert.deepEqual(third.pagination, {
+            page: 3,
+            pageSize: 20,
+            totalItems: 45,
+            totalPages: 3,
+          });
+          const all = await patients.findByFilters({
+            ...criteria,
+            pageSize: 100,
+          });
+          assert.deepEqual(
+            [...first.items, ...second.items, ...third.items].map(
+              (row) => row.id,
+            ),
+            all.items.map((row) => row.id),
+          );
+          const outside = await patients.findByFilters({
+            ...criteria,
+            page: 4,
+          });
+          assert.deepEqual(outside.items, []);
+          assert.deepEqual(outside.pagination, {
+            page: 4,
+            pageSize: 20,
+            totalItems: 45,
+            totalPages: 3,
+          });
+          const filtered = await patients.findByFilters({
+            ...criteria,
+            status: 'INACTIVE',
+            page: 2,
+            pageSize: 3,
+          });
+          assert.equal(filtered.items.length, 3);
+          assert.ok(filtered.items.every((row) => row.status === 'INACTIVE'));
+          assert.deepEqual(filtered.pagination, {
+            page: 2,
+            pageSize: 3,
+            totalItems: 7,
+            totalPages: 3,
+          });
+          const empty = await patients.findByFilters({
+            organizationId,
+            search: 'Inexistente',
+          });
+          assert.deepEqual(empty, {
+            items: [],
+            pagination: { page: 1, pageSize: 20, totalItems: 0, totalPages: 0 },
+          });
+        },
+      );
+
       const services = new PrismaDentalServiceRepository(dentistryDb);
       let service, secondService;
       await t.test(

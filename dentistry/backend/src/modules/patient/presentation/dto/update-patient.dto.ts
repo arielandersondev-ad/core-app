@@ -1,23 +1,27 @@
+import { Transform } from 'class-transformer';
+import type { PatientSex } from '../../domain/entities/patient.entity.js';
 import {
   IsDateString,
   IsIn,
+  IsNotEmpty,
   Matches,
   IsEmail,
   IsOptional,
   IsString,
-  IsUUID,
+  ValidateIf,
 } from 'class-validator';
 
 export class UpdatePatientDto {
-  @IsUUID()
-  organizationId: string;
-
-  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @ValidateIf((_object, value) => value !== undefined)
   @IsString()
+  @IsNotEmpty()
   firstName?: string;
 
-  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @ValidateIf((_object, value) => value !== undefined)
   @IsString()
+  @IsNotEmpty()
   lastName?: string;
 
   @IsOptional()
@@ -36,7 +40,7 @@ export class UpdatePatientDto {
   @IsOptional()
   @IsString()
   @IsIn(['MALE', 'FEMALE', 'OTHER'])
-  sex?: string;
+  sex?: PatientSex;
 
   @IsOptional()
   @IsString()
@@ -53,7 +57,4 @@ export class UpdatePatientDto {
   @IsOptional()
   @IsString()
   notes?: string;
-
-  @IsUUID()
-  updatedByMembershipId: string;
 }

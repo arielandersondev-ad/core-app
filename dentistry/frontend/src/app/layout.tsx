@@ -38,7 +38,9 @@ export default function RootLayout({
       className={`${inter.variable} ${workSans.variable} ${dmMono.variable} h-full antialiased`}
     >
       <body className="h-full flex flex-col overflow-hidden">
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script 
+        //dangerouslySetInnerHTML={{ __html: themeScript }} 
+        />
         {children}
       </body>
     </html>

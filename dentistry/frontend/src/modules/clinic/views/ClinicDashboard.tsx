@@ -20,7 +20,6 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { StatCard, Icons } from "@/shared/components/ui";
 import {
   CreateAppointmentModal,
-  CreatePatientModal,
   RegisterPaymentModal,
 } from "@/modules/clinic/components";
 
@@ -47,7 +46,6 @@ export default function ClinicDashboard({
 }) {
   const router = useRouter();
   const [isApptModalOpen, setIsApptModalOpen] = useState(false);
-  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const formattedDate = new Date(TODAY_DATE + "T12:00:00").toLocaleDateString(
@@ -84,7 +82,7 @@ export default function ClinicDashboard({
           {
             label: "Nuevo paciente",
             icon: "👤",
-            action: () => setIsPatientModalOpen(true),
+            action: () => onNavigate("crear-paciente"),
           },
           {
             label: "Registrar pago",
@@ -335,14 +333,6 @@ export default function ClinicDashboard({
         onClose={() => setIsApptModalOpen(false)}
         onSuccess={() => {
           onNavigate("agenda");
-        }}
-      />
-
-      <CreatePatientModal
-        open={isPatientModalOpen}
-        onClose={() => setIsPatientModalOpen(false)}
-        onSuccess={() => {
-          onNavigate("pacientes");
         }}
       />
 
