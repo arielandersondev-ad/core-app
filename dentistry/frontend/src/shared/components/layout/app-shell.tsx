@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main column */}
       <div className="flex flex-col flex-1 min-w-0">
         <AppNavbar />
-        <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
         <BottomNav />
       </div>
     </div>

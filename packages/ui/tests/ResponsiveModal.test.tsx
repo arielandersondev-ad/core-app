@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { renderToString } from "react-dom/server";
 import { ResponsiveModal } from "../src/components/ui/ResponsiveModal";
-import { ModalFooter, DatePicker, TimePicker } from "../src/index";
+import { ModalFooter, DatePicker, TimePicker, BottomSheet } from "../src/index";
 import * as useIsMobileModule from "../src/hooks/useIsMobile";
 
 describe("ResponsiveModal Unit & Integration Tests", () => {
@@ -529,6 +529,313 @@ describe("ResponsiveModal Unit & Integration Tests", () => {
       expect(html).toContain("Hora de la Cita");
       expect(html).toContain('value="09:30"');
       expect(html).toContain("09:30");
+    });
+  });
+
+  describe("BottomSheet Browser History (Back button / popstate integration - HAG-59 & HAG-61)", () => {
+    const originalWindow = globalThis.window;
+    const originalDocument = globalThis.document;
+
+    afterEach(() => {
+      if (originalWindow !== undefined) {
+        globalThis.window = originalWindow;
+      } else {
+        delete (globalThis as any).window;
+      }
+      if (originalDocument !== undefined) {
+        globalThis.document = originalDocument;
+      } else {
+        delete (globalThis as any).document;
+      }
+      vi.restoreAllMocks();
+    });
+
+    /**
+     * Lightweight Hook and Component Test Runner for Node/Vitest environments.
+     */
+    function renderHook<TProps, TResult>(
+      hookFn: (props: TProps) => TResult,
+      options: { initialProps: TProps }
+    ): {
+      result: { current: TResult };
+      rerender: (newProps?: TProps) => TResult;
+    } {
+      const internals = (React as any).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      const hooks: any[] = [];
+      let hookIndex = 0;
+      let effects: { idx: number; effect: () => any }[] = [];
+      const cleanups: (() => void)[] = [];
+      const prevDepsMap = new Map<number, any[] | undefined>();
+      let currentProps = options.initialProps;
+      let result!: TResult;
+
+      const dispatcher = {
+        useState(initialValue: any) {
+          const idx = hookIndex++;
+          if (hooks[idx] === undefined) {
+            hooks[idx] = typeof initialValue === "function" ? initialValue() : initialValue;
+          }
+          const setState = (action: any) => {
+            const next = typeof action === "function" ? action(hooks[idx]) : action;
+            hooks[idx] = next;
+            rerender();
+          };
+          return [hooks[idx], setState];
+        },
+        useRef(initialValue: any) {
+          const idx = hookIndex++;
+          if (hooks[idx] === undefined) {
+            hooks[idx] = { current: initialValue };
+          }
+          return hooks[idx];
+        },
+        useCallback(fn: any, deps?: any[]) {
+          const idx = hookIndex++;
+          if (hooks[idx] === undefined) {
+            hooks[idx] = { fn, deps };
+          } else {
+            const prev = hooks[idx];
+            const changed = !deps || deps.some((d, i) => d !== prev.deps[i]);
+            if (changed) {
+              hooks[idx] = { fn, deps };
+            }
+          }
+          return hooks[idx].fn;
+        },
+        useEffect(effect: () => any, deps?: any[]) {
+          const idx = hookIndex++;
+          const prev = prevDepsMap.get(idx);
+          const changed = !deps || !prev || deps.some((d, i) => d !== prev[i]);
+          if (changed) {
+            prevDepsMap.set(idx, deps);
+            effects.push({ idx, effect });
+          }
+        },
+      };
+
+      function rerender(newProps?: TProps) {
+        if (newProps !== undefined) currentProps = newProps;
+        hookIndex = 0;
+        const prevDispatcher = internals.H;
+        internals.H = dispatcher;
+        try {
+          result = hookFn(currentProps);
+        } finally {
+          internals.H = prevDispatcher;
+        }
+        const runEffects = [...effects];
+        effects = [];
+        for (const { idx, effect } of runEffects) {
+          if (cleanups[idx]) {
+            cleanups[idx]();
+          }
+          const cleanup = effect();
+          if (typeof cleanup === "function") {
+            cleanups[idx] = cleanup;
+          }
+        }
+        return result;
+      }
+
+      rerender();
+      return {
+        result: {
+          get current() {
+            return result;
+          },
+        },
+        rerender,
+      };
+    }
+
+    it("invokes window.history.pushState when BottomSheet opens (open={true})", () => {
+      const pushStateSpy = vi.fn();
+      const listeners = new Map<string, Set<(e: any) => void>>();
+
+      (globalThis as any).window = {
+        history: {
+          state: { prevData: 123 },
+          pushState: pushStateSpy,
+          back: vi.fn(),
+        },
+        addEventListener: vi.fn((event: string, cb: any) => {
+          if (!listeners.has(event)) listeners.set(event, new Set());
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: vi.fn((event: string, cb: any) => {
+          listeners.get(event)?.delete(cb);
+        }),
+      };
+      (globalThis as any).document = {
+        body: {
+          style: { overflow: "" },
+        },
+      };
+
+      const handleClose = vi.fn();
+      renderHook((props: any) => BottomSheet(props), {
+        initialProps: {
+          open: true,
+          onClose: handleClose,
+          title: "Detalles de Cita",
+          children: <div>Contenido</div>,
+        },
+      });
+
+      expect(pushStateSpy).toHaveBeenCalledTimes(1);
+      expect(pushStateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ prevData: 123, __bottomSheet: true }),
+        ""
+      );
+      expect((globalThis as any).window.addEventListener).toHaveBeenCalledWith(
+        "popstate",
+        expect.any(Function)
+      );
+    });
+
+    it("invokes onClose() exactly 1 time when popstate event is dispatched (window.dispatchEvent)", () => {
+      const listeners = new Map<string, Set<(e: any) => void>>();
+      const pushStateSpy = vi.fn();
+
+      (globalThis as any).window = {
+        history: {
+          state: {},
+          pushState: pushStateSpy,
+          back: vi.fn(),
+        },
+        addEventListener: vi.fn((event: string, cb: any) => {
+          if (!listeners.has(event)) listeners.set(event, new Set());
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: vi.fn((event: string, cb: any) => {
+          listeners.get(event)?.delete(cb);
+        }),
+        dispatchEvent: vi.fn((event: any) => {
+          const cbs = listeners.get(event.type);
+          if (cbs) {
+            cbs.forEach((cb) => cb(event));
+          }
+          return true;
+        }),
+      };
+      (globalThis as any).document = {
+        body: {
+          style: { overflow: "" },
+        },
+      };
+
+      class PopStateEvent {
+        type: string;
+        constructor(type: string) {
+          this.type = type;
+        }
+      }
+      (globalThis as any).PopStateEvent = PopStateEvent;
+
+      const handleClose = vi.fn();
+      renderHook((props: any) => BottomSheet(props), {
+        initialProps: {
+          open: true,
+          onClose: handleClose,
+          title: "Panel con Historial",
+          children: <div>Contenido</div>,
+        },
+      });
+
+      expect(handleClose).not.toHaveBeenCalled();
+
+      // Dispatch popstate event (simulating mobile Back button)
+      (globalThis as any).window.dispatchEvent(new (globalThis as any).PopStateEvent("popstate"));
+
+      expect(handleClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("safely calls window.history.back() on cleanup when closed without popstate and history was pushed", () => {
+      const pushStateSpy = vi.fn();
+      const backSpy = vi.fn();
+      const listeners = new Map<string, Set<(e: any) => void>>();
+
+      const mockHistoryState = { __bottomSheet: true };
+      (globalThis as any).window = {
+        history: {
+          state: mockHistoryState,
+          pushState: pushStateSpy,
+          back: backSpy,
+        },
+        addEventListener: vi.fn((event: string, cb: any) => {
+          if (!listeners.has(event)) listeners.set(event, new Set());
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: vi.fn((event: string, cb: any) => {
+          listeners.get(event)?.delete(cb);
+        }),
+      };
+      (globalThis as any).document = {
+        body: {
+          style: { overflow: "" },
+        },
+      };
+
+      const handleClose = vi.fn();
+      const { rerender } = renderHook((props: any) => BottomSheet(props), {
+        initialProps: {
+          open: true,
+          onClose: handleClose,
+          title: "Panel a cerrar",
+          children: <div>Contenido</div>,
+        },
+      });
+
+      expect(pushStateSpy).toHaveBeenCalledTimes(1);
+      expect(backSpy).not.toHaveBeenCalled();
+
+      // Change open to false (closing normally, e.g. via backdrop or close button)
+      rerender({
+        open: false,
+        onClose: handleClose,
+        title: "Panel a cerrar",
+        children: <div>Contenido</div>,
+      });
+
+      expect(backSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call history.pushState when open is false", () => {
+      const pushStateSpy = vi.fn();
+
+      (globalThis as any).window = {
+        history: {
+          state: {},
+          pushState: pushStateSpy,
+          back: vi.fn(),
+        },
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+
+      const handleClose = vi.fn();
+      renderHook((props: any) => BottomSheet(props), {
+        initialProps: {
+          open: false,
+          onClose: handleClose,
+          title: "Panel Cerrado",
+          children: <div>Contenido</div>,
+        },
+      });
+
+      expect(pushStateSpy).not.toHaveBeenCalled();
+    });
+
+    it("renders safely without history errors during SSR (window or window.history undefined)", () => {
+      delete (globalThis as any).window;
+
+      expect(() => {
+        renderToString(
+          <BottomSheet open={true} onClose={() => {}} title="SSR Sheet">
+            <div>Contenido SSR</div>
+          </BottomSheet>
+        );
+      }).not.toThrow();
     });
   });
 });

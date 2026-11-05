@@ -17,6 +17,7 @@ import {
   MobileFloatingActionMenu,
   MobileFilterSheet,
   FilterTriggerButton,
+  PullToRefresh,
 } from "@/shared/components/ui";
 import { PatientTable } from "@/features/patient/components/patient-table";
 import { PatientListError } from "@/features/patient/components/patient-list-error";
@@ -67,6 +68,11 @@ export default function PatientsPage() {
     if (addHistory) window.history.pushState(null, "", href);
     else window.history.replaceState(null, "", href);
   }
+
+  const handleRefresh = async () => {
+    changeParams({ page: 1 });
+    await query.refetch();
+  };
 
   // Reset accumulated patients on search or status change
   useEffect(() => {
@@ -353,10 +359,11 @@ export default function PatientsPage() {
       </MobileFilterSheet>
 
       {/* 4. Listado Bimodal & Scroll Infinito */}
-      <section
-        aria-label="Resultados de pacientes"
-        aria-busy={isLoading || query.isFetching}
-        className="space-y-4"
+      <PullToRefresh onRefresh={handleRefresh}>
+        <section
+          aria-label="Resultados de pacientes"
+          aria-busy={isLoading || query.isFetching}
+          className="space-y-4"
       >
         {query.fetchStatus === "paused" ? (
           <p
@@ -469,7 +476,8 @@ export default function PatientsPage() {
             </>
           )
         )}
-      </section>
+        </section>
+      </PullToRefresh>
 
       {/* 5. Menú Flotante de Acciones Rápidas Móvil (Speed-Dial FAB) */}
       <MobileFloatingActionMenu

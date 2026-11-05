@@ -19,6 +19,7 @@ import {
   Badge,
   MobileFilterSheet,
   FilterTriggerButton,
+  PullToRefresh,
 } from "@/shared/components/ui";
 import { RegisterPaymentModal } from "@/modules/clinic/components";
 
@@ -87,6 +88,11 @@ export default function Payments({
       setIsLoadingMore(false);
     }, 200);
   }, [isLoadingMore, hasMore]);
+
+  const handleRefresh = useCallback(async () => {
+    setPage(1);
+    setPaymentsList([...payments]);
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -371,7 +377,9 @@ export default function Payments({
       {/* 4. Tabla y Desglose */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Contenedor principal de lista / tabla */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
+        <div className="lg:col-span-3">
+          <PullToRefresh onRefresh={handleRefresh}>
+            <div className="flex flex-col gap-4">
           {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales <article> limpias */}
           <div className="md:hidden flex flex-col gap-3">
             {visiblePayments.map((pay) => {
@@ -555,6 +563,8 @@ export default function Payments({
             )}
           </div>
         </div>
+      </PullToRefresh>
+    </div>
 
         {/* Sidebar: por método de pago */}
         <div className="lg:col-span-1 flex flex-col gap-2.5">

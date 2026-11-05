@@ -18,6 +18,7 @@ import {
   Badge,
   MobileFilterSheet,
   FilterTriggerButton,
+  PullToRefresh,
 } from "@/shared/components/ui";
 import { CreateInventoryModal } from "@/modules/clinic/components";
 
@@ -104,6 +105,11 @@ export default function Inventory() {
       setIsLoadingMore(false);
     }, 200);
   }, [isLoadingMore, hasMore]);
+
+  const handleRefresh = useCallback(async () => {
+    setPage(1);
+    setInventoryList([...initialInventory]);
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -388,7 +394,8 @@ export default function Inventory() {
       </MobileFilterSheet>
 
       {/* 5. Listado Responsivo de Inventario */}
-      <div className="flex flex-col gap-4">
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="flex flex-col gap-4">
         {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales <article> limpias */}
         <div className="md:hidden flex flex-col gap-3">
           {visibleItems.map((item) => {
@@ -607,8 +614,9 @@ export default function Inventory() {
           )}
         </div>
       </div>
+    </PullToRefresh>
 
-      <CreateInventoryModal
+    <CreateInventoryModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {

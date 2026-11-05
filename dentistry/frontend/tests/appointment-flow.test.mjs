@@ -539,3 +539,144 @@ test('HAG-49: AppointmentDetailSheet.tsx consume datos reales de paciente/person
     'No debe hardcodear Total: Bs. en los precios',
   );
 });
+
+// ============================================================================
+// 8. HAG-52: Rediseño de lista de citas en Agenda.tsx con Timeline y tarjetas colapsables
+// ============================================================================
+
+test('HAG-52: Agenda.tsx implementa timeline vertical en 2 columnas, tarjetas desplegables y acciones táctiles', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const content = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Estructura en 2 columnas: Columna izquierda de timeline con riel vertical
+  assert.match(
+    content,
+    /w-12\s+sm:w-14\s+flex\s+flex-col\s+items-center\s+pt-3\.5\s+shrink-0/,
+    'Debe implementar la columna izquierda del timeline con ancho w-12 sm:w-14',
+  );
+  assert.match(
+    content,
+    /w-px\s+flex-1\s+bg-\[var\(--border\)\]\s+my-1\.5/,
+    'Debe contener la línea vertical conectora del timeline',
+  );
+  assert.match(
+    content,
+    /getTimelineDotColor/,
+    'Debe incluir helper getTimelineDotColor para dots de colores según estado',
+  );
+  assert.match(content, /bg-amber-400/, 'Debe soportar dot ámbar para programada/en_sala/en_curso');
+  assert.match(content, /bg-emerald-500/, 'Debe soportar dot verde para confirmada/completada');
+  assert.match(content, /bg-rose-500/, 'Debe soportar dot coral para no_asistio/cancelada');
+
+  // 2. Columna derecha: Tarjeta acordeón desplegable con expandedId
+  assert.match(content, /expandedId/, 'Debe manejar estado expandedId');
+  assert.match(content, /durationMin/, 'Debe calcular durationMin de la cita');
+  assert.match(
+    content,
+    /flex-1\s+min-w-0\s+rounded-2xl\s+border\s+border-\[var\(--border\)\]\s+bg-\[var\(--surface-elevated\)\]\s+p-4/,
+    'Tarjeta debe tener rounded-2xl, border, surface-elevated y p-4',
+  );
+
+  // 3. Vista colapsada: Servicio y duración
+  assert.match(
+    content,
+    /\{svcName\}\s*·\s*\{durationMin\}\s*min/,
+    'Vista colapsada debe desplegar `${svcName} · ${durationMin} min`',
+  );
+
+  // 4. Botón táctil WhatsApp y botón táctil de llamada
+  assert.match(
+    content,
+    /h-10\s+w-12\s+rounded-xl\s+border\s+border-\[var\(--border\)\]\s+bg-\[var\(--background\)\]/,
+    'Debe implementar botones táctiles rounded-xl para WhatsApp y teléfono',
+  );
+
+  // 5. Botón primario verde ancho con paleta #6cc24a
+  assert.match(
+    content,
+    /bg-\[#6cc24a\]\s+hover:bg-\[#5db33c\]/,
+    'Debe tener botón primario CTA en verde #6cc24a',
+  );
+
+  // 6. Botón secundario No Asistió
+  assert.match(
+    content,
+    /No asistió/,
+    'Debe incluir botón secundario No asistió en la vista expandida',
+  );
+});
+
+// ============================================================================
+// 12. FRONTEND LOGIC & UI (HAG-60): Subrayado Bybit, WhatsAppReal, popstate Back
+// ============================================================================
+
+test('HAG-60 Frontend: Subrayado Bybit en nombre, sin Ver ficha, teléfono al expandir, Icons.whatsappReal y popstate Back', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+
+  const modalPath = path.resolve(
+    __dirname,
+    '../src/shared/components/ui/WhatsAppModal.tsx',
+  );
+  const modalContent = fs.readFileSync(modalPath, 'utf8');
+
+  // 1. Subrayado punteado estilo Bybit en el nombre del paciente
+  assert.match(
+    agendaContent,
+    /underline\s+decoration-dotted\s+decoration-\[var\(--muted\)\]\/70\s+underline-offset-4\s+hover:decoration-\[var\(--primary\)\]/,
+    'Debe aplicar subrayado punteado Bybit en el nombre del paciente',
+  );
+
+  // 2. Clic en el nombre abre directamente el detalle sin importar si estaba colapsada o expandida
+  assert.match(
+    agendaContent,
+    /setSelectedDetailCitaId\(apt\.id\);\s*setIsDetailSheetOpen\(true\);/,
+    'Clic en el nombre del paciente debe abrir directamente el modal de detalle',
+  );
+
+  // 3. Quitar "Ver ficha" por completo de la tarjeta
+  assert.equal(
+    agendaContent.includes('Ver ficha'),
+    false,
+    'No debe existir el texto "Ver ficha" en Agenda.tsx',
+  );
+
+  // 4. Número de teléfono sutil debajo del nombre SOLO cuando está expandida
+  assert.match(
+    agendaContent,
+    /isExpanded\s*&&\s*\([\s\S]*?\{displayPhone\s*&&\s*\(\s*<p className="text-\[11px\] font-mono text-\[var\(--muted\)\]\/75 leading-tight mt-0\.5 mb-1">\s*\{displayPhone\}/,
+    'Debe mostrar displayPhone sutil debajo del nombre solo cuando isExpanded',
+  );
+
+  // 5. Restaurar icono oficial de WhatsApp en la tarjeta de Agenda
+  assert.match(
+    agendaContent,
+    /\{Icons\.whatsappReal\}/,
+    'Debe usar Icons.whatsappReal en el botón táctil de Agenda.tsx',
+  );
+
+  // 6. WhatsAppModal: icono oficial whatsappReal en cabecera y botón principal
+  assert.match(
+    modalContent,
+    /\{Icons\.whatsappReal\}/,
+    'WhatsAppModal debe usar Icons.whatsappReal',
+  );
+
+  // 7. WhatsAppModal: soporte de retroceso / botón Atrás con popstate y __bottomSheet
+  assert.match(
+    modalContent,
+    /__bottomSheet:\s*true/,
+    'WhatsAppModal debe registrar __bottomSheet en history.state',
+  );
+  assert.match(
+    modalContent,
+    /window\.addEventListener\("popstate",\s*handlePopState\)/,
+    'WhatsAppModal debe escuchar el evento popstate para retroceder limpiamente',
+  );
+});

@@ -12,6 +12,7 @@ import {
   Icons,
   CompactStatSummary,
   type CompactStatItem,
+  PullToRefresh,
 } from '@/shared/components/ui';
 import { usePermissions, useReplaceRolePermissions, useRolePermissions } from '../hooks/use-permissions';
 import { CreateRoleDialog } from '../components/create-role-dialog';
@@ -235,12 +236,21 @@ export default function RolePage() {
           </div>
 
           <div className="mt-6 grid items-start gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
-            <RoleSelectorPanel
-              roles={roles}
-              selectedRoleId={selectedRoleId}
-              onSelectRole={handleSelectRole}
-              onCreateRole={() => setIsCreateRoleOpen(true)}
-            />
+            <PullToRefresh
+              onRefresh={async () => {
+                await Promise.all([
+                  query.refetch(),
+                  selectedRoleId ? queryRolePermissions.refetch() : Promise.resolve(),
+                ]);
+              }}
+            >
+              <RoleSelectorPanel
+                roles={roles}
+                selectedRoleId={selectedRoleId}
+                onSelectRole={handleSelectRole}
+                onCreateRole={() => setIsCreateRoleOpen(true)}
+              />
+            </PullToRefresh>
             {selectedRole && (queryPermissions.isPending || queryRolePermissions.isPending) ? (
               <div role="status" className="h-96 animate-pulse rounded-lg border border-border bg-surface">
                 <span className="sr-only">Cargando permisos…</span>

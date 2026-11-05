@@ -40,7 +40,7 @@ export interface MobileFloatingActionMenuProps
   icon?: ReactNode;
   /** Clases adicionales para el contenedor posicionado */
   className?: string;
-  /** Clases de posicionamiento fijo personalizado (por defecto 'fixed bottom-20 right-4 z-30') */
+  /** Clases de posicionamiento fijo personalizado (por defecto 'fixed bottom-24 right-4 z-30') */
   positionClassName?: string;
   /** Si es true (por defecto), se oculta en desktop mediante md:hidden */
   mobileOnly?: boolean;
@@ -100,7 +100,7 @@ const actionIconVariantClasses: Record<MobileFloatingActionVariant, string> = {
  * MobileFloatingActionMenu (Speed-Dial FAB / MobileFabDropdown)
  *
  * Botón de acción flotante (FAB) tipo Speed-Dial para vistas móviles (< 768px / md:hidden).
- * Posicionado en `fixed bottom-20 right-4 z-30` para despejar el BottomNav móvil (`bottom-16`).
+ * Posicionado en `fixed bottom-24 right-4 z-30` para despejar el BottomNav móvil (`bottom-16`).
  * - Estado cerrado: Botón circular primary (`w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg`) con icono '+'.
  * - Estado abierto: El icono '+' rota 45° (`rotate-45 transition-transform duration-200`) convirtiéndose en 'x',
  *   despliega un backdrop translúcido (`fixed inset-0 bg-black/40 backdrop-blur-xs z-20`) y eleva verticalmente
@@ -112,7 +112,7 @@ export function MobileFloatingActionMenu({
   ariaLabel = "Acciones rápidas",
   icon,
   className = "",
-  positionClassName = "fixed bottom-20 right-4 z-30",
+  positionClassName = "fixed bottom-24 right-4 z-30",
   mobileOnly = true,
   open: controlledOpen,
   isOpen: controlledIsOpen,

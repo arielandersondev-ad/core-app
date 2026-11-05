@@ -57,6 +57,42 @@ export function BottomSheet({
   const [dragStartTime, setDragStartTime] = useState<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Historial de navegador (Back en móvil / popstate)
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const pushedHistoryRef = useRef(false);
+  const closedByPopStateRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+    if (typeof window === "undefined" || typeof window.history?.pushState !== "function") return;
+
+    window.history.pushState(
+      { ...(window.history.state || {}), __bottomSheet: true },
+      ""
+    );
+    pushedHistoryRef.current = true;
+    closedByPopStateRef.current = false;
+
+    const handlePopState = () => {
+      closedByPopStateRef.current = true;
+      pushedHistoryRef.current = false;
+      onCloseRef.current();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (pushedHistoryRef.current && !closedByPopStateRef.current) {
+        pushedHistoryRef.current = false;
+        if (window.history.state?.__bottomSheet) {
+          window.history.back();
+        }
+      }
+    };
+  }, [open]);
+
   // Esc key and scroll lock
   useEffect(() => {
     if (!open) return;

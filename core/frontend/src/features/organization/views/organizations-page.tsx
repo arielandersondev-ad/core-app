@@ -11,6 +11,7 @@ import {
   MobileFloatingActionMenu,
   MobileFilterSheet,
   FilterTriggerButton,
+  PullToRefresh,
   ResponsiveModal,
   ModalFooter,
   Input,
@@ -350,37 +351,43 @@ export function OrganizationsPage() {
         </div>
       </MobileFilterSheet>
 
-      {/* 4. Listado Bimodal & EmptyState */}
-      {!query.isPending && !error && filteredOrganizations.length === 0 ? (
-        <div className="flex-1 min-h-64 flex rounded-xl border border-dashed border-border bg-surface my-6">
-          <EmptyState
-            message="No se encontraron organizaciones"
-            description={
-              search || status !== "all" || country !== "all"
-                ? "Prueba ajustando los términos de búsqueda o los filtros aplicados."
-                : "Aún no hay organizaciones registradas en la plataforma."
-            }
-          />
-        </div>
-      ) : (
-        <>
-          {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales */}
-          <div className="mt-4 grid gap-3 md:hidden">
-            {filteredOrganizations.map((organization) => (
-              <OrganizationMobileCard
-                key={organization.id}
-                organization={organization}
-              />
-            ))}
+      {/* 4. Listado Bimodal & EmptyState con PullToRefresh */}
+      <PullToRefresh
+        onRefresh={async () => {
+          await query.refetch();
+        }}
+      >
+        {!query.isPending && !error && filteredOrganizations.length === 0 ? (
+          <div className="flex-1 min-h-64 flex rounded-xl border border-dashed border-border bg-surface my-6">
+            <EmptyState
+              message="No se encontraron organizaciones"
+              description={
+                search || status !== "all" || country !== "all"
+                  ? "Prueba ajustando los términos de búsqueda o los filtros aplicados."
+                  : "Aún no hay organizaciones registradas en la plataforma."
+              }
+            />
           </div>
+        ) : (
+          <>
+            {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales */}
+            <div className="mt-4 grid gap-3 md:hidden">
+              {filteredOrganizations.map((organization) => (
+                <OrganizationMobileCard
+                  key={organization.id}
+                  organization={organization}
+                />
+              ))}
+            </div>
 
-          {/* VISTA DESKTOP (>= 768px / hidden md:block): Tabla tradicional */}
-          <OrganizationTable
-            organizations={filteredOrganizations}
-            total={organizations.length}
-          />
-        </>
-      )}
+            {/* VISTA DESKTOP (>= 768px / hidden md:block): Tabla tradicional */}
+            <OrganizationTable
+              organizations={filteredOrganizations}
+              total={organizations.length}
+            />
+          </>
+        )}
+      </PullToRefresh>
 
       {/* 5. Floating Action Menu para móvil (< 768px / md:hidden) */}
       <MobileFloatingActionMenu
