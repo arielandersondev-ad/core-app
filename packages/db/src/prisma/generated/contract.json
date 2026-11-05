@@ -32,6 +32,10 @@
       "model": "ClinicalEncounter",
       "namespace": "dentistry"
     },
+    "ClinicalEncounterProcedure": {
+      "model": "ClinicalEncounterProcedure",
+      "namespace": "dentistry"
+    },
     "ClinicalFile": {
       "model": "ClinicalFile",
       "namespace": "dentistry"
@@ -114,6 +118,10 @@
     },
     "Treatment": {
       "model": "Treatment",
+      "namespace": "dentistry"
+    },
+    "TreatmentProcedure": {
+      "model": "TreatmentProcedure",
       "namespace": "dentistry"
     },
     "User": {
@@ -3274,6 +3282,21 @@
                   "namespace": "dentistry"
                 }
               },
+              "procedures": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "clinicalEncounterId"
+                  ]
+                },
+                "to": {
+                  "model": "ClinicalEncounterProcedure",
+                  "namespace": "dentistry"
+                }
+              },
               "treatment": {
                 "cardinality": "N:1",
                 "on": {
@@ -3383,6 +3406,236 @@
               },
               "namespaceId": "dentistry",
               "table": "ClinicalEncounter"
+            }
+          },
+          "ClinicalEncounterProcedure": {
+            "fields": {
+              "clinicalEncounterId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdByMembershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "patientId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "rowVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "targetDescription": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "targetType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "toothNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "treatmentProcedureId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedByMembershipId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "voidReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "voidedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "voidedByMembershipId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "encounter": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "organizationId",
+                    "patientId",
+                    "clinicalEncounterId"
+                  ],
+                  "targetFields": [
+                    "organizationId",
+                    "patientId",
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ClinicalEncounter",
+                  "namespace": "dentistry"
+                }
+              },
+              "treatmentProcedure": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "organizationId",
+                    "patientId",
+                    "treatmentProcedureId"
+                  ],
+                  "targetFields": [
+                    "organizationId",
+                    "patientId",
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "TreatmentProcedure",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "clinicalEncounterId": {
+                  "column": "clinicalEncounterId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdByMembershipId": {
+                  "column": "createdByMembershipId"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "patientId": {
+                  "column": "patientId"
+                },
+                "rowVersion": {
+                  "column": "rowVersion"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "targetDescription": {
+                  "column": "targetDescription"
+                },
+                "targetType": {
+                  "column": "targetType"
+                },
+                "toothNumber": {
+                  "column": "toothNumber"
+                },
+                "treatmentProcedureId": {
+                  "column": "treatmentProcedureId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "updatedByMembershipId": {
+                  "column": "updatedByMembershipId"
+                },
+                "voidReason": {
+                  "column": "voidReason"
+                },
+                "voidedAt": {
+                  "column": "voidedAt"
+                },
+                "voidedByMembershipId": {
+                  "column": "voidedByMembershipId"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "ClinicalEncounterProcedure"
             }
           },
           "ClinicalFile": {
@@ -4141,7 +4394,21 @@
                   "kind": "scalar"
                 }
               },
+              "maritalStatus": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "occupation": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
@@ -4152,6 +4419,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -4363,11 +4637,20 @@
                 "lastName": {
                   "column": "lastName"
                 },
+                "maritalStatus": {
+                  "column": "maritalStatus"
+                },
                 "notes": {
                   "column": "notes"
                 },
+                "occupation": {
+                  "column": "occupation"
+                },
                 "organizationId": {
                   "column": "organizationId"
+                },
+                "origin": {
+                  "column": "origin"
                 },
                 "phone": {
                   "column": "phone"
@@ -5472,7 +5755,7 @@
                 }
               },
               "serviceId": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/uuid@1",
                   "kind": "scalar"
@@ -5585,6 +5868,21 @@
                   "namespace": "dentistry"
                 }
               },
+              "procedures": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "treatmentId"
+                  ]
+                },
+                "to": {
+                  "model": "TreatmentProcedure",
+                  "namespace": "dentistry"
+                }
+              },
               "service": {
                 "cardinality": "N:1",
                 "on": {
@@ -5659,6 +5957,202 @@
               },
               "namespaceId": "dentistry",
               "table": "Treatment"
+            }
+          },
+          "TreatmentProcedure": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdByMembershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "patientId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "position": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "rowVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "targetDescription": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "targetType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "toothNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "treatmentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedByMembershipId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "encounterProcedures": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "treatmentProcedureId"
+                  ]
+                },
+                "to": {
+                  "model": "ClinicalEncounterProcedure",
+                  "namespace": "dentistry"
+                }
+              },
+              "treatment": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "organizationId",
+                    "patientId",
+                    "treatmentId"
+                  ],
+                  "targetFields": [
+                    "organizationId",
+                    "patientId",
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Treatment",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdByMembershipId": {
+                  "column": "createdByMembershipId"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "patientId": {
+                  "column": "patientId"
+                },
+                "position": {
+                  "column": "position"
+                },
+                "rowVersion": {
+                  "column": "rowVersion"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "targetDescription": {
+                  "column": "targetDescription"
+                },
+                "targetType": {
+                  "column": "targetType"
+                },
+                "toothNumber": {
+                  "column": "toothNumber"
+                },
+                "treatmentId": {
+                  "column": "treatmentId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "updatedByMembershipId": {
+                  "column": "updatedByMembershipId"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "TreatmentProcedure"
             }
           }
         }
@@ -7979,8 +8473,8 @@
                   "prefix": "ClinicalEncounter_version"
                 },
                 {
-                  "expression": "\"status\" <> 'COMPLETED' OR (\"endedAt\" IS NOT NULL AND \"completedAt\" IS NOT NULL AND \"completedByMembershipId\" IS NOT NULL AND \"procedureSummary\" IS NOT NULL AND length(btrim(\"procedureSummary\")) > 0)",
-                  "name": "encounter_completion_f68c0f91",
+                  "expression": "\"status\" <> 'COMPLETED' OR (\"endedAt\" IS NOT NULL AND \"completedAt\" IS NOT NULL AND \"completedByMembershipId\" IS NOT NULL)",
+                  "name": "encounter_completion_bc0ba739",
                   "prefix": "encounter_completion"
                 },
                 {
@@ -8279,6 +8773,242 @@
                     "appointmentId"
                   ]
                 },
+                {
+                  "columns": [
+                    "organizationId",
+                    "id"
+                  ]
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "id"
+                  ]
+                }
+              ]
+            },
+            "ClinicalEncounterProcedure": {
+              "checks": [
+                {
+                  "expression": "\"rowVersion\" > 0",
+                  "name": "ClinicalEncounterProcedure_version_dd7c92f3",
+                  "prefix": "ClinicalEncounterProcedure_version"
+                },
+                {
+                  "expression": "length(btrim(\"description\")) > 0",
+                  "name": "encounter_procedure_description_89a34e41",
+                  "prefix": "encounter_procedure_description"
+                },
+                {
+                  "expression": "\"status\" IN ('RECORDED', 'VOIDED')",
+                  "name": "encounter_procedure_status_5eb91a7c",
+                  "prefix": "encounter_procedure_status"
+                },
+                {
+                  "expression": "(\"targetType\" = 'TOOTH' AND \"toothNumber\" IS NOT NULL AND length(btrim(\"toothNumber\")) > 0) OR (\"targetType\" <> 'TOOTH' AND \"toothNumber\" IS NULL)",
+                  "name": "encounter_procedure_target_57de7bf8",
+                  "prefix": "encounter_procedure_target"
+                },
+                {
+                  "expression": "\"targetType\" IN ('TOOTH', 'REGION', 'WHOLE_MOUTH', 'OTHER')",
+                  "name": "encounter_procedure_target_type_f0db201c",
+                  "prefix": "encounter_procedure_target_type"
+                },
+                {
+                  "expression": "(\"status\" = 'RECORDED' AND \"voidedAt\" IS NULL AND \"voidedByMembershipId\" IS NULL AND \"voidReason\" IS NULL) OR (\"status\" = 'VOIDED' AND \"voidedAt\" IS NOT NULL AND \"voidedByMembershipId\" IS NOT NULL AND \"voidReason\" IS NOT NULL AND length(btrim(\"voidReason\")) > 0)",
+                  "name": "encounter_procedure_void_7fd3b183",
+                  "prefix": "encounter_procedure_void"
+                }
+              ],
+              "columns": {
+                "clinicalEncounterId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "organizationId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "patientId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "rowVersion": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "RECORDED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "targetDescription": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "targetType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "toothNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "treatmentProcedureId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "updatedByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "voidReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "voidedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "voidedByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "name": "encounter_procedure_encounter_fk",
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "clinicalEncounterId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "ClinicalEncounterProcedure"
+                  },
+                  "target": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "ClinicalEncounter"
+                  }
+                },
+                {
+                  "name": "encounter_procedure_plan_fk",
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "treatmentProcedureId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "ClinicalEncounterProcedure"
+                  },
+                  "target": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "TreatmentProcedure"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "clinicalEncounterId"
+                  ],
+                  "name": "encounter_procedure_list_idx_165e4cfa",
+                  "prefix": "encounter_procedure_list_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "treatmentProcedureId"
+                  ],
+                  "name": "encounter_procedure_plan_idx_b2f5358b",
+                  "prefix": "encounter_procedure_plan_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "toothNumber"
+                  ],
+                  "name": "encounter_procedure_tooth_idx_fc15b9d9",
+                  "prefix": "encounter_procedure_tooth_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
                 {
                   "columns": [
                     "organizationId",
@@ -8972,7 +9702,17 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "maritalStatus": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "occupation": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -8981,6 +9721,11 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "phone": {
                   "codecId": "pg/text@1",
@@ -10087,7 +10832,7 @@
                 "serviceId": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
-                  "nullable": false
+                  "nullable": true
                 },
                 "startedAt": {
                   "codecId": "pg/timestamptz@1",
@@ -10203,6 +10948,199 @@
                   ]
                 }
               ]
+            },
+            "TreatmentProcedure": {
+              "checks": [
+                {
+                  "expression": "\"rowVersion\" > 0",
+                  "name": "TreatmentProcedure_version_dd7c92f3",
+                  "prefix": "TreatmentProcedure_version"
+                },
+                {
+                  "expression": "length(btrim(\"description\")) > 0",
+                  "name": "treatment_procedure_description_89a34e41",
+                  "prefix": "treatment_procedure_description"
+                },
+                {
+                  "expression": "\"position\" >= 0",
+                  "name": "treatment_procedure_position_f43e8efc",
+                  "prefix": "treatment_procedure_position"
+                },
+                {
+                  "expression": "\"status\" IN ('PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED')",
+                  "name": "treatment_procedure_status_1cc80bf3",
+                  "prefix": "treatment_procedure_status"
+                },
+                {
+                  "expression": "(\"targetType\" = 'TOOTH' AND \"toothNumber\" IS NOT NULL AND length(btrim(\"toothNumber\")) > 0) OR (\"targetType\" <> 'TOOTH' AND \"toothNumber\" IS NULL)",
+                  "name": "treatment_procedure_target_57de7bf8",
+                  "prefix": "treatment_procedure_target"
+                },
+                {
+                  "expression": "\"targetType\" IN ('TOOTH', 'REGION', 'WHOLE_MOUTH', 'OTHER')",
+                  "name": "treatment_procedure_target_type_f0db201c",
+                  "prefix": "treatment_procedure_target_type"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "organizationId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "patientId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "position": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "rowVersion": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PLANNED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "targetDescription": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "targetType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "toothNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "treatmentId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "updatedByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "name": "treatment_procedure_treatment_fk",
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "treatmentId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "TreatmentProcedure"
+                  },
+                  "target": {
+                    "columns": [
+                      "organizationId",
+                      "patientId",
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "Treatment"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "treatmentId"
+                  ],
+                  "name": "TreatmentProcedure_organizationId_patientId_treatmentI_dd20ff46",
+                  "prefix": "TreatmentProcedure_organizationId_patientId_treatmentI",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "status"
+                  ],
+                  "name": "treatment_procedure_status_idx_1c537051",
+                  "prefix": "treatment_procedure_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "organizationId",
+                    "id"
+                  ]
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "patientId",
+                    "id"
+                  ]
+                }
+              ]
             }
           }
         },
@@ -10217,10 +11155,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "873f4f9c817e3c3ec73a64cd4ed9e2012da81c60e14e99be88e7848bf17bdf73"
+    "storageHash": "60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216"
   },
   "execution": {
-    "executionHash": "9150149e7d51d8d81ac6287c8123725a1869e9b02c0458a80ad83a275237345d",
+    "executionHash": "b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31",
     "mutations": {
       "defaults": [
         {
@@ -10388,6 +11326,32 @@
             "column": "updatedAt",
             "namespace": "dentistry",
             "table": "ClinicalEncounter"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "ClinicalEncounterProcedure"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "ClinicalEncounterProcedure"
           }
         },
         {
@@ -10889,6 +11853,32 @@
             "column": "updatedAt",
             "namespace": "dentistry",
             "table": "Treatment"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "TreatmentProcedure"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "TreatmentProcedure"
           }
         },
         {

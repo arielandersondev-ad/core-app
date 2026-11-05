@@ -979,3 +979,26 @@ Para filas actuales no inferir estados clínicos nuevos solo porque endedAt es N
 | P10 | Gestión de vínculos a sucursales | Relación N:M dentro de la misma organización confirmada. Falta concretar quién vincula un paciente existente a otra sucursal y cómo se retira o deshabilita el vínculo sin perder historia. No inferir esta facultad de poder registrar un paciente nuevo. |
 
 Definir estas políticas no requiere crear todas las tablas futuras. El objetivo es una versión 0.1 operativa y un vocabulario estable que permita añadir relaciones y módulos después.
+
+## Extensión del flujo de atención — contrato Dentistry de 2026-11-05
+
+Estado: contrato local emitido desde `schema.ts`; borrador de migración `20261105T1344_dentistry_clinical_procedures`, desde `a2da18a1e42ff8ae6f0d46751f9a5a2e83a412042830e84417c6b6cec115f99b` hasta `5c836a17897034dbb8a150f6b56d26d180d4ee98e5045292e979d172ac740945`. La migración está preparada localmente y todavía no se aplicó. El contrato pasa de 29 a 31 modelos: Core 15 y Dentistry 16.
+
+### Cambios en entidades existentes
+
+- `Patient` agrega `maritalStatus`, `occupation` y `origin`, todos opcionales. `address` se presenta como residencia/domicilio. La edad se deriva de `birthDate`; no se persiste aparte. El nombre continúa dividido entre `firstName` y `lastName`.
+- `Treatment.serviceId` pasa a ser opcional: un tratamiento puede ser personalizado y no derivarse de un servicio.
+- `ClinicalEncounter` puede completarse sin procedimientos realizados. El cierre conserva `endedAt`, `completedAt` y `completedByMembershipId` como requisitos. `procedureSummary` permanece para narrativa o compatibilidad, pero ya no es obligatorio para completar.
+- `DentalService.description` sigue siendo la descripción libre del paquete. No se añade una tabla de componentes comerciales; el servicio puede relacionarse con varios tratamientos a través de `Treatment.serviceId`.
+
+### `TreatmentProcedure`
+
+Representa un paso planificado de un tratamiento. Campos: `organizationId`, `patientId`, `treatmentId`, `targetType`, `toothNumber`, `targetDescription`, `description`, `position`, `status`, autoría, fechas y `rowVersion`. Los estados son `PLANNED`, `IN_PROGRESS`, `COMPLETED` y `CANCELED`. El objetivo puede ser una pieza, una región, toda la boca u otro ámbito. El paso puede ser personalizado aunque el tratamiento no esté vinculado a un servicio.
+
+Relación: `Treatment` 1:N `TreatmentProcedure`. La FK compuesta asegura que el tratamiento pertenezca a la misma organización y paciente.
+
+### `ClinicalEncounterProcedure`
+
+Representa una acción realizada durante una atención. Campos: `organizationId`, `patientId`, `clinicalEncounterId`, `treatmentProcedureId` opcional, `targetType`, `toothNumber`, `targetDescription`, `description`, `status`, autoría, fechas, `rowVersion` y datos de anulación. `description` es texto libre. Los estados son `RECORDED` y `VOIDED`; anular requiere fecha, autor y motivo.
+
+Relaciones: `ClinicalEncounter` 1:N `ClinicalEncounterProcedure`; cada acción puede vincularse a un `TreatmentProcedure` del mismo paciente. Una atención puede contener acciones de varios tratamientos y acciones independientes. Se guarda una fila por pieza o ámbito; una selección común de varias piezas en la UI crea varias filas con la misma descripción. Las acciones de región o boca completa no requieren `toothNumber`.

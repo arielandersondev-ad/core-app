@@ -30,9 +30,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'873f4f9c817e3c3ec73a64cd4ed9e2012da81c60e14e99be88e7848bf17bdf73'>;
+  StorageHashBase<'60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216'>;
 export type ExecutionHash =
-  ExecutionHashBase<'9150149e7d51d8d81ac6287c8123725a1869e9b02c0458a80ad83a275237345d'>;
+  ExecutionHashBase<'b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -452,6 +452,26 @@ export type FieldOutputTypes = {
       readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly voidReason: CodecTypes['pg/text@1']['output'] | null;
     };
+    readonly ClinicalEncounterProcedure: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly patientId: CodecTypes['pg/uuid@1']['output'];
+      readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['output'];
+      readonly treatmentProcedureId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['output'];
+      readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
+      readonly voidedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
+      readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly voidReason: CodecTypes['pg/text@1']['output'] | null;
+    };
     readonly ClinicalFile: {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
@@ -519,6 +539,9 @@ export type FieldOutputTypes = {
       readonly documentType: CodecTypes['pg/text@1']['output'] | null;
       readonly documentNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly address: CodecTypes['pg/text@1']['output'] | null;
+      readonly maritalStatus: CodecTypes['pg/text@1']['output'] | null;
+      readonly occupation: CodecTypes['pg/text@1']['output'] | null;
+      readonly origin: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
@@ -618,7 +641,7 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
       readonly patientId: CodecTypes['pg/uuid@1']['output'];
-      readonly serviceId: CodecTypes['pg/uuid@1']['output'];
+      readonly serviceId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
@@ -632,6 +655,23 @@ export type FieldOutputTypes = {
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
+    readonly TreatmentProcedure: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly patientId: CodecTypes['pg/uuid@1']['output'];
+      readonly treatmentId: CodecTypes['pg/uuid@1']['output'];
+      readonly targetType: CodecTypes['pg/text@1']['output'];
+      readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly position: CodecTypes['pg/int4@1']['output'];
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
     };
   };
 };
@@ -895,6 +935,26 @@ export type FieldInputTypes = {
       readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly voidReason: CodecTypes['pg/text@1']['input'] | null;
     };
+    readonly ClinicalEncounterProcedure: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly patientId: CodecTypes['pg/uuid@1']['input'];
+      readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['input'];
+      readonly treatmentProcedureId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['input'];
+      readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
+      readonly voidedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
+      readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly voidReason: CodecTypes['pg/text@1']['input'] | null;
+    };
     readonly ClinicalFile: {
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
@@ -962,6 +1022,9 @@ export type FieldInputTypes = {
       readonly documentType: CodecTypes['pg/text@1']['input'] | null;
       readonly documentNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly address: CodecTypes['pg/text@1']['input'] | null;
+      readonly maritalStatus: CodecTypes['pg/text@1']['input'] | null;
+      readonly occupation: CodecTypes['pg/text@1']['input'] | null;
+      readonly origin: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
@@ -1061,7 +1124,7 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
       readonly patientId: CodecTypes['pg/uuid@1']['input'];
-      readonly serviceId: CodecTypes['pg/uuid@1']['input'];
+      readonly serviceId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
@@ -1075,6 +1138,23 @@ export type FieldInputTypes = {
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly TreatmentProcedure: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly patientId: CodecTypes['pg/uuid@1']['input'];
+      readonly treatmentId: CodecTypes['pg/uuid@1']['input'];
+      readonly targetType: CodecTypes['pg/text@1']['input'];
+      readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly position: CodecTypes['pg/int4@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
     };
   };
 };
@@ -1338,6 +1418,26 @@ export type StorageColumnTypes = {
       readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly voidReason: CodecTypes['pg/text@1']['output'] | null;
     };
+    readonly ClinicalEncounterProcedure: {
+      readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly patientId: CodecTypes['pg/uuid@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['output'];
+      readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly treatmentProcedureId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly voidedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
+      readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly voidReason: CodecTypes['pg/text@1']['output'] | null;
+    };
     readonly ClinicalFile: {
       readonly appointmentId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly bucket: CodecTypes['pg/text@1']['output'];
@@ -1405,8 +1505,11 @@ export type StorageColumnTypes = {
       readonly firstName: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly lastName: CodecTypes['pg/text@1']['output'];
+      readonly maritalStatus: CodecTypes['pg/text@1']['output'] | null;
       readonly notes: CodecTypes['pg/text@1']['output'] | null;
+      readonly occupation: CodecTypes['pg/text@1']['output'] | null;
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly origin: CodecTypes['pg/text@1']['output'] | null;
       readonly phone: CodecTypes['pg/text@1']['output'] | null;
       readonly sex: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -1513,9 +1616,26 @@ export type StorageColumnTypes = {
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
       readonly patientId: CodecTypes['pg/uuid@1']['output'];
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
-      readonly serviceId: CodecTypes['pg/uuid@1']['output'];
+      readonly serviceId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+    };
+    readonly TreatmentProcedure: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly patientId: CodecTypes['pg/uuid@1']['output'];
+      readonly position: CodecTypes['pg/int4@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['output'];
+      readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly treatmentId: CodecTypes['pg/uuid@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
     };
@@ -1782,6 +1902,26 @@ export type StorageColumnInputTypes = {
       readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly voidReason: CodecTypes['pg/text@1']['input'] | null;
     };
+    readonly ClinicalEncounterProcedure: {
+      readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly patientId: CodecTypes['pg/uuid@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['input'];
+      readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly treatmentProcedureId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly voidedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
+      readonly voidedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly voidReason: CodecTypes['pg/text@1']['input'] | null;
+    };
     readonly ClinicalFile: {
       readonly appointmentId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly bucket: CodecTypes['pg/text@1']['input'];
@@ -1849,8 +1989,11 @@ export type StorageColumnInputTypes = {
       readonly firstName: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly lastName: CodecTypes['pg/text@1']['input'];
+      readonly maritalStatus: CodecTypes['pg/text@1']['input'] | null;
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
+      readonly occupation: CodecTypes['pg/text@1']['input'] | null;
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly origin: CodecTypes['pg/text@1']['input'] | null;
       readonly phone: CodecTypes['pg/text@1']['input'] | null;
       readonly sex: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -1957,9 +2100,26 @@ export type StorageColumnInputTypes = {
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
       readonly patientId: CodecTypes['pg/uuid@1']['input'];
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
-      readonly serviceId: CodecTypes['pg/uuid@1']['input'];
+      readonly serviceId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+    };
+    readonly TreatmentProcedure: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly patientId: CodecTypes['pg/uuid@1']['input'];
+      readonly position: CodecTypes['pg/int4@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
+      readonly targetType: CodecTypes['pg/text@1']['input'];
+      readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly treatmentId: CodecTypes['pg/uuid@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
     };
@@ -3962,6 +4122,174 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly ClinicalEncounterProcedure: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly patientId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly clinicalEncounterId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly treatmentProcedureId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly targetType: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly toothNumber: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly targetDescription: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly description: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'RECORDED'>;
+                  };
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly updatedByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+                readonly rowVersion: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
+                  };
+                };
+                readonly voidedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: true;
+                };
+                readonly voidedByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly voidReason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['organizationId', 'id'] },
+                { readonly columns: readonly ['organizationId', 'patientId', 'id'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'encounter_procedure_list_idx_165e4cfa';
+                  readonly prefix: 'encounter_procedure_list_idx';
+                  readonly columns: readonly ['organizationId', 'patientId', 'clinicalEncounterId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'encounter_procedure_plan_idx_b2f5358b';
+                  readonly prefix: 'encounter_procedure_plan_idx';
+                  readonly columns: readonly [
+                    'organizationId',
+                    'patientId',
+                    'treatmentProcedureId',
+                  ];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'encounter_procedure_tooth_idx_fc15b9d9';
+                  readonly prefix: 'encounter_procedure_tooth_idx';
+                  readonly columns: readonly ['organizationId', 'patientId', 'toothNumber'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'ClinicalEncounterProcedure';
+                    readonly columns: readonly [
+                      'organizationId',
+                      'patientId',
+                      'clinicalEncounterId',
+                    ];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'ClinicalEncounter';
+                    readonly columns: readonly ['organizationId', 'patientId', 'id'];
+                  };
+                  readonly name: 'encounter_procedure_encounter_fk';
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'ClinicalEncounterProcedure';
+                    readonly columns: readonly [
+                      'organizationId',
+                      'patientId',
+                      'treatmentProcedureId',
+                    ];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'TreatmentProcedure';
+                    readonly columns: readonly ['organizationId', 'patientId', 'id'];
+                  };
+                  readonly name: 'encounter_procedure_plan_fk';
+                },
+              ];
+            };
             readonly ClinicalFile: {
               columns: {
                 readonly id: {
@@ -4434,6 +4762,21 @@ type ContractBase = Omit<
                   readonly nullable: true;
                 };
                 readonly address: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly maritalStatus: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly occupation: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly origin: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
@@ -5206,7 +5549,7 @@ type ContractBase = Omit<
                 readonly serviceId: {
                   readonly nativeType: 'uuid';
                   readonly codecId: 'pg/uuid@1';
-                  readonly nullable: false;
+                  readonly nullable: true;
                 };
                 readonly practitionerMembershipId: {
                   readonly nativeType: 'uuid';
@@ -5331,6 +5674,132 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly TreatmentProcedure: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly patientId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly treatmentId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly targetType: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly toothNumber: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly targetDescription: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly description: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly position: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'PLANNED'>;
+                  };
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly updatedByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+                readonly rowVersion: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
+                  };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [
+                { readonly columns: readonly ['organizationId', 'id'] },
+                { readonly columns: readonly ['organizationId', 'patientId', 'id'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'treatment_procedure_status_idx_1c537051';
+                  readonly prefix: 'treatment_procedure_status_idx';
+                  readonly columns: readonly ['organizationId', 'patientId', 'status'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'TreatmentProcedure_organizationId_patientId_treatmentI_dd20ff46';
+                  readonly prefix: 'TreatmentProcedure_organizationId_patientId_treatmentI';
+                  readonly columns: readonly ['organizationId', 'patientId', 'treatmentId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'TreatmentProcedure';
+                    readonly columns: readonly ['organizationId', 'patientId', 'treatmentId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'Treatment';
+                    readonly columns: readonly ['organizationId', 'patientId', 'id'];
+                  };
+                  readonly name: 'treatment_procedure_treatment_fk';
+                },
+              ];
+            };
           };
         };
       };
@@ -5425,6 +5894,14 @@ type ContractBase = Omit<
     readonly AppointmentService: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'AppointmentService';
+    };
+    readonly TreatmentProcedure: {
+      readonly namespace: 'dentistry' & NamespaceId;
+      readonly model: 'TreatmentProcedure';
+    };
+    readonly ClinicalEncounterProcedure: {
+      readonly namespace: 'dentistry' & NamespaceId;
+      readonly model: 'ClinicalEncounterProcedure';
     };
     readonly Treatment: {
       readonly namespace: 'dentistry' & NamespaceId;
@@ -7298,6 +7775,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['clinicalEncounterId'];
                 };
               };
+              readonly procedures: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'ClinicalEncounterProcedure';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['clinicalEncounterId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'ClinicalEncounter';
@@ -7327,6 +7815,138 @@ type ContractBase = Omit<
                 readonly completedAt: { readonly column: 'completedAt' };
                 readonly completedByMembershipId: { readonly column: 'completedByMembershipId' };
                 readonly historySnapshot: { readonly column: 'historySnapshot' };
+                readonly rowVersion: { readonly column: 'rowVersion' };
+                readonly voidedAt: { readonly column: 'voidedAt' };
+                readonly voidedByMembershipId: { readonly column: 'voidedByMembershipId' };
+                readonly voidReason: { readonly column: 'voidReason' };
+              };
+            };
+          };
+          readonly ClinicalEncounterProcedure: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly patientId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly clinicalEncounterId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly treatmentProcedureId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly targetType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly toothNumber: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly targetDescription: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly description: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdByMembershipId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly updatedByMembershipId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly rowVersion: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly voidedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly voidedByMembershipId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly voidReason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly encounter: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'ClinicalEncounter';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly [
+                    'organizationId',
+                    'patientId',
+                    'clinicalEncounterId',
+                  ];
+                  readonly targetFields: readonly ['organizationId', 'patientId', 'id'];
+                };
+              };
+              readonly treatmentProcedure: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'TreatmentProcedure';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly [
+                    'organizationId',
+                    'patientId',
+                    'treatmentProcedureId',
+                  ];
+                  readonly targetFields: readonly ['organizationId', 'patientId', 'id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'ClinicalEncounterProcedure';
+              readonly namespaceId: 'dentistry';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly patientId: { readonly column: 'patientId' };
+                readonly clinicalEncounterId: { readonly column: 'clinicalEncounterId' };
+                readonly treatmentProcedureId: { readonly column: 'treatmentProcedureId' };
+                readonly targetType: { readonly column: 'targetType' };
+                readonly toothNumber: { readonly column: 'toothNumber' };
+                readonly targetDescription: { readonly column: 'targetDescription' };
+                readonly description: { readonly column: 'description' };
+                readonly status: { readonly column: 'status' };
+                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
+                readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
                 readonly rowVersion: { readonly column: 'rowVersion' };
                 readonly voidedAt: { readonly column: 'voidedAt' };
                 readonly voidedByMembershipId: { readonly column: 'voidedByMembershipId' };
@@ -7764,6 +8384,18 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly maritalStatus: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly occupation: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly origin: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly notes: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -7909,6 +8541,9 @@ type ContractBase = Omit<
                 readonly documentType: { readonly column: 'documentType' };
                 readonly documentNumber: { readonly column: 'documentNumber' };
                 readonly address: { readonly column: 'address' };
+                readonly maritalStatus: { readonly column: 'maritalStatus' };
+                readonly occupation: { readonly column: 'occupation' };
+                readonly origin: { readonly column: 'origin' };
                 readonly notes: { readonly column: 'notes' };
                 readonly status: { readonly column: 'status' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
@@ -8495,7 +9130,7 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
               };
               readonly serviceId: {
-                readonly nullable: false;
+                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
               };
               readonly practitionerMembershipId: {
@@ -8618,6 +9253,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['treatmentId'];
                 };
               };
+              readonly procedures: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'TreatmentProcedure';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['treatmentId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'Treatment';
@@ -8640,6 +9286,115 @@ type ContractBase = Omit<
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly TreatmentProcedure: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly patientId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly treatmentId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly targetType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly toothNumber: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly targetDescription: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly description: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly position: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdByMembershipId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly updatedByMembershipId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly rowVersion: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly treatment: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'Treatment';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['organizationId', 'patientId', 'treatmentId'];
+                  readonly targetFields: readonly ['organizationId', 'patientId', 'id'];
+                };
+              };
+              readonly encounterProcedures: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'ClinicalEncounterProcedure';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['treatmentProcedureId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'TreatmentProcedure';
+              readonly namespaceId: 'dentistry';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly patientId: { readonly column: 'patientId' };
+                readonly treatmentId: { readonly column: 'treatmentId' };
+                readonly targetType: { readonly column: 'targetType' };
+                readonly toothNumber: { readonly column: 'toothNumber' };
+                readonly targetDescription: { readonly column: 'targetDescription' };
+                readonly description: { readonly column: 'description' };
+                readonly position: { readonly column: 'position' };
+                readonly status: { readonly column: 'status' };
+                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
+                readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly rowVersion: { readonly column: 'rowVersion' };
               };
             };
           };
@@ -8775,6 +9530,23 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'dentistry';
             readonly table: 'ClinicalEncounter';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'ClinicalEncounterProcedure';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'ClinicalEncounterProcedure';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
@@ -9105,6 +9877,23 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'dentistry';
             readonly table: 'Treatment';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'TreatmentProcedure';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'TreatmentProcedure';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
