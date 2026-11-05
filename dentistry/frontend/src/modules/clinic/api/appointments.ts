@@ -49,6 +49,8 @@ export interface AppointmentDto {
   patientName?: string;
   personName?: string;
   patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
 }
 
 export interface CreateAppointmentRequest {

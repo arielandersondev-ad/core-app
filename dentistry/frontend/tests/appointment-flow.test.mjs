@@ -433,3 +433,109 @@ test('HAG-45: Agenda.tsx enriquece tarjetas en Feed y Grilla con badges Paciente
     'Debe renderizar cleanedNote truncada cuando existe motivo o nota clínica',
   );
 });
+
+// ============================================================================
+// 7. HAG-49: Agenda.tsx y AppointmentDetailSheet.tsx con datos reales sin mocks
+// ============================================================================
+
+test('HAG-49: Agenda.tsx erradica getPatientById, traslada datos reales en mapDtoToAppointment y descarta Paciente / Contacto', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const content = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Cero importación o uso de getPatientById
+  assert.equal(
+    content.includes('getPatientById'),
+    false,
+    'Agenda.tsx no debe importar ni utilizar getPatientById',
+  );
+
+  // 2. Cero aparición de la etiqueta ambigua "Paciente / Contacto"
+  assert.equal(
+    content.includes('Paciente / Contacto'),
+    false,
+    'Agenda.tsx debe erradicar completamente el texto "Paciente / Contacto"',
+  );
+
+  // 3. Prioridad al nombre real del paciente o persona con fallback "Paciente sin nombre"
+  assert.match(
+    content,
+    /apt\.patientName\s*\|\|\s*apt\.personName\s*\|\|\s*"Paciente sin nombre"/,
+    'Debe mostrar con prioridad el nombre real de paciente o persona',
+  );
+
+  // 4. mapDtoToAppointment traslada patientName, personName, patientPhone, personPhone y serviceName
+  assert.match(
+    content,
+    /patientName:\s*dto\.patientName/,
+    'mapDtoToAppointment debe trasladar patientName',
+  );
+  assert.match(
+    content,
+    /personName:\s*dto\.personName/,
+    'mapDtoToAppointment debe trasladar personName',
+  );
+  assert.match(
+    content,
+    /patientPhone:\s*dto\.patientPhone\s*\|\|\s*dto\.personPhone/,
+    'mapDtoToAppointment debe trasladar patientPhone con fallback personPhone',
+  );
+  assert.match(
+    content,
+    /personPhone:\s*dto\.personPhone/,
+    'mapDtoToAppointment debe trasladar personPhone',
+  );
+  assert.match(
+    content,
+    /serviceName/,
+    'mapDtoToAppointment debe trasladar serviceName',
+  );
+
+  // 5. Teléfono real de paciente/persona utilizado para display y WhatsApp
+  assert.match(
+    content,
+    /apt\.patientPhone\s*\|\|\s*apt\.personPhone/,
+    'Debe usar el teléfono real proveniente de la API para contacto directo y WhatsApp',
+  );
+});
+
+test('HAG-49: AppointmentDetailSheet.tsx consume datos reales de paciente/persona y usa formatCurrency', () => {
+  const detailSheetPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/components/AppointmentDetailSheet.tsx',
+  );
+  const content = fs.readFileSync(detailSheetPath, 'utf8');
+
+  // 1. Extrae patientName / personName y teléfonos reales del appointment devuelto
+  assert.match(
+    content,
+    /apt\.patientName\s*\|\|\s*apt\.personName/,
+    'Debe extraer nombres reales de paciente/persona desde el appointment',
+  );
+  assert.match(
+    content,
+    /apt\.patientPhone\s*\|\|\s*apt\.personPhone/,
+    'Debe extraer teléfonos reales desde el appointment',
+  );
+
+  // 2. Soporte para initialAppointment para hidratación sin parpadeos
+  assert.match(
+    content,
+    /initialAppointment/,
+    'Debe soportar initialAppointment para visualización instantánea',
+  );
+
+  // 3. Uso de formatCurrency de @app/ui (cero 'Bs. {totalPrice}' hardcodeado)
+  assert.match(
+    content,
+    /import\s*\{[^}]*formatCurrency[^}]*\}\s*from\s*"@app\/ui"/,
+    'Debe importar formatCurrency desde @app/ui',
+  );
+  assert.equal(
+    /Total:\s*Bs\.\s*\{totalPrice/.test(content),
+    false,
+    'No debe hardcodear Total: Bs. en los precios',
+  );
+});

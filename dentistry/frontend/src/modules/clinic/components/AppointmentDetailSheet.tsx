@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BottomSheet } from "@/shared/components/ui";
 import { Icons } from "@/shared/components/ui/Icons";
+import { formatCurrency } from "@app/ui";
 import {
   fetchAppointmentById,
   updateAppointmentStatus,
@@ -16,6 +17,7 @@ import { normalizePhoneNumber } from "@/shared/utils/whatsapp-generator";
 interface AppointmentDetailSheetProps {
   open: boolean;
   citaId: string | null;
+  initialAppointment?: any | null;
   onClose: () => void;
   onStatusUpdated?: (citaId: string, newStatus: string) => void;
   onOpenPayment?: (citaId: string, patientId?: string, amount?: number) => void;
@@ -45,19 +47,43 @@ const statusStyles: Record<string, string> = {
 export function AppointmentDetailSheet({
   open,
   citaId,
+  initialAppointment,
   onClose,
   onStatusUpdated,
   onOpenPayment,
   onOpenWhatsApp,
 }: AppointmentDetailSheetProps) {
-  const [appointment, setAppointment] = useState<AppointmentDto | null>(null);
+  const [appointment, setAppointment] = useState<AppointmentDto | null>(
+    initialAppointment || null,
+  );
   const [patientDetails, setPatientDetails] = useState<{
     name: string;
     phone: string | null;
     email: string | null;
     documentNumber: string | null;
     notes: string | null;
-  } | null>(null);
+  } | null>(() => {
+    if (initialAppointment) {
+      const initName =
+        initialAppointment.patientName ||
+        initialAppointment.personName ||
+        null;
+      const initPhone =
+        initialAppointment.patientPhone ||
+        initialAppointment.personPhone ||
+        null;
+      if (initName) {
+        return {
+          name: initName,
+          phone: initPhone,
+          email: null,
+          documentNumber: null,
+          notes: null,
+        };
+      }
+    }
+    return null;
+  });
   const [servicesList, setServicesList] = useState<DentalServiceDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -96,8 +122,26 @@ export function AppointmentDetailSheet({
     }
 
     let isMounted = true;
-    setIsLoading(true);
+    setIsLoading(!initialAppointment);
     setErrorMessage(null);
+
+    // Si viene initialAppointment, establecer datos de inmediato
+    if (initialAppointment) {
+      setAppointment(initialAppointment);
+      const initName =
+        initialAppointment.patientName || initialAppointment.personName;
+      const initPhone =
+        initialAppointment.patientPhone || initialAppointment.personPhone;
+      if (initName) {
+        setPatientDetails({
+          name: initName,
+          phone: initPhone || null,
+          email: null,
+          documentNumber: null,
+          notes: null,
+        });
+      }
+    }
 
     // 1. Fetch real appointment from API
     fetchAppointmentById(citaId)
@@ -105,24 +149,39 @@ export function AppointmentDetailSheet({
         if (!isMounted) return;
         setAppointment(apt);
 
+        const realName =
+          apt.patientName || apt.personName || undefined;
+        const realPhone =
+          apt.patientPhone || apt.personPhone || null;
+
+        if (realName) {
+          setPatientDetails((prev) => ({
+            name: realName,
+            phone: realPhone,
+            email: prev?.email || null,
+            documentNumber: prev?.documentNumber || null,
+            notes: prev?.notes || null,
+          }));
+        }
+
         // 2. Fetch real patient from API if patientId is present
         if (apt.patientId) {
           try {
             const pat = await fetchPatientById(apt.patientId);
             if (isMounted) {
               setPatientDetails({
-                name: pat.fullName,
-                phone: pat.phone,
+                name: pat.fullName || realName || `Paciente`,
+                phone: pat.phone || realPhone,
                 email: pat.email,
                 documentNumber: pat.documentNumber,
                 notes: pat.notes,
               });
             }
           } catch {
-            if (isMounted) {
+            if (isMounted && !realName) {
               setPatientDetails({
                 name: `Paciente #${apt.patientId.slice(0, 8)}`,
-                phone: null,
+                phone: realPhone,
                 email: null,
                 documentNumber: null,
                 notes: null,
@@ -155,7 +214,7 @@ export function AppointmentDetailSheet({
     return () => {
       isMounted = false;
     };
-  }, [open, citaId]);
+  }, [open, citaId, initialAppointment]);
 
   if (!open) return null;
 
@@ -198,18 +257,43 @@ export function AppointmentDetailSheet({
         id: found.id,
         name: found.name,
         price: found.basePriceMinor / 100,
+        currency: found.currency || "BOB",
         duration: found.durationMinutes,
+      };
+    }
+    const aptSvc = appointment?.services?.find((s) => s.serviceId === id);
+    if (aptSvc?.serviceName) {
+      return {
+        id,
+        name: aptSvc.serviceName,
+        price: (aptSvc.priceMinor ?? 0) / 100,
+        currency: aptSvc.currency || "BOB",
+        duration: aptSvc.durationMinutes || 30,
       };
     }
     return {
       id,
-      name: "Tratamiento odontológico",
-      price: 150,
+      name: appointment?.serviceName || "Consulta / Evaluación general",
+      price: 0,
+      currency: "BOB",
       duration: 30,
     };
   });
 
-  const totalPrice = matchedServices.reduce((sum, s) => sum + s.price, 0);
+  const effectiveServices =
+    matchedServices.length > 0
+      ? matchedServices
+      : [
+          {
+            id: "general",
+            name: appointment?.serviceName || "Consulta / Evaluación general",
+            price: 0,
+            currency: "BOB",
+            duration: durationMinutes || 30,
+          },
+        ];
+
+  const totalPrice = effectiveServices.reduce((sum, s) => sum + s.price, 0);
 
   // Kebab menu actions (modificaciones de estado)
   const handleMutateStatus = async (targetStatus: string) => {
@@ -509,12 +593,12 @@ export function AppointmentDetailSheet({
                   Procedimientos Planificados
                 </span>
                 <span className="font-mono font-bold text-xs text-[var(--primary)]">
-                  Total: Bs. {totalPrice.toFixed(2)}
+                  Total: {formatCurrency(totalPrice, { currency: "BOB" })}
                 </span>
               </div>
 
               <div className="flex flex-col gap-1.5 pt-1">
-                {matchedServices.map((svc, idx) => (
+                {effectiveServices.map((svc, idx) => (
                   <div
                     key={`${svc.id}-${idx}`}
                     className="flex items-center justify-between p-2 rounded-lg bg-[var(--background)] border border-[var(--border)]/70 text-xs"
@@ -528,7 +612,7 @@ export function AppointmentDetailSheet({
                       </span>
                     </div>
                     <span className="font-mono font-semibold text-[var(--foreground)] shrink-0">
-                      Bs. {svc.price.toFixed(2)}
+                      {formatCurrency(svc.price, { currency: svc.currency || "BOB" })}
                     </span>
                   </div>
                 ))}

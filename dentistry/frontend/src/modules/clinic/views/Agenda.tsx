@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  getPatientById,
   getServiceById,
   getProfessionalById,
   statusColors,
@@ -56,20 +55,14 @@ function getDoctorDisplay(professionalId?: string) {
   return { name: "Odontólogo asignado", color: "#3d7a46" };
 }
 
-function isPersonaAppointment(apt: Appointment, patient: any): boolean {
+function isPersonaAppointment(apt: Appointment): boolean {
   if (apt.patientType === "person") return true;
   if (apt.patientType === "patient") return false;
   if (apt.personName && !apt.patientName) return true;
   if (
     apt.notes &&
-    apt.notes.toLowerCase().includes("registro rápido de persona")
-  )
-    return true;
-  if (apt.notes && apt.notes.toLowerCase().includes("registro rápido"))
-    return true;
-  if (
-    patient?.notes &&
-    patient.notes.toLowerCase().includes("registro rápido de persona")
+    (apt.notes.toLowerCase().includes("registro rápido de persona") ||
+      apt.notes.toLowerCase().includes("registro rápido"))
   )
     return true;
   return false;
@@ -153,12 +146,19 @@ function mapDtoToAppointment(dto: AppointmentDto): Appointment {
           ? [dto.serviceId]
           : [];
 
+  const serviceName =
+    dto.serviceName ||
+    (dto.services && dto.services[0]?.serviceName) ||
+    undefined;
+
   return {
     id: dto.id,
     patientId: dto.patientId,
     patientName: dto.patientName,
     personName: dto.personName,
-    patientPhone: dto.patientPhone,
+    patientPhone: dto.patientPhone || dto.personPhone,
+    personPhone: dto.personPhone,
+    serviceName,
     professionalId: dto.practitionerMembershipId || "",
     serviceId: dto.serviceId || serviceIds[0] || "",
     serviceIds,
@@ -273,15 +273,14 @@ export default function Agenda({
   };
 
   const handleOpenWhatsApp = (apt: Appointment) => {
-    const patient = getPatientById(apt.patientId);
     const svc = getServiceById(apt.serviceId);
     const pro = getProfessionalById(apt.professionalId);
 
     const patientName =
-      patient?.name || apt.patientName || apt.personName || "Paciente";
-    const patientPhone = patient?.phone || apt.patientPhone || "";
+      apt.patientName || apt.personName || "Paciente sin nombre";
+    const patientPhone = apt.patientPhone || apt.personPhone || "";
     const serviceName =
-      svc?.name || (apt as any).serviceName || "Consulta odontológica";
+      apt.serviceName || svc?.name || "Consulta odontológica";
 
     const dt = new Date(apt.date + "T12:00:00");
     const dateFormatted = dt.toLocaleDateString("es-BO", {
@@ -610,21 +609,19 @@ export default function Agenda({
             />
           ) : (
             dayAppts.map((apt) => {
-              const patient = getPatientById(apt.patientId);
               const svc = getServiceById(apt.serviceId);
               const doctor = getDoctorDisplay(apt.professionalId);
-              const isPerson = isPersonaAppointment(apt, patient);
-              const rawPhone = patient?.phone || apt.patientPhone || "";
+              const isPerson = isPersonaAppointment(apt);
+              const rawPhone = apt.patientPhone || apt.personPhone || "";
               const cleanPhone = normalizePhoneNumber(rawPhone, "591");
               const displayPhone = formatLocalPhone(rawPhone);
               const patientName =
-                patient?.name ||
                 apt.patientName ||
                 apt.personName ||
-                "Paciente / Contacto";
+                "Paciente sin nombre";
               const svcName =
+                apt.serviceName ||
                 svc?.name ||
-                (apt as any).serviceName ||
                 "Consulta / Evaluación general";
               const noteContent = (apt.reason || apt.notes || "").trim();
               const cleanedNote = noteContent
@@ -636,14 +633,6 @@ export default function Agenda({
                   key={apt.id}
                   className="group bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-xs hover:border-[var(--primary)]/30 transition-all flex flex-col gap-3 relative"
                 >
-                  {patient?.allergies && patient.allergies.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-medium border border-rose-500/20 self-start">
-                      <span className="w-3.5 h-3.5 flex items-center justify-center text-rose-600 dark:text-rose-400">
-                        {Icons.alertTriangle}
-                      </span>
-                      <span>Alergia: {patient.allergies.join(", ")}</span>
-                    </span>
-                  )}
                   {/* Encabezado de la tarjeta: Horario y Estado */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -798,7 +787,7 @@ export default function Agenda({
                         <a
                           href={`tel:+${cleanPhone}`}
                           className="h-8 w-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
-                          title={`Llamar a ${patient?.name || "paciente"}`}
+                          title={`Llamar a ${patientName}`}
                         >
                           <span className="w-4 h-4 flex items-center justify-center">
                             {Icons.phoneCall}
@@ -955,21 +944,18 @@ export default function Agenda({
                 );
                 const top = (start / 60) * 80;
                 const height = Math.max((duration / 60) * 80 - 4, 36);
-                const patient = getPatientById(apt.patientId);
                 const svc = getServiceById(apt.serviceId);
                 const doctor = getDoctorDisplay(apt.professionalId);
-                const isPerson = isPersonaAppointment(apt, patient);
-                const rawPhone = patient?.phone || apt.patientPhone || "";
+                const isPerson = isPersonaAppointment(apt);
+                const rawPhone = apt.patientPhone || apt.personPhone || "";
                 const displayPhone = formatLocalPhone(rawPhone);
-                console.log({ patient });
                 const patientName =
-                  patient?.name ||
                   apt.patientName ||
                   apt.personName ||
-                  "Paciente / Contacto";
+                  "Paciente sin nombre";
                 const svcName =
+                  apt.serviceName ||
                   svc?.name ||
-                  (apt as any).serviceName ||
                   "Consulta / Evaluación general";
                 const noteContent = (apt.reason || apt.notes || "").trim();
                 const cleanedNote = noteContent
@@ -1110,8 +1096,9 @@ export default function Agenda({
             });
           }}
           patientName={
-            getPatientById(paymentPromptAppointment.patientId)?.name ||
-            "Paciente"
+            paymentPromptAppointment.patientName ||
+            paymentPromptAppointment.personName ||
+            "Paciente sin nombre"
           }
           serviceName={
             getServiceById(paymentPromptAppointment.serviceId)?.name ||
@@ -1158,6 +1145,9 @@ export default function Agenda({
       <AppointmentDetailSheet
         open={isDetailSheetOpen}
         citaId={selectedDetailCitaId}
+        initialAppointment={appointmentsList.find(
+          (a) => a.id === selectedDetailCitaId,
+        )}
         onClose={() => {
           setIsDetailSheetOpen(false);
           setSelectedDetailCitaId(null);

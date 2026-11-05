@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { Appointment } from '../dist/modules/appointment/domain/entities/appointment.entity.js';
 import { CreateAppointmentUseCase } from '../dist/modules/appointment/application/use-case/create-appointment.use-case.js';
 import { CreateAppointmentDto } from '../dist/modules/appointment/presentation/dto/create-appointment.dto.js';
+import { PrismaAppointmentRepository } from '../dist/modules/appointment/infrastructure/prisma-appointment.repository.js';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
@@ -574,4 +575,228 @@ test('CreateAppointmentDto: valida exitosamente payload mínimo con solo { branc
 
   const errorsPerson = await validate(minimalDtoPerson);
   assert.equal(errorsPerson.length, 0, JSON.stringify(errorsPerson));
+});
+
+test('Appointment Entity: soporta y serializa en toJSON() patientName, patientPhone, personName, personPhone y serviceName', () => {
+  const patientId = randomUUID();
+  const appt = new Appointment({
+    organizationId,
+    branchId,
+    patientId,
+    createdByMembershipId: actor,
+    scheduledStartAt: new Date('2026-11-05T09:00:00Z'),
+    scheduledEndAt: new Date('2026-11-05T09:30:00Z'),
+    patientName: 'Carlos Gardel',
+    patientPhone: '+591 70012345',
+    serviceName: 'Limpieza Dental',
+  });
+
+  assert.equal(appt.patientName, 'Carlos Gardel');
+  assert.equal(appt.patientPhone, '+591 70012345');
+  assert.equal(appt.serviceName, 'Limpieza Dental');
+  assert.equal(appt.personName, null);
+  assert.equal(appt.personPhone, null);
+
+  const json = JSON.parse(JSON.stringify(appt));
+  assert.equal(json.patientName, 'Carlos Gardel');
+  assert.equal(json.patientPhone, '+591 70012345');
+  assert.equal(json.serviceName, 'Limpieza Dental');
+  assert.equal(json.personName, null);
+  assert.equal(json.personPhone, null);
+  assert.equal(json.status, 'SCHEDULED');
+});
+
+test('PrismaAppointmentRepository: findByFilters y findById enriquecen citas con datos reales de Paciente, Persona y DentalService', async () => {
+  const patientId = randomUUID();
+  const personId = randomUUID();
+  const svc1 = randomUUID();
+  const svc2 = randomUUID();
+  const appt1Id = randomUUID();
+  const appt2Id = randomUUID();
+
+  const fakeRows = [
+    {
+      id: appt1Id,
+      organizationId,
+      branchId,
+      patientId,
+      personId: null,
+      practitionerMembershipId: null,
+      treatmentId: null,
+      scheduledStartAt: new Date('2026-11-05T09:00:00Z'),
+      scheduledEndAt: new Date('2026-11-05T09:30:00Z'),
+      status: 'SCHEDULED',
+      reason: 'Revisión',
+      notes: null,
+      createdByMembershipId: actor,
+      updatedByMembershipId: null,
+      rowVersion: 1,
+      canceledAt: null,
+      canceledByMembershipId: null,
+      cancellationReason: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: appt2Id,
+      organizationId,
+      branchId,
+      patientId: '',
+      personId,
+      practitionerMembershipId: null,
+      treatmentId: null,
+      scheduledStartAt: new Date('2026-11-05T10:00:00Z'),
+      scheduledEndAt: new Date('2026-11-05T10:30:00Z'),
+      status: 'CONFIRMED',
+      reason: 'Urgencia',
+      notes: null,
+      createdByMembershipId: actor,
+      updatedByMembershipId: null,
+      rowVersion: 1,
+      canceledAt: null,
+      canceledByMembershipId: null,
+      cancellationReason: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  const fakeServices = [
+    {
+      id: randomUUID(),
+      organizationId,
+      appointmentId: appt1Id,
+      serviceId: svc1,
+      priceMinor: 15000,
+      currency: 'BOB',
+      durationMinutes: 30,
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: randomUUID(),
+      organizationId,
+      appointmentId: appt2Id,
+      serviceId: svc2,
+      priceMinor: 20000,
+      currency: 'BOB',
+      durationMinutes: 30,
+      notes: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  const fakePrisma = {
+    orm: {
+      dentistry: {
+        Appointment: {
+          where: () => ({ all: async () => fakeRows }),
+          first: async ({ id }) => fakeRows.find((r) => r.id === id) || null,
+        },
+        AppointmentService: {
+          where: ({ appointmentId }) => ({
+            all: async () =>
+              appointmentId
+                ? fakeServices.filter((s) => s.appointmentId === appointmentId)
+                : fakeServices,
+          }),
+        },
+        Patient: {
+          where: () => ({
+            all: async () => [
+              {
+                id: patientId,
+                organizationId,
+                firstName: 'Ana',
+                lastName: 'Gomez',
+                phone: '+591 71122334',
+              },
+            ],
+          }),
+          first: async ({ id }) =>
+            id === patientId
+              ? {
+                  id: patientId,
+                  organizationId,
+                  firstName: 'Ana',
+                  lastName: 'Gomez',
+                  phone: '+591 71122334',
+                }
+              : null,
+        },
+        Person: {
+          where: () => ({
+            all: async () => [
+              {
+                id: personId,
+                organizationId,
+                firstName: 'Beto',
+                lastName: 'Perez',
+                phone: '+591 75566778',
+              },
+            ],
+          }),
+          first: async ({ id }) =>
+            id === personId
+              ? {
+                  id: personId,
+                  organizationId,
+                  firstName: 'Beto',
+                  lastName: 'Perez',
+                  phone: '+591 75566778',
+                }
+              : null,
+        },
+        DentalService: {
+          where: () => ({
+            all: async () => [
+              { id: svc1, name: 'Ortodoncia Preventiva' },
+              { id: svc2, name: 'Extracción Simple' },
+            ],
+          }),
+        },
+      },
+    },
+  };
+
+  const repository = new PrismaAppointmentRepository(fakePrisma);
+
+  // 1. findByFilters
+  const list = await repository.findByFilters({
+    organizationId,
+    authorizedBranchIds: [branchId],
+  });
+
+  assert.equal(list.length, 2);
+
+  // Cita 1: Paciente
+  const apt1 = list.find((a) => a.id === appt1Id);
+  assert.ok(apt1);
+  assert.equal(apt1.patientName, 'Ana Gomez');
+  assert.equal(apt1.patientPhone, '+591 71122334');
+  assert.equal(apt1.personName, null);
+  assert.equal(apt1.serviceName, 'Ortodoncia Preventiva');
+
+  // Cita 2: Persona
+  const apt2 = list.find((a) => a.id === appt2Id);
+  assert.ok(apt2);
+  assert.equal(apt2.personName, 'Beto Perez');
+  assert.equal(apt2.personPhone, '+591 75566778');
+  assert.equal(apt2.patientName, null);
+  assert.equal(apt2.serviceName, 'Extracción Simple');
+
+  // 2. findById
+  const single1 = await repository.findById(appt1Id, organizationId);
+  assert.ok(single1);
+  assert.equal(single1.patientName, 'Ana Gomez');
+  assert.equal(single1.patientPhone, '+591 71122334');
+  assert.equal(single1.serviceName, 'Ortodoncia Preventiva');
+
+  const single2 = await repository.findById(appt2Id, organizationId);
+  assert.ok(single2);
+  assert.equal(single2.personName, 'Beto Perez');
+  assert.equal(single2.personPhone, '+591 75566778');
+  assert.equal(single2.serviceName, 'Extracción Simple');
 });

@@ -41,6 +41,11 @@ export interface AppointmentProps {
   createdAt?: Date;
   updatedAt?: Date;
   services?: AppointmentServiceItem[];
+  patientName?: string | null;
+  patientPhone?: string | null;
+  personName?: string | null;
+  personPhone?: string | null;
+  serviceName?: string | null;
 }
 
 export class Appointment {
@@ -55,6 +60,11 @@ export class Appointment {
   readonly treatmentId: string | null;
   readonly scheduledStartAt: Date;
   readonly scheduledEndAt: Date;
+  readonly patientName: string | null;
+  readonly patientPhone: string | null;
+  readonly personName: string | null;
+  readonly personPhone: string | null;
+  readonly serviceName: string | null;
   private _status: AppointmentStatus;
   private _reason: string | null;
   private _notes: string | null;
@@ -111,6 +121,12 @@ export class Appointment {
     this._cancellationReason = props.cancellationReason ?? null;
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
+    this.patientName = props.patientName ?? null;
+    this.patientPhone = props.patientPhone ?? null;
+    this.personName = props.personName ?? null;
+    this.personPhone = props.personPhone ?? null;
+    this.serviceName =
+      props.serviceName ?? props.services?.[0]?.serviceName ?? null;
   }
 
   get status(): AppointmentStatus {
@@ -206,5 +222,38 @@ export class Appointment {
 
   updateNotes(notes: string): void {
     this._notes = notes;
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      organizationId: this.organizationId,
+      branchId: this.branchId,
+      patientId: this.patientId,
+      personId: this.personId,
+      practitionerMembershipId: this.practitionerMembershipId,
+      serviceId: this.serviceId,
+      serviceIds: this.serviceIds,
+      treatmentId: this.treatmentId,
+      scheduledStartAt: this.scheduledStartAt,
+      scheduledEndAt: this.scheduledEndAt,
+      status: this.status,
+      reason: this.reason,
+      notes: this.notes,
+      createdByMembershipId: this.createdByMembershipId,
+      updatedByMembershipId: this.updatedByMembershipId,
+      rowVersion: this.rowVersion,
+      canceledAt: this.canceledAt,
+      canceledByMembershipId: this.canceledByMembershipId,
+      cancellationReason: this.cancellationReason,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      services: this.services,
+      patientName: this.patientName,
+      patientPhone: this.patientPhone,
+      personName: this.personName,
+      personPhone: this.personPhone,
+      serviceName: this.serviceName,
+    };
   }
 }
