@@ -21,8 +21,9 @@ export interface AppointmentProps {
   id?: string;
   organizationId: string;
   branchId: string;
-  patientId: string;
-  practitionerMembershipId: string;
+  patientId?: string;
+  personId?: string;
+  practitionerMembershipId?: string | null;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string | null;
@@ -46,8 +47,9 @@ export class Appointment {
   readonly id: string;
   readonly organizationId: string;
   readonly branchId: string;
-  readonly patientId: string;
-  readonly practitionerMembershipId: string;
+  readonly patientId: string | null;
+  readonly personId: string | null;
+  readonly practitionerMembershipId: string | null;
   readonly serviceId: string;
   readonly serviceIds: string[];
   readonly treatmentId: string | null;
@@ -67,15 +69,23 @@ export class Appointment {
   readonly services: AppointmentServiceItem[];
 
   constructor(props: AppointmentProps) {
-    if (props.scheduledStartAt >= props.scheduledEndAt) {
+    if (
+      Number.isNaN(props.scheduledStartAt?.getTime()) ||
+      Number.isNaN(props.scheduledEndAt?.getTime()) ||
+      props.scheduledStartAt >= props.scheduledEndAt
+    ) {
       throw new Error('La hora de inicio debe ser anterior a la hora de fin.');
+    }
+    if (!props.patientId && !props.personId) {
+      throw new Error('Debe tener asociado un paciente o una persona de contacto.');
     }
 
     this.id = props.id ?? '';
     this.organizationId = props.organizationId;
     this.branchId = props.branchId;
-    this.patientId = props.patientId;
-    this.practitionerMembershipId = props.practitionerMembershipId;
+    this.patientId = props.patientId ?? null;
+    this.personId = props.personId ?? null;
+    this.practitionerMembershipId = props.practitionerMembershipId ?? null;
 
     const sIds =
       props.serviceIds && props.serviceIds.length > 0

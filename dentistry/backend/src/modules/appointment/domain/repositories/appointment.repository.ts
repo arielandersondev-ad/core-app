@@ -1,4 +1,4 @@
-﻿import { Appointment } from '../entities/appointment.entity.js';
+import { Appointment } from '../entities/appointment.entity.js';
 
 export interface FindAppointmentsFilters {
   organizationId: string;
@@ -14,7 +14,7 @@ export interface FindAppointmentsFilters {
 export interface CheckOverlapParams {
   organizationId: string;
   branchId?: string;
-  practitionerMembershipId: string;
+  practitionerMembershipId?: string | null;
   scheduledStartAt: Date;
   scheduledEndAt: Date;
   excludeAppointmentId?: string;
@@ -22,7 +22,8 @@ export interface CheckOverlapParams {
 
 export interface AppointmentReferences {
   organizationId: string;
-  patientId: string;
+  patientId?: string;
+  personId?: string;
   serviceIds: string[];
   treatmentId?: string | null;
 }

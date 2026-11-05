@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useId, useState } from 'react';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
-import { Icons } from '@/shared/components/ui/Icons';
+import { EmptyState, Icons } from '@/shared/components/ui';
 import { getPermissionGroupPresentation } from '../data/permission-group-presentation';
 import type { PermissionGroup } from '../types/role';
 
@@ -60,14 +60,12 @@ export function PermissionEditorPanel({
 
   if (!roleName) {
     return (
-      <section className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface px-6 text-center">
-        <span className="flex size-12 items-center justify-center rounded-full bg-primary-subtle text-primary" aria-hidden="true">
-          {Icons.shield}
-        </span>
-        <h2 className="mt-4 font-display text-lg font-semibold">Selecciona un rol</h2>
-        <p className="mt-1 max-w-sm text-sm text-muted">
-          Elige un rol del listado para revisar y administrar sus permisos.
-        </p>
+      <section className="flex min-h-80 rounded-lg border border-dashed border-border bg-surface overflow-hidden">
+        <EmptyState
+          message="Selecciona un rol"
+          description="Elige un rol del listado para revisar y administrar sus permisos."
+          icon={<span className="[&>svg]:size-5">{Icons.shield}</span>}
+        />
       </section>
     );
   }
@@ -106,13 +104,13 @@ export function PermissionEditorPanel({
         {readOnly ? (
           <div className="mt-4 flex gap-3 rounded-md border border-warning/30 bg-warning-subtle px-3 py-3 text-sm text-warning">
             <span className="mt-0.5 shrink-0" aria-hidden="true">{Icons.lock}</span>
-            <p>Este rol es global. Puedes revisar sus permisos, pero su edición está protegida.</p>
+            <p>Este rol es global. Puedes revisar sus permisos, pero su ediciÃ³n estÃ¡ protegida.</p>
           </div>
         ) : (
           <p className="mt-4 max-w-2xl text-sm text-muted">
             {isEditing
               ? 'Selecciona las acciones que necesita este rol y guarda los cambios cuando termines.'
-              : 'Los permisos están en modo de consulta. Presiona Editar permisos para modificarlos.'}
+              : 'Los permisos estÃ¡n en modo de consulta. Presiona Editar permisos para modificarlos.'}
           </p>
         )}
       </header>
@@ -230,7 +228,7 @@ export function PermissionEditorPanel({
             <Button variant="ghost" onClick={onDiscard} disabled={isSaving}>Cancelar</Button>
             <Button onClick={onSave} disabled={!hasChanges || isSaving}>
               <span aria-hidden="true">{Icons.check}</span>
-              {isSaving ? 'Guardando…' : 'Guardar cambios'}
+              {isSaving ? 'Guardandoâ€¦' : 'Guardar cambios'}
             </Button>
           </div>
         </footer>

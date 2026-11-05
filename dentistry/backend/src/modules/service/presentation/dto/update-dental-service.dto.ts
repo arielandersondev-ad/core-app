@@ -12,7 +12,7 @@ import { Type } from 'class-transformer';
 import { CreateDentalServiceSupplyInput } from './create-dental-service.dto.js';
 
 export class UpdateDentalServiceDto {
-  @IsUUID()
+  @IsUUID('all')
   organizationId: string;
 
   @IsOptional()
@@ -54,7 +54,7 @@ export class UpdateDentalServiceDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @IsUUID()
+  @IsUUID('all')
   updatedByMembershipId: string;
 
   @IsOptional()
@@ -65,9 +65,9 @@ export class UpdateDentalServiceDto {
 }
 
 export class ToggleDentalServiceStatusDto {
-  @IsUUID()
+  @IsUUID('all')
   organizationId: string;
 
-  @IsUUID()
+  @IsUUID('all')
   updatedByMembershipId: string;
 }

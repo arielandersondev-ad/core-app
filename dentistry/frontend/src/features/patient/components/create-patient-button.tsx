@@ -7,11 +7,25 @@ import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-ses
 import { CreatePatientDialog } from "@/features/patient/components/create-patient-dialog";
 import type { PatientDto } from "@/features/patient/types/patient";
 
-export function CreatePatientButton({ onCreated }: { onCreated: (patient: PatientDto) => void }) {
-  const [open, setOpen] = useState(false);
+export function CreatePatientButton({
+  onCreated,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  onCreated: (patient: PatientDto) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const session = useAuthenticatedSession();
   const searchParams = useSearchParams();
   const requested = searchParams.get("create") === "true";
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+  function setOpen(next: boolean) {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  }
 
   function close() {
     setOpen(false);
@@ -25,8 +39,17 @@ export function CreatePatientButton({ onCreated }: { onCreated: (patient: Patien
   if (!session.permissions.includes("dentistry:patients:create")) return null;
   return (
     <>
-      <Button variant="primary" leftIcon={Icons.plus} onClick={() => setOpen(true)}>Nuevo paciente</Button>
-      {(open || requested) && <CreatePatientDialog onClose={close} onCreated={onCreated} />}
+      <Button
+        variant="primary"
+        leftIcon={Icons.plus}
+        onClick={() => setOpen(true)}
+        className="hidden md:inline-flex"
+      >
+        Nuevo paciente
+      </Button>
+      {(isOpen || requested) && (
+        <CreatePatientDialog onClose={close} onCreated={onCreated} />
+      )}
     </>
   );
 }

@@ -56,14 +56,30 @@ export class DentalServiceController {
   async list(@Query() query: ListDentalServicesQueryDto) {
     let isActive: boolean | undefined = undefined;
     if (query.isActive !== undefined) {
-      isActive = query.isActive === 'true';
+      if (typeof query.isActive === 'boolean') {
+        isActive = query.isActive;
+      } else if (typeof query.isActive === 'string') {
+        if (query.isActive.toLowerCase() === 'true') isActive = true;
+        else if (query.isActive.toLowerCase() === 'false') isActive = false;
+      }
+    } else if (query.status !== undefined) {
+      const s = query.status.trim().toUpperCase();
+      if (s === 'ACTIVE') isActive = true;
+      else if (s === 'INACTIVE') isActive = false;
     }
+
+    const limit = query.limit ?? query.pageSize ?? 15;
+    const page = query.page ?? 1;
 
     return this.listServicesUseCase.execute({
       organizationId: query.organizationId,
       category: query.category,
       isActive,
+      status: query.status,
       search: query.search,
+      page,
+      limit,
+      offset: query.offset,
     });
   }
 

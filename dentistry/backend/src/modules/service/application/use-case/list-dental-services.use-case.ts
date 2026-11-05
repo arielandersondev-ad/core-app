@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { DentalService } from '../../domain/entities/dental-service.entity.js';
 import {
   DentalServiceRepository,
   FindDentalServicesFilters,
+  PaginatedDentalServicesResult,
 } from '../../domain/repositories/dental-service.repository.js';
 
 @Injectable()
 export class ListDentalServicesUseCase {
   constructor(private readonly serviceRepository: DentalServiceRepository) {}
 
-  async execute(filters: FindDentalServicesFilters): Promise<DentalService[]> {
+  async execute(
+    filters: FindDentalServicesFilters,
+  ): Promise<PaginatedDentalServicesResult> {
     return this.serviceRepository.findByFilters(filters);
   }
 }

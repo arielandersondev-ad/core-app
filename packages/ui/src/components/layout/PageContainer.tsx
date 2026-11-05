@@ -13,7 +13,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <div
-      className={`w-full ${maxWidth} mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6 ${className}`}
+      className={`w-full ${maxWidth} mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4 ${className}`}
     >
       {children}
     </div>

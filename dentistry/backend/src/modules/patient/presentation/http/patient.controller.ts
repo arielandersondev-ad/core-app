@@ -44,15 +44,29 @@ export class PatientController {
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Query() query: ListPatientsQueryDto,
   ): Promise<PaginatedResult<PatientResponseDto>> {
-    const result = await this.listPatientsUseCase.execute({
+    const filters: any = {
       organizationId: principal.organizationId,
-      search: query.search,
       status: query.status,
+      search: query.search,
       page: query.page,
       pageSize: query.pageSize,
-    });
+    };
+    if (query.limit !== undefined) {
+      filters.limit = query.limit;
+    }
+    if (query.offset !== undefined) {
+      filters.offset = query.offset;
+    }
+
+    const result = await this.listPatientsUseCase.execute(filters);
+
+    const items = result.items.map(PatientResponseDto.fromEntity);
     return {
-      items: result.items.map(PatientResponseDto.fromEntity),
+      items,
+      total: result.total ?? result.pagination?.totalItems ?? items.length,
+      page: result.page ?? result.pagination?.page ?? query.page,
+      limit: result.limit ?? result.pagination?.pageSize ?? query.pageSize,
+      hasMore: result.hasMore ?? false,
       pagination: result.pagination,
     };
   }

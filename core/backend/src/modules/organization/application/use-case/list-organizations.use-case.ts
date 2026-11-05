@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { OrganizationRepository } from "../../domain/repositories/organization.repository.js";
-import { Organization } from "../../domain/entities/organization.entity.js";
+import type { Organization } from "../../domain/entities/organization.entity.js";
+import type { PaginatedResult } from "../../../../common/pagination/pagination.js";
+import type { ListOrganizationsQueryDto } from "../../presentation/dto/list-organizations.query.dto.js";
 
 @Injectable()
 export class ListOrganizationsUseCase {
@@ -10,11 +12,10 @@ export class ListOrganizationsUseCase {
     private readonly organizationRepository: OrganizationRepository,
   ) {}
 
-  async execute(): Promise<Organization[]> {
-    this.logger.log("Paso 1/2 - Consultando organizaciones activas");
-    const organizations = await this.organizationRepository.findAll();
-    this.logger.log(`Paso 2/2 - ${organizations.length} organización(es) encontradas`);
-
-    return organizations;
+  async execute(
+    query?: ListOrganizationsQueryDto,
+  ): Promise<PaginatedResult<Organization>> {
+    this.logger.log("Consultando organizaciones con paginación");
+    return this.organizationRepository.listOrganizations(query);
   }
 }

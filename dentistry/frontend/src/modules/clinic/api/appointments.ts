@@ -21,8 +21,8 @@ export interface AppointmentDto {
   organizationId: string;
   branchId: string;
   patientId: string;
-  practitionerMembershipId: string;
-  serviceId: string;
+  practitionerMembershipId?: string | null;
+  serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string | null;
   scheduledStartAt: string;
@@ -46,13 +46,16 @@ export interface AppointmentDto {
   createdAt: string;
   updatedAt: string;
   services?: AppointmentServiceDto[];
+  patientName?: string;
+  personName?: string;
+  patientPhone?: string;
 }
 
 export interface CreateAppointmentRequest {
   organizationId?: string;
   branchId: string;
   patientId: string;
-  practitionerMembershipId: string;
+  practitionerMembershipId?: string;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string;

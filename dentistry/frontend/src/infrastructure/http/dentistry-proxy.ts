@@ -38,7 +38,7 @@ const ROUTES: readonly ProxyRule[] = [
     method: "GET",
     pattern: /^patients$/,
     query: {
-      parameters: ["search", "status", "page", "pageSize"],
+      parameters: ["search", "status", "page", "pageSize", "limit", "offset"],
       errorMessage: "Filtro de pacientes inválido.",
     },
   },
@@ -46,6 +46,44 @@ const ROUTES: readonly ProxyRule[] = [
   { method: "GET", pattern: new RegExp(`^patients/${UUID}$`) },
   { method: "PATCH", pattern: new RegExp(`^patients/${UUID}$`) },
   { method: "DELETE", pattern: new RegExp(`^patients/${UUID}$`) },
+  {
+    method: "GET",
+    pattern: /^persons$/,
+    query: {
+      parameters: ["search", "onlyUnconverted"],
+      errorMessage: "Filtro de personas inválido.",
+    },
+  },
+  { method: "POST", pattern: /^persons$/ },
+  { method: "GET", pattern: new RegExp(`^persons/${UUID}$`) },
+  { method: "POST", pattern: new RegExp(`^persons/${UUID}/convert$`) },
+  {
+    method: "GET",
+    pattern: /^services$/,
+    query: {
+      parameters: ["organizationId", "search", "category", "isActive", "status", "page", "limit", "pageSize", "offset"],
+      errorMessage: "Filtro de servicios inválido.",
+    },
+  },
+  { method: "POST", pattern: /^services$/ },
+  {
+    method: "GET",
+    pattern: new RegExp(`^services/${UUID}$`),
+    query: {
+      parameters: ["organizationId"],
+      errorMessage: "Parámetros de servicio inválidos.",
+    },
+  },
+  { method: "PATCH", pattern: new RegExp(`^services/${UUID}$`) },
+  { method: "PATCH", pattern: new RegExp(`^services/${UUID}/toggle-status$`) },
+  {
+    method: "DELETE",
+    pattern: new RegExp(`^services/${UUID}$`),
+    query: {
+      parameters: ["organizationId"],
+      errorMessage: "Parámetros de servicio inválidos.",
+    },
+  },
 ];
 
 function jsonError(message: string, status: number): Response {

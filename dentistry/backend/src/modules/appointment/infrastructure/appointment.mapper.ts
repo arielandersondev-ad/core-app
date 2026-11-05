@@ -24,7 +24,8 @@ export interface AppointmentRow {
   organizationId: string;
   branchId: string;
   patientId: string;
-  practitionerMembershipId: string;
+  personId?: string | null;
+  practitionerMembershipId?: string | null;
   treatmentId: string | null;
   scheduledStartAt: Date;
   scheduledEndAt: Date;
@@ -65,8 +66,9 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     id: row.id,
     organizationId: row.organizationId,
     branchId: row.branchId,
-    patientId: row.patientId,
-    practitionerMembershipId: row.practitionerMembershipId,
+    patientId: row.patientId || undefined,
+    personId: (row as any).personId || undefined,
+    practitionerMembershipId: row.practitionerMembershipId ?? null,
     serviceIds,
     treatmentId: row.treatmentId,
     scheduledStartAt: row.scheduledStartAt,

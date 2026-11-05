@@ -3,8 +3,19 @@
 import { useState } from "react";
 import { patients, calcAge } from "@/modules/clinic/__mocks__/data";
 import { displayDate } from "@/features/clinical-history/data/history";
-import { PageContainer, PageHeader, FilterToolbar } from "@/shared/components/layout";
-import { StatCard, Button, Input, EmptyState, Icons } from "@/shared/components/ui";
+import {
+  PageContainer,
+  PageHeader,
+  FilterToolbar,
+} from "@/shared/components/layout";
+import {
+  StatCard,
+  Button,
+  Input,
+  EmptyState,
+  Icons,
+  MobileFloatingActionMenu,
+} from "@/shared/components/ui";
 import { CreatePatientModal } from "@/modules/clinic/components";
 
 export default function Patients({
@@ -35,7 +46,7 @@ export default function Patients({
           <Button
             variant="primary"
             onClick={() => setIsModalOpen(true)}
-            className="font-semibold text-xs shadow-xs"
+            className="hidden md:inline-flex font-semibold text-xs shadow-xs"
           >
             <span className="text-base leading-none font-bold">+</span>
             Nuevo paciente
@@ -189,6 +200,20 @@ export default function Patients({
           <span>Sincronizado con base de datos</span>
         </div>
       </div>
+
+      {/* Menú Flotante de Acciones Rápidas Móvil (Speed-Dial FAB) */}
+      <MobileFloatingActionMenu
+        ariaLabel="Acciones rápidas de pacientes"
+        className="md:hidden"
+        actions={[
+          {
+            label: "Nuevo Paciente",
+            icon: Icons.users,
+            variant: "primary",
+            onClick: () => setIsModalOpen(true),
+          },
+        ]}
+      />
 
       <CreatePatientModal
         open={isModalOpen}

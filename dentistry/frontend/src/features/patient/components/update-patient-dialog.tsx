@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal, Icons } from "@/shared/components/ui";
+import { ResponsiveModal, Icons } from "@/shared/components/ui";
 import { PatientForm } from "@/features/patient/components/forms/patient-form";
 import { useUpdatePatient } from "@/features/patient/hooks/use-update-patient";
 import type { PatientDto, UpdatePatientRequest } from "@/features/patient/types/patient";
@@ -32,8 +32,17 @@ export function UpdatePatientDialog({ patient, onClose, onUpdated }: Props) {
   }
 
   return (
-    <Modal open onClose={handleClose} title="Editar paciente" description={`Actualiza los datos de ${patient.fullName}.`} icon={Icons.users} maxWidth="max-w-2xl">
+    <ResponsiveModal
+      open
+      onClose={handleClose}
+      title="Editar paciente"
+      description={`Actualiza los datos de ${patient.fullName}.`}
+      icon={Icons.users}
+      breakpoint={768}
+      snapPoint="auto"
+      maxWidth="max-w-2xl"
+    >
       <PatientForm patient={patient} onSubmit={handleUpdate} onCancel={handleClose} isSubmitting={mutation.isPending} error={mutation.error} />
-    </Modal>
+    </ResponsiveModal>
   );
 }

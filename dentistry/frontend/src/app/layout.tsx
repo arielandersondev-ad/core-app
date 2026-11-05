@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Work_Sans, DM_Mono } from "next/font/google";
+import { DevPersonaSwitcherServer } from "@/features/dev-auth/components/DevPersonaSwitcherServer";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   description: "Sistema de gestión dental",
 };
 
-const themeScript = `(function(){try{var t=localStorage.getItem("theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`;
+const themeScript = `(function(){try{var t=localStorage.getItem("theme");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d){document.documentElement.classList.add("dark");}else{document.documentElement.classList.remove("dark");}}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -37,11 +38,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${workSans.variable} ${dmMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="h-full flex flex-col overflow-hidden">
-        <script 
-        //dangerouslySetInnerHTML={{ __html: themeScript }} 
-        />
         {children}
+        <DevPersonaSwitcherServer />
       </body>
     </html>
   );

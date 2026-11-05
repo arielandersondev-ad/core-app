@@ -198,4 +198,27 @@ export class DentalService {
     this._updatedAt = new Date();
     return this._isActive;
   }
+
+  toJSON() {
+    return {
+      id: this.id,
+      organizationId: this.organizationId,
+      code: this.code,
+      name: this.name,
+      category: this.category,
+      description: this.description,
+      durationMinutes: this.durationMinutes,
+      basePriceMinor: this.basePriceMinor,
+      labCostMinor: this.labCostMinor,
+      currency: this.currency,
+      isActive: this.isActive,
+      createdByMembershipId: this.createdByMembershipId,
+      updatedByMembershipId: this.updatedByMembershipId,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      supplies: this.supplies,
+      totalSuppliesCostMinor: this.totalSuppliesCostMinor,
+      estimatedMarginMinor: this.estimatedMarginMinor,
+    };
+  }
 }

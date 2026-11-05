@@ -18,6 +18,8 @@ const meta: Meta<typeof Badge> = {
         "inactive",
         "suspended",
         "role",
+        "patient",
+        "person",
       ],
     },
     size: {
@@ -79,6 +81,24 @@ export const AllVariants: Story = {
       <Badge variant="danger" dot>Danger</Badge>
       <Badge variant="neutral">Neutral</Badge>
       <Badge variant="role">Role</Badge>
+      <Badge variant="patient" dot>Paciente</Badge>
+      <Badge variant="person" dot>Persona</Badge>
     </div>
   ),
+};
+
+export const PatientContact: Story = {
+  args: {
+    children: "Paciente",
+    variant: "patient",
+    dot: true,
+  },
+};
+
+export const PersonContact: Story = {
+  args: {
+    children: "Persona",
+    variant: "person",
+    dot: true,
+  },
 };

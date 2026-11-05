@@ -629,6 +629,26 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
 }
 
 function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
+  const Person = model("Person", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      firstName: field.text(),
+      lastName: field.text().optional(),
+      phone: field.text().optional(),
+      email: field.text().optional(),
+      notes: field.text().optional(),
+      convertedToPatientId: field.uuidNative().optional(),
+      convertedAt: field.temporal.timestamptz().optional(),
+      createdByMembershipId: field.uuidNative(),
+      updatedByMembershipId: field.uuidNative().optional(),
+      deletedAt: field.temporal.timestamptz().optional(),
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
   const Patient = model("Patient", {
     namespace: DENTISTRY_NAMESPACE,
     fields: {
@@ -725,7 +745,8 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       organizationId: field.uuidNative(),
       branchId: field.uuidNative(),
       patientId: field.uuidNative(),
-      practitionerMembershipId: field.uuidNative(),
+      personId: field.uuidNative().optional(),
+      practitionerMembershipId: field.uuidNative().optional(),
       treatmentId: field.uuidNative().optional(),
       scheduledStartAt: field.temporal.timestamptz(),
       scheduledEndAt: field.temporal.timestamptz(),
@@ -945,6 +966,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           payments: rel.hasMany(Payment, { by: "patientId" }),
           clinicalFiles: rel.hasMany(ClinicalFile, { by: "patientId" }),
           healthProfile: rel.hasOne(PatientHealthProfile, { by: "patientId" }),
+          persons: rel.hasMany(Person, { by: "convertedToPatientId" }),
         })
         .sql(({ cols, constraints }) => ({
           table: "Patient",
@@ -1662,6 +1684,54 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
               name: "file_upload_ready",
               expression:
                 '"uploadStatus" <> \'READY\' OR "uploadedAt" IS NOT NULL',
+            }),
+          ],
+        })),
+
+      Person: Person.attributes(({ fields, constraints }) => ({
+        uniques: [constraints.unique([fields.organizationId, fields.id])],
+      }))
+        .relations({
+          appointments: rel.hasMany(Appointment, { by: "personId" }),
+          convertedToPatient: rel.belongsTo(Patient, {
+            from: ["organizationId", "convertedToPatientId"],
+            to: ["organizationId", "id"],
+          }),
+        })
+        .sql(({ cols, constraints }) => ({
+          table: "Person",
+          foreignKeys: [
+            constraints.foreignKey(
+              [cols.organizationId, cols.convertedToPatientId],
+              [Patient.refs.organizationId, Patient.refs.id],
+              { onDelete: "restrict" },
+            ),
+          ],
+          indexes: [
+            constraints.index(
+              [cols.organizationId, cols.convertedToPatientId],
+              { name: "Person_organizationId_convertedToPatientId_idx" },
+            ),
+            constraints.index(
+              [cols.organizationId, cols.lastName, cols.firstName],
+              { name: "person_org_name_idx" },
+            ),
+            constraints.index([cols.organizationId, cols.phone], {
+              name: "person_org_phone_idx",
+            }),
+          ],
+          checks: [
+            check({
+              name: "person_first_name_not_empty",
+              expression: 'length(btrim("firstName")) > 0',
+            }),
+            check({
+              name: "person_last_name_not_empty",
+              expression: '"lastName" IS NULL OR length(btrim("lastName")) > 0',
+            }),
+            check({
+              name: "person_phone_not_empty",
+              expression: '"phone" IS NULL OR length(btrim("phone")) > 0',
             }),
           ],
         })),

@@ -452,7 +452,7 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `createdAt`, `u
 |---|---|---|---|
 | `branchId` | UUID | C | Sucursal autorizada y habilitada de la organización. |
 | `patientId` | UUID | C | Paciente de la organización. |
-| `professionalMembershipId → practitionerMembershipId` | UUID | R | Membresía del odontólogo que atenderá; puede diferir del creador. |
+| `professionalMembershipId → practitionerMembershipId` | UUID? | R | Membresía del odontólogo que atenderá si está asignado (opcional); puede diferir del creador. |
 | `startsAt → scheduledStartAt` | TIMESTAMPTZ | R | Inicio previsto incluido. |
 | `endsAt → scheduledEndAt` | TIMESTAMPTZ | R | Fin previsto excluido; mayor al inicio. |
 | `status` | text | M | Catálogo de citas; unificar CANCELLED → CANCELED. |
@@ -465,6 +465,7 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `createdAt`, `u
 | `rowVersion` | integer | A | Default 1 para evitar que una reprogramación sobrescriba otra edición. |
 | `serviceId` | UUID actual | M — retirar | Eliminar relación singular redundante; servicios previstos, si se habilitan, solo en AppointmentService. |
 | `treatmentId` | UUID? | C | Vínculo opcional reservado a módulo de tratamientos; nunca requisito para agendar en base. No representa todos los tratamientos posibles de una atención. |
+| `personId` | UUID? | C | Persona asignada a la cita previa a la conversión a paciente. |
 
 Relaciones: `patient`, `clinicalEncounter` 0..1; `appointmentServices` 0..N opcional, `treatment` opcional, `payments` y `clinicalFiles` para módulos posteriores. Retirar `service` singular e inversa DentalService.appointments; no retirar la relación N:M.
 
@@ -762,6 +763,24 @@ Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
 | `notes` | text? | C | Interpretaciones/aclaraciones de la ficha, sin afirmar que existe visor o informe diagnóstico estructurado. |
 
 Relaciones: `clinicalFile` N:1. FK compuesta por organización. Índice cronológico se resolverá mediante ClinicalFile.capturedAt; retirar el índice actual basado en Radiograph.takenAt al consolidar.
+
+
+### 5.8 Person
+<!-- source: Person -->
+
+**Actual físico:** Person. **Definición:** registro de persona/prospecto previo a la apertura de un expediente clínico completo de paciente.
+
+Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembershipId`, `createdAt`, `updatedAt`, `deletedAt`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `firstName` | text | C | Nombres o porción inicial; no vacío. |
+| `lastName` | text? | C | Apellidos; opcional cuando solo se provee un nombre. |
+| `phone` | text? | C | Teléfono de contacto opcional. |
+| `email` | text? | C | Correo electrónico de contacto opcional. |
+| `notes` | text? | C | Notas o motivo de registro rápido. |
+| `convertedToPatientId` | UUID? | C | Paciente al que fue convertida. |
+| `convertedAt` | TIMESTAMPTZ? | C | Instante de conversión. |
 
 ## 6. Relaciones y fuentes de verdad
 

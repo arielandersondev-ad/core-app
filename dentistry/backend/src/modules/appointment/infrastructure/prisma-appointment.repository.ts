@@ -23,8 +23,9 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       const row = await tx.orm.dentistry.Appointment.create({
         organizationId: appointment.organizationId,
         branchId: appointment.branchId,
-        patientId: appointment.patientId,
-        practitionerMembershipId: appointment.practitionerMembershipId,
+        patientId: appointment.patientId ?? '',
+        personId: appointment.personId || undefined,
+        practitionerMembershipId: appointment.practitionerMembershipId ?? null,
         treatmentId: appointment.treatmentId,
         scheduledStartAt: appointment.scheduledStartAt,
         scheduledEndAt: appointment.scheduledEndAt,
@@ -43,7 +44,7 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
           }),
         );
       }
-      return toAppointmentEntity({ ...row, services });
+      return toAppointmentEntity({ ...row, personId: (row as any).personId ?? appointment.personId, services });
     });
   }
 
@@ -108,6 +109,9 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
   }
 
   async hasOverlap(params: CheckOverlapParams): Promise<boolean> {
+    if (!params.practitionerMembershipId) {
+      return false;
+    }
     const rows = await this.prisma.orm.dentistry.Appointment.where({
       organizationId: params.organizationId,
       practitionerMembershipId: params.practitionerMembershipId,
@@ -124,13 +128,24 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
   async referencesBelongToOrganization(
     params: AppointmentReferences,
   ): Promise<boolean> {
-    const { organizationId, patientId } = params;
-    const patient = await this.prisma.orm.dentistry.Patient.first({
-      id: patientId,
-      organizationId,
-      deletedAt: null,
-    });
-    if (!patient) return false;
+    const { organizationId, patientId, personId } = params;
+    if (patientId) {
+      const patient = await this.prisma.orm.dentistry.Patient.first({
+        id: patientId,
+        organizationId,
+        deletedAt: null,
+      });
+      if (!patient) return false;
+    } else if (personId) {
+      const person = await this.prisma.orm.dentistry.Person.first({
+        id: personId,
+        organizationId,
+        deletedAt: null,
+      });
+      if (!person) return false;
+    } else {
+      return false;
+    }
     for (const id of params.serviceIds) {
       const service = await this.prisma.orm.dentistry.DentalService.first({
         id,

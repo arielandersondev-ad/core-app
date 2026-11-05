@@ -34,7 +34,7 @@ export class CreateDentalServiceSupplyInput {
 }
 
 export class CreateDentalServiceDto {
-  @IsUUID()
+  @IsUUID('all')
   organizationId: string;
 
   @IsOptional()
@@ -75,7 +75,7 @@ export class CreateDentalServiceDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @IsUUID()
+  @IsUUID('all')
   createdByMembershipId: string;
 
   @IsOptional()

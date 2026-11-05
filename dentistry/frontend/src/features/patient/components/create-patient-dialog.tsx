@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal, Icons } from "@/shared/components/ui";
+import { ResponsiveModal, Icons } from "@/shared/components/ui";
 import { PatientForm } from "@/features/patient/components/forms/patient-form";
 import { useCreatePatient } from "@/features/patient/hooks/use-create-patient";
 import type { CreatePatientRequest, PatientDto } from "@/features/patient/types/patient";
@@ -22,8 +22,17 @@ export function CreatePatientDialog({ onClose, onCreated }: Props) {
   }
 
   return (
-    <Modal open onClose={handleClose} title="Nuevo paciente" description="Registra los datos personales y de contacto del paciente." icon={Icons.users} maxWidth="max-w-2xl">
+    <ResponsiveModal
+      open
+      onClose={handleClose}
+      title="Nuevo paciente"
+      description="Registra los datos personales y de contacto del paciente."
+      icon={Icons.users}
+      breakpoint={768}
+      snapPoint="auto"
+      maxWidth="max-w-2xl"
+    >
       <PatientForm onSubmit={handleCreate} onCancel={handleClose} isSubmitting={mutation.isPending} error={mutation.error} />
-    </Modal>
+    </ResponsiveModal>
   );
 }

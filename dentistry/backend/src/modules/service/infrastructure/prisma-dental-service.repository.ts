@@ -3,12 +3,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { or } from '@prisma/orm-postgres/orm-client';
 import { hasPostgresCode } from '../../../common/infrastructure/postgres-error.js';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
 import { DentalService } from '../domain/entities/dental-service.entity.js';
 import {
   DentalServiceRepository,
   FindDentalServicesFilters,
+  PaginatedDentalServicesResult,
 } from '../domain/repositories/dental-service.repository.js';
 import {
   DentalServiceSupplyRow,
@@ -102,57 +104,112 @@ export class PrismaDentalServiceRepository extends DentalServiceRepository {
 
   async findByFilters(
     filters: FindDentalServicesFilters,
-  ): Promise<DentalService[]> {
-    const rows = await this.prisma.orm.dentistry.DentalService.where({
+  ): Promise<PaginatedDentalServicesResult> {
+    if (!filters.organizationId?.trim()) {
+      throw new Error('organizationId es obligatorio.');
+    }
+
+    let query = this.prisma.orm.dentistry.DentalService.where({
       organizationId: filters.organizationId,
-    }).all();
+    });
 
-    const allSupplies =
-      await this.prisma.orm.dentistry.DentalServiceSupply.where({
-        organizationId: filters.organizationId,
-      }).all();
+    if (filters.category?.trim()) {
+      const cat = filters.category.trim();
+      query = query.where((s) => s.category.ilike(cat));
+    }
 
-    // Map supplies by serviceId
+    let isActive = filters.isActive;
+    if (isActive === undefined && filters.status) {
+      const s = filters.status.trim().toUpperCase();
+      if (s === 'ACTIVE') isActive = true;
+      else if (s === 'INACTIVE') isActive = false;
+    }
+
+    if (isActive !== undefined) {
+      query = query.where({ isActive });
+    }
+
+    const search = filters.search?.trim();
+    if (search) {
+      const pattern = '%' + search.replace(/[\\%_]/g, '\\$&') + '%';
+      query = query.where((s) =>
+        or(
+          s.name.ilike(pattern),
+          s.code.ilike(pattern),
+          s.category.ilike(pattern),
+          s.description.ilike(pattern),
+        ),
+      );
+    }
+
+    const limit = Math.max(1, filters.limit ?? filters.pageSize ?? 15);
+    let page = Math.max(1, filters.page ?? 1);
+    let skip: number;
+
+    if (filters.offset !== undefined && filters.offset >= 0) {
+      skip = filters.offset;
+      page = Math.floor(skip / limit) + 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const { totalItems } = await query.aggregate((aggregate) => ({
+      totalItems: aggregate.count(),
+    }));
+
+    const rows = await query
+      .orderBy([
+        (s) => s.name.asc(),
+        (s) => s.id.asc(),
+      ])
+      .skip(skip)
+      .take(limit)
+      .all();
+
+    const serviceIds = new Set(rows.map((r) => r.id));
     const suppliesByService = new Map<string, DentalServiceSupplyRow[]>();
-    for (const s of allSupplies) {
-      if (!suppliesByService.has(s.serviceId)) {
-        suppliesByService.set(s.serviceId, []);
+
+    if (rows.length > 0) {
+      const allSupplies =
+        await this.prisma.orm.dentistry.DentalServiceSupply.where({
+          organizationId: filters.organizationId,
+        }).all();
+
+      for (const s of allSupplies) {
+        if (serviceIds.has(s.serviceId)) {
+          if (!suppliesByService.has(s.serviceId)) {
+            suppliesByService.set(s.serviceId, []);
+          }
+          suppliesByService.get(s.serviceId)!.push(s);
+        }
       }
-      suppliesByService.get(s.serviceId)!.push(s);
     }
 
-    let filtered = rows;
+    const items = rows.map((r) =>
+      toDentalServiceEntity({
+        ...r,
+        supplies: suppliesByService.get(r.id) || [],
+      }),
+    );
 
-    if (filters.category) {
-      const catLower = filters.category.toLowerCase();
-      filtered = filtered.filter(
-        (r) => r.category && r.category.toLowerCase() === catLower,
-      );
-    }
+    const total = totalItems;
+    const hasMore = skip + rows.length < total;
+    const totalPages = Math.ceil(total / limit);
 
-    if (filters.isActive !== undefined) {
-      filtered = filtered.filter((r) => r.isActive === filters.isActive);
-    }
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (r) =>
-          r.name.toLowerCase().includes(q) ||
-          (r.code && r.code.toLowerCase().includes(q)) ||
-          (r.category && r.category.toLowerCase().includes(q)) ||
-          (r.description && r.description.toLowerCase().includes(q)),
-      );
-    }
-
-    return filtered
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((r) => {
-        return toDentalServiceEntity({
-          ...r,
-          supplies: suppliesByService.get(r.id) || [],
-        });
-      });
+    return {
+      items,
+      total,
+      page,
+      limit,
+      hasMore,
+      pagination: {
+        page,
+        pageSize: limit,
+        totalItems: total,
+        totalPages,
+        hasMore,
+      },
+    };
   }
 
   async update(service: DentalService): Promise<DentalService> {

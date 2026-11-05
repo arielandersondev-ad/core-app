@@ -297,7 +297,58 @@ export default function UserDetail() {
       )}
 
       {tab === 'permisos' && (
-        <div className="hidden md:block">
+        <div>
+          {/* Vista móvil de permisos (< 768px) */}
+          <div className="grid gap-3 md:hidden">
+            {permissions.map((perm) => {
+              const allOn = perm.view && perm.create && perm.edit && perm.delete;
+              return (
+                <Card key={perm.module} className="overflow-hidden p-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
+                    <h3 className="text-sm font-display font-semibold text-foreground">
+                      {perm.module}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPermissions((prev) =>
+                          prev.map((p) =>
+                            p.module === perm.module
+                              ? {
+                                  module: p.module,
+                                  view: !allOn,
+                                  create: !allOn,
+                                  edit: !allOn,
+                                  delete: !allOn,
+                                }
+                              : p
+                          )
+                        );
+                        setPermSaved(false);
+                      }}
+                      className="text-[10px] font-mono uppercase tracking-wider text-muted hover:text-primary transition-colors"
+                    >
+                      {allOn ? 'Revocar todo' : 'Dar todo'}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3">
+                    {actions.map((a) => (
+                      <div key={a.key} className="flex items-center justify-between rounded-md bg-background/50 p-2 border border-border/50">
+                        <span className="text-xs text-muted font-medium">{a.label}</span>
+                        <Toggle
+                          checked={perm[a.key]}
+                          onChange={(v) => updatePerm(perm.module, a.key, v)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Vista desktop de tabla tradicional (>= 768px) */}
+          <div className="hidden md:block">
           <Card className="overflow-hidden">
             <table className="w-full">
               <thead>
@@ -368,6 +419,7 @@ export default function UserDetail() {
               </tbody>
             </table>
           </Card>
+        </div>
           <div className="flex items-center gap-3 mt-4">
             <button
               onClick={() => setPermSaved(true)}

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -19,4 +19,17 @@ export class PaginationQueryDto implements PaginationInput {
   @Min(1)
   @Max(MAX_PAGE_SIZE)
   pageSize: number = DEFAULT_PAGE_SIZE;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(MAX_PAGE_SIZE)
+  limit?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset?: number;
 }

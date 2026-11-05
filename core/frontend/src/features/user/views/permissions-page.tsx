@@ -94,7 +94,21 @@ export default function Permissions() {
                 </button>
               </div>
               <Separator />
-              <div className="flex items-center px-4 py-3">
+              {/* Vista móvil (< 768px): grid con label de cada acción */}
+              <div className="grid grid-cols-2 gap-2 p-3 md:hidden">
+                {actions.map((a) => (
+                  <div key={a.key} className="flex items-center justify-between rounded-md bg-background/50 p-2 border border-border/50">
+                    <span className="text-xs text-muted-foreground font-medium">{a.label}</span>
+                    <Toggle
+                      checked={perm[a.key]}
+                      onChange={(v) => update(perm.module, a.key, v)}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Vista desktop (>= 768px) */}
+              <div className="hidden md:flex items-center px-4 py-3">
                 <div className="flex-1" />
                 {actions.map((a) => (
                   <div key={a.key} className="w-12 md:w-20 flex justify-center">

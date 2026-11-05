@@ -226,7 +226,57 @@ export function DynamicTable<
         />
       )}
 
-      <div className="overflow-auto">
+      {/* Vista Móvil: Tarjetas (< 768px / md) */}
+      <div className="block md:hidden divide-y divide-border">
+        {paginatedData.length === 0 ? (
+          <div className="p-4">
+            <DataTableEmpty message={emptyMessage} />
+          </div>
+        ) : (
+          paginatedData.map((row, rowIndex) => (
+            <article
+              key={rowIndex}
+              onClick={() => onRowClick?.(row)}
+              className={`p-4 transition-colors hover:bg-background/60 ${
+                onRowClick ? 'cursor-pointer' : ''
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                {displayedColumns.length > 0 && (
+                  <div className="font-semibold text-sm text-foreground">
+                    {renderCell(displayedColumns[0], row)}
+                  </div>
+                )}
+                {actions.length > 0 && (
+                  <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <DataTableActions
+                      row={row}
+                      actions={actions}
+                      mode={actionsMode}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                {displayedColumns.slice(1).map((column) => (
+                  <div key={String(column.key)}>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground block mb-0.5">
+                      {column.label}
+                    </span>
+                    <div className="text-foreground">
+                      {renderCell(column, row)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+
+      {/* Vista Desktop: Tabla tradicional (>= 768px / md) */}
+      <div className="hidden md:block overflow-auto">
         <table className="w-full">
           <thead
             className={`

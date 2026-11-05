@@ -17,7 +17,7 @@ import {
   TODAY_DATE,
 } from "@/modules/clinic/__mocks__/data";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { StatCard, Icons } from "@/shared/components/ui";
+import { StatCard, Icons, EmptyState, Button } from "@/shared/components/ui";
 import {
   CreateAppointmentModal,
   RegisterPaymentModal,
@@ -169,9 +169,22 @@ export default function ClinicDashboard({
 
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
             {todayAppts.length === 0 ? (
-              <div className="py-12 text-center text-sm text-[var(--muted)]">
-                Sin citas programadas para el día de hoy
-              </div>
+              <EmptyState
+                icon={<span className="text-2xl">🦷</span>}
+                message="Sin citas programadas para el día de hoy"
+                description="El sillón odontológico está libre para nuevas reservas o urgencias"
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsApptModalOpen(true)}
+                    className="rounded-xl shadow-xs"
+                  >
+                    + Agendar Cita
+                  </Button>
+                }
+                className="py-10"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">

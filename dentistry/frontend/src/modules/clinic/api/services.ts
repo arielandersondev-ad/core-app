@@ -73,10 +73,20 @@ export interface UpdateDentalServiceRequest {
 }
 
 export interface ListDentalServicesParams {
-  organizationId: string;
+  organizationId?: string;
   category?: string;
   isActive?: boolean | string;
   search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedDentalServicesResponse {
+  items: DentalServiceDto[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }
 
 export async function fetchDentalServices(
@@ -94,7 +104,65 @@ export async function fetchDentalServices(
   if (!res.ok) {
     throw new Error(`Error al obtener servicios: ${res.statusText}`);
   }
-  return res.json();
+  const data = await res.json();
+  if (data && Array.isArray(data.items)) {
+    return data.items;
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+export async function fetchDentalServicesPaginated(
+  params: ListDentalServicesParams,
+): Promise<PaginatedDentalServicesResponse> {
+  const page = params.page || 1;
+  const limit = params.limit || 15;
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") query.append(key, String(value));
+  });
+
+  try {
+    const res = await fetch(`${API_BASE}/services?${query.toString()}`, {
+      headers: { Accept: "application/json" },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === "object" && Array.isArray(data.items)) {
+        return {
+          items: data.items,
+          total: typeof data.total === "number" ? data.total : data.items.length,
+          page: typeof data.page === "number" ? data.page : page,
+          limit: typeof data.limit === "number" ? data.limit : limit,
+          hasMore:
+            typeof data.hasMore === "boolean"
+              ? data.hasMore
+              : (data.page ?? page) * (data.limit ?? limit) < (data.total ?? data.items.length),
+        };
+      }
+      if (Array.isArray(data)) {
+        const start = (page - 1) * limit;
+        const sliced = data.slice(start, start + limit);
+        return {
+          items: sliced,
+          total: data.length,
+          page,
+          limit,
+          hasMore: start + limit < data.length,
+        };
+      }
+    }
+  } catch {
+    // Backend offline or error, return empty paginated shape so caller can fallback gracefully
+  }
+
+  return {
+    items: [],
+    total: 0,
+    page,
+    limit,
+    hasMore: false,
+  };
 }
 
 export async function fetchDentalServiceById(

@@ -86,7 +86,7 @@ export function PageHeader({
         </div>
 
         {action && (
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <div className="hidden md:inline-flex flex items-center gap-2 self-start sm:self-auto shrink-0">
             {action}
           </div>
         )}

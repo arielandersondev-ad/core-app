@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { isAxiosError } from 'axios';
-import { Badge, Button } from '@/shared/components/ui';
-import { Modal } from '@/shared/components/ui/Modal';
+import { Badge, Button, MobileCardItem, ResponsiveModal } from '@/shared/components/ui';
+
 import { PlanFormDialog } from '../components/plan-form-dialog';
 import { AssignPlanDialog } from '../components/assign-plan-dialog';
 import { useDeletePlan, usePlanAssignments, usePlans, useUpdateAssignmentStatus } from '../hooks/use-plans';
@@ -72,11 +72,107 @@ export default function PlansPage() {
       {assignmentsQuery.isPending ? <div className="mt-4 h-56 animate-pulse rounded-xl bg-surface" />
       : assignmentsQuery.isError ? <ErrorState message={errorMessage(assignmentsQuery.error, 'No se pudieron cargar las asignaciones.')} retry={() => void assignmentsQuery.refetch()} />
       : assignments.length === 0 ? <EmptyState title="Sin asignaciones" body="Asigna un plan a una organización para habilitar su acceso." />
-      : <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-surface"><table className="w-full min-w-[850px] text-left text-sm"><thead className="border-b border-border bg-background/60 text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3">Organización</th><th className="px-4 py-3">Plan</th><th className="px-4 py-3">Estado</th><th className="px-4 py-3">Vigencia</th><th className="px-4 py-3 text-right">Acciones</th></tr></thead><tbody>{assignments.map((assignment) => <tr key={assignment.id} className="border-b border-border last:border-0"><td className="px-4 py-4 font-medium">{assignment.organizationName}</td><td className="px-4 py-4"><span className="font-medium">{assignment.planName}</span><span className="block font-mono text-[10px] text-muted">{assignment.planCode}</span></td><td className="px-4 py-4"><Badge variant={assignment.status === 'ACTIVE' ? 'success' : assignment.status === 'SUSPENDED' ? 'warning' : assignment.status === 'CANCELED' ? 'danger' : 'primary'}>{statusLabel[assignment.status]}</Badge></td><td className="px-4 py-4 text-muted">{dateFormat.format(new Date(assignment.startsAt))} – {dateFormat.format(new Date(assignment.endsAt))}</td><td className="px-4 py-4"><div className="flex justify-end gap-2"><Button size="sm" variant="ghost" onClick={() => setAssigning(assignment)}>Reemplazar</Button>{assignment.status === 'SUSPENDED' ? <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'ACTIVE')}>Activar</Button> : assignment.status !== 'CANCELED' && <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'SUSPENDED')}>Suspender</Button>}{assignment.status !== 'CANCELED' && <Button size="sm" variant="danger" onClick={() => void changeStatus(assignment, 'CANCELED')}>Cancelar</Button>}</div></td></tr>)}</tbody></table></div>}
+      : (
+        <>
+          {/* Vista móvil de asignaciones (< 768px) */}
+          <div className="mt-4 grid gap-3 md:hidden">
+            {assignments.map((assignment) => (
+              <MobileCardItem
+                key={assignment.id}
+                title={assignment.organizationName}
+                subtitle={`${assignment.planName} · ${assignment.planCode}`}
+                badge={
+                  <Badge variant={assignment.status === 'ACTIVE' ? 'success' : assignment.status === 'SUSPENDED' ? 'warning' : assignment.status === 'CANCELED' ? 'danger' : 'primary'}>
+                    {statusLabel[assignment.status]}
+                  </Badge>
+                }
+                fields={[
+                  {
+                    label: 'Vigencia desde',
+                    value: dateFormat.format(new Date(assignment.startsAt)),
+                  },
+                  {
+                    label: 'Vigencia hasta',
+                    value: dateFormat.format(new Date(assignment.endsAt)),
+                  },
+                ]}
+                actions={
+                  <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+                    <Button size="sm" variant="ghost" onClick={() => setAssigning(assignment)}>
+                      Reemplazar
+                    </Button>
+                    {assignment.status === 'SUSPENDED' ? (
+                      <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'ACTIVE')}>
+                        Activar
+                      </Button>
+                    ) : assignment.status !== 'CANCELED' && (
+                      <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'SUSPENDED')}>
+                        Suspender
+                      </Button>
+                    )}
+                    {assignment.status !== 'CANCELED' && (
+                      <Button size="sm" variant="danger" onClick={() => void changeStatus(assignment, 'CANCELED')}>
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
+            ))}
+          </div>
+
+          {/* Vista desktop de tabla tradicional (>= 768px) */}
+          <div className="mt-4 hidden overflow-x-auto rounded-xl border border-border bg-surface md:block">
+            <table className="w-full min-w-[850px] text-left text-sm">
+              <thead className="border-b border-border bg-background/60 text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="px-4 py-3">Organización</th>
+                  <th className="px-4 py-3">Plan</th>
+                  <th className="px-4 py-3">Estado</th>
+                  <th className="px-4 py-3">Vigencia</th>
+                  <th className="px-4 py-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignments.map((assignment) => (
+                  <tr key={assignment.id} className="border-b border-border last:border-0 hover:bg-background/40 transition-colors">
+                    <td className="px-4 py-4 font-medium">{assignment.organizationName}</td>
+                    <td className="px-4 py-4">
+                      <span className="font-medium">{assignment.planName}</span>
+                      <span className="block font-mono text-[10px] text-muted">{assignment.planCode}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <Badge variant={assignment.status === 'ACTIVE' ? 'success' : assignment.status === 'SUSPENDED' ? 'warning' : assignment.status === 'CANCELED' ? 'danger' : 'primary'}>
+                        {statusLabel[assignment.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-4 text-muted">
+                      {dateFormat.format(new Date(assignment.startsAt))} – {dateFormat.format(new Date(assignment.endsAt))}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => setAssigning(assignment)}>Reemplazar</Button>
+                        {assignment.status === 'SUSPENDED' ? (
+                          <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'ACTIVE')}>Activar</Button>
+                        ) : assignment.status !== 'CANCELED' && (
+                          <Button size="sm" variant="outline" onClick={() => void changeStatus(assignment, 'SUSPENDED')}>Suspender</Button>
+                        )}
+                        {assignment.status !== 'CANCELED' && (
+                          <Button size="sm" variant="danger" onClick={() => void changeStatus(assignment, 'CANCELED')}>Cancelar</Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {editing !== undefined && <PlanFormDialog open plan={editing} onClose={() => setEditing(undefined)} />}
       {assigning !== undefined && <AssignPlanDialog open plans={plans} assignment={assigning} onClose={() => setAssigning(undefined)} />}
-      <Modal open={Boolean(deleting)} onClose={() => setDeleting(null)} eyebrow="Acción irreversible" title="Eliminar plan" description="El plan se desactivará y quedará eliminado lógicamente; no se borrará información histórica."><div className="space-y-5 p-6"><p className="text-sm">¿Confirmas que deseas eliminar <strong>{deleting?.name}</strong>? Si tiene asignaciones no canceladas, el backend rechazará la operación.</p>{actionError && <p className="rounded-md bg-danger-subtle p-3 text-sm text-danger">{actionError}</p>}<div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setDeleting(null)}>Volver</Button><Button variant="danger" onClick={() => void confirmDelete()} disabled={remove.isPending}>{remove.isPending ? 'Eliminando…' : 'Eliminar plan'}</Button></div></div></Modal>
+      <ResponsiveModal maxWidth="max-w-lg" open={Boolean(deleting)} onClose={() => setDeleting(null)} eyebrow="Acción irreversible" title="Eliminar plan" description="El plan se desactivará y quedará eliminado lógicamente; no se borrará información histórica."><div className="space-y-5 p-2 sm:p-4"><p className="text-sm">¿Confirmas que deseas eliminar <strong>{deleting?.name}</strong>? Si tiene asignaciones no canceladas, el backend rechazará la operación.</p>{actionError && <p className="rounded-md bg-danger-subtle p-3 text-sm text-danger">{actionError}</p>}<div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setDeleting(null)}>Volver</Button><Button variant="danger" onClick={() => void confirmDelete()} disabled={remove.isPending}>{remove.isPending ? 'Eliminando…' : 'Eliminar plan'}</Button></div></div></ResponsiveModal>
     </section>
   );
 }

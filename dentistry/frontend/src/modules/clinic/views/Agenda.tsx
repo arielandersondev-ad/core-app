@@ -18,14 +18,62 @@ import {
   AppointmentDto,
 } from "@/modules/clinic/api/appointments";
 import { Icons } from "@/shared/components/ui/Icons";
+import {
+  EmptyState,
+  Button,
+  MobileFloatingActionMenu,
+} from "@/shared/components/ui";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
-import { CreateAppointmentModal, RegisterPaymentModal } from "@/modules/clinic/components";
+import {
+  CreateAppointmentModal,
+  CreatePatientModal,
+  RegisterPaymentModal,
+  AppointmentDetailSheet,
+} from "@/modules/clinic/components";
 import {
   DentalWhatsAppContext,
   WhatsAppTemplateKey,
   normalizePhoneNumber,
 } from "@/shared/utils/whatsapp-generator";
+import { DEV_PERSONAS } from "@/features/dev-auth/types/personas";
+
+const formatLocalPhone = (phone?: string | null): string => {
+  if (!phone || phone === "-") return "";
+  return phone.replace(/^\+?(?:591)?[\s-]*/, "").trim();
+};
+
+function getDoctorDisplay(professionalId?: string) {
+  if (!professionalId) return null;
+  const pro = getProfessionalById(professionalId);
+  if (pro) return { name: pro.name, color: pro.color || "#3d7a46" };
+  if (professionalId === DEV_PERSONAS.practitioner.membershipId) {
+    return { name: DEV_PERSONAS.practitioner.name, color: "#3d7a46" };
+  }
+  if (professionalId === DEV_PERSONAS.owner.membershipId) {
+    return { name: DEV_PERSONAS.owner.name, color: "#6366f1" };
+  }
+  return { name: "Odontólogo asignado", color: "#3d7a46" };
+}
+
+function isPersonaAppointment(apt: Appointment, patient: any): boolean {
+  if (apt.patientType === "person") return true;
+  if (apt.patientType === "patient") return false;
+  if (apt.personName && !apt.patientName) return true;
+  if (
+    apt.notes &&
+    apt.notes.toLowerCase().includes("registro rápido de persona")
+  )
+    return true;
+  if (apt.notes && apt.notes.toLowerCase().includes("registro rápido"))
+    return true;
+  if (
+    patient?.notes &&
+    patient.notes.toLowerCase().includes("registro rápido de persona")
+  )
+    return true;
+  return false;
+}
 
 function addDays(dateStr: string, n: number) {
   const d = new Date(dateStr + "T12:00:00");
@@ -101,19 +149,25 @@ function mapDtoToAppointment(dto: AppointmentDto): Appointment {
       ? dto.services.map((s) => s.serviceId)
       : dto.serviceIds && dto.serviceIds.length > 0
         ? dto.serviceIds
-        : [dto.serviceId];
+        : dto.serviceId
+          ? [dto.serviceId]
+          : [];
 
   return {
     id: dto.id,
     patientId: dto.patientId,
-    professionalId: dto.practitionerMembershipId,
-    serviceId: dto.serviceId,
+    patientName: dto.patientName,
+    personName: dto.personName,
+    patientPhone: dto.patientPhone,
+    professionalId: dto.practitionerMembershipId || "",
+    serviceId: dto.serviceId || serviceIds[0] || "",
     serviceIds,
     date: dto.scheduledStartAt.slice(0, 10),
     startTime,
     endTime,
     status: statusMap[dto.status] ?? "programada",
     notes: dto.notes ?? "",
+    reason: dto.reason ?? undefined,
   };
 }
 
@@ -150,6 +204,11 @@ export default function Agenda({
 
   // Modals de creación integrados
   const [isCreateApptOpen, setIsCreateApptOpen] = useState(false);
+  const [isCreatePatientOpen, setIsCreatePatientOpen] = useState(false);
+  const [selectedDetailCitaId, setSelectedDetailCitaId] = useState<
+    string | null
+  >(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [paymentModalState, setPaymentModalState] = useState<{
     open: boolean;
     patientId?: string;
@@ -203,7 +262,7 @@ export default function Agenda({
       });
     } catch {
       setAppointmentsList((prev) =>
-        prev.map((item) => item.id === aptId ? apt : item),
+        prev.map((item) => (item.id === aptId ? apt : item)),
       );
     }
 
@@ -218,7 +277,11 @@ export default function Agenda({
     const svc = getServiceById(apt.serviceId);
     const pro = getProfessionalById(apt.professionalId);
 
-    if (!patient || !svc) return;
+    const patientName =
+      patient?.name || apt.patientName || apt.personName || "Paciente";
+    const patientPhone = patient?.phone || apt.patientPhone || "";
+    const serviceName =
+      svc?.name || (apt as any).serviceName || "Consulta odontológica";
 
     const dt = new Date(apt.date + "T12:00:00");
     const dateFormatted = dt.toLocaleDateString("es-BO", {
@@ -233,9 +296,9 @@ export default function Agenda({
     else if (apt.status === "completada") defaultTpl = "post_tratamiento";
 
     setWaContext({
-      patientName: patient.name,
-      patientPhone: patient.phone,
-      serviceName: svc.name,
+      patientName,
+      patientPhone,
+      serviceName,
       dateStr: dateFormatted,
       timeStr: apt.startTime,
       clinicName: "Dental Care Consultorio",
@@ -396,8 +459,6 @@ export default function Agenda({
               Hoy
             </button>
 
-
-
             <button
               type="button"
               onClick={() => setIsCreateApptOpen(true)}
@@ -519,7 +580,11 @@ export default function Agenda({
       </div>
 
       {/* ── CUERPO PRINCIPAL: FEED CRONOLÓGICO MÓVIL ── */}
-      {loadError && <p role="alert" className="text-xs text-red-600">{loadError}</p>}
+      {loadError && (
+        <p role="alert" className="text-xs text-red-600">
+          {loadError}
+        </p>
+      )}
       {viewMode === "feed" ? (
         <div className="flex flex-col gap-3">
           {isLoading ? (
@@ -527,34 +592,44 @@ export default function Agenda({
               Cargando agenda de citas...
             </div>
           ) : dayAppts.length === 0 ? (
-            <div className="p-10 text-center bg-[var(--surface)] border border-[var(--border)] rounded-2xl flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[var(--background)] flex items-center justify-center text-2xl">
-                🦷
-              </div>
-              <div>
-                <p className="font-display font-bold text-sm text-[var(--foreground)]">
-                  No hay citas en este horario o filtro
-                </p>
-                <p className="text-xs text-[var(--muted)] mt-0.5">
-                  El sillón está libre para nuevas reservas o urgencias
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCreateApptOpen(true)}
-                className="mt-2 h-9 px-4 bg-[var(--primary)] text-[var(--primary-foreground)] rounded-xl text-xs font-semibold hover:bg-[var(--primary-accent)] active:scale-95 shadow-xs transition-all"
-              >
-                + Agendar Cita
-              </button>
-            </div>
+            <EmptyState
+              icon={<span className="text-2xl">🦷</span>}
+              message="No hay citas en este horario o filtro"
+              description="El sillón está libre para nuevas reservas o urgencias"
+              action={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsCreateApptOpen(true)}
+                  className="rounded-xl shadow-xs"
+                >
+                  + Agendar Cita
+                </Button>
+              }
+              className="w-full justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-10"
+            />
           ) : (
             dayAppts.map((apt) => {
               const patient = getPatientById(apt.patientId);
               const svc = getServiceById(apt.serviceId);
-              const pro = getProfessionalById(apt.professionalId);
-              const cleanPhone = normalizePhoneNumber(
-                patient?.phone || "",
-                "591",
-              );
+              const doctor = getDoctorDisplay(apt.professionalId);
+              const isPerson = isPersonaAppointment(apt, patient);
+              const rawPhone = patient?.phone || apt.patientPhone || "";
+              const cleanPhone = normalizePhoneNumber(rawPhone, "591");
+              const displayPhone = formatLocalPhone(rawPhone);
+              const patientName =
+                patient?.name ||
+                apt.patientName ||
+                apt.personName ||
+                "Paciente / Contacto";
+              const svcName =
+                svc?.name ||
+                (apt as any).serviceName ||
+                "Consulta / Evaluación general";
+              const noteContent = (apt.reason || apt.notes || "").trim();
+              const cleanedNote = noteContent
+                .replace(/^Registro rápido de persona en cita:\s*/i, "")
+                .trim();
 
               return (
                 <div
@@ -580,9 +655,13 @@ export default function Agenda({
                           – {apt.endTime}
                         </span>
                       </div>
-                      {svc?.durationMin && (
+                      {svc?.durationMin ? (
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-[var(--background)] text-[var(--muted)] border border-[var(--border)]/70">
                           {svc.durationMin} min
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-[var(--background)] text-[var(--muted)] border border-[var(--border)]/70">
+                          30 min
                         </span>
                       )}
                     </div>
@@ -597,43 +676,103 @@ export default function Agenda({
                     </span>
                   </div>
 
-                  {/* Detalle del paciente y servicio */}
-                  <div className="space-y-1.5">
+                  {/* Detalle del paciente, contacto y servicio */}
+                  <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 space-y-1">
+                      <div className="min-w-0 space-y-1.5 flex-1">
+                        {/* a) Identidad y Tipo: Nombre completo + Badge sutil */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
                             type="button"
-                            onClick={() =>
-                              onNavigate("cita-detalle", { citaId: apt.id })
-                            }
-                            className="text-left font-display text-base font-bold text-[var(--foreground)] hover:text-[var(--primary)] transition-colors truncate"
+                            onClick={() => {
+                              setSelectedDetailCitaId(apt.id);
+                              setIsDetailSheetOpen(true);
+                            }}
+                            className="text-left font-display text-base font-bold text-[var(--foreground)] hover:text-[var(--primary)] transition-colors truncate cursor-pointer"
                           >
-                            {patient?.name}
+                            {patientName}
                           </button>
+                          {isPerson ? (
+                            <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[10px] font-medium px-2 py-0.5 rounded-md">
+                              Persona
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-medium px-2 py-0.5 rounded-md">
+                              Paciente
+                            </span>
+                          )}
+
+                          {/* b) Datos de Contacto Directo: Teléfono legible */}
+                          {displayPhone && (
+                            <a
+                              href={`tel:+${cleanPhone || displayPhone}`}
+                              className="inline-flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors font-mono ml-1"
+                              title={`Llamar a ${displayPhone}`}
+                            >
+                              <span className="w-3.5 h-3.5 flex items-center justify-center text-[var(--muted)]">
+                                {Icons.phoneCall}
+                              </span>
+                              <span>{displayPhone}</span>
+                            </a>
+                          )}
                         </div>
 
+                        {/* c) Doctor y Procedimiento */}
                         <div className="flex items-center gap-2 text-xs text-[var(--muted)] flex-wrap">
-                          <span className="font-medium text-[var(--foreground)]/80">
-                            {svc?.name || "Servicio no especificado"}
+                          <span className="font-medium text-[var(--foreground)]/85">
+                            {svcName}
                           </span>
-                          {pro && (
+                          <span className="text-[var(--border)]">·</span>
+                          {doctor ? (
                             <span className="inline-flex items-center gap-1.5 text-[var(--muted)]">
                               <span
-                                className="w-2 h-2 rounded-full"
+                                className="w-2 h-2 rounded-full shrink-0"
                                 style={{
-                                  backgroundColor: pro.color || "#3d7a46",
+                                  backgroundColor: doctor.color,
                                 }}
                               />
-                              <span>{pro.name}</span>
+                              <span>{doctor.name}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                              Por asignar
                             </span>
                           )}
                         </div>
+
+                        {/* d) Motivo / Nota Rápida */}
+                        {cleanedNote && (
+                          <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] truncate max-w-md pt-0.5">
+                            <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0 opacity-70">
+                              <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                              </svg>
+                            </span>
+                            <span className="truncate">{cleanedNote}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {svc?.price !== undefined && (
+                      {svc?.price !== undefined ? (
                         <span className="font-mono text-xs font-semibold text-[var(--muted)] flex-shrink-0 pt-0.5">
                           {formatCurrency(svc.price)}
+                        </span>
+                      ) : (
+                        <span className="font-mono text-xs font-semibold text-[var(--muted)] flex-shrink-0 pt-0.5">
+                          {formatCurrency(0)}
                         </span>
                       )}
                     </div>
@@ -646,19 +785,19 @@ export default function Agenda({
                       <button
                         type="button"
                         onClick={() => handleOpenWhatsApp(apt)}
-                        className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] hover:border-[var(--primary)]/30 text-[var(--foreground)] text-xs font-medium flex items-center gap-2 transition-all shadow-2xs active:scale-95"
+                        className="h-8 px-2 sm:px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] hover:border-[var(--primary)]/30 text-[var(--foreground)] text-xs font-medium flex items-center gap-1.5 transition-all shadow-2xs active:scale-95 cursor-pointer"
                         title="Enviar mensaje por WhatsApp"
                       >
                         <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                           {Icons.whatsappReal}
                         </span>
-                        <span>WhatsApp</span>
+                        <span className="hidden sm:inline">WhatsApp</span>
                       </button>
 
                       {cleanPhone && (
                         <a
                           href={`tel:+${cleanPhone}`}
-                          className="h-9 w-9 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
+                          className="h-8 w-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] flex items-center justify-center transition-all active:scale-95 shadow-2xs"
                           title={`Llamar a ${patient?.name || "paciente"}`}
                         >
                           <span className="w-4 h-4 flex items-center justify-center">
@@ -676,7 +815,7 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "confirmada")
                           }
-                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-8 px-2.5 sm:px-3 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
                         >
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
                             {Icons.check}
@@ -691,7 +830,7 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "en_sala")
                           }
-                          className="h-9 px-4 bg-[var(--primary-subtle)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] active:scale-95 text-[var(--primary)] rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-[var(--primary)]/20 shadow-2xs transition-all"
+                          className="h-8 px-2.5 sm:px-3 bg-[var(--primary-subtle)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)] active:scale-95 text-[var(--primary)] rounded-lg text-xs font-semibold flex items-center gap-1 border border-[var(--primary)]/20 shadow-2xs transition-all cursor-pointer"
                         >
                           <span>A sala de espera</span>
                         </button>
@@ -703,7 +842,7 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "en_curso")
                           }
-                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-8 px-2.5 sm:px-3 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
                         >
                           <span>Pasar al sillón</span>
                         </button>
@@ -715,7 +854,7 @@ export default function Agenda({
                           onClick={() =>
                             handleQuickStatusChange(apt.id, "completada")
                           }
-                          className="h-9 px-4 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all"
+                          className="h-8 px-2.5 sm:px-3 bg-[var(--primary)] hover:bg-[var(--primary-accent)] active:scale-95 text-[var(--primary-foreground)] rounded-lg text-xs font-semibold flex items-center gap-1 shadow-xs transition-all cursor-pointer"
                         >
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
                             {Icons.check}
@@ -727,10 +866,11 @@ export default function Agenda({
                       {apt.status === "completada" && (
                         <button
                           type="button"
-                          onClick={() =>
-                            onNavigate("cita-detalle", { citaId: apt.id })
-                          }
-                          className="h-9 px-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--foreground)] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
+                          onClick={() => {
+                            setSelectedDetailCitaId(apt.id);
+                            setIsDetailSheetOpen(true);
+                          }}
+                          className="h-8 px-2.5 sm:px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--background)] text-[var(--foreground)] text-xs font-semibold flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
                         >
                           <span>Ver Ficha</span>
                           <span className="w-3.5 h-3.5 flex items-center justify-center">
@@ -758,9 +898,10 @@ export default function Agenda({
                       {apt.status !== "completada" && (
                         <button
                           type="button"
-                          onClick={() =>
-                            onNavigate("cita-detalle", { citaId: apt.id })
-                          }
+                          onClick={() => {
+                            setSelectedDetailCitaId(apt.id);
+                            setIsDetailSheetOpen(true);
+                          }}
                           className="h-9 w-9 rounded-xl text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--background)] flex items-center justify-center transition-all"
                           title="Ver detalle completo"
                         >
@@ -816,13 +957,32 @@ export default function Agenda({
                 const height = Math.max((duration / 60) * 80 - 4, 36);
                 const patient = getPatientById(apt.patientId);
                 const svc = getServiceById(apt.serviceId);
+                const doctor = getDoctorDisplay(apt.professionalId);
+                const isPerson = isPersonaAppointment(apt, patient);
+                const rawPhone = patient?.phone || apt.patientPhone || "";
+                const displayPhone = formatLocalPhone(rawPhone);
+                console.log({ patient });
+                const patientName =
+                  patient?.name ||
+                  apt.patientName ||
+                  apt.personName ||
+                  "Paciente / Contacto";
+                const svcName =
+                  svc?.name ||
+                  (apt as any).serviceName ||
+                  "Consulta / Evaluación general";
+                const noteContent = (apt.reason || apt.notes || "").trim();
+                const cleanedNote = noteContent
+                  .replace(/^Registro rápido de persona en cita:\s*/i, "")
+                  .trim();
 
                 return (
                   <div
                     key={apt.id}
-                    onClick={() =>
-                      onNavigate("cita-detalle", { citaId: apt.id })
-                    }
+                    onClick={() => {
+                      setSelectedDetailCitaId(apt.id);
+                      setIsDetailSheetOpen(true);
+                    }}
                     style={{ top: `${top}px`, height: `${height}px` }}
                     className="absolute left-2 right-2 rounded-xl p-2.5 cursor-pointer border border-[var(--border)] bg-[var(--surface-elevated)] hover:border-[var(--primary)]/60 shadow-2xs hover:shadow-xs flex items-center justify-between transition-all group overflow-hidden"
                   >
@@ -841,13 +1001,48 @@ export default function Agenda({
                                   : "bg-stone-300 dark:bg-stone-600"
                       }`}
                     />
-                    <div className="min-w-0 pl-1.5">
-                      <p className="text-xs font-display font-bold text-[var(--foreground)] truncate group-hover:text-[var(--primary)] transition-colors">
-                        {patient?.name}
-                      </p>
-                      <p className="text-[10px] text-[var(--muted)] truncate">
-                        {svc?.name} · {apt.startTime} - {apt.endTime}
-                      </p>
+                    <div className="min-w-0 pl-1.5 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-xs font-display font-bold text-[var(--foreground)] truncate group-hover:text-[var(--primary)] transition-colors">
+                          {patientName}
+                        </p>
+                        {isPerson ? (
+                          <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-[9px] font-medium px-1.5 py-0.2 rounded">
+                            Persona
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-medium px-1.5 py-0.2 rounded">
+                            Paciente
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted)] truncate">
+                        <span className="truncate">{svcName}</span>
+                        <span>·</span>
+                        {doctor ? (
+                          <span className="truncate">{doctor.name}</span>
+                        ) : (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                            Por asignar
+                          </span>
+                        )}
+                        <span>·</span>
+                        <span className="font-mono">
+                          {apt.startTime} - {apt.endTime}
+                        </span>
+                        {displayPhone && (
+                          <>
+                            <span>·</span>
+                            <span className="font-mono">📞 {displayPhone}</span>
+                          </>
+                        )}
+                      </div>
+                      {cleanedNote && (
+                        <p className="text-[10px] text-[var(--muted)] truncate max-w-md flex items-center gap-1">
+                          <span className="opacity-70 shrink-0">📝</span>
+                          <span className="truncate">{cleanedNote}</span>
+                        </p>
+                      )}
                     </div>
                     <span
                       className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md ml-2 flex-shrink-0 ${statusColors[apt.status]}`}
@@ -862,14 +1057,29 @@ export default function Agenda({
         </div>
       )}
 
-      {/* ── BOTÓN FLOTANTE MÓVIL (FAB) ── */}
-      <button
-        onClick={() => setIsCreateApptOpen(true)}
-        className="sm:hidden fixed bottom-20 right-4 w-14 h-14 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] shadow-xl flex items-center justify-center text-2xl font-bold active:scale-90 transition-transform z-30"
-        aria-label="Nueva cita rápida"
-      >
-        +
-      </button>
+      {/* ── MENÚ FLOTANTE DE ACCIONES RÁPIDAS MÓVIL (Speed-Dial FAB) ── */}
+      <MobileFloatingActionMenu
+        ariaLabel="Acciones rápidas de agenda"
+        className="md:hidden"
+        actions={[
+          {
+            label: "Nueva Cita",
+            icon: Icons.calendar,
+            variant: "primary",
+            onClick: () => setIsCreateApptOpen(true),
+          },
+          {
+            label: "Nuevo Paciente",
+            icon: Icons.users,
+            onClick: () => setIsCreatePatientOpen(true),
+          },
+          {
+            label: "Cobro Rápido",
+            icon: Icons.dollarSign,
+            onClick: () => setPaymentModalState({ open: true }),
+          },
+        ]}
+      />
 
       {/* ── MODAL WHATSAPP ── */}
       <WhatsAppModal
@@ -888,7 +1098,8 @@ export default function Agenda({
             const pid = paymentPromptAppointment.patientId;
             const sid = paymentPromptAppointment.serviceId;
             const svcPrice = getServiceById(sid)?.price || 0;
-            const svcName = getServiceById(sid)?.name || "Atención Odontológica";
+            const svcName =
+              getServiceById(sid)?.name || "Atención Odontológica";
             setPaymentPromptAppointment(null);
             setPaymentModalState({
               open: true,
@@ -924,6 +1135,12 @@ export default function Agenda({
         }}
       />
 
+      {/* ── MODAL NUEVO PACIENTE ── */}
+      <CreatePatientModal
+        open={isCreatePatientOpen}
+        onClose={() => setIsCreatePatientOpen(false)}
+      />
+
       {/* ── MODAL REGISTRAR PAGO ── */}
       <RegisterPaymentModal
         open={paymentModalState.open}
@@ -934,6 +1151,52 @@ export default function Agenda({
         onClose={() => setPaymentModalState({ open: false })}
         onSuccess={() => {
           setPaymentModalState({ open: false });
+        }}
+      />
+
+      {/* ── BOTTOMSHEET DETALLE DE CITA (READ-ONLY + KEBAB MENU) ── */}
+      <AppointmentDetailSheet
+        open={isDetailSheetOpen}
+        citaId={selectedDetailCitaId}
+        onClose={() => {
+          setIsDetailSheetOpen(false);
+          setSelectedDetailCitaId(null);
+        }}
+        onStatusUpdated={(id, newStatus) => {
+          setAppointmentsList((prev) =>
+            prev.map((a) =>
+              a.id === id
+                ? { ...a, status: statusMap[newStatus] ?? "programada" }
+                : a,
+            ),
+          );
+        }}
+        onOpenPayment={(id, patientId, amount) => {
+          setIsDetailSheetOpen(false);
+          setPaymentModalState({
+            open: true,
+            patientId,
+            amount,
+          });
+        }}
+        onOpenWhatsApp={(
+          patientName,
+          patientPhone,
+          serviceName,
+          dateStr,
+          timeStr,
+        ) => {
+          setIsDetailSheetOpen(false);
+          setWaContext({
+            patientName,
+            patientPhone,
+            serviceName,
+            dateStr,
+            timeStr,
+            clinicName: "Dental Care Consultorio",
+          });
+          setWaTemplate("confirmacion");
+          setIsWaOpen(true);
         }}
       />
     </div>

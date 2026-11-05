@@ -7,7 +7,12 @@ import { OrganizationSelect } from '../components/organization-select';
 import { RoleSelectorPanel } from '../components/role-selector-panel';
 import { PermissionEditorPanel } from '../components/permission-editor-panel';
 import { AccessFormDialog } from '../components/access-form-dialog';
-import { Icons } from '@/shared/components/ui/Icons';
+import {
+  EmptyState,
+  Icons,
+  CompactStatSummary,
+  type CompactStatItem,
+} from '@/shared/components/ui';
 import { usePermissions, useReplaceRolePermissions, useRolePermissions } from '../hooks/use-permissions';
 import { CreateRoleDialog } from '../components/create-role-dialog';
 import { CreatePermissionDialog } from '../components/create-permission-dialog';
@@ -64,7 +69,7 @@ export default function RolePage() {
     : savedPermissionIds;
 
   const query = useRoles(organizationId);
-  const roles = query.data ?? [];
+  const roles = useMemo(() => query.data ?? [], [query.data]);
   const selectedRole = roles.find((role) => role.id === selectedRoleId);
   const hasChanges = useMemo(
     () => selectedPermissionIds.size !== savedPermissionIds.size
@@ -136,6 +141,33 @@ export default function RolePage() {
       : 'No se pudieron guardar los permisos del rol.'
     : null;
 
+  // Compact metrics for mobile strip (< 1024px)
+  const roleCompactMetrics: CompactStatItem[] = useMemo(
+    () => [
+      {
+        id: 'total',
+        label: 'Total Roles',
+        value: roles.length,
+        icon: Icons.shield,
+      },
+      {
+        id: 'org',
+        label: 'De Org.',
+        value: roles.filter((r) => r.organizationId !== null).length,
+        variant: 'success',
+        icon: Icons.building,
+      },
+      {
+        id: 'global',
+        label: 'Globales',
+        value: roles.filter((r) => r.organizationId === null).length,
+        variant: 'warning',
+        icon: Icons.lock,
+      },
+    ],
+    [roles]
+  );
+
   return (
     <section className="mx-auto w-full max-w-[1440px] p-4 md:p-8">
       <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
@@ -158,9 +190,12 @@ export default function RolePage() {
       </header>
 
       {!organizationId && (
-        <div className="mt-8 flex min-h-72 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-surface px-6 text-center">
-          <h2 className="font-display text-lg font-semibold">Selecciona una organización</h2>
-          <p className="mt-1 max-w-md text-sm text-muted">Elige una organización para consultar sus roles y comenzar a configurar permisos.</p>
+        <div className="mt-8 flex min-h-72 rounded-lg border border-dashed border-border bg-surface">
+          <EmptyState
+            message="Selecciona una organización"
+            description="Elige una organización para consultar sus roles y comenzar a configurar permisos."
+            icon={<span className="[&>svg]:size-5">{Icons.shield}</span>}
+          />
         </div>
       )}
 
@@ -182,7 +217,7 @@ export default function RolePage() {
           <button
             type="button"
             onClick={() => void query.refetch()}
-            className="ml-2 underline"
+            className="ml-2 underline font-semibold"
           >
             Reintentar
           </button>
@@ -190,53 +225,63 @@ export default function RolePage() {
       )}
 
       {organizationId && !query.isPending && !error && (
-        <div className="mt-8 grid items-start gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
-          <RoleSelectorPanel
-            roles={roles}
-            selectedRoleId={selectedRoleId}
-            onSelectRole={handleSelectRole}
-            onCreateRole={() => setIsCreateRoleOpen(true)}
-          />
-          {selectedRole && (queryPermissions.isPending || queryRolePermissions.isPending) ? (
-            <div role="status" className="h-96 animate-pulse rounded-lg border border-border bg-surface">
-              <span className="sr-only">Cargando permisos…</span>
-            </div>
-          ) : selectedRole && permissionsError ? (
-            <div role="alert" className="rounded-md border border-danger/30 bg-danger-subtle p-4 text-sm text-danger">
-              {permissionsError}
-              <button
-                type="button"
-                onClick={() => void Promise.all([queryPermissions.refetch(), queryRolePermissions.refetch()])}
-                className="ml-2 underline"
-              >
-                Reintentar
-              </button>
-            </div>
-          ) : (
-            <PermissionEditorPanel
-              roleName={selectedRole?.name}
-              roleCode={selectedRole?.code}
-              readOnly={selectedRole?.organizationId === null}
-              isEditing={isEditingPermissions}
-              permissionGroups={permissionGroups}
-              selectedPermissionIds={selectedPermissionIds}
-              totalPermissions={queryPermissions.data?.length ?? 0}
-              hasChanges={hasChanges}
-              isSaving={replaceRolePermissions.isPending}
-              saveError={savePermissionsError}
-              onToggle={handleTogglePermission}
-              onStartEditing={() => {
-                replaceRolePermissions.reset();
-                setIsEditingPermissions(true);
-              }}
-              onDiscard={handleDiscardPermissions}
-              onSave={handleSavePermissions}
-              onEditRole={() => setDialog({ kind: 'role', name: selectedRole?.name, code: selectedRole?.code })}
-              onCreatePermission={() => setIsCreatePermissionOpen(true)}
-              onEditPermission={(code, name) => setDialog({ kind: 'permission', code, name })}
+        <>
+          <div className="mt-6 lg:hidden">
+            <CompactStatSummary
+              items={roleCompactMetrics}
+              variant="pill"
+              className="py-1"
             />
-          )}
-        </div>
+          </div>
+
+          <div className="mt-6 grid items-start gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
+            <RoleSelectorPanel
+              roles={roles}
+              selectedRoleId={selectedRoleId}
+              onSelectRole={handleSelectRole}
+              onCreateRole={() => setIsCreateRoleOpen(true)}
+            />
+            {selectedRole && (queryPermissions.isPending || queryRolePermissions.isPending) ? (
+              <div role="status" className="h-96 animate-pulse rounded-lg border border-border bg-surface">
+                <span className="sr-only">Cargando permisos…</span>
+              </div>
+            ) : selectedRole && permissionsError ? (
+              <div role="alert" className="rounded-md border border-danger/30 bg-danger-subtle p-4 text-sm text-danger">
+                {permissionsError}
+                <button
+                  type="button"
+                  onClick={() => void Promise.all([queryPermissions.refetch(), queryRolePermissions.refetch()])}
+                  className="ml-2 underline font-semibold"
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : (
+              <PermissionEditorPanel
+                roleName={selectedRole?.name}
+                roleCode={selectedRole?.code}
+                readOnly={selectedRole?.organizationId === null}
+                isEditing={isEditingPermissions}
+                permissionGroups={permissionGroups}
+                selectedPermissionIds={selectedPermissionIds}
+                totalPermissions={queryPermissions.data?.length ?? 0}
+                hasChanges={hasChanges}
+                isSaving={replaceRolePermissions.isPending}
+                saveError={savePermissionsError}
+                onToggle={handleTogglePermission}
+                onStartEditing={() => {
+                  replaceRolePermissions.reset();
+                  setIsEditingPermissions(true);
+                }}
+                onDiscard={handleDiscardPermissions}
+                onSave={handleSavePermissions}
+                onEditRole={() => setDialog({ kind: 'role', name: selectedRole?.name, code: selectedRole?.code })}
+                onCreatePermission={() => setIsCreatePermissionOpen(true)}
+                onEditPermission={(code, name) => setDialog({ kind: 'permission', code, name })}
+              />
+            )}
+          </div>
+        </>
       )}
 
       {selectedOrganization && (
@@ -253,22 +298,20 @@ export default function RolePage() {
       {selectedOrganization && (
         <CreateRoleDialog
           open={isCreateRoleOpen}
+          onClose={() => setIsCreateRoleOpen(false)}
           organizationId={selectedOrganization.id}
           organizationName={selectedOrganization.name}
-          onClose={() => setIsCreateRoleOpen(false)}
         />
       )}
 
-      {isCreatePermissionOpen && (
-        <CreatePermissionDialog
-          open
-          onClose={() => setIsCreatePermissionOpen(false)}
-        />
-      )}
+      <CreatePermissionDialog
+        open={isCreatePermissionOpen}
+        onClose={() => setIsCreatePermissionOpen(false)}
+      />
 
       {dialog && (
         <AccessFormDialog
-          open
+          open={Boolean(dialog)}
           kind={dialog.kind}
           initialName={dialog.name}
           initialCode={dialog.code}

@@ -1,7 +1,8 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export class ListDentalServicesQueryDto {
-  @IsUUID()
+  @IsUUID('all')
   organizationId: string;
 
   @IsOptional()
@@ -14,5 +15,36 @@ export class ListDentalServicesQueryDto {
 
   @IsOptional()
   @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
   search?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(Number.MAX_SAFE_INTEGER)
+  page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 15;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset?: number;
 }

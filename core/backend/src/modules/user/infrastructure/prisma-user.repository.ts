@@ -16,6 +16,14 @@ import type {
 import { PasswordHasher } from '../domain/services/password-hasher.js';
 import { isPostgresUniqueViolation } from '../../../common/infrastructure/postgres-error.js';
 import { MembershipAlreadyExistsError } from '../domain/errors/membership-already-exists.error.js';
+import { or } from '@prisma/orm-postgres/orm-client';
+import {
+  createPaginatedResult,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  type PaginatedResult,
+} from '../../../common/pagination/pagination.js';
+import type { ListUsersQueryDto } from '../presentation/dto/list-users.query.dto.js';
 
 const MEMBERSHIP_ACTIVE_USER_ORG_UNIQUE_INDEX =
   'membership_org_user_uidx_97d1e537';
@@ -58,9 +66,54 @@ export class PrismaUserRepository extends UserRepository {
     super();
   }
 
-  async listUsers(): Promise<UserListItem[]> {
-    const [users, memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
-      this.prisma.orm.core.User.all(),
+  async listUsers(query?: ListUsersQueryDto): Promise<PaginatedResult<UserListItem>> {
+    let userQuery = this.prisma.orm.core.User.where({
+      deletedAt: null,
+    });
+
+    if (query?.status && query.status !== "all") {
+      userQuery = userQuery.where({ status: query.status.toUpperCase() });
+    }
+
+    const search = query?.search?.trim();
+    if (search) {
+      const pattern = '%' + search.replace(/[\\%_]/g, (m) => '\\' + m) + '%';
+      userQuery = userQuery.where((u) =>
+        or(
+          u.firstName.ilike(pattern),
+          u.lastName.ilike(pattern),
+          u.email.ilike(pattern),
+          u.phone.ilike(pattern),
+        ),
+      );
+    }
+
+    const limit = Math.max(1, query?.limit ?? query?.pageSize ?? DEFAULT_PAGE_SIZE);
+    let page = Math.max(1, query?.page ?? DEFAULT_PAGE);
+    let skip: number;
+
+    if (query?.offset !== undefined && query.offset >= 0) {
+      skip = query.offset;
+      page = Math.floor(skip / limit) + 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const { totalItems } = await userQuery.aggregate((aggregate) => ({
+      totalItems: aggregate.count(),
+    }));
+
+    const paginatedUsers = await userQuery
+      .orderBy([
+        (u) => u.lastName.asc(),
+        (u) => u.firstName.asc(),
+        (u) => u.id.asc(),
+      ])
+      .skip(skip)
+      .take(limit)
+      .all();
+
+    const [memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
       this.prisma.orm.core.OrganizationMembership.all(),
       this.prisma.orm.core.Organization.all(),
       this.prisma.orm.core.Branch.all(),
@@ -71,7 +124,8 @@ export class PrismaUserRepository extends UserRepository {
     const organizationsById = new Map(organizations.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
     const branchesById = new Map(branches.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
     const rolesById = new Map(roles.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
-    return users.filter((user) => !user.deletedAt).map((user) => ({
+
+    const items: UserListItem[] = paginatedUsers.map((user) => ({
       id: String(user.id),
       email: user.email,
       firstName: user.firstName,
@@ -82,7 +136,7 @@ export class PrismaUserRepository extends UserRepository {
         .filter((membership) => !membership.deletedAt && String(membership.userId) === String(user.id))
         .map((membership) => ({
           organizationId: String(membership.organizationId),
-          organizationName: organizationsById.get(String(membership.organizationId))?.name ?? 'Organización no disponible',
+          organizationName: organizationsById.get(String(membership.organizationId))?.name ?? "Organización no disponible",
           branchNames: membershipBranches
             .filter((link) => !link.deletedAt && String(link.membershipId) === String(membership.id))
             .map((link) => branchesById.get(String(link.branchId))?.name)
@@ -93,6 +147,12 @@ export class PrismaUserRepository extends UserRepository {
             .filter((name): name is string => Boolean(name)),
         })),
     }));
+
+    return createPaginatedResult(
+      items,
+      { page, limit, pageSize: limit, offset: skip },
+      totalItems,
+    );
   }
 
   async listUsersByOrganizationScope(

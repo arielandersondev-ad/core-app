@@ -92,7 +92,17 @@ export class PrismaPatientRepository extends PatientRepository {
       );
     }
 
-    const { page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE } = filters;
+    const limit = Math.max(1, filters.limit ?? filters.pageSize ?? DEFAULT_PAGE_SIZE);
+    let page = Math.max(1, filters.page ?? DEFAULT_PAGE);
+    let skip: number;
+
+    if (filters.offset !== undefined && filters.offset >= 0) {
+      skip = filters.offset;
+      page = Math.floor(skip / limit) + 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
     const { totalItems } = await query.aggregate((aggregate) => ({
       totalItems: aggregate.count(),
     }));
@@ -105,13 +115,13 @@ export class PrismaPatientRepository extends PatientRepository {
         (patient) => patient.firstName.asc(),
         (patient) => patient.id.asc(),
       ])
-      .skip((page - 1) * pageSize)
-      .take(pageSize)
+      .skip(skip)
+      .take(limit)
       .all();
 
     return createPaginatedResult(
       rows.map(toPatientEntity),
-      { page, pageSize },
+      { page, limit, pageSize: limit, offset: skip },
       totalItems,
     );
   }

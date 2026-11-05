@@ -7,17 +7,23 @@ import {
 } from 'class-validator';
 
 export class CreateAppointmentDto {
-  @IsUUID()
+  @IsUUID('all')
   branchId: string;
 
-  @IsUUID()
-  patientId: string;
-
-  @IsUUID()
-  practitionerMembershipId: string;
+  @IsOptional()
+  @IsUUID('all')
+  patientId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
+  personId?: string;
+
+  @IsOptional()
+  @IsUUID('all')
+  practitionerMembershipId?: string;
+
+  @IsOptional()
+  @IsUUID('all')
   serviceId?: string;
 
   @IsOptional()
@@ -26,7 +32,7 @@ export class CreateAppointmentDto {
   serviceIds?: string[];
 
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   treatmentId?: string;
 
   @IsISO8601()
