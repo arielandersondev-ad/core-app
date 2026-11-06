@@ -13,9 +13,13 @@ import {
 } from "@/modules/clinic/__mocks__/data";
 import {
   fetchAppointments,
-  updateAppointmentStatus,
-  AppointmentDto,
+  type AppointmentDto,
 } from "@/modules/clinic/api/appointments";
+import {
+  useAppointments,
+  useUpdateAppointmentStatus,
+  useCancelAppointment,
+} from "@/modules/clinic/hooks";
 import { Icons } from "@/shared/components/ui/Icons";
 import {
   EmptyState,
@@ -213,13 +217,27 @@ export default function Agenda({
   const [proFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"feed" | "grid">("feed");
-  const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // TanStack Query: Consulta reactiva declarativa de citas por fecha
+  const {
+    data: appointmentsData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAppointments({ date });
+
+  // Mutaciones reactivas de TanStack Query
+  const updateStatusMutation = useUpdateAppointmentStatus();
+  const cancelAppointmentMutation = useCancelAppointment();
+
+  // Mapeo declarativo de DTOs del servidor a modelos locales de vista
+  const appointmentsList = useMemo(() => {
+    if (!appointmentsData) return [];
+    return appointmentsData.map(mapDtoToAppointment);
+  }, [appointmentsData]);
 
   const changeDate = (nextDate: string) => {
-    setIsLoading(true);
-    setLoadError(null);
     setDate(nextDate);
   };
 
@@ -250,42 +268,12 @@ export default function Agenda({
     concept?: string;
   }>({ open: false });
 
-  useEffect(() => {
-    let isMounted = true;
-    fetchAppointments({
-      date,
-    })
-      .then((dtos) => {
-        if (isMounted) {
-          setAppointmentsList(dtos.map(mapDtoToAppointment));
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setAppointmentsList([]);
-          setLoadError("No se pudo cargar la agenda. Inténtalo nuevamente.");
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [date]);
-
   const handleRefreshAppointments = async () => {
-    try {
-      const dtos = await fetchAppointments({ date });
-      setAppointmentsList(dtos.map(mapDtoToAppointment));
-      setLoadError(null);
-    } catch {
-      setLoadError("No se pudo actualizar la agenda.");
-    }
+    // Recargar citas por fecha: fetchAppointments({ date }) mediante TanStack Query refetch
+    await refetch();
   };
 
-  // Actualizar estado de cita de forma reactiva en UI y backend
+  // Actualizar estado de cita de forma reactiva en UI y backend con TanStack Query
   const handleQuickStatusChange = async (
     aptId: string,
     newStatus: QuickStatus,
@@ -293,20 +281,16 @@ export default function Agenda({
     const apt = appointmentsList.find((a) => a.id === aptId);
     if (!apt) return;
 
-    // Actualización optimista local
-    setAppointmentsList((prev) =>
-      prev.map((a) => (a.id === aptId ? { ...a, status: newStatus } : a)),
-    );
-
     try {
-      await updateAppointmentStatus(aptId, {
-        status: backendStatusMap[newStatus],
-        notes: apt.notes,
+      await updateStatusMutation.mutateAsync({
+        id: aptId,
+        payload: {
+          status: backendStatusMap[newStatus],
+          notes: apt.notes,
+        },
       });
-    } catch {
-      setAppointmentsList((prev) =>
-        prev.map((item) => (item.id === aptId ? apt : item)),
-      );
+    } catch (err) {
+      console.error("Error al actualizar estado de la cita:", err);
     }
 
     // Si la cita pasó a completada, abrir prompt de cobro automático
@@ -661,18 +645,55 @@ export default function Agenda({
         )}
       </div>
 
-      {/* ── CUERPO PRINCIPAL: FEED CRONOLÓGICO MÓVIL ── */}
-      {loadError && (
-        <p role="alert" className="text-xs text-red-600">
-          {loadError}
-        </p>
+      {/* ── CUERPO PRINCIPAL: ESTADO DE ERROR DECLARATIVO ── */}
+      {isError && (
+        <div
+          role="alert"
+          className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-base shrink-0">⚠️</span>
+            <span>
+              No pudimos conectar con el servidor para obtener las citas. Inténtalo nuevamente.
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void refetch()}
+            className="shrink-0 rounded-xl border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/15"
+          >
+            Reintentar
+          </Button>
+        </div>
       )}
+
       {viewMode === "feed" ? (
         <PullToRefresh onRefresh={handleRefreshAppointments}>
           <div className="flex flex-col gap-3 h-full">
             {isLoading ? (
-              <div className="p-8 text-center text-xs font-mono text-[var(--muted)] animate-pulse bg-[var(--surface)] border border-[var(--border)] rounded-2xl">
-                Cargando agenda de citas...
+              <div className="flex flex-col gap-3 p-4">
+                <div className="p-6 text-center text-xs font-mono text-[var(--muted)] animate-pulse bg-[var(--surface)] border border-[var(--border)] rounded-2xl flex flex-col items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+                  <span>Cargando agenda de citas...</span>
+                </div>
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex gap-3 sm:gap-4 items-stretch opacity-60 animate-pulse"
+                  >
+                    <div className="w-12 sm:w-14 flex flex-col items-center pt-3.5 shrink-0">
+                      <div className="h-4 w-10 bg-[var(--border)] rounded" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[var(--border)] mt-2" />
+                      <div className="w-px flex-1 bg-[var(--border)] my-1.5" />
+                    </div>
+                    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 flex flex-col gap-2.5">
+                      <div className="h-4 w-1/3 bg-[var(--border)] rounded" />
+                      <div className="h-3 w-1/2 bg-[var(--border)]/60 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : dayAppts.length === 0 ? (
               <EmptyState
@@ -1321,10 +1342,8 @@ export default function Agenda({
         open={isCreateApptOpen}
         initialDate={date}
         onClose={() => setIsCreateApptOpen(false)}
-        onSuccess={(newAppt) => {
-          if (newAppt.date === date) {
-            setAppointmentsList((prev) => [newAppt, ...prev]);
-          }
+        onSuccess={() => {
+          void refetch();
         }}
       />
 
@@ -1358,14 +1377,8 @@ export default function Agenda({
           setIsDetailSheetOpen(false);
           setSelectedDetailCitaId(null);
         }}
-        onStatusUpdated={(id, newStatus) => {
-          setAppointmentsList((prev) =>
-            prev.map((a) =>
-              a.id === id
-                ? { ...a, status: statusMap[newStatus] ?? "programada" }
-                : a,
-            ),
-          );
+        onStatusUpdated={(_id, _newStatus) => {
+          void refetch();
         }}
         onOpenPayment={(id, patientId, amount) => {
           setIsDetailSheetOpen(false);
