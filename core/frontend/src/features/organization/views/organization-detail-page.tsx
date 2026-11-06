@@ -1,14 +1,17 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge, Avatar, Separator, Icons } from '@/shared/components/ui';
-import { getOrgById, getBranchesByOrg, getUsersByOrg, formatDate, planLabels } from '@/shared/data/platform.mock';
+import { useOrganizations, useBranches } from '../hooks/use-organizations';
+import { useUsers } from '@/features/user/hooks/use-users';
+import { formatDate, planLabels } from '@/shared/utils/format';
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="px-4 py-3 md:px-0 md:py-2">
       <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="text-sm text-foreground mt-0.5 break-all">{value}</p>
+      <p className="text-sm text-foreground mt-0.5 break-all">{value || '-'}</p>
     </div>
   );
 }
@@ -18,7 +21,55 @@ export default function OrganizationDetail() {
   const router = useRouter();
   const orgId = params.id;
 
-  const org = getOrgById(orgId);
+  const { data: orgs = [], isLoading: loadingOrgs } = useOrganizations();
+  const { data: rawBranches = [], isLoading: loadingBranches } = useBranches(orgId);
+  const { data: rawUsers = [] } = useUsers();
+
+  const org = useMemo(() => orgs.find((o) => o.id === orgId), [orgs, orgId]);
+
+  const branches = useMemo(() => {
+    return rawBranches.map((b) => ({
+      id: b.id,
+      name: b.name,
+      city: (b as unknown as { city?: string }).city || 'Principal',
+      address: (b as unknown as { address?: string }).address || 'Dirección central',
+      manager: (b as unknown as { manager?: string }).manager || 'Sin asignar',
+      usersCount: (b as unknown as { usersCount?: number }).usersCount || 0,
+      status: b.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+    }));
+  }, [rawBranches]);
+
+  const orgUsers = useMemo(() => {
+    return rawUsers
+      .filter((u) => u.memberships?.some((m) => m.organizationId === orgId))
+      .map((u) => ({
+        id: u.id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+        email: u.email,
+        status: u.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+      }));
+  }, [rawUsers, orgId]);
+
+  const activeBranches = useMemo(
+    () => branches.filter((b) => b.status === 'active'),
+    [branches]
+  );
+
+  const plan = 'enterprise';
+  const planColors: Record<string, string> = {
+    enterprise: 'text-primary bg-primary-subtle',
+    professional: 'text-secondary bg-secondary/10',
+    starter: 'text-muted bg-border',
+  };
+
+  if (loadingOrgs || loadingBranches) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando organización...</p>
+      </div>
+    );
+  }
+
   if (!org) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -26,16 +77,6 @@ export default function OrganizationDetail() {
       </div>
     );
   }
-
-  const branches = getBranchesByOrg(orgId);
-  const users = getUsersByOrg(orgId);
-  const activeBranches = branches.filter((b) => b.status === 'active');
-
-  const planColors: Record<string, string> = {
-    enterprise: 'text-primary bg-primary-subtle',
-    professional: 'text-secondary bg-secondary/10',
-    starter: 'text-muted bg-border',
-  };
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-4 md:p-8 gap-6">
@@ -47,17 +88,17 @@ export default function OrganizationDetail() {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-1">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">{org.name}</h2>
-            <Badge variant={org.status === 'active' ? 'active' : 'inactive'}>
-              {org.status === 'active' ? 'Activo' : 'Inactivo'}
+            <Badge variant={org.status.toLowerCase() === 'active' ? 'active' : 'inactive'}>
+              {org.status.toLowerCase() === 'active' ? 'Activo' : 'Inactivo'}
             </Badge>
             <span
-              className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider rounded-xs ${planColors[org.plan]}`}
+              className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider rounded-xs ${planColors[plan]}`}
             >
-              {planLabels[org.plan]}
+              {planLabels[plan]}
             </span>
           </div>
           <p className="text-sm text-muted font-mono">
-            {org.legalName} · {org.taxId}
+            {org.legalName || org.name} {org.taxId ? `· ${org.taxId}` : ''}
           </p>
         </div>
         <button
@@ -71,8 +112,8 @@ export default function OrganizationDetail() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-3 md:gap-4">
         {[
-          { label: 'Sucursales', value: org.branchesCount },
-          { label: 'Usuarios', value: org.usersCount },
+          { label: 'Sucursales', value: branches.length },
+          { label: 'Usuarios', value: orgUsers.length },
           { label: 'Sucursales activas', value: activeBranches.length },
         ].map((stat) => (
           <div
@@ -110,7 +151,7 @@ export default function OrganizationDetail() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-background/50">
-                    {['Nombre', 'Dirección', 'Encargado', 'Usuarios', 'Estado', ''].map((h) => (
+                    {['Nombre', 'Ciudad', 'Encargado', 'Usuarios', 'Estado', ''].map((h) => (
                       <th
                         key={h}
                         className="text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-widest text-muted"
@@ -192,7 +233,7 @@ export default function OrganizationDetail() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-mono uppercase tracking-widest text-muted">
-                Usuarios ({users.length})
+                Usuarios ({orgUsers.length})
               </p>
               <button
                 onClick={() => router.push('/users/create')}
@@ -202,7 +243,7 @@ export default function OrganizationDetail() {
               </button>
             </div>
             <div className="bg-surface border border-border rounded-md overflow-hidden">
-              {users.slice(0, 5).map((user, i) => (
+              {orgUsers.slice(0, 5).map((user, i) => (
                 <div key={user.id}>
                   <button
                     onClick={() => router.push(`/users/${user.id}`)}
@@ -219,20 +260,20 @@ export default function OrganizationDetail() {
                       {user.status === 'active' ? 'Activo' : 'Inac.'}
                     </Badge>
                   </button>
-                  {i < Math.min(users.length, 5) - 1 && <Separator />}
+                  {i < Math.min(orgUsers.length, 5) - 1 && <Separator />}
                 </div>
               ))}
-              {users.length > 5 && (
+              {orgUsers.length > 5 && (
                 <>
                   <Separator />
                   <div className="px-4 py-3 text-center">
                     <p className="text-xs text-muted-foreground font-mono">
-                      +{users.length - 5} más
+                      +{orgUsers.length - 5} más
                     </p>
                   </div>
                 </>
               )}
-              {users.length === 0 && (
+              {orgUsers.length === 0 && (
                 <div className="py-4 text-center text-sm text-muted">No hay usuarios</div>
               )}
             </div>
@@ -246,15 +287,11 @@ export default function OrganizationDetail() {
               Datos fiscales
             </p>
             <div className="flex flex-col gap-3">
-              <InfoRow label="Razón social" value={org.legalName} />
+              <InfoRow label="Razón social" value={org.legalName || org.name} />
               <Separator />
-              <InfoRow label="RUC / NIT" value={org.taxId} />
+              <InfoRow label="RUC / NIT" value={org.taxId || 'No registrado'} />
               <Separator />
-              <InfoRow label="Dirección" value={`${org.address}, ${org.city}`} />
-              <Separator />
-              <InfoRow label="Teléfono" value={org.phone} />
-              <Separator />
-              <InfoRow label="Correo" value={org.email} />
+              <InfoRow label="País" value={org.country || 'No especificado'} />
               <Separator />
               <InfoRow label="Registrado" value={formatDate(org.createdAt)} />
             </div>
@@ -265,9 +302,9 @@ export default function OrganizationDetail() {
               Plan actual
             </p>
             <span
-              className={`inline-flex items-center px-2.5 py-1 text-xs font-mono font-medium uppercase tracking-wider rounded-xs ${planColors[org.plan]}`}
+              className={`inline-flex items-center px-2.5 py-1 text-xs font-mono font-medium uppercase tracking-wider rounded-xs ${planColors[plan]}`}
             >
-              {planLabels[org.plan]}
+              {planLabels[plan]}
             </span>
             <button className="mt-3 w-full h-8 text-xs font-semibold text-primary border border-primary/30 rounded-sm hover:bg-primary-subtle transition-colors">
               Cambiar plan

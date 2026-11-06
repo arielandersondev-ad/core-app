@@ -1,20 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Input, Button, Card, Icons } from '@/shared/components/ui';
-import { getUserById } from '@/shared/data/platform.mock';
+import { useUsers } from '@/features/user/hooks/use-users';
 
 export default function ChangeEmail() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = params.id;
-  const user = getUserById(userId);
+
+  const { data: users = [], isLoading } = useUsers();
+  const rawUser = useMemo(() => users.find((u) => u.id === userId), [users, userId]);
+
+  const user = useMemo(() => {
+    if (!rawUser) return null;
+    return {
+      id: rawUser.id,
+      name: `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || rawUser.email,
+      email: rawUser.email,
+    };
+  }, [rawUser]);
 
   const [newEmail, setNewEmail] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando usuario...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

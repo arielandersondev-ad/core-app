@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Input,
@@ -9,18 +9,27 @@ import {
   Card,
   SectionHeader,
 } from '@/shared/components/ui';
-import {
-  getOrgById,
-  getUsersByOrg,
-} from '@/shared/data/platform.mock';
+import { useOrganizations } from '../hooks/use-organizations';
+import { useUsers } from '@/features/user/hooks/use-users';
 
 export default function CreateBranch() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const orgId = params.id;
 
-  const org = getOrgById(orgId);
-  const orgUsers = org ? getUsersByOrg(orgId) : [];
+  const { data: orgs = [], isLoading: loadingOrgs } = useOrganizations();
+  const { data: rawUsers = [] } = useUsers();
+
+  const org = useMemo(() => orgs.find((o) => o.id === orgId), [orgs, orgId]);
+
+  const orgUsers = useMemo(() => {
+    return rawUsers
+      .filter((u) => u.memberships?.some((m) => m.organizationId === orgId))
+      .map((u) => ({
+        id: u.id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+      }));
+  }, [rawUsers, orgId]);
 
   const [form, setForm] = useState({
     name: '',
@@ -55,6 +64,14 @@ export default function CreateBranch() {
     }
     setSuccess(true);
   };
+
+  if (loadingOrgs) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando organización...</p>
+      </div>
+    );
+  }
 
   if (success) {
     return (
