@@ -186,7 +186,7 @@ describe("PullToRefresh & usePullToRefresh Unit Tests (HAG-57)", () => {
         </PullToRefresh>
       );
 
-      expect(html).toContain("relative w-full overflow-hidden bg-slate-50 touch-pan-y");
+      expect(html).toContain("relative w-full h-full overflow-hidden bg-slate-50 touch-pan-y");
     });
   });
 
