@@ -14,6 +14,22 @@ import {
   rawSql,
 } from '@prisma/orm-postgres/migration';
 
+const personPatientForeignKeyExists = `
+  SELECT 1
+  FROM pg_constraint AS c
+  WHERE c.contype = 'f'
+    AND c.conrelid = to_regclass('"dentistry"."Person"')
+    AND c.confrelid = to_regclass('"dentistry"."Patient"')
+    AND c.conkey = ARRAY[
+      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'organizationId'),
+      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'convertedToPatientId')
+    ]::smallint[]
+    AND c.confkey = ARRAY[
+      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'organizationId'),
+      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'id')
+    ]::smallint[]
+`;
+
 export default class M extends Migration<Start, End> {
   override readonly startContractJson = startContract;
   override readonly endContractJson = endContract;
@@ -141,6 +157,63 @@ export default class M extends Migration<Start, End> {
             'person_phone_not_empty_64d7f03d',
             '"phone" IS NULL OR length(btrim("phone")) > 0',
           ),
+        ],
+      }),
+      rawSql({
+        id: 'reconcile-person-check-constraints',
+        label: 'Align existing Person checks with the contract',
+        operationClass: 'additive',
+        summary: 'Replace equivalent legacy checks with the contract-named checks without changing their rules',
+        target: {
+          id: 'postgres',
+          details: {
+            schema: 'dentistry',
+            objectType: 'table',
+            name: 'Person',
+          },
+        },
+        precheck: [
+          {
+            description: 'ensure the Person table exists before aligning checks',
+            sql: `SELECT to_regclass('"dentistry"."Person"') IS NOT NULL AS "result"`,
+            params: [],
+          },
+        ],
+        execute: [
+          {
+            description: 'replace the legacy Person check names with their contract definitions',
+            sql: `DO $checks$
+            BEGIN
+              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_first_name_not_empty') THEN
+                ALTER TABLE "dentistry"."Person" DROP CONSTRAINT "person_first_name_not_empty";
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_first_name_not_empty_9cd62522') THEN
+                ALTER TABLE "dentistry"."Person" ADD CONSTRAINT "person_first_name_not_empty_9cd62522" CHECK (length(btrim("firstName")) > 0);
+              END IF;
+
+              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_last_name_valid') THEN
+                ALTER TABLE "dentistry"."Person" DROP CONSTRAINT "person_last_name_valid";
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_last_name_not_empty_1fc0ba58') THEN
+                ALTER TABLE "dentistry"."Person" ADD CONSTRAINT "person_last_name_not_empty_1fc0ba58" CHECK ("lastName" IS NULL OR length(btrim("lastName")) > 0);
+              END IF;
+
+              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_phone_valid') THEN
+                ALTER TABLE "dentistry"."Person" DROP CONSTRAINT "person_phone_valid";
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND conname = 'person_phone_not_empty_64d7f03d') THEN
+                ALTER TABLE "dentistry"."Person" ADD CONSTRAINT "person_phone_not_empty_64d7f03d" CHECK ("phone" IS NULL OR length(btrim("phone")) > 0);
+              END IF;
+            END;
+            $checks$;`,
+          },
+        ],
+        postcheck: [
+          {
+            description: 'verify all contract-named Person checks exist',
+            sql: `SELECT count(*) = 3 AS "result" FROM pg_constraint WHERE conrelid = to_regclass('"dentistry"."Person"') AND contype = 'c' AND conname = ANY(ARRAY['person_first_name_not_empty_9cd62522', 'person_last_name_not_empty_1fc0ba58', 'person_phone_not_empty_64d7f03d'])`,
+            params: [],
+          },
         ],
       }),
       this.createTable({
@@ -346,15 +419,54 @@ export default class M extends Migration<Start, End> {
           onDelete: 'restrict',
         },
       }),
-      this.addForeignKey({
-        schema: 'dentistry',
-        table: 'Person',
-        foreignKey: {
-          name: 'Person_organizationId_convertedToPatientId_fkey',
-          columns: ['organizationId', 'convertedToPatientId'],
-          references: { schema: 'dentistry', table: 'Patient', columns: ['organizationId', 'id'] },
-          onDelete: 'restrict',
+      rawSql({
+        id: 'ensure-person-patient-organization-foreign-key',
+        label: 'Ensure the organization-scoped Person to Patient foreign key',
+        operationClass: 'additive',
+        summary: 'Keep an equivalent existing composite foreign key or add it when absent',
+        target: {
+          id: 'postgres',
+          details: {
+            schema: 'dentistry',
+            objectType: 'foreignKey',
+            name: 'Person_organizationId_convertedToPatientId_fkey',
+            table: 'Person',
+          },
         },
+        precheck: [
+          {
+            description: 'ensure the canonical constraint name is available if no equivalent FK exists',
+            sql: `SELECT NOT EXISTS (
+              SELECT 1 FROM pg_constraint
+              WHERE conrelid = to_regclass('"dentistry"."Person"')
+                AND conname = 'Person_organizationId_convertedToPatientId_fkey'
+            ) AS "result"`,
+            params: [],
+          },
+        ],
+        execute: [
+          {
+            description: 'add the organization-scoped Person to Patient FK only if no equivalent FK exists',
+            sql: `DO $fk$
+            BEGIN
+              IF NOT EXISTS (${personPatientForeignKeyExists}) THEN
+                ALTER TABLE "dentistry"."Person"
+                ADD CONSTRAINT "Person_organizationId_convertedToPatientId_fkey"
+                FOREIGN KEY ("organizationId", "convertedToPatientId")
+                REFERENCES "dentistry"."Patient" ("organizationId", "id")
+                ON DELETE RESTRICT;
+              END IF;
+            END;
+            $fk$;`,
+          },
+        ],
+        postcheck: [
+          {
+            description: 'verify the organization-scoped Person to Patient FK exists',
+            sql: `SELECT EXISTS (${personPatientForeignKeyExists}) AS "result"`,
+            params: [],
+          },
+        ],
       }),
       this.addForeignKey({
         schema: 'dentistry',

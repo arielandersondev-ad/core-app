@@ -8514,17 +8514,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['patientId'];
                 };
               };
-              readonly persons: {
-                readonly to: {
-                  readonly namespace: 'dentistry' & NamespaceId;
-                  readonly model: 'Person';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['convertedToPatientId'];
-                };
-              };
             };
             readonly storage: {
               readonly table: 'Patient';
@@ -9007,17 +8996,6 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['id'];
                   readonly targetFields: readonly ['personId'];
-                };
-              };
-              readonly convertedToPatient: {
-                readonly to: {
-                  readonly namespace: 'dentistry' & NamespaceId;
-                  readonly model: 'Patient';
-                };
-                readonly cardinality: 'N:1';
-                readonly on: {
-                  readonly localFields: readonly ['organizationId', 'convertedToPatientId'];
-                  readonly targetFields: readonly ['organizationId', 'id'];
                 };
               };
             };

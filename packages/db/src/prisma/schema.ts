@@ -1014,7 +1014,6 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           payments: rel.hasMany(Payment, { by: "patientId" }),
           clinicalFiles: rel.hasMany(ClinicalFile, { by: "patientId" }),
           healthProfile: rel.hasOne(PatientHealthProfile, { by: "patientId" }),
-          persons: rel.hasMany(Person, { by: "convertedToPatientId" }),
         })
         .sql(({ cols, constraints }) => ({
           table: "Patient",
@@ -1871,10 +1870,6 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       }))
         .relations({
           appointments: rel.hasMany(Appointment, { by: "personId" }),
-          convertedToPatient: rel.belongsTo(Patient, {
-            from: ["organizationId", "convertedToPatientId"],
-            to: ["organizationId", "id"],
-          }),
         })
         .sql(({ cols, constraints }) => ({
           table: "Person",

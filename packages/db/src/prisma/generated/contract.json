@@ -4556,21 +4556,6 @@
                   "namespace": "dentistry"
                 }
               },
-              "persons": {
-                "cardinality": "1:N",
-                "on": {
-                  "localFields": [
-                    "id"
-                  ],
-                  "targetFields": [
-                    "convertedToPatientId"
-                  ]
-                },
-                "to": {
-                  "model": "Person",
-                  "namespace": "dentistry"
-                }
-              },
               "practitionerAssignments": {
                 "cardinality": "1:N",
                 "on": {
@@ -5469,23 +5454,6 @@
                 },
                 "to": {
                   "model": "Appointment",
-                  "namespace": "dentistry"
-                }
-              },
-              "convertedToPatient": {
-                "cardinality": "N:1",
-                "on": {
-                  "localFields": [
-                    "organizationId",
-                    "convertedToPatientId"
-                  ],
-                  "targetFields": [
-                    "organizationId",
-                    "id"
-                  ]
-                },
-                "to": {
-                  "model": "Patient",
                   "namespace": "dentistry"
                 }
               }

@@ -142,6 +142,40 @@
     ]
   },
   {
+    "id": "reconcile-person-check-constraints",
+    "label": "Align existing Person checks with the contract",
+    "operationClass": "additive",
+    "summary": "Replace equivalent legacy checks with the contract-named checks without changing their rules",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "Person"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure the Person table exists before aligning checks",
+        "sql": "SELECT to_regclass('\"dentistry\".\"Person\"') IS NOT NULL AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "replace the legacy Person check names with their contract definitions",
+        "sql": "DO $checks$\n            BEGIN\n              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_first_name_not_empty') THEN\n                ALTER TABLE \"dentistry\".\"Person\" DROP CONSTRAINT \"person_first_name_not_empty\";\n              END IF;\n              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_first_name_not_empty_9cd62522') THEN\n                ALTER TABLE \"dentistry\".\"Person\" ADD CONSTRAINT \"person_first_name_not_empty_9cd62522\" CHECK (length(btrim(\"firstName\")) > 0);\n              END IF;\n\n              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_last_name_valid') THEN\n                ALTER TABLE \"dentistry\".\"Person\" DROP CONSTRAINT \"person_last_name_valid\";\n              END IF;\n              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_last_name_not_empty_1fc0ba58') THEN\n                ALTER TABLE \"dentistry\".\"Person\" ADD CONSTRAINT \"person_last_name_not_empty_1fc0ba58\" CHECK (\"lastName\" IS NULL OR length(btrim(\"lastName\")) > 0);\n              END IF;\n\n              IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_phone_valid') THEN\n                ALTER TABLE \"dentistry\".\"Person\" DROP CONSTRAINT \"person_phone_valid\";\n              END IF;\n              IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND conname = 'person_phone_not_empty_64d7f03d') THEN\n                ALTER TABLE \"dentistry\".\"Person\" ADD CONSTRAINT \"person_phone_not_empty_64d7f03d\" CHECK (\"phone\" IS NULL OR length(btrim(\"phone\")) > 0);\n              END IF;\n            END;\n            $checks$;"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify all contract-named Person checks exist",
+        "sql": "SELECT count(*) = 3 AS \"result\" FROM pg_constraint WHERE conrelid = to_regclass('\"dentistry\".\"Person\"') AND contype = 'c' AND conname = ANY(ARRAY['person_first_name_not_empty_9cd62522', 'person_last_name_not_empty_1fc0ba58', 'person_phone_not_empty_64d7f03d'])",
+        "params": []
+      }
+    ]
+  },
+  {
     "id": "table.TreatmentProcedure",
     "label": "Create table \"TreatmentProcedure\"",
     "summary": "Creates table \"TreatmentProcedure\"",
@@ -1083,9 +1117,10 @@
     ]
   },
   {
-    "id": "foreignKey.Person.Person_organizationId_convertedToPatientId_fkey",
-    "label": "Add foreign key \"Person_organizationId_convertedToPatientId_fkey\" on \"Person\"",
+    "id": "ensure-person-patient-organization-foreign-key",
+    "label": "Ensure the organization-scoped Person to Patient foreign key",
     "operationClass": "additive",
+    "summary": "Keep an equivalent existing composite foreign key or add it when absent",
     "target": {
       "id": "postgres",
       "details": {
@@ -1097,30 +1132,22 @@
     },
     "precheck": [
       {
-        "description": "ensure FK \"Person_organizationId_convertedToPatientId_fkey\" does not exist",
-        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
-        "params": [
-          "Person_organizationId_convertedToPatientId_fkey",
-          "dentistry",
-          "\"dentistry\".\"Person\""
-        ]
+        "description": "ensure the canonical constraint name is available if no equivalent FK exists",
+        "sql": "SELECT NOT EXISTS (\n              SELECT 1 FROM pg_constraint\n              WHERE conrelid = to_regclass('\"dentistry\".\"Person\"')\n                AND conname = 'Person_organizationId_convertedToPatientId_fkey'\n            ) AS \"result\"",
+        "params": []
       }
     ],
     "execute": [
       {
-        "description": "add FK \"Person_organizationId_convertedToPatientId_fkey\"",
-        "sql": "ALTER TABLE \"dentistry\".\"Person\"\nADD CONSTRAINT \"Person_organizationId_convertedToPatientId_fkey\"\nFOREIGN KEY (\"organizationId\", \"convertedToPatientId\")\nREFERENCES \"dentistry\".\"Patient\" (\"organizationId\", \"id\")\nON DELETE RESTRICT"
+        "description": "add the organization-scoped Person to Patient FK only if no equivalent FK exists",
+        "sql": "DO $fk$\n            BEGIN\n              IF NOT EXISTS (\n  SELECT 1\n  FROM pg_constraint AS c\n  WHERE c.contype = 'f'\n    AND c.conrelid = to_regclass('\"dentistry\".\"Person\"')\n    AND c.confrelid = to_regclass('\"dentistry\".\"Patient\"')\n    AND c.conkey = ARRAY[\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'organizationId'),\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'convertedToPatientId')\n    ]::smallint[]\n    AND c.confkey = ARRAY[\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'organizationId'),\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'id')\n    ]::smallint[]\n) THEN\n                ALTER TABLE \"dentistry\".\"Person\"\n                ADD CONSTRAINT \"Person_organizationId_convertedToPatientId_fkey\"\n                FOREIGN KEY (\"organizationId\", \"convertedToPatientId\")\n                REFERENCES \"dentistry\".\"Patient\" (\"organizationId\", \"id\")\n                ON DELETE RESTRICT;\n              END IF;\n            END;\n            $fk$;"
       }
     ],
     "postcheck": [
       {
-        "description": "verify FK \"Person_organizationId_convertedToPatientId_fkey\" exists",
-        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
-        "params": [
-          "Person_organizationId_convertedToPatientId_fkey",
-          "dentistry",
-          "\"dentistry\".\"Person\""
-        ]
+        "description": "verify the organization-scoped Person to Patient FK exists",
+        "sql": "SELECT EXISTS (\n  SELECT 1\n  FROM pg_constraint AS c\n  WHERE c.contype = 'f'\n    AND c.conrelid = to_regclass('\"dentistry\".\"Person\"')\n    AND c.confrelid = to_regclass('\"dentistry\".\"Patient\"')\n    AND c.conkey = ARRAY[\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'organizationId'),\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.conrelid AND attname = 'convertedToPatientId')\n    ]::smallint[]\n    AND c.confkey = ARRAY[\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'organizationId'),\n      (SELECT attnum FROM pg_attribute WHERE attrelid = c.confrelid AND attname = 'id')\n    ]::smallint[]\n) AS \"result\"",
+        "params": []
       }
     ]
   },
