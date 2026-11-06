@@ -10,6 +10,7 @@ import {
   cancelAppointment,
   AppointmentDto,
 } from "@/modules/clinic/api/appointments";
+import { useAppointmentDetail } from "@/modules/clinic/hooks";
 import { fetchPatientById } from "@/features/patient/services/patient.service";
 import { fetchDentalServices, DentalServiceDto } from "@/modules/clinic/api/services";
 import { normalizePhoneNumber } from "@/shared/utils/whatsapp-generator";
@@ -87,6 +88,10 @@ export function AppointmentDetailSheet({
   const [servicesList, setServicesList] = useState<DentalServiceDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // TanStack Query hook
+  const { data: queryAppointment, error: queryError, refetch: refetchAppointment } =
+    useAppointmentDetail(open && citaId ? citaId : "");
 
   // Kebab menu state (3 vertical dots)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -480,12 +485,44 @@ export function AppointmentDetailSheet({
       {/* CUERPO DEL BOTTOMSHEET: 100% DATOS DE LECTURA */}
       <div className="flex flex-col gap-4 text-xs">
         {isLoading ? (
-          <div className="p-8 text-center text-xs font-mono text-[var(--muted)] animate-pulse">
-            Cargando información clínica de la cita...
+          <div className="flex flex-col gap-3.5 py-2 animate-pulse">
+            <div className="p-3 rounded-xl border border-[var(--border)]/70 bg-[var(--surface-subtle)] space-y-2">
+              <div className="h-4 bg-[var(--border)]/50 rounded w-1/3" />
+              <div className="h-3 bg-[var(--border)]/30 rounded w-1/2" />
+            </div>
+            <div className="p-3 rounded-xl border border-[var(--border)]/70 bg-[var(--surface-subtle)] space-y-2">
+              <div className="h-4 bg-[var(--border)]/50 rounded w-2/5" />
+              <div className="h-3 bg-[var(--border)]/30 rounded w-3/4" />
+            </div>
+            <div className="p-3 rounded-xl border border-[var(--border)]/70 bg-[var(--surface-subtle)] space-y-2">
+              <div className="h-4 bg-[var(--border)]/50 rounded w-1/4" />
+              <div className="h-3 bg-[var(--border)]/30 rounded w-full" />
+            </div>
           </div>
         ) : errorMessage ? (
-          <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 text-rose-600">
-            {errorMessage}
+          <div
+            role="alert"
+            className="p-5 rounded-xl border border-rose-500/25 bg-rose-500/5 text-center flex flex-col items-center gap-2.5"
+          >
+            <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center text-sm font-bold">
+              ⚠️
+            </div>
+            <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+              {errorMessage}
+            </p>
+            <p className="text-[11px] text-[var(--muted)]">
+              No fue posible obtener los datos actualizados de la cita.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMessage(null);
+                refetchAppointment();
+              }}
+              className="mt-1 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs font-semibold hover:bg-[var(--surface-subtle)] transition-colors"
+            >
+              Reintentar
+            </button>
           </div>
         ) : (
           <>
