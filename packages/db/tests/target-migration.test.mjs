@@ -44,11 +44,12 @@ async function fixture() {
 }
 
 test('emitted operation, readable SQL and pinned snapshots agree', () => {
-  assert.equal(sql, buildTargetMigration(before, after));
+  const normalizedSql = sql.replace(/\r\n/g, '\n');
+  assert.equal(normalizedSql, buildTargetMigration(before, after).replace(/\r\n/g, '\n'));
   const ops = read(`../migrations/app/${migrationName}/ops.json`);
   assert.equal(ops.length, 1);
-  assert.equal(ops[0].execute[0].sql, sql);
-  assert.doesNotMatch(sql, /DROP TABLE|CASCADE|UPDATE prisma_contract|DELETE FROM|TRUNCATE/i);
+  assert.equal(ops[0].execute[0].sql.replace(/\r\n/g, '\n'), normalizedSql);
+  assert.doesNotMatch(normalizedSql, /DROP TABLE|CASCADE|UPDATE prisma_contract|DELETE FROM|TRUNCATE/i);
 });
 
 test('real PostgreSQL migration preserves facts and enforces the target schema', async t => {

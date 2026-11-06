@@ -450,14 +450,20 @@ test(
           assert.deepEqual(first.pagination, {
             page: 1,
             pageSize: 20,
+            limit: 20,
             totalItems: 45,
+            total: 45,
             totalPages: 3,
+            hasMore: true,
           });
           assert.deepEqual(third.pagination, {
             page: 3,
             pageSize: 20,
+            limit: 20,
             totalItems: 45,
+            total: 45,
             totalPages: 3,
+            hasMore: false,
           });
           const all = await patients.findByFilters({
             ...criteria,
@@ -477,8 +483,11 @@ test(
           assert.deepEqual(outside.pagination, {
             page: 4,
             pageSize: 20,
+            limit: 20,
             totalItems: 45,
+            total: 45,
             totalPages: 3,
+            hasMore: false,
           });
           const filtered = await patients.findByFilters({
             ...criteria,
@@ -491,8 +500,11 @@ test(
           assert.deepEqual(filtered.pagination, {
             page: 2,
             pageSize: 3,
+            limit: 3,
             totalItems: 7,
+            total: 7,
             totalPages: 3,
+            hasMore: true,
           });
           const empty = await patients.findByFilters({
             organizationId,
@@ -500,7 +512,19 @@ test(
           });
           assert.deepEqual(empty, {
             items: [],
-            pagination: { page: 1, pageSize: 20, totalItems: 0, totalPages: 0 },
+            total: 0,
+            page: 1,
+            limit: 20,
+            hasMore: false,
+            pagination: {
+              page: 1,
+              pageSize: 20,
+              limit: 20,
+              totalItems: 0,
+              total: 0,
+              totalPages: 0,
+              hasMore: false,
+            },
           });
         },
       );
