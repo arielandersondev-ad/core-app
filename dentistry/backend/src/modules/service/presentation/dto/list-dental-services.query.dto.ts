@@ -2,8 +2,9 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export class ListDentalServicesQueryDto {
+  @IsOptional()
   @IsUUID('all')
-  organizationId: string;
+  organizationId?: string;
 
   @IsOptional()
   @IsString()

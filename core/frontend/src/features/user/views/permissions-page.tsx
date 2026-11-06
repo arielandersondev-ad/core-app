@@ -1,20 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Toggle, Button, Card, Separator } from '@/shared/components/ui';
-import { getUserById, type Permission, MODULES } from '@/shared/data/platform.mock';
+import { useUsers } from '@/features/user/hooks/use-users';
+import { type Permission, MODULES } from '@/shared/utils/format';
 
 export default function Permissions() {
   const params = useParams<{ id: string }>();
   const userId = params.id;
-  const user = getUserById(userId);
 
-  const [permissions, setPermissions] = useState<Permission[]>(
-    user?.permissions ??
-      MODULES.map((m) => ({ module: m, view: false, create: false, edit: false, delete: false }))
+  const { data: users = [], isLoading } = useUsers();
+  const rawUser = useMemo(() => users.find((u) => u.id === userId), [users, userId]);
+
+  const user = useMemo(() => {
+    if (!rawUser) return null;
+    return {
+      id: rawUser.id,
+      name: `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || rawUser.email,
+      email: rawUser.email,
+    };
+  }, [rawUser]);
+
+  const [permissions, setPermissions] = useState<Permission[]>(() =>
+    MODULES.map((m) => ({ module: m, view: false, create: false, edit: false, delete: false }))
   );
   const [saved, setSaved] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando permisos...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -61,60 +80,44 @@ export default function Permissions() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full gap-5">
-      <p className="text-sm text-muted-foreground">
-        Configura los accesos de <strong className="text-foreground">{user.name}</strong> a los módulos del sistema.
-      </p>
-
-      {/* Encabezados de columnas */}
-      <div className="hidden md:flex items-center px-4">
-        <div className="flex-1" />
-        {actions.map((a) => (
-          <div key={a.key} className="w-20 text-center">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{a.label}</p>
-          </div>
-        ))}
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Permisos granulares para <strong className="text-foreground">{user.name}</strong>.
+            Los cambios sobrescriben los permisos base del rol asignado.
+          </p>
+        </div>
+        {saved && (
+          <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-xs">
+            ✓ Guardado
+          </span>
+        )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {permissions.map((perm) => {
-          const allOn = perm.view && perm.create && perm.edit && perm.delete;
+          const allActive = perm.view && perm.create && perm.edit && perm.delete;
           return (
-            <Card key={perm.module} className="overflow-hidden">
-              <div className="flex items-center px-4 py-2.5 bg-muted/50">
-                <p className="flex-1 text-xs font-display font-semibold text-foreground">
-                  {perm.module}
-                </p>
+            <Card key={perm.module} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">{perm.module}</p>
                 <button
-                  onClick={() => toggleAll(perm.module, !allOn)}
-                  className={`text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-xs transition-colors ${
-                    allOn ? 'bg-primary text-primary-foreground' : 'bg-border text-muted-foreground'
-                  }`}
+                  type="button"
+                  onClick={() => toggleAll(perm.module, !allActive)}
+                  className="text-[11px] font-mono text-primary hover:underline mt-0.5"
                 >
-                  {allOn ? 'Todo activo' : 'Activar todo'}
+                  {allActive ? 'Desmarcar todos' : 'Marcar todos'}
                 </button>
               </div>
-              <Separator />
-              {/* Vista móvil (< 768px): grid con label de cada acción */}
-              <div className="grid grid-cols-2 gap-2 p-3 md:hidden">
-                {actions.map((a) => (
-                  <div key={a.key} className="flex items-center justify-between rounded-md bg-background/50 p-2 border border-border/50">
-                    <span className="text-xs text-muted-foreground font-medium">{a.label}</span>
-                    <Toggle
-                      checked={perm[a.key]}
-                      onChange={(v) => update(perm.module, a.key, v)}
-                    />
-                  </div>
-                ))}
-              </div>
 
-              {/* Vista desktop (>= 768px) */}
-              <div className="hidden md:flex items-center px-4 py-3">
-                <div className="flex-1" />
-                {actions.map((a) => (
-                  <div key={a.key} className="w-12 md:w-20 flex justify-center">
+              {/* Controles: responsive con etiquetas en móvil */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:flex items-center gap-3 md:gap-6 pt-2 md:pt-0 border-t md:border-t-0 border-border">
+                {actions.map(({ key, label }) => (
+                  <div key={key} className="flex items-center justify-between md:justify-start gap-2 bg-muted/40 md:bg-transparent p-2 md:p-0 rounded-xs">
+                    <span className="text-xs text-muted-foreground md:hidden">{label}</span>
                     <Toggle
-                      checked={perm[a.key]}
-                      onChange={(v) => update(perm.module, a.key, v)}
+                      checked={perm[key]}
+                      onChange={(v) => update(perm.module, key, v)}
                     />
                   </div>
                 ))}
@@ -124,19 +127,10 @@ export default function Permissions() {
         })}
       </div>
 
-      <div className="flex gap-3 mt-2">
-        {saved ? (
-          <div className="flex-1 h-10 flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            Cambios guardados
-          </div>
-        ) : (
-          <Button onClick={() => setSaved(true)} fullWidth size="lg">
-            Guardar permisos
-          </Button>
-        )}
+      <div className="flex justify-end gap-3 pt-2">
+        <Button onClick={() => setSaved(true)} size="lg">
+          Guardar cambios
+        </Button>
       </div>
     </div>
   );

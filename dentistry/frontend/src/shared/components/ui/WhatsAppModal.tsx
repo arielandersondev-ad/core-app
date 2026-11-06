@@ -32,12 +32,15 @@ export function WhatsAppModal({
 
   // Historial de navegador (Back en móvil / popstate)
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
   const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
   const pushedHistoryRef = useRef(false);
   const closedByPopStateRef = useRef(false);
   const unmountCleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    isOpenRef.current = isOpen;
+  }, [onClose, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

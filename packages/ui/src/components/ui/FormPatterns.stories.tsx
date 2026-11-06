@@ -2,10 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Input } from "./Input";
 import { Combobox } from "./Combobox";
-import { ReadonlyField } from "./ReadonlyField";
 import { DatePicker } from "./DatePicker";
 import { TimePicker } from "./TimePicker";
-import { FormSectionHeader } from "./FormSectionHeader";
 import { Button } from "./Button";
 import { Icons } from "./Icons";
 import { formatCurrency } from "../../utils/formatters";
@@ -17,7 +15,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          "Guía y estándar de diseño para formularios en Core y Dentistry. Establece la altura uniforme (size='sm' / 36px), bordes redondeados consistentes (`rounded-lg`), selectores compactos con búsqueda (`Combobox`), selectores híbridos de fecha y hora (`DatePicker` y `TimePicker` con soporte para escritura directa o popover visual), y diferenciación estricta de datos de solo lectura (`ReadonlyField`).",
+          "Guía y estándar de diseño para formularios en Core y Dentistry. Establece la altura uniforme (size='sm' / 36px), bordes redondeados consistentes (`rounded-lg`), selectores compactos con búsqueda (`Combobox`), selectores híbridos de fecha y hora (`DatePicker` y `TimePicker` con soporte para escritura directa o popover visual), y diferenciación estricta de datos de solo lectura.",
       },
     },
   },
@@ -55,13 +53,23 @@ export const FormularioClinicoEstandar: StoryObj = {
           </span>
         </div>
 
-        {/* Sección 1: Destinatario de la Cita (Sección Crucial Destacada) */}
+        {/* Sección 1: Destinatario de la Cita */}
         <div className="bg-[var(--surface-subtle)] border-2 border-[var(--border)] rounded-2xl p-4 space-y-3 shadow-2xs">
-          <FormSectionHeader
-            step={1}
-            title="Destinatario de la Cita"
-            description="Selecciona a quién se le asignará la atención odontológica"
-          />
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--border)]/70 pb-2.5">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <span className="w-5.5 h-5.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs mt-0.5">
+                1
+              </span>
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold text-[var(--foreground)] leading-tight">
+                  Destinatario de la Cita
+                </h4>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-snug">
+                  Selecciona a quién se le asignará la atención odontológica
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Selector de 2 Cards interactivas prominentes */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -201,13 +209,26 @@ export const FormularioClinicoEstandar: StoryObj = {
 
         {/* Sección 2: Atención Odontológica y Horario */}
         <div className="space-y-3 pt-1">
-          <FormSectionHeader
-            step={2}
-            title="Atención Odontológica y Horario"
-            badge="Requerido"
-            badgeVariant="primary"
-            description="Asigna el odontólogo tratante y define la fecha con horario de inicio"
-          />
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--border)]/70 pb-2.5">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <span className="w-5.5 h-5.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs mt-0.5">
+                2
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-xs sm:text-sm font-bold text-[var(--foreground)] leading-tight">
+                    Atención Odontológica y Horario
+                  </h4>
+                  <span className="text-[9px] sm:text-[10px] font-mono uppercase px-1.5 py-0.5 rounded leading-none bg-[var(--primary)]/15 text-[var(--primary)] font-semibold">
+                    Requerido
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-snug">
+                  Asigna el odontólogo tratante y define la fecha con horario de inicio
+                </p>
+              </div>
+            </div>
+          </div>
 
           <Combobox
             label="Odontólogo Tratante (Opcional)"
@@ -250,31 +271,47 @@ export const FormularioClinicoEstandar: StoryObj = {
             />
 
             {/* Dato de solo lectura: NUNCA se muestra como un <input disabled> */}
-            <ReadonlyField
-              label="Fin Estimado"
-              size="sm"
-              icon={Icons.clock}
-              value="09:30"
-              badge="Auto"
-              helperText="Estimado 30 min consulta"
-            />
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs font-semibold text-[var(--foreground)]">Fin Estimado</label>
+              <div className="h-9 w-full rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center justify-between gap-2 px-3 text-xs">
+                <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                  <span className="shrink-0 text-[var(--muted)] opacity-85">{Icons.clock}</span>
+                  <span className="truncate font-medium">09:30</span>
+                </div>
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                  Auto
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--muted)]">Estimado 30 min consulta</p>
+            </div>
           </div>
         </div>
 
         {/* Sección 3: Procedimientos (Opcional, por defecto Consulta Simple) */}
         <div className="space-y-3 pt-1">
-          <FormSectionHeader
-            step={3}
-            title="Procedimientos"
-            badge="Opcional"
-            badgeVariant="muted"
-            description="Tratamientos previstos para la consulta (consulta simple por defecto)"
-            action={
-              <span className="text-[11px] font-mono text-[var(--primary)] font-semibold shrink-0">
-                30 min · $35.00 USD
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--border)]/70 pb-2.5">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <span className="w-5.5 h-5.5 rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs mt-0.5">
+                3
               </span>
-            }
-          />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="text-xs sm:text-sm font-bold text-[var(--foreground)] leading-tight">
+                    Procedimientos
+                  </h4>
+                  <span className="text-[9px] sm:text-[10px] font-mono uppercase px-1.5 py-0.5 rounded leading-none bg-[var(--surface-subtle)] text-[var(--muted)] border border-[var(--border)] font-medium">
+                    Opcional
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-snug">
+                  Tratamientos previstos para la consulta (consulta simple por defecto)
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono text-[var(--primary)] font-semibold shrink-0">
+              30 min · $35.00 USD
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Combobox
@@ -310,14 +347,19 @@ export const FormularioClinicoEstandar: StoryObj = {
               clearable
             />
 
-            <ReadonlyField
-              label="Total Presupuestado"
-              size="sm"
-              icon={Icons.dollarSign}
-              value={formatCurrency(35, { currency: "USD" })}
-              badge="Tarifa base"
-              helperText="Sujeto a confirmación en consulta"
-            />
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs font-semibold text-[var(--foreground)]">Total Presupuestado</label>
+              <div className="h-9 w-full rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center justify-between gap-2 px-3 text-xs">
+                <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                  <span className="shrink-0 text-[var(--muted)] opacity-85">{Icons.dollarSign}</span>
+                  <span className="truncate font-medium">{formatCurrency(35, { currency: "USD" })}</span>
+                </div>
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                  Tarifa base
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--muted)]">Sujeto a confirmación en consulta</p>
+            </div>
           </div>
         </div>
 
@@ -355,15 +397,20 @@ export const ComparativaEditableVsSoloLectura: StoryObj = {
 
         <div>
           <span className="text-[10px] font-mono text-[var(--muted)] uppercase block mb-1">
-            2. Dato de Solo Lectura (ReadonlyField)
+            2. Dato de Solo Lectura
           </span>
-          <ReadonlyField
-            size="sm"
-            icon={Icons.shield}
-            value="HIST-2026-88102"
-            badge="No modificable"
-            helperText="Se muestra con fondo sutil y badge distintivo; no parece un input roto."
-          />
+          <div className="h-9 w-full rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center justify-between gap-2 px-3 text-xs">
+            <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
+              <span className="shrink-0 text-[var(--muted)] opacity-85">{Icons.shield}</span>
+              <span className="truncate font-medium">HIST-2026-88102</span>
+            </div>
+            <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+              No modificable
+            </span>
+          </div>
+          <p className="text-[11px] text-[var(--muted)] mt-1">
+            Se muestra con fondo sutil y badge distintivo; no parece un input roto.
+          </p>
         </div>
       </div>
     );
@@ -447,14 +494,19 @@ export const ModoMobileSinWrap: StoryObj = {
         {/* Grid de 2 columnas compacto para Horario con TimePicker */}
         <div className="grid grid-cols-2 gap-2.5">
           <TimePicker label="Hora Inicio *" pickerSize="sm" value="09:00" />
-          <ReadonlyField
-            label="Fin Estimado"
-            size="sm"
-            icon={Icons.clock}
-            value="09:30"
-            badge="Auto"
-            helperText="30 min"
-          />
+          <div className="flex flex-col gap-1 w-full">
+            <label className="text-xs font-semibold text-[var(--foreground)]">Fin Estimado</label>
+            <div className="h-9 w-full rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center justify-between gap-1.5 px-2.5 text-xs">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 truncate">
+                <span className="shrink-0 text-[var(--muted)] opacity-85">{Icons.clock}</span>
+                <span className="truncate font-medium">09:30</span>
+              </div>
+              <span className="shrink-0 px-1 py-0.5 rounded text-[9px] font-mono font-semibold bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                Auto
+              </span>
+            </div>
+            <p className="text-[10px] text-[var(--muted)]">30 min</p>
+          </div>
         </div>
 
         {/* Combobox de tratamiento */}

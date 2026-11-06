@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useCallback, useEffect } from "react";
+import { useState, useTransition, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { DEV_PERSONAS, type DevPersona } from "../types/personas";
 import { switchPersonaAction } from "../actions/switch-persona.action";

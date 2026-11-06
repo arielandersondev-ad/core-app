@@ -166,3 +166,75 @@ test("HAG-24 services.ts: Contrato de paginación para scroll infinito", () => {
     "Debe exportar fetchDentalServicesPaginated",
   );
 });
+
+// ============================================================================
+// HAG-84: Integración de TanStack Query en Treatments y DetailSheet con UX declarativa
+// ============================================================================
+
+test("HAG-84 Treatments.tsx: Integra TanStack Query con UX declarativa, skeletons y reintento", () => {
+  const treatmentsPath = path.resolve(
+    __dirname,
+    "../src/modules/clinic/views/Treatments.tsx",
+  );
+  const content = fs.readFileSync(treatmentsPath, "utf8");
+
+  assert.match(
+    content,
+    /useDentalServicesPaginated\(/,
+    "Treatments.tsx debe consumir useDentalServicesPaginated()",
+  );
+  assert.match(
+    content,
+    /await\s+refetch\(\)/,
+    "handleRefresh debe invocar refetch() de TanStack Query",
+  );
+  assert.match(
+    content,
+    /isError\s*&&\s*items\.length\s*===\s*0/,
+    "Debe controlar estado declarativo de isError",
+  );
+  assert.match(
+    content,
+    /No se pudo cargar el catálogo de tratamientos/,
+    "Debe mostrar mensaje amigable en error",
+  );
+  assert.match(
+    content,
+    /Reintentar carga/,
+    "Debe ofrecer botón de reintento en error",
+  );
+  assert.match(
+    content,
+    /isLoading\s*&&\s*items\.length\s*===\s*0[\s\S]*?animate-pulse/,
+    "Debe renderizar skeleton animado durante la carga inicial",
+  );
+});
+
+test("HAG-84 AppointmentDetailSheet.tsx: Integra useAppointmentDetail con estado de error declarativo y reintento", () => {
+  const sheetPath = path.resolve(
+    __dirname,
+    "../src/modules/clinic/components/AppointmentDetailSheet.tsx",
+  );
+  const content = fs.readFileSync(sheetPath, "utf8");
+
+  assert.match(
+    content,
+    /useAppointmentDetail\(/,
+    "AppointmentDetailSheet.tsx debe consumir useAppointmentDetail()",
+  );
+  assert.match(
+    content,
+    /refetchAppointment\(\)/,
+    "Debe permitir reintentar la carga con refetchAppointment()",
+  );
+  assert.match(
+    content,
+    /role="alert"/,
+    "Debe renderizar contenedor accesible con role alert para errores",
+  );
+  assert.match(
+    content,
+    /Reintentar/,
+    "Debe incluir botón Reintentar en el estado de error",
+  );
+});

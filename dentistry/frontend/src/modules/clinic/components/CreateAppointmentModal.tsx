@@ -25,6 +25,10 @@ import {
   createAppointment,
   AppointmentDto,
 } from "@/modules/clinic/api/appointments";
+import {
+  useCurrentSession,
+  useCreateAppointment,
+} from "@/modules/clinic/hooks";
 import type { PatientDto } from "@/features/patient/types/patient";
 import {
   DEV_ORG_ID,
@@ -139,37 +143,23 @@ export function CreateAppointmentModal({
   );
   const [activeOrgId, setActiveOrgId] = useState<string>(DEV_ORG_ID);
 
-  // Intentar resolver dinámicamente desde la sesión activa (/api/auth/me)
+  // Consulta de sesión activa (/api/auth/me) mediante hook reactivo useCurrentSession()
+  const { data: session } = useCurrentSession();
+  const createApptMutation = useCreateAppointment();
+
   useEffect(() => {
-    let isMounted = true;
-    async function loadActiveSession() {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok) {
-          const session = await res.json();
-          if (isMounted && session?.context) {
-            if (session.context.branchIds?.[0] && !propBranchId) {
-              setActiveBranchId(session.context.branchIds[0]);
-            }
-            if (session.context.membershipId && !propPractitionerId) {
-              setActivePractitionerId((current) => (current === "" ? "" : session.context.membershipId));
-            }
-            if (session.context.organizationId) {
-              setActiveOrgId(session.context.organizationId);
-            }
-          }
-        }
-      } catch {
-        // Fallback seguro ya inicializado
+    if (session?.context) {
+      if (session.context.branchIds?.[0] && !propBranchId) {
+        setActiveBranchId(session.context.branchIds[0]);
+      }
+      if (session.context.membershipId && !propPractitionerId) {
+        setActivePractitionerId((current) => (current === "" ? "" : session.context.membershipId));
+      }
+      if (session.context.organizationId) {
+        setActiveOrgId(session.context.organizationId);
       }
     }
-    if (open) {
-      void loadActiveSession();
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [open, propBranchId, propPractitionerId]);
+  }, [session, propBranchId, propPractitionerId]);
 
   // Booking target: Paciente registrado o Persona (Registro Rápido)
   const [bookingType, setBookingType] = useState<"patient" | "person">(
@@ -399,7 +389,7 @@ export function CreateAppointmentModal({
       const scheduledStartAt = `${form.date}T${form.startTime}:00.000Z`;
       const scheduledEndAt = `${form.date}T${endTime}:00.000Z`;
 
-      const newAppt = await createAppointment({
+      const newAppt = await createApptMutation.mutateAsync({
         branchId: activeBranchId,
         patientId: finalPatientId,
         practitionerMembershipId: activePractitionerId || undefined,
@@ -414,7 +404,10 @@ export function CreateAppointmentModal({
       handleClose();
     } catch (err: any) {
       setErrors({
-        form: err.message || "Error al crear la cita en el servidor.",
+        form:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Error al crear la cita en el servidor. Inténtalo nuevamente.",
       });
     } finally {
       setIsSubmitting(false);
@@ -450,6 +443,7 @@ export function CreateAppointmentModal({
           type="button"
           variant="outline"
           onClick={handleClose}
+          disabled={isSubmitting || createApptMutation.isPending}
           className="rounded-xl"
         >
           Cancelar
@@ -458,10 +452,17 @@ export function CreateAppointmentModal({
           type="submit"
           form="create-appointment-form"
           variant="primary"
-          disabled={isSubmitting}
+          disabled={isSubmitting || createApptMutation.isPending}
           className="rounded-xl shadow-xs"
         >
-          {isSubmitting ? "Agendando..." : "Agendar Cita"}
+          {isSubmitting || createApptMutation.isPending ? (
+            <span className="flex items-center gap-1.5">
+              <span className="animate-spin text-xs">⏳</span>
+              <span>Guardando cita...</span>
+            </span>
+          ) : (
+            "Agendar Cita"
+          )}
         </Button>
       </div>
     </div>
@@ -485,8 +486,12 @@ export function CreateAppointmentModal({
         className="flex flex-col gap-5"
       >
         {errors.form && (
-          <div className="p-3 rounded-md bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600">
-            {errors.form}
+          <div
+            role="alert"
+            className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-400 flex items-center gap-2"
+          >
+            <span className="text-sm shrink-0">⚠️</span>
+            <span>{errors.form}</span>
           </div>
         )}
 

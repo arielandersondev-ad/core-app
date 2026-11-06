@@ -1,31 +1,35 @@
 import "server-only";
 
+import axios, { isAxiosError } from "axios";
 import { serverEnv } from "@/infrastructure/config/server-env";
 
 export class AuthenticationError extends Error {}
 
 export async function login(email: string, password: string): Promise<{access_token: string; expires_in: number}> {
-  let response: Response;
+  let result: unknown;
   try {
-    const url = new URL("/auth/dentistry/login", serverEnv.authApiUrl);
-    response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ email, password }),
-      cache: "no-store",
-      signal: AbortSignal.timeout(15_000),
-    });
+    const url = new URL("/auth/dentistry/login", serverEnv.authApiUrl).toString();
+    const response = await axios.post(
+      url,
+      { email, password },
+      {
+        headers: { Accept: "application/json" },
+        timeout: 15_000,
+      }
+    );
+    result = response.data;
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Falta configurar ")) {
       throw new AuthenticationError(error.message);
     }
+    if (isAxiosError(error) && error.response) {
+      if (error.response.status === 401) throw new AuthenticationError("Correo o contraseña incorrectos.");
+      if (error.response.status === 403) throw new AuthenticationError("Tu organización no tiene acceso a Dentistry.");
+      throw new AuthenticationError("No se pudo iniciar sesión. Inténtalo nuevamente.");
+    }
     throw new AuthenticationError("No se pudo conectar con el servicio de acceso.");
   }
-  if (response.status === 401) throw new AuthenticationError("Correo o contraseña incorrectos.");
-  if (response.status === 403) throw new AuthenticationError("Tu organización no tiene acceso a Dentistry.");
-  if (!response.ok) throw new AuthenticationError("No se pudo iniciar sesión. Inténtalo nuevamente.");
 
-  const result: unknown = await response.json().catch(() => null);
   if (!result || typeof result !== "object") throw new AuthenticationError("Respuesta de acceso inválida.");
   const token = (result as Record<string, unknown>).access_token;
   const type = (result as Record<string, unknown>).token_type;

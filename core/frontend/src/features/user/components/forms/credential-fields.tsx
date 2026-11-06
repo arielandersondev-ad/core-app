@@ -7,9 +7,7 @@ import {
   type FieldErrors,
   type UseFormRegister,
 } from 'react-hook-form';
-import { Icons } from '@/shared/components/ui/Icons';
-import { Input } from '@/shared/components/ui/Input';
-import { Label } from '@/shared/components/ui/Label';
+import { Icons, Input, Label } from '@/shared/components/ui';
 import { CreateUserFormValues } from '../../chemas/create-user.schema';
 
 type CredentialsFieldsProps = {

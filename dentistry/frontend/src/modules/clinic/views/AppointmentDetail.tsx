@@ -18,6 +18,7 @@ import {
   updateAppointmentStatus,
   type AppointmentDto,
 } from "@/modules/clinic/api/appointments";
+import { useAppointmentDetail } from "@/modules/clinic/hooks";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
@@ -97,6 +98,9 @@ export default function AppointmentDetail({
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
+  // TanStack Query for reactive appointment detail
+  const { refetch: refetchDetail } = useAppointmentDetail(citaId);
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -136,22 +140,45 @@ export default function AppointmentDetail({
           {loadError.notFound ? "Cita no encontrada" : "No se pudo cargar la cita"}
         </h2>
         <p className="mt-2 text-sm text-[var(--muted)]">{loadError.message}</p>
-        <button
-          type="button"
-          onClick={() => onNavigate("agenda")}
-          className="mt-4 text-sm text-[var(--primary)] hover:underline"
-        >
-          Volver a la agenda
-        </button>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setLoadError(null);
+              setIsLoading(true);
+              refetchDetail();
+            }}
+            className="text-sm font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)] transition-colors"
+          >
+            Reintentar
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("agenda")}
+            className="text-sm text-[var(--primary)] hover:underline"
+          >
+            Volver a la agenda
+          </button>
+        </div>
       </div>
     );
   }
 
   if (isLoading && !mockApt && !apiAppointment) {
     return (
-      <p className="p-8 text-center text-sm text-[var(--muted)]" role="status">
-        Cargando detalle de la cita…
-      </p>
+      <div className="p-8 max-w-3xl mx-auto flex flex-col gap-4 animate-pulse" role="status">
+        <div className="h-6 bg-[var(--border)]/40 rounded w-1/3 mb-2" />
+        <div className="p-6 rounded-xl border border-[var(--border)]/70 bg-[var(--surface)] space-y-3">
+          <div className="h-4 bg-[var(--border)]/50 rounded w-1/4" />
+          <div className="h-3 bg-[var(--border)]/30 rounded w-1/2" />
+          <div className="h-3 bg-[var(--border)]/30 rounded w-1/3" />
+        </div>
+        <div className="p-6 rounded-xl border border-[var(--border)]/70 bg-[var(--surface)] space-y-3">
+          <div className="h-4 bg-[var(--border)]/50 rounded w-1/3" />
+          <div className="h-3 bg-[var(--border)]/30 rounded w-2/3" />
+        </div>
+        <p className="sr-only">Cargando detalle de la cita…</p>
+      </div>
     );
   }
 

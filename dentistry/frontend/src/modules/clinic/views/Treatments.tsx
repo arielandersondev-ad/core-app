@@ -26,6 +26,7 @@ import {
   fetchDentalServicesPaginated,
   DentalServiceDto,
 } from "@/modules/clinic/api/services";
+import { useDentalServicesPaginated } from "@/modules/clinic/hooks";
 import { ServiceFormModal } from "./ServiceFormModal";
 
 const PAGE_SIZE = 15;
@@ -85,6 +86,7 @@ export default function Treatments({
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   // Local catalog baseline for stats and fallbacks
   const [localCatalog, setLocalCatalog] = useState<Service[]>(initialMockServices);
@@ -99,6 +101,25 @@ export default function Treatments({
   const activeFilterCount = useMemo(() => {
     return (selectedCategory !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
   }, [selectedCategory, statusFilter]);
+
+  // TanStack Query for reactive treatments
+  const queryParams = useMemo(
+    () => ({
+      page,
+      limit: PAGE_SIZE,
+      search: debouncedSearch.trim() || undefined,
+      category: selectedCategory !== "all" ? selectedCategory : undefined,
+      isActive:
+        statusFilter === "all"
+          ? undefined
+          : statusFilter === "active"
+            ? true
+            : false,
+    }),
+    [page, debouncedSearch, selectedCategory, statusFilter],
+  );
+
+  const { refetch } = useDentalServicesPaginated(queryParams);
 
   // Sentinel ref for infinite scroll IntersectionObserver
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +192,7 @@ export default function Treatments({
     async (targetPage: number, reset: boolean) => {
       if (reset) {
         setIsLoading(true);
+        setIsError(false);
       } else {
         setIsLoadingMore(true);
       }
@@ -231,7 +253,10 @@ export default function Treatments({
       } catch (err) {
         console.error("Error loading dental services:", err);
         // Fail-safe: empty or preserved state
-        if (reset) setItems([]);
+        if (reset) {
+          setItems([]);
+          setIsError(true);
+        }
         setHasMore(false);
       } finally {
         setIsLoading(false);
@@ -243,8 +268,9 @@ export default function Treatments({
 
   const handleRefresh = useCallback(async () => {
     setPage(1);
+    await refetch();
     await loadPage(1, true);
-  }, [loadPage]);
+  }, [loadPage, refetch]);
 
   // Requirement: Filter resilience. Reset to page 1 whenever filters change.
   useEffect(() => {
@@ -501,13 +527,79 @@ export default function Treatments({
       </MobileFilterSheet>
 
       {/* 4. Listado Responsivo de Tratamientos */}
-      {/* Estado inicial de carga */}
-      {isLoading && items.length === 0 ? (
-        <div className="p-12 flex flex-col items-center justify-center gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xs">
-          <div className="w-8 h-8 rounded-full border-2 border-[var(--primary)] border-t-transparent animate-spin" />
-          <p className="text-xs font-mono text-[var(--muted)]">
-            Cargando catálogo de tratamientos…
-          </p>
+      {/* Estado declarativo de Error */}
+      {isError && items.length === 0 ? (
+        <div
+          role="alert"
+          className="p-6 rounded-xl border border-rose-500/25 bg-rose-500/5 flex flex-col items-center justify-center gap-3 text-center shadow-xs"
+        >
+          <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center text-lg font-bold">
+            ⚠️
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-display font-semibold text-[var(--foreground)]">
+              No se pudo cargar el catálogo de tratamientos. Inténtalo nuevamente.
+            </h4>
+            <p className="text-xs text-[var(--muted)]">
+              Ocurrió un error al consultar el catálogo de servicios clínicos.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsError(false);
+              loadPage(1, true);
+            }}
+            className="text-xs font-semibold mt-1"
+          >
+            Reintentar carga
+          </Button>
+        </div>
+      ) : isLoading && items.length === 0 ? (
+        <div className="flex flex-col gap-4 animate-pulse">
+          {/* Skeleton para vista móvil (< 768px / md:hidden) */}
+          <div className="md:hidden flex flex-col gap-3">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="rounded-xl border border-[var(--border)]/70 bg-[var(--surface)] p-4 shadow-xs flex flex-col gap-3"
+              >
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-4 bg-[var(--border)]/50 rounded w-2/3" />
+                    <div className="h-2.5 bg-[var(--border)]/30 rounded w-1/4" />
+                  </div>
+                  <div className="h-5 bg-[var(--border)]/40 rounded-full w-16" />
+                </div>
+                <div className="h-3 bg-[var(--border)]/30 rounded w-full" />
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]/40">
+                  <div className="h-3 bg-[var(--border)]/40 rounded w-16" />
+                  <div className="h-4 bg-[var(--border)]/50 rounded w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Skeleton para vista desktop (>= 768px / hidden md:block) */}
+          <div className="hidden md:block bg-[var(--surface)] border border-[var(--border)]/70 rounded-xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-[var(--border)]/50 bg-[var(--background)]/30">
+              <div className="h-3 bg-[var(--border)]/40 rounded w-1/4" />
+            </div>
+            <div className="divide-y divide-[var(--border)]/40">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <div key={n} className="p-4 flex items-center justify-between gap-4">
+                  <div className="space-y-1.5 w-1/3">
+                    <div className="h-4 bg-[var(--border)]/50 rounded w-3/4" />
+                    <div className="h-2.5 bg-[var(--border)]/30 rounded w-1/3" />
+                  </div>
+                  <div className="h-5 bg-[var(--border)]/40 rounded-full w-20" />
+                  <div className="h-3 bg-[var(--border)]/30 rounded w-1/4" />
+                  <div className="h-4 bg-[var(--border)]/50 rounded w-16" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : items.length === 0 ? (
         <EmptyState

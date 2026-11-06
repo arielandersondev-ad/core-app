@@ -879,3 +879,105 @@ test('HAG-66 Frontend: Agenda.tsx contiene divider de citas vencidas, badge y es
     'Cabecera debe incluir el badge ⏰ Vencida',
   );
 });
+
+// ============================================================================
+// 14. FRONTEND INTEGRATION (HAG-83): TanStack Query y UX declarativa en Agenda y Modal
+// ============================================================================
+
+test('HAG-83 Frontend: TanStack Query en Agenda.tsx y CreateAppointmentModal con estados declarativos', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+
+  const modalPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/components/CreateAppointmentModal.tsx',
+  );
+  const modalContent = fs.readFileSync(modalPath, 'utf8');
+
+  // 1. Agenda.tsx consume useAppointments y mutaciones de TanStack Query
+  assert.match(
+    agendaContent,
+    /useAppointments\(\{\s*date\s*\}\)/,
+    'Agenda.tsx debe consumir useAppointments({ date })',
+  );
+  assert.match(
+    agendaContent,
+    /useUpdateAppointmentStatus/,
+    'Agenda.tsx debe importar y utilizar useUpdateAppointmentStatus',
+  );
+  assert.match(
+    agendaContent,
+    /useCancelAppointment/,
+    'Agenda.tsx debe importar useCancelAppointment',
+  );
+
+  // 2. Erradicación de useEffect y estados manuales de carga en Agenda.tsx
+  assert.equal(
+    /setAppointmentsList\(dtos\.map/.test(agendaContent),
+    false,
+    'Agenda.tsx debe erradicar el useEffect de carga manual con setAppointmentsList',
+  );
+
+  // 3. Estado de Carga Declarativo con skeleton y mensaje amigable
+  assert.match(
+    agendaContent,
+    /isLoading\s*\?[\s\S]*?Cargando agenda de citas\.\.\./,
+    'Agenda.tsx debe renderizar mensaje y skeleton amigable en isLoading',
+  );
+
+  // 4. Estado de Error Declarativo con banner amigable y botón de reintento
+  assert.match(
+    agendaContent,
+    /isError\s*&&/,
+    'Agenda.tsx debe verificar isError de TanStack Query',
+  );
+  assert.match(
+    agendaContent,
+    /No pudimos conectar con el servidor para obtener las citas\. Inténtalo nuevamente\./,
+    'Agenda.tsx debe mostrar mensaje claro de error orientado al usuario',
+  );
+  assert.match(
+    agendaContent,
+    /Reintentar/,
+    'Agenda.tsx debe ofrecer botón Reintentar',
+  );
+
+  // 5. PullToRefresh invoca refetch()
+  assert.match(
+    agendaContent,
+    /handleRefreshAppointments[\s\S]*?refetch\(\)/,
+    'handleRefreshAppointments debe invocar refetch() de TanStack Query',
+  );
+
+  // 6. CreateAppointmentModal erradica fetch('/api/auth/me') usando useCurrentSession()
+  assert.equal(
+    /fetch\(["']\/api\/auth\/me["']\)/.test(modalContent),
+    false,
+    'CreateAppointmentModal debe erradicar fetch directo a /api/auth/me',
+  );
+  assert.match(
+    modalContent,
+    /useCurrentSession\(\)/,
+    'CreateAppointmentModal debe usar useCurrentSession()',
+  );
+
+  // 7. CreateAppointmentModal conecta creación a useCreateAppointment con loading y feedback
+  assert.match(
+    modalContent,
+    /useCreateAppointment\(\)/,
+    'CreateAppointmentModal debe usar useCreateAppointment()',
+  );
+  assert.match(
+    modalContent,
+    /createApptMutation\.mutateAsync/,
+    'CreateAppointmentModal debe invocar mutateAsync de la mutación',
+  );
+  assert.match(
+    modalContent,
+    /Guardando cita\.\.\./,
+    'CreateAppointmentModal debe mostrar texto de progreso Guardando cita... en botón submit',
+  );
+});

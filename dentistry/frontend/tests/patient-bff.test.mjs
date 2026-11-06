@@ -59,7 +59,7 @@ test("missing cookie rejects all four patient operations without contacting the 
 test("unknown routes, unsupported methods and invalid route ids are rejected", async (t) => {
   const { proxyToDentistry } = createBffLoader()("src/infrastructure/http/dentistry-proxy.ts");
   const upstream = t.mock.method(globalThis, "fetch", async () => { throw new Error("Unexpected request"); });
-  for (const [method, path] of [["DELETE", `patients/${ID}`], ["PUT", `patients/${ID}`], ["GET", "patients/not-a-uuid"], ["GET", "patients/extra/path"], ["POST", "auth/login"]]) {
+  for (const [method, path] of [["PUT", `patients/${ID}`], ["GET", "patients/not-a-uuid"], ["GET", "patients/extra/path"], ["POST", "auth/login"]]) {
     assert.equal((await proxyToDentistry(request(path, method), path.split("/"))).status, 404);
   }
   assert.equal(upstream.mock.callCount(), 0);

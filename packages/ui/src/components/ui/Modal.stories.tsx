@@ -10,7 +10,6 @@ import { DatePicker } from "./DatePicker";
 import { TimePicker } from "./TimePicker";
 import { Badge } from "./Badge";
 import { Icons } from "./Icons";
-import { ReadonlyField } from "./ReadonlyField";
 import { formatCurrency } from "../../utils/formatters";
 
 const meta: Meta<typeof Modal> = {
@@ -423,16 +422,22 @@ export const ReadOnlyAppointmentDetailModal: Story = {
           }
         >
           <div className="flex flex-col gap-3 py-1">
-            <ReadonlyField
-              label="Profesional Asignado"
-              value="Dra. Paulina Vega (Endodoncia)"
-              icon={Icons.user}
-            />
-            <ReadonlyField
-              label="Teléfono de Contacto"
-              value="+56 9 1234 5678"
-              badge="WhatsApp activo"
-            />
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs font-semibold text-[var(--foreground)]">Profesional Asignado</label>
+              <div className="h-9 px-3 rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center gap-2 text-xs">
+                <span className="shrink-0 text-[var(--muted)] opacity-85">{Icons.user}</span>
+                <span className="font-medium truncate">Dra. Paulina Vega (Endodoncia)</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs font-semibold text-[var(--foreground)]">Teléfono de Contacto</label>
+              <div className="h-9 px-3 rounded-md bg-[var(--surface-subtle)]/75 border border-[var(--border)]/70 text-[var(--foreground)] flex items-center justify-between text-xs">
+                <span className="font-medium truncate">+56 9 1234 5678</span>
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
+                  WhatsApp activo
+                </span>
+              </div>
+            </div>
             <div className="p-3.5 rounded-md border border-[var(--border)] bg-[var(--surface)] flex flex-col gap-2">
               <span className="text-xs font-semibold text-[var(--foreground)]">
                 Tratamientos Planificados

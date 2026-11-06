@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Avatar,
@@ -11,16 +11,15 @@ import {
   SectionHeader,
   Toggle,
 } from '@/shared/components/ui';
+import { useUsers } from '@/features/user/hooks/use-users';
+import { useOrganizations } from '@/features/organization/hooks/use-organizations';
 import {
-  getUserById,
-  getOrgById,
-  getBranchById,
   roleLabels,
   formatDate,
   timeAgo,
   MODULES,
-  Permission,
-} from '@/shared/data/platform.mock';
+  type Permission,
+} from '@/shared/utils/format';
 
 type Tab = 'info' | 'permisos';
 
@@ -54,14 +53,46 @@ export default function UserDetail() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const userId = params.id;
-  const user = getUserById(userId);
+
+  const { data: rawUsers = [], isLoading: loadingUsers } = useUsers();
+  const { data: rawOrgs = [] } = useOrganizations();
+
+  const rawUser = useMemo(() => rawUsers.find((u) => u.id === userId), [rawUsers, userId]);
+
+  const user = useMemo(() => {
+    if (!rawUser) return null;
+    const primaryMembership = rawUser.memberships?.[0];
+    return {
+      id: rawUser.id,
+      name: `${rawUser.firstName || ''} ${rawUser.lastName || ''}`.trim() || rawUser.email,
+      email: rawUser.email,
+      role: (primaryMembership?.roleNames?.[0] || 'operator').toLowerCase(),
+      orgId: primaryMembership?.organizationId,
+      branchName: primaryMembership?.branchNames?.[0] || 'Sin asignar',
+      status: rawUser.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+      lastLogin: rawUser.createdAt,
+      createdAt: rawUser.createdAt,
+    };
+  }, [rawUser]);
+
+  const org = useMemo(() => {
+    if (!user?.orgId) return null;
+    return rawOrgs.find((o) => o.id === user.orgId);
+  }, [rawOrgs, user?.orgId]);
 
   const [tab, setTab] = useState<Tab>('info');
-  const [permissions, setPermissions] = useState<Permission[]>(
-    user?.permissions ??
-      MODULES.map((m) => ({ module: m, view: false, create: false, edit: false, delete: false }))
+  const [permissions, setPermissions] = useState<Permission[]>(() =>
+    MODULES.map((m) => ({ module: m, view: false, create: false, edit: false, delete: false }))
   );
   const [permSaved, setPermSaved] = useState(false);
+
+  if (loadingUsers) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando usuario...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -71,12 +102,8 @@ export default function UserDetail() {
     );
   }
 
-  const org = getOrgById(user.orgId);
-  const branch = user.branchId ? getBranchById(user.branchId) : null;
-  const statusVariant =
-    user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive';
-  const statusLabel =
-    user.status === 'active' ? 'Activo' : user.status === 'suspended' ? 'Suspendido' : 'Inactivo';
+  const statusVariant = user.status === 'active' ? 'active' : 'inactive';
+  const statusLabel = user.status === 'active' ? 'Activo' : 'Inactivo';
 
   const updatePerm = (module: string, action: keyof Omit<Permission, 'module'>, value: boolean) => {
     setPermissions((prev) =>
@@ -113,12 +140,12 @@ export default function UserDetail() {
               {user.name}
             </h2>
             <Badge variant={statusVariant}>{statusLabel}</Badge>
-            <Badge variant="role">{roleLabels[user.role]}</Badge>
+            <Badge variant="role">{roleLabels[user.role] || user.role}</Badge>
           </div>
           <p className="text-sm font-mono text-muted">{user.email}</p>
           <p className="text-[11px] font-mono text-muted mt-1">
-            {org?.name}
-            {branch ? ` · ${branch.name}` : ''} · Registrado {formatDate(user.createdAt)}
+            {org?.name || 'Organización'}
+            {user.branchName ? ` · ${user.branchName}` : ''} · Registrado {formatDate(user.createdAt)}
           </p>
         </div>
         <div className="flex gap-2 self-start md:self-center">
@@ -165,8 +192,8 @@ export default function UserDetail() {
               <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
                 {[
                   { label: 'Organización', value: org?.name ?? '—' },
-                  { label: 'Sucursal', value: branch?.name ?? 'Sin asignar' },
-                  { label: 'Rol', value: roleLabels[user.role] },
+                  { label: 'Sucursal', value: user.branchName },
+                  { label: 'Rol', value: roleLabels[user.role] || user.role },
                   { label: 'Estado', value: user.status },
                   { label: 'Último acceso', value: timeAgo(user.lastLogin) },
                   { label: 'Fecha de registro', value: formatDate(user.createdAt) },
@@ -349,77 +376,78 @@ export default function UserDetail() {
 
           {/* Vista desktop de tabla tradicional (>= 768px) */}
           <div className="hidden md:block">
-          <Card className="overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-background/50">
-                  <th className="text-left px-5 py-3 text-[10px] font-mono uppercase tracking-widest text-muted">
-                    Módulo
-                  </th>
-                  {actions.map((a) => (
-                    <th
-                      key={a.key}
-                      className="text-center px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-muted w-24"
-                    >
-                      {a.label}
+            <Card className="overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-background/50">
+                    <th className="text-left px-5 py-3 text-[10px] font-mono uppercase tracking-widest text-muted">
+                      Módulo
                     </th>
-                  ))}
-                  <th className="px-4 py-3 w-28" />
-                </tr>
-              </thead>
-              <tbody>
-                {permissions.map((perm, i) => (
-                  <tr
-                    key={perm.module}
-                    className={`border-b border-border last:border-0 ${
-                      i % 2 === 0 ? '' : 'bg-background/20'
-                    }`}
-                  >
-                    <td className="px-5 py-3 text-sm font-display font-semibold text-foreground">
-                      {perm.module}
-                    </td>
                     {actions.map((a) => (
-                      <td key={a.key} className="px-4 py-3 text-center">
-                        <div className="flex justify-center">
-                          <Toggle
-                            checked={perm[a.key]}
-                            onChange={(v) => updatePerm(perm.module, a.key, v)}
-                          />
-                        </div>
-                      </td>
-                    ))}
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => {
-                          const allOn = perm.view && perm.create && perm.edit && perm.delete;
-                          setPermissions((prev) =>
-                            prev.map((p) =>
-                              p.module === perm.module
-                                ? {
-                                    module: p.module,
-                                    view: !allOn,
-                                    create: !allOn,
-                                    edit: !allOn,
-                                    delete: !allOn,
-                                  }
-                                : p
-                            )
-                          );
-                          setPermSaved(false);
-                        }}
-                        className="text-[10px] font-mono uppercase tracking-wider text-muted hover:text-primary transition-colors"
+                      <th
+                        key={a.key}
+                        className="text-center px-4 py-3 text-[10px] font-mono uppercase tracking-widest text-muted w-24"
                       >
-                        {perm.view && perm.create && perm.edit && perm.delete
-                          ? 'Revocar todo'
-                          : 'Dar todo'}
-                      </button>
-                    </td>
+                        {a.label}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 w-28" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        </div>
+                </thead>
+                <tbody>
+                  {permissions.map((perm, i) => (
+                    <tr
+                      key={perm.module}
+                      className={`border-b border-border last:border-0 ${
+                        i % 2 === 0 ? '' : 'bg-background/20'
+                      }`}
+                    >
+                      <td className="px-5 py-3 text-sm font-display font-semibold text-foreground">
+                        {perm.module}
+                      </td>
+                      {actions.map((a) => (
+                        <td key={a.key} className="px-4 py-3 text-center">
+                          <div className="flex justify-center">
+                            <Toggle
+                              checked={perm[a.key]}
+                              onChange={(v) => updatePerm(perm.module, a.key, v)}
+                            />
+                          </div>
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => {
+                            const allOn = perm.view && perm.create && perm.edit && perm.delete;
+                            setPermissions((prev) =>
+                              prev.map((p) =>
+                                p.module === perm.module
+                                  ? {
+                                      module: p.module,
+                                      view: !allOn,
+                                      create: !allOn,
+                                      edit: !allOn,
+                                      delete: !allOn,
+                                    }
+                                  : p
+                              )
+                            );
+                            setPermSaved(false);
+                          }}
+                          className="text-[10px] font-mono uppercase tracking-wider text-muted hover:text-primary transition-colors"
+                        >
+                          {perm.view && perm.create && perm.edit && perm.delete
+                            ? 'Revocar todo'
+                            : 'Dar todo'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </div>
+
           <div className="flex items-center gap-3 mt-4">
             <button
               onClick={() => setPermSaved(true)}

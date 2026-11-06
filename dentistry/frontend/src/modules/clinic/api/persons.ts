@@ -1,8 +1,10 @@
-const API_BASE = "/api/dentistry";
+import { api } from "@/infrastructure/http/api";
+import { ApiError } from "@/infrastructure/http/api-error";
 
 export class PersonApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
+    this.name = "PersonApiError";
   }
 }
 
@@ -69,23 +71,15 @@ export interface ConvertPersonToPatientResponse {
 export async function createPerson(
   payload: CreatePersonInput,
 ): Promise<Person> {
-  const res = await fetch(`${API_BASE}/persons`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al crear persona: ${res.statusText}`;
-    throw new PersonApiError(message, res.status);
+  try {
+    const { data } = await api.post<Person>("/dentistry/persons", payload);
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new PersonApiError(error.message, error.status);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function listPersons(params?: {
@@ -97,34 +91,29 @@ export async function listPersons(params?: {
   if (params?.onlyUnconverted !== undefined) {
     query.append("onlyUnconverted", String(params.onlyUnconverted));
   }
+  const suffix = query.size ? `?${query.toString()}` : "";
 
-  const res = await fetch(`${API_BASE}/persons?${query.toString()}`, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al listar personas: ${res.statusText}`;
-    throw new PersonApiError(message, res.status);
+  try {
+    const { data } = await api.get<Person[]>(`/dentistry/persons${suffix}`);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new PersonApiError(error.message, error.status);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function getPersonById(id: string): Promise<Person> {
-  const res = await fetch(`${API_BASE}/persons/${id}`, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al obtener persona: ${res.statusText}`;
-    throw new PersonApiError(message, res.status);
+  try {
+    const { data } = await api.get<Person>(`/dentistry/persons/${encodeURIComponent(id)}`);
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new PersonApiError(error.message, error.status);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export const fetchPersons = listPersons;
@@ -134,21 +123,16 @@ export async function convertPersonToPatient(
   personId: string,
   payload: ConvertPersonToPatientInput,
 ): Promise<ConvertPersonToPatientResponse> {
-  const res = await fetch(`${API_BASE}/persons/${personId}/convert`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al convertir persona a paciente: ${res.statusText}`;
-    throw new PersonApiError(message, res.status);
+  try {
+    const { data } = await api.post<ConvertPersonToPatientResponse>(
+      `/dentistry/persons/${encodeURIComponent(personId)}/convert`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new PersonApiError(error.message, error.status);
+    }
+    throw error;
   }
-  return res.json();
 }
