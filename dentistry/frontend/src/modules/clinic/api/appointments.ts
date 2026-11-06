@@ -1,8 +1,10 @@
-const API_BASE = "/api/dentistry";
+import { api } from "@/infrastructure/http/api";
+import { ApiError } from "@/infrastructure/http/api-error";
 
 export class AppointmentApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
+    this.name = "AppointmentApiError";
   }
 }
 
@@ -80,57 +82,52 @@ export interface ListAppointmentsParams {
 }
 
 export async function fetchAppointments(
-  params: ListAppointmentsParams,
+  params: ListAppointmentsParams = {},
 ): Promise<AppointmentDto[]> {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value) query.append(key, value);
   });
+  const suffix = query.size ? `?${query.toString()}` : "";
 
-  const res = await fetch(`${API_BASE}/appointments?${query.toString()}`, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Error al obtener citas: ${res.statusText}`);
+  try {
+    const { data } = await api.get<AppointmentDto[]>(`/dentistry/appointments${suffix}`);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(`Error al obtener citas: ${error.message}`);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function fetchAppointmentById(id: string): Promise<AppointmentDto> {
-  const res = await fetch(`${API_BASE}/appointments/${id}`, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    throw new AppointmentApiError(
-      res.status === 404 ? "La cita no existe o no está disponible." : "No se pudo cargar el detalle de la cita.",
-      res.status,
-    );
+  try {
+    const { data } = await api.get<AppointmentDto>(`/dentistry/appointments/${encodeURIComponent(id)}`);
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new AppointmentApiError(
+        error.status === 404 ? "La cita no existe o no está disponible." : "No se pudo cargar el detalle de la cita.",
+        error.status,
+      );
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function createAppointment(
   payload: CreateAppointmentRequest,
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${API_BASE}/appointments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al crear cita: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.post<AppointmentDto>("/dentistry/appointments", payload);
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function updateAppointmentStatus(
@@ -146,23 +143,18 @@ export async function updateAppointmentStatus(
     notes?: string;
   },
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${API_BASE}/appointments/${id}/status`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al actualizar cita: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.patch<AppointmentDto>(
+      `/dentistry/appointments/${encodeURIComponent(id)}/status`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function cancelAppointment(
@@ -172,21 +164,16 @@ export async function cancelAppointment(
     reason: string;
   },
 ): Promise<AppointmentDto> {
-  const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al cancelar cita: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.post<AppointmentDto>(
+      `/dentistry/appointments/${encodeURIComponent(id)}/cancel`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }

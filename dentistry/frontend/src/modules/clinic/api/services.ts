@@ -1,4 +1,5 @@
-const API_BASE = "/api/dentistry";
+import { api } from "@/infrastructure/http/api";
+import { ApiError } from "@/infrastructure/http/api-error";
 
 export interface DentalServiceSupplyDto {
   id?: string;
@@ -90,29 +91,30 @@ export interface PaginatedDentalServicesResponse {
 }
 
 export async function fetchDentalServices(
-  params: ListDentalServicesParams,
+  params: ListDentalServicesParams = {},
 ): Promise<DentalServiceDto[]> {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== "") query.append(key, String(value));
   });
+  const suffix = query.size ? `?${query.toString()}` : "";
 
-  const res = await fetch(`${API_BASE}/services?${query.toString()}`, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Error al obtener servicios: ${res.statusText}`);
+  try {
+    const { data } = await api.get<any>(`/dentistry/services${suffix}`);
+    if (data && Array.isArray(data.items)) {
+      return data.items;
+    }
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(`Error al obtener servicios: ${error.message}`);
+    }
+    throw error;
   }
-  const data = await res.json();
-  if (data && Array.isArray(data.items)) {
-    return data.items;
-  }
-  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchDentalServicesPaginated(
-  params: ListDentalServicesParams,
+  params: ListDentalServicesParams = {},
 ): Promise<PaginatedDentalServicesResponse> {
   const page = params.page || 1;
   const limit = params.limit || 15;
@@ -120,37 +122,32 @@ export async function fetchDentalServicesPaginated(
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== "") query.append(key, String(value));
   });
+  const suffix = query.size ? `?${query.toString()}` : "";
 
   try {
-    const res = await fetch(`${API_BASE}/services?${query.toString()}`, {
-      headers: { Accept: "application/json" },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data && typeof data === "object" && Array.isArray(data.items)) {
-        return {
-          items: data.items,
-          total: typeof data.total === "number" ? data.total : data.items.length,
-          page: typeof data.page === "number" ? data.page : page,
-          limit: typeof data.limit === "number" ? data.limit : limit,
-          hasMore:
-            typeof data.hasMore === "boolean"
-              ? data.hasMore
-              : (data.page ?? page) * (data.limit ?? limit) < (data.total ?? data.items.length),
-        };
-      }
-      if (Array.isArray(data)) {
-        const start = (page - 1) * limit;
-        const sliced = data.slice(start, start + limit);
-        return {
-          items: sliced,
-          total: data.length,
-          page,
-          limit,
-          hasMore: start + limit < data.length,
-        };
-      }
+    const { data } = await api.get<any>(`/dentistry/services${suffix}`);
+    if (data && typeof data === "object" && Array.isArray(data.items)) {
+      return {
+        items: data.items,
+        total: typeof data.total === "number" ? data.total : data.items.length,
+        page: typeof data.page === "number" ? data.page : page,
+        limit: typeof data.limit === "number" ? data.limit : limit,
+        hasMore:
+          typeof data.hasMore === "boolean"
+            ? data.hasMore
+            : (data.page ?? page) * (data.limit ?? limit) < (data.total ?? data.items.length),
+      };
+    }
+    if (Array.isArray(data)) {
+      const start = (page - 1) * limit;
+      const sliced = data.slice(start, start + limit);
+      return {
+        items: sliced,
+        total: data.length,
+        page,
+        limit,
+        hasMore: start + limit < data.length,
+      };
     }
   } catch {
     // Backend offline or error, return empty paginated shape so caller can fallback gracefully
@@ -167,110 +164,86 @@ export async function fetchDentalServicesPaginated(
 
 export async function fetchDentalServiceById(
   id: string,
-  organizationId: string,
+  organizationId?: string,
 ): Promise<DentalServiceDto> {
-  const res = await fetch(
-    `${API_BASE}/services/${id}?organizationId=${organizationId}`,
-    {
-      headers: { Accept: "application/json" },
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error(`Error al obtener detalle del servicio: ${res.statusText}`);
+  const query = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : "";
+  try {
+    const { data } = await api.get<DentalServiceDto>(
+      `/dentistry/services/${encodeURIComponent(id)}${query}`,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(`Error al obtener detalle del servicio: ${error.message}`);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function createDentalService(
   payload: CreateDentalServiceRequest,
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${API_BASE}/services`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al crear servicio: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.post<DentalServiceDto>("/dentistry/services", payload);
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function updateDentalService(
   id: string,
   payload: UpdateDentalServiceRequest,
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${API_BASE}/services/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al actualizar servicio: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.patch<DentalServiceDto>(
+      `/dentistry/services/${encodeURIComponent(id)}`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function toggleDentalServiceStatus(
   id: string,
   payload: { organizationId: string; updatedByMembershipId: string },
 ): Promise<DentalServiceDto> {
-  const res = await fetch(`${API_BASE}/services/${id}/toggle-status`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message ||
-        `Error al cambiar estado del servicio: ${res.statusText}`;
-    throw new Error(message);
+  try {
+    const { data } = await api.patch<DentalServiceDto>(
+      `/dentistry/services/${encodeURIComponent(id)}/toggle-status`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 export async function deleteDentalService(
   id: string,
-  organizationId: string,
+  organizationId?: string,
 ): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(
-    `${API_BASE}/services/${id}?organizationId=${organizationId}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    const message = Array.isArray(errorData.message)
-      ? errorData.message.join(", ")
-      : errorData.message || `Error al eliminar servicio: ${res.statusText}`;
-    throw new Error(message);
+  const query = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : "";
+  try {
+    const { data } = await api.delete<{ success: boolean; message: string }>(
+      `/dentistry/services/${encodeURIComponent(id)}${query}`,
+    );
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw new Error(error.message);
+    }
+    throw error;
   }
-  return res.json();
 }
