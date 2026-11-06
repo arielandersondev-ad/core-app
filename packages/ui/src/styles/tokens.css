@@ -40,6 +40,7 @@
 
   --popover: #ffffff;
   --accent: #f0ebe1;
+  --accent-foreground: var(--foreground);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --ring: var(--primary);
@@ -84,6 +85,7 @@
 
   --popover: #181d19;
   --accent: #1a201a;
+  --accent-foreground: var(--foreground);
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --ring: var(--primary);
@@ -125,6 +127,7 @@
 
   --color-popover: var(--popover);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-ring: var(--ring);
@@ -137,4 +140,25 @@
   --font-sans: var(--font-inter, ui-sans-serif, system-ui, sans-serif);
   --font-display: var(--font-work-sans, var(--font-sans));
   --font-mono: var(--font-dm-mono, ui-monospace, monospace);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
 }
