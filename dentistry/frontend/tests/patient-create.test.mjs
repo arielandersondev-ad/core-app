@@ -158,9 +158,9 @@ test("form reuses the real UI fields and offers reauthentication without automat
       ...ui("../../packages/ui/src/components/ui/Label.tsx"),
     },
   });
-  const { CreatePatientForm } = load("src/features/patient/components/forms/create-patient-form.tsx");
+  const { PatientForm } = load("src/features/patient/components/forms/patient-form.tsx");
   const { ApiError } = load("src/infrastructure/http/api-error.ts");
-  const html = renderToStaticMarkup(createElement(CreatePatientForm, { onSubmit: async () => {}, onCancel: () => {}, isSubmitting: false, error: new ApiError(401, "Sesión vencida") }));
+  const html = renderToStaticMarkup(createElement(PatientForm, { onSubmit: async () => {}, onCancel: () => {}, isSubmitting: false, error: new ApiError(401, "Sesión vencida") }));
   assert.match(html, /name="firstName"/);
   assert.match(html, /name="lastName"/);
   assert.match(html, /name="documentType"/);
