@@ -1,6 +1,3 @@
-// import { Button } from "../../ui/button";
-// import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../../ui/dropdown-menu";
-
 interface Props {
   searchTerm: string;
 

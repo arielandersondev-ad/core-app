@@ -19,16 +19,8 @@ export function useIsMobile(breakpoint: number = 768): boolean {
 
       const onChange = () => callback();
 
-      if (mql.addEventListener) {
-        mql.addEventListener("change", onChange);
-        return () => mql.removeEventListener("change", onChange);
-      } else if ("addListener" in mql) {
-        // Fallback for older environments / test mocks
-        (mql as any).addListener(onChange);
-        return () => (mql as any).removeListener(onChange);
-      }
-
-      return () => {};
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
     },
     [breakpoint]
   );
