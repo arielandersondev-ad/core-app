@@ -48,7 +48,7 @@ describe("MobileFloatingActionMenu (Speed-Dial FAB) Unit Tests (HAG-31)", () => 
   });
 
   describe("Closed State & Mobile Positioning", () => {
-    it("renders closed FAB at fixed bottom-20 right-4 z-30 with md:hidden by default", () => {
+    it("renders closed FAB at fixed bottom-24 right-4 z-30 with md:hidden by default", () => {
       const html = renderToString(
         <MobileFloatingActionMenu
           actions={sampleActions}
@@ -58,7 +58,7 @@ describe("MobileFloatingActionMenu (Speed-Dial FAB) Unit Tests (HAG-31)", () => 
 
       expect(html).toContain('data-component="mobile-floating-action-menu"');
       expect(html).toContain('data-state="closed"');
-      expect(html).toContain("fixed bottom-20 right-4 z-30");
+      expect(html).toContain("fixed bottom-24 right-4 z-30");
       expect(html).toContain("md:hidden");
 
       // Trigger button classes

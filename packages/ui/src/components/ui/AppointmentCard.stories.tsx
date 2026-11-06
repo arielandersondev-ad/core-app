@@ -4,6 +4,7 @@ import {
   AppointmentTimelineItem,
   AppointmentTimelineItemData,
   AppointmentTimelineStatus,
+  sortAppointmentsByTimelinePriority,
   ContactTypeBadge,
   AppointmentStatusBadge,
   Badge,
@@ -27,10 +28,11 @@ type Story = StoryObj;
 // HISTORIA PRINCIPAL 1:1 CON LA IMAGEN DE REFERENCIA (paste-1793904355673.png)
 // Riel de Timeline lateral (Hora mono + punto de estado + línea vertical conectora)
 // Tarjetas acordeón colapsables/expandibles con acciones táctiles
+// Y ordenamiento inteligente con estado visual 'Vencida' (HAG-65)
 // ─────────────────────────────────────────────────────────────────────────────
 export const TimelineAgendaView: Story = {
   render: () => {
-    // Estado de ítems expandidos (por defecto María Fernández Cruz a las 05:00 está abierta)
+    // Estado de ítems expandidos (por defecto María Fernández Cruz a las 09:00 está abierta)
     const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({
       "apt-1": true,
       "apt-2": false,
@@ -39,12 +41,13 @@ export const TimelineAgendaView: Story = {
       "apt-5": false,
     });
 
+    // Lista de citas combinadas: algunas actuales/futuras y una vencida
     const [appointments, setAppointments] = useState<AppointmentTimelineItemData[]>([
       {
         id: "apt-1",
-        startTime: "05:00",
+        startTime: "09:00",
         durationMin: 45,
-        status: "SCHEDULED", // Punto ámbar (amarillo)
+        status: "SCHEDULED", // Cita actual / próxima
         contactName: "María Fernández Cruz",
         phone: "+591 71234567",
         serviceName: "Evaluación general",
@@ -52,37 +55,40 @@ export const TimelineAgendaView: Story = {
       },
       {
         id: "apt-2",
-        startTime: "05:45",
+        startTime: "10:00",
         durationMin: 30,
-        status: "CONFIRMED", // Punto verde
+        status: "CONFIRMED", // Cita futura
         contactName: "Jorge Mamani Quispe",
         phone: "+591 78912345",
         serviceName: "Limpieza dental",
       },
       {
         id: "apt-3",
-        startTime: "06:30",
+        startTime: "07:30",
+        durationMin: 45,
+        status: "NO_SHOW", // Cita que ya pasó su hora y no vino -> Vencida
+        isOverdue: true,
+        contactName: "Carlos Choque Apaza",
+        phone: "+591 76543210",
+        serviceName: "Extracción 3.8",
+        notes: "No se presentó a la hora programada",
+      },
+      {
+        id: "apt-4",
+        startTime: "11:30",
         durationMin: 60,
-        status: "SCHEDULED", // Punto ámbar
+        status: "SCHEDULED",
         contactName: "Lucía Rojas Vargas",
         phone: "+591 67890123",
         serviceName: "Endodoncia · control",
         notes: "Sensibilidad en molar inf. der.",
       },
       {
-        id: "apt-4",
-        startTime: "07:30",
-        durationMin: 30,
-        status: "SCHEDULED", // Punto ámbar
-        contactName: "Carlos Choque Apaza",
-        phone: "+591 76543210",
-        serviceName: "Extracción 3.8",
-      },
-      {
         id: "apt-5",
-        startTime: "08:00",
-        durationMin: 45,
-        status: "CONFIRMED", // Punto verde
+        startTime: "06:15",
+        durationMin: 30,
+        status: "SCHEDULED", // Cita anterior vencida
+        isOverdue: true,
         contactName: "Rosa Quispe Mamani",
         phone: "+591 70011223",
         serviceName: "Ortodoncia · ajuste",
@@ -99,7 +105,7 @@ export const TimelineAgendaView: Story = {
     const handleConfirm = (id: string) => {
       setAppointments((prev) =>
         prev.map((apt) =>
-          apt.id === id ? { ...apt, status: "CONFIRMED" } : apt
+          apt.id === id ? { ...apt, status: "CONFIRMED", isOverdue: false } : apt
         )
       );
     };
@@ -112,31 +118,77 @@ export const TimelineAgendaView: Story = {
       );
     };
 
+    // Ordenamiento inteligente: citas actuales/futuras arriba, citas vencidas al fondo
+    const sortedAppointments = sortAppointmentsByTimelinePriority(appointments);
+
+    // Separamos para renderizar indicador de sección si hay vencidas
+    const activeAppts = sortedAppointments.filter((a) => !a.isOverdue);
+    const overdueAppts = sortedAppointments.filter((a) => Boolean(a.isOverdue));
+
     return (
       <div className="w-full max-w-sm sm:max-w-md mx-auto p-4 bg-zinc-950 text-zinc-100 rounded-3xl shadow-2xl border border-zinc-800/80">
         <div className="mb-4 px-2 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold tracking-tight text-zinc-100 font-display">
-              Timeline de Citas
+              Timeline de Citas Inteligente
             </h3>
             <p className="text-[11px] text-zinc-400">
-              Vista móvil 1:1 con tarjetas colapsables
+              Citas actuales arriba · Vencidas al fondo
             </p>
           </div>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400">
-            5 citas
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400">
+              {activeAppts.length} activas
+            </span>
+            {overdueAppts.length > 0 && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                {overdueAppts.length} vencidas
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* Citas Activas / Futuras */}
         <div className="flex flex-col">
-          {appointments.map((apt, index) => (
+          {activeAppts.map((apt, index) => (
             <AppointmentTimelineItem
               key={apt.id}
               appointment={apt}
               isExpanded={expandedIds[apt.id] || false}
               onToggleExpand={() => toggleExpand(apt.id)}
               onNameClick={() => alert(`Ficha de paciente: ${apt.contactName}`)}
-              isLast={index === appointments.length - 1}
+              isLast={overdueAppts.length === 0 && index === activeAppts.length - 1}
+              onConfirm={() => handleConfirm(apt.id)}
+              onNoShow={() => handleNoShow(apt.id)}
+              onWhatsApp={() => alert(`WhatsApp a ${apt.contactName}`)}
+              onCall={() => alert(`Llamada a ${apt.contactName}`)}
+            />
+          ))}
+        </div>
+
+        {/* Separador de Citas Vencidas si existen */}
+        {overdueAppts.length > 0 && (
+          <div className="my-3 flex items-center gap-3 px-2">
+            <div className="h-px flex-1 bg-rose-500/20" />
+            <span className="text-[10px] font-mono font-medium text-rose-400 uppercase tracking-wider flex items-center gap-1">
+              <span>⏰</span>
+              <span>Citas vencidas ({overdueAppts.length})</span>
+            </span>
+            <div className="h-px flex-1 bg-rose-500/20" />
+          </div>
+        )}
+
+        {/* Citas Vencidas al final */}
+        <div className="flex flex-col">
+          {overdueAppts.map((apt, index) => (
+            <AppointmentTimelineItem
+              key={apt.id}
+              appointment={apt}
+              isOverdue={true}
+              isExpanded={expandedIds[apt.id] || false}
+              onToggleExpand={() => toggleExpand(apt.id)}
+              onNameClick={() => alert(`Ficha de paciente: ${apt.contactName}`)}
+              isLast={index === overdueAppts.length - 1}
               onConfirm={() => handleConfirm(apt.id)}
               onNoShow={() => handleNoShow(apt.id)}
               onWhatsApp={() => alert(`WhatsApp a ${apt.contactName}`)}

@@ -24,6 +24,7 @@ export interface AppointmentTimelineItemData {
   notes?: string;
   phone?: string;
   price?: number;
+  isOverdue?: boolean;
 }
 
 export interface AppointmentTimelineItemProps {
@@ -36,6 +37,7 @@ export interface AppointmentTimelineItemProps {
   onNoShow?: () => void;
   onWhatsApp?: () => void;
   onCall?: () => void;
+  isOverdue?: boolean;
   className?: string;
 }
 
@@ -64,6 +66,63 @@ export function getTimelineStatusDotClass(status: AppointmentTimelineStatus): st
   }
 }
 
+function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(":");
+  const h = parseInt(parts[0], 10) || 0;
+  const m = parseInt(parts[1], 10) || 0;
+  return h * 60 + m;
+}
+
+const OVERDUE_STATUSES = new Set([
+  "SCHEDULED",
+  "CONFIRMED",
+  "NO_SHOW",
+  "programada",
+  "confirmada",
+  "no_asistio",
+]);
+
+/**
+ * Ordena las citas de forma inteligente para la vista Timeline:
+ * - Primero las citas actuales y posteriores (ordenadas ascendentemente por startTime).
+ * - Al final las citas vencidas (cuya hora ya pasó y no asistió o marcadas isOverdue: true, ordenadas ascendentemente por startTime).
+ */
+export function sortAppointmentsByTimelinePriority<
+  T extends { startTime: string; endTime?: string; status?: string; isOverdue?: boolean }
+>(items: T[], currentMinutes?: number): T[] {
+  const currentOrUpcoming: T[] = [];
+  const overdue: T[] = [];
+
+  for (const item of items) {
+    let isItemOverdue = Boolean(item.isOverdue);
+
+    if (!isItemOverdue && currentMinutes !== undefined) {
+      const compareTime = item.endTime || item.startTime;
+      const itemMinutes = parseTimeToMinutes(compareTime);
+      const itemStatus = item.status || "SCHEDULED";
+      if (itemMinutes < currentMinutes && OVERDUE_STATUSES.has(itemStatus)) {
+        isItemOverdue = true;
+      }
+    }
+
+    if (isItemOverdue) {
+      overdue.push(isItemOverdue !== Boolean(item.isOverdue) ? { ...item, isOverdue: true } : item);
+    } else {
+      currentOrUpcoming.push(item);
+    }
+  }
+
+  currentOrUpcoming.sort(
+    (a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)
+  );
+  overdue.sort(
+    (a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime)
+  );
+
+  return [...currentOrUpcoming, ...overdue];
+}
+
 /**
  * AppointmentTimelineItem
  * Fila de cita con Timeline lateral conectada (hora + punto de estado + riel vertical)
@@ -79,10 +138,12 @@ export function AppointmentTimelineItem({
   onNoShow,
   onWhatsApp,
   onCall,
+  isOverdue,
   className = "",
 }: AppointmentTimelineItemProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
+  const overdue = Boolean(isOverdue ?? appointment.isOverdue);
 
   const handleToggle = () => {
     if (onToggleExpand) {
@@ -92,7 +153,10 @@ export function AppointmentTimelineItem({
     }
   };
 
-  const dotClass = getTimelineStatusDotClass(appointment.status);
+  const dotClass = overdue
+    ? "bg-rose-500 ring-3 ring-rose-500/20"
+    : getTimelineStatusDotClass(appointment.status);
+
   const durationText = appointment.durationMin ? `${appointment.durationMin} min` : undefined;
 
   return (
@@ -102,7 +166,13 @@ export function AppointmentTimelineItem({
     >
       {/* Columna Izquierda: Riel de Timeline */}
       <div className="w-12 sm:w-14 flex flex-col items-center pt-3 select-none shrink-0">
-        <span className="font-mono text-sm sm:text-base font-bold text-[var(--foreground)] tracking-tight">
+        <span
+          className={`font-mono text-sm sm:text-base font-bold tracking-tight ${
+            overdue
+              ? "text-rose-500/80 dark:text-rose-400/80 line-through decoration-rose-500/50"
+              : "text-[var(--foreground)]"
+          }`}
+        >
           {appointment.startTime}
         </span>
         <span
@@ -113,7 +183,11 @@ export function AppointmentTimelineItem({
         {!isLast && (
           <div
             data-testid="timeline-vertical-line"
-            className="w-px flex-1 bg-[var(--border)] mt-2"
+            className={
+              overdue
+                ? "w-px flex-1 border-l border-dashed border-rose-500/30 dark:border-rose-400/25 bg-transparent mt-2"
+                : "w-px flex-1 bg-[var(--border)] mt-2"
+            }
             aria-hidden="true"
           />
         )}
@@ -123,7 +197,11 @@ export function AppointmentTimelineItem({
       <div className="flex-1 pb-3 sm:pb-4 min-w-0">
         <div
           data-testid={`appointment-card-accordion-${appointment.id}`}
-          className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 transition-all shadow-2xs hover:border-[var(--primary)]/30"
+          className={`rounded-2xl border p-4 transition-all shadow-2xs ${
+            overdue
+              ? "border-dashed border-rose-500/35 dark:border-rose-400/30 bg-rose-500/[0.03] dark:bg-rose-950/10 opacity-75 hover:opacity-100"
+              : "border-[var(--border)] bg-[var(--surface-elevated)] hover:border-[var(--primary)]/30"
+          }`}
         >
           {/* Cabecera Clickeable */}
           <button
@@ -133,7 +211,7 @@ export function AppointmentTimelineItem({
             className="w-full text-left flex items-start justify-between gap-3 cursor-pointer group/header"
           >
             <div className="min-w-0 flex-1">
-              <h4 className="text-base font-bold text-[var(--foreground)] group-hover/header:text-[var(--primary)] transition-colors truncate">
+              <h4 className="text-base font-bold text-[var(--foreground)] group-hover/header:text-[var(--primary)] transition-colors truncate flex items-center gap-2 flex-wrap">
                 <span
                   onClick={(e) => {
                     if (onNameClick) {
@@ -145,6 +223,15 @@ export function AppointmentTimelineItem({
                 >
                   {appointment.contactName}
                 </span>
+
+                {overdue && (
+                  <span
+                    data-testid="appointment-overdue-badge"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25 shrink-0"
+                  >
+                    ⏰ Vencida
+                  </span>
+                )}
               </h4>
 
               {/* Teléfono sutil debajo del nombre SOLO cuando está expandida */}
@@ -174,14 +261,18 @@ export function AppointmentTimelineItem({
               className="w-5 h-5 flex items-center justify-center text-[var(--muted)] group-hover/header:text-[var(--foreground)] transition-transform shrink-0 pt-0.5"
               aria-hidden="true"
             >
-              {isExpanded ? Icons.chevronUp || (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="18 15 12 9 6 15" />
-                </svg>
-              ) : Icons.chevronDown || (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+              {isExpanded ? (
+                Icons.chevronUp || (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="18 15 12 9 6 15" />
+                  </svg>
+                )
+              ) : (
+                Icons.chevronDown || (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                )
               )}
             </span>
           </button>

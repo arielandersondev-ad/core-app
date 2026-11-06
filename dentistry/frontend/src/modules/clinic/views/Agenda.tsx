@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Fragment } from "react";
 import {
   getServiceById,
   getProfessionalById,
@@ -138,6 +138,22 @@ function getTimelineDotColor(status: AppointmentStatus): string {
     default:
       return "bg-amber-400";
   }
+}
+
+export function isAppointmentOverdue(
+  apt: Appointment,
+  nowDateStr: string,
+  nowMinutes: number,
+): boolean {
+  if (apt.status === "no_asistio") return true;
+  if (apt.status !== "programada" && apt.status !== "confirmada") return false;
+  if (apt.date < nowDateStr) return true;
+  if (apt.date > nowDateStr) return false;
+
+  const endMin = apt.endTime ? timeToMinutes(apt.endTime) : 0;
+  const startMin = apt.startTime ? timeToMinutes(apt.startTime) : 0;
+  const threshold = endMin > startMin ? endMin : startMin;
+  return threshold <= nowMinutes;
 }
 
 function mapDtoToAppointment(dto: AppointmentDto): Appointment {
@@ -333,8 +349,12 @@ export default function Agenda({
     setIsWaOpen(true);
   };
 
+  const now = new Date();
+  const nowDateStr = now.toISOString().slice(0, 10);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   const dayAppts = useMemo(() => {
-    return appointmentsList.filter((a) => {
+    const filtered = appointmentsList.filter((a) => {
       const matchPro = proFilter === "all" || a.professionalId === proFilter;
       const matchStatus =
         statusFilter === "all"
@@ -344,7 +364,26 @@ export default function Agenda({
             : a.status === statusFilter;
       return matchPro && matchStatus;
     });
-  }, [appointmentsList, proFilter, statusFilter]);
+
+    const upcoming: Appointment[] = [];
+    const overdue: Appointment[] = [];
+
+    for (const apt of filtered) {
+      if (isAppointmentOverdue(apt, nowDateStr, nowMinutes)) {
+        overdue.push(apt);
+      } else {
+        upcoming.push(apt);
+      }
+    }
+
+    const sortByTime = (a: Appointment, b: Appointment) =>
+      timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+
+    upcoming.sort(sortByTime);
+    overdue.sort(sortByTime);
+
+    return [...upcoming, ...overdue];
+  }, [appointmentsList, proFilter, statusFilter, nowDateStr, nowMinutes]);
 
   // Estado de expansión de tarjeta en Feed (por defecto la primera cita de dayAppts)
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -412,7 +451,7 @@ export default function Agenda({
   ).length;
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6 pb-24">
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4 pb-24 h-full">
       {/* ── BARRA SUPERIOR: Selector de Calendario Minimalista (Floating Minimal) ── */}
       <div className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
         {/* Fila Superior: Navegación de Mes/Año + Controles de Modo y Hoy (Sin botón +) */}
@@ -558,7 +597,7 @@ export default function Agenda({
       </div>
 
       {/* ── CHIPS DE FILTRO RÁPIDO ── */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+      <div className="flex items-center gap-2 overflow-x-auto overflow-y-hidden no-scrollbar text-xs py-2">
         <button
           onClick={() => setStatusFilter("all")}
           className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-medium transition-all border ${
@@ -630,7 +669,7 @@ export default function Agenda({
       )}
       {viewMode === "feed" ? (
         <PullToRefresh onRefresh={handleRefreshAppointments}>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 h-full">
             {isLoading ? (
               <div className="p-8 text-center text-xs font-mono text-[var(--muted)] animate-pulse bg-[var(--surface)] border border-[var(--border)] rounded-2xl">
                 Cargando agenda de citas...
@@ -653,7 +692,20 @@ export default function Agenda({
                 className="w-full justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] py-10"
               />
             ) : (
-              dayAppts.map((apt) => {
+              dayAppts.map((apt, index) => {
+                const isOverdue = isAppointmentOverdue(
+                  apt,
+                  nowDateStr,
+                  nowMinutes,
+                );
+                const showOverdueDivider =
+                  isOverdue &&
+                  index > 0 &&
+                  !isAppointmentOverdue(
+                    dayAppts[index - 1],
+                    nowDateStr,
+                    nowMinutes,
+                  );
                 const svc = getServiceById(apt.serviceId);
                 const doctor = getDoctorDisplay(apt.professionalId);
                 const isPerson = isPersonaAppointment(apt);
@@ -678,327 +730,385 @@ export default function Agenda({
                 const isExpanded = expandedId === apt.id;
 
                 return (
-                  <div
-                    key={apt.id}
-                    className="flex gap-3 sm:gap-4 items-stretch"
-                  >
-                    {/* 1) Columna Izquierda — Riel de Timeline */}
-                    <div className="w-12 sm:w-14 flex flex-col items-center pt-3.5 shrink-0">
-                      <span className="font-mono text-xs sm:text-sm font-bold text-[var(--foreground)]">
-                        {apt.startTime}
-                      </span>
-                      <span
-                        className={`mt-2 w-2.5 h-2.5 rounded-full shrink-0 ${getTimelineDotColor(
-                          apt.status,
-                        )}`}
-                      />
-                      <span className="w-px flex-1 bg-[var(--border)] my-1.5" />
-                    </div>
-
-                    {/* 2) Columna Derecha — Tarjeta Desplegable / Acordeón */}
-                    <div className="flex-1 min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 transition-all shadow-2xs">
-                      {/* Cabecera de la tarjeta */}
+                  <Fragment key={apt.id}>
+                    {showOverdueDivider && (
                       <div
-                        className="flex items-center justify-between gap-2 cursor-pointer select-none"
-                        onClick={() => handleToggleExpand(apt.id)}
+                        className="flex items-center gap-3 pt-2 pb-1 px-1"
+                        data-testid="overdue-appointments-divider"
                       >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedDetailCitaId(apt.id);
-                            setIsDetailSheetOpen(true);
-                          }}
-                          className="text-left font-display text-base font-bold text-[var(--foreground)] underline decoration-dotted decoration-[var(--muted)]/70 underline-offset-4 hover:decoration-[var(--primary)] hover:text-[var(--primary)] transition-colors truncate cursor-pointer"
+                        <div className="h-px flex-1 bg-rose-500/20" />
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-rose-500/80 dark:text-rose-400/80 font-semibold">
+                          ⏰ Citas vencidas (hora pasada)
+                        </span>
+                        <div className="h-px flex-1 bg-rose-500/20" />
+                      </div>
+                    )}
+                    <div className="flex gap-3 sm:gap-4 items-stretch">
+                      {/* 1) Columna Izquierda — Riel de Timeline */}
+                      <div className="w-12 sm:w-14 flex flex-col items-center pt-3.5 shrink-0">
+                        <span
+                          className={`font-mono text-xs sm:text-sm font-bold ${
+                            isOverdue
+                              ? "text-rose-500/80 dark:text-rose-400/80 line-through decoration-rose-500/50"
+                              : "text-[var(--foreground)]"
+                          }`}
                         >
-                          {patientName}
-                        </button>
-
-                        <button
-                          type="button"
-                          aria-label={
-                            isExpanded ? "Colapsar cita" : "Expandir cita"
+                          {apt.startTime}
+                        </span>
+                        <span
+                          className={`mt-2 w-2.5 h-2.5 rounded-full shrink-0 ${
+                            isOverdue
+                              ? "bg-rose-500 ring-3 ring-rose-500/20"
+                              : getTimelineDotColor(apt.status)
+                          }`}
+                        />
+                        <span
+                          className={
+                            isOverdue
+                              ? "w-px flex-1 border-l border-dashed border-rose-500/30 my-1.5"
+                              : "w-px flex-1 bg-[var(--border)] my-1.5"
                           }
-                          className="w-8 h-8 flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] transition-colors rounded-lg shrink-0 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleExpand(apt.id);
-                          }}
-                        >
-                          {isExpanded ? (
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="18 15 12 9 6 15" />
-                            </svg>
-                          ) : (
-                            <svg
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                          )}
-                        </button>
+                        />
                       </div>
 
-                      {/* Vista Colapsada */}
-                      {!isExpanded && (
+                      {/* 2) Columna Derecha — Tarjeta Desplegable / Acordeón */}
+                      <div
+                        className={`flex-1 min-w-0 rounded-2xl p-4 transition-all shadow-2xs ${
+                          isOverdue
+                            ? "border border-dashed border-rose-500/35 dark:border-rose-400/30 bg-rose-500/[0.03] dark:bg-rose-950/10 opacity-75 hover:opacity-100"
+                            : "border border-[var(--border)] bg-[var(--surface-elevated)]"
+                        }`}
+                      >
+                        {/* Cabecera de la tarjeta */}
                         <div
-                          className="mt-1 cursor-pointer"
+                          className="flex items-center justify-between gap-2 cursor-pointer select-none"
                           onClick={() => handleToggleExpand(apt.id)}
                         >
-                          <p className="text-sm text-[var(--muted)] truncate">
-                            {svcName} · {durationMin} min
-                          </p>
-                          {cleanedNote && (
-                            <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400/90 truncate">
-                              <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="shrink-0"
-                              >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10 9 9 9 8 9" />
-                              </svg>
-                              <span className="truncate">{cleanedNote}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Vista Expandida */}
-                      {isExpanded && (
-                        <div className="mt-1">
-                          {displayPhone && (
-                            <p className="text-[11px] font-mono text-[var(--muted)]/75 leading-tight mt-0.5 mb-1">
-                              {displayPhone}
-                            </p>
-                          )}
-                          <p className="text-sm text-[var(--muted)]">
-                            {svcName}
-                          </p>
-                          {cleanedNote && (
-                            <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400/90">
-                              <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="shrink-0"
-                              >
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10 9 9 9 8 9" />
-                              </svg>
-                              <span>{cleanedNote}</span>
-                            </div>
-                          )}
-
-                          {/* Fila de Acciones Táctiles */}
-                          <div className="mt-3.5 flex items-center gap-2">
-                            {/* WhatsApp */}
+                          <div className="flex items-center gap-2 min-w-0 truncate">
                             <button
                               type="button"
-                              onClick={() => handleOpenWhatsApp(apt)}
-                              className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] hover:border-emerald-500/40 flex items-center justify-center shrink-0 transition-colors cursor-pointer active:scale-95 shadow-2xs"
-                              title="Enviar WhatsApp"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedDetailCitaId(apt.id);
+                                setIsDetailSheetOpen(true);
+                              }}
+                              className="text-left font-display text-base font-bold text-[var(--foreground)] underline decoration-dotted decoration-[var(--muted)]/70 underline-offset-4 hover:decoration-[var(--primary)] hover:text-[var(--primary)] transition-colors truncate cursor-pointer"
                             >
-                              <span className="w-5 h-5 flex items-center justify-center">
-                                {Icons.whatsappReal}
-                              </span>
+                              {patientName}
                             </button>
-
-                            {/* Teléfono */}
-                            {cleanPhone || displayPhone ? (
-                              <a
-                                href={`tel:+${cleanPhone || displayPhone}`}
-                                className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] hover:border-[var(--foreground)]/40 flex items-center justify-center shrink-0 text-[var(--foreground)] transition-colors active:scale-95 shadow-2xs"
-                                title={`Llamar a ${displayPhone || patientName}`}
+                            {isOverdue && (
+                              <span
+                                data-testid="appointment-overdue-badge"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25 shrink-0"
                               >
-                                <span className="w-4 h-4 flex items-center justify-center">
-                                  {Icons.phoneCall}
-                                </span>
-                              </a>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled
-                                className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] opacity-40 flex items-center justify-center shrink-0 text-[var(--muted)]"
-                              >
-                                <span className="w-4 h-4 flex items-center justify-center">
-                                  {Icons.phoneCall}
-                                </span>
-                              </button>
+                                ⏰ Vencida
+                              </span>
                             )}
+                          </div>
 
-                            {/* Botón Primario Ancho Verde o Estado Informativo */}
-                            {["programada", "confirmada", "en_sala", "en_curso"].includes(
-                              apt.status,
-                            ) ? (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (apt.status === "programada") {
-                                    handleQuickStatusChange(apt.id, "confirmada");
-                                  } else if (apt.status === "confirmada") {
-                                    handleQuickStatusChange(apt.id, "en_sala");
-                                  } else if (apt.status === "en_sala") {
-                                    handleQuickStatusChange(apt.id, "en_curso");
-                                  } else if (apt.status === "en_curso") {
-                                    handleQuickStatusChange(apt.id, "completada");
-                                  }
-                                }}
-                                className="flex-1 h-10 rounded-xl bg-[#6cc24a] hover:bg-[#5db33c] text-zinc-950 font-semibold text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.99] shadow-xs"
+                          <button
+                            type="button"
+                            aria-label={
+                              isExpanded ? "Colapsar cita" : "Expandir cita"
+                            }
+                            className="w-8 h-8 flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] transition-colors rounded-lg shrink-0 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleExpand(apt.id);
+                            }}
+                          >
+                            {isExpanded ? (
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
-                                {apt.status === "programada" && (
-                                  <>
-                                    <svg
-                                      width="15"
-                                      height="15"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span>Confirmar</span>
-                                  </>
-                                )}
-                                {apt.status === "confirmada" && (
-                                  <>
-                                    <svg
-                                      width="15"
-                                      height="15"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span>A sala de espera</span>
-                                  </>
-                                )}
-                                {apt.status === "en_sala" && (
-                                  <>
-                                    <svg
-                                      width="15"
-                                      height="15"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span>Pasar al sillón</span>
-                                  </>
-                                )}
-                                {apt.status === "en_curso" && (
-                                  <>
-                                    <svg
-                                      width="15"
-                                      height="15"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <polyline points="20 6 9 17 4 12" />
-                                    </svg>
-                                    <span>Finalizar</span>
-                                  </>
-                                )}
-                              </button>
+                                <polyline points="18 15 12 9 6 15" />
+                              </svg>
                             ) : (
-                              <div className="flex-1 h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] font-medium text-xs flex items-center justify-center gap-1.5 select-none">
-                                <span>{statusLabels[apt.status] || apt.status}</span>
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Vista Colapsada */}
+                        {!isExpanded && (
+                          <div
+                            className="mt-1 cursor-pointer"
+                            onClick={() => handleToggleExpand(apt.id)}
+                          >
+                            <p className="text-sm text-[var(--muted)] truncate">
+                              {svcName} · {durationMin} min
+                            </p>
+                            {cleanedNote && (
+                              <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400/90 truncate">
+                                <svg
+                                  width="13"
+                                  height="13"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="shrink-0"
+                                >
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                  <line x1="16" y1="13" x2="8" y2="13" />
+                                  <line x1="16" y1="17" x2="8" y2="17" />
+                                  <polyline points="10 9 9 9 8 9" />
+                                </svg>
+                                <span className="truncate">{cleanedNote}</span>
                               </div>
                             )}
                           </div>
+                        )}
 
-                          {/* Fila Inferior del Acordeón */}
-                          <div className="mt-3 pt-1 flex items-center justify-between text-xs text-[var(--muted)]">
-                            <div className="flex items-center gap-3">
-                              {apt.status !== "no_asistio" &&
-                                apt.status !== "cancelada" &&
-                                apt.status !== "completada" && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
+                        {/* Vista Expandida */}
+                        {isExpanded && (
+                          <div className="mt-1">
+                            {displayPhone && (
+                              <p className="text-[11px] font-mono text-[var(--muted)]/75 leading-tight mt-0.5 mb-1">
+                                {displayPhone}
+                              </p>
+                            )}
+                            <p className="text-sm text-[var(--muted)]">
+                              {svcName}
+                            </p>
+                            {cleanedNote && (
+                              <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400/90">
+                                <svg
+                                  width="13"
+                                  height="13"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className="shrink-0"
+                                >
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                  <line x1="16" y1="13" x2="8" y2="13" />
+                                  <line x1="16" y1="17" x2="8" y2="17" />
+                                  <polyline points="10 9 9 9 8 9" />
+                                </svg>
+                                <span>{cleanedNote}</span>
+                              </div>
+                            )}
+
+                            {/* Fila de Acciones Táctiles */}
+                            <div className="mt-3.5 flex items-center gap-2">
+                              {/* WhatsApp */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenWhatsApp(apt)}
+                                className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] hover:border-emerald-500/40 flex items-center justify-center shrink-0 transition-colors cursor-pointer active:scale-95 shadow-2xs"
+                                title="Enviar WhatsApp"
+                              >
+                                <span className="w-5 h-5 flex items-center justify-center">
+                                  {Icons.whatsappReal}
+                                </span>
+                              </button>
+
+                              {/* Teléfono */}
+                              {cleanPhone || displayPhone ? (
+                                <a
+                                  href={`tel:+${cleanPhone || displayPhone}`}
+                                  className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] hover:border-[var(--foreground)]/40 flex items-center justify-center shrink-0 text-[var(--foreground)] transition-colors active:scale-95 shadow-2xs"
+                                  title={`Llamar a ${displayPhone || patientName}`}
+                                >
+                                  <span className="w-4 h-4 flex items-center justify-center">
+                                    {Icons.phoneCall}
+                                  </span>
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled
+                                  className="h-10 w-12 rounded-xl border border-[var(--border)] bg-[var(--background)] opacity-40 flex items-center justify-center shrink-0 text-[var(--muted)]"
+                                >
+                                  <span className="w-4 h-4 flex items-center justify-center">
+                                    {Icons.phoneCall}
+                                  </span>
+                                </button>
+                              )}
+
+                              {/* Botón Primario Ancho Verde o Estado Informativo */}
+                              {[
+                                "programada",
+                                "confirmada",
+                                "en_sala",
+                                "en_curso",
+                              ].includes(apt.status) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (apt.status === "programada") {
                                       handleQuickStatusChange(
                                         apt.id,
-                                        "no_asistio",
-                                      )
+                                        "confirmada",
+                                      );
+                                    } else if (apt.status === "confirmada") {
+                                      handleQuickStatusChange(
+                                        apt.id,
+                                        "en_sala",
+                                      );
+                                    } else if (apt.status === "en_sala") {
+                                      handleQuickStatusChange(
+                                        apt.id,
+                                        "en_curso",
+                                      );
+                                    } else if (apt.status === "en_curso") {
+                                      handleQuickStatusChange(
+                                        apt.id,
+                                        "completada",
+                                      );
                                     }
-                                    className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)] cursor-pointer transition-colors"
-                                    title="Marcar que no asistió"
-                                  >
-                                    <svg
-                                      width="14"
-                                      height="14"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                      <circle cx="8.5" cy="7" r="4" />
-                                      <line x1="18" y1="8" x2="23" y2="13" />
-                                      <line x1="23" y1="8" x2="18" y2="13" />
-                                    </svg>
-                                    <span>No asistió</span>
-                                  </button>
-                                )}
+                                  }}
+                                  className="flex-1 h-10 rounded-xl bg-[#6cc24a] hover:bg-[#5db33c] text-zinc-950 font-semibold text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.99] shadow-xs"
+                                >
+                                  {apt.status === "programada" && (
+                                    <>
+                                      <svg
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                      <span>Confirmar</span>
+                                    </>
+                                  )}
+                                  {apt.status === "confirmada" && (
+                                    <>
+                                      <svg
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                      <span>A sala de espera</span>
+                                    </>
+                                  )}
+                                  {apt.status === "en_sala" && (
+                                    <>
+                                      <svg
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                      <span>Pasar al sillón</span>
+                                    </>
+                                  )}
+                                  {apt.status === "en_curso" && (
+                                    <>
+                                      <svg
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <polyline points="20 6 9 17 4 12" />
+                                      </svg>
+                                      <span>Finalizar</span>
+                                    </>
+                                  )}
+                                </button>
+                              ) : (
+                                <div className="flex-1 h-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] font-medium text-xs flex items-center justify-center gap-1.5 select-none">
+                                  <span>
+                                    {statusLabels[apt.status] || apt.status}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            <span className="font-mono text-xs text-[var(--muted)]">
-                              {durationMin} min
-                            </span>
+
+                            {/* Fila Inferior del Acordeón */}
+                            <div className="mt-3 pt-1 flex items-center justify-between text-xs text-[var(--muted)]">
+                              <div className="flex items-center gap-3">
+                                {apt.status !== "no_asistio" &&
+                                  apt.status !== "cancelada" &&
+                                  apt.status !== "completada" && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleQuickStatusChange(
+                                          apt.id,
+                                          "no_asistio",
+                                        )
+                                      }
+                                      className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--foreground)] cursor-pointer transition-colors"
+                                      title="Marcar que no asistió"
+                                    >
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                        <circle cx="8.5" cy="7" r="4" />
+                                        <line x1="18" y1="8" x2="23" y2="13" />
+                                        <line x1="23" y1="8" x2="18" y2="13" />
+                                      </svg>
+                                      <span>No asistió</span>
+                                    </button>
+                                  )}
+                              </div>
+                              <span className="font-mono text-xs text-[var(--muted)]">
+                                {durationMin} min
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Fragment>
                 );
               })
             )}

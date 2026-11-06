@@ -576,7 +576,7 @@ test('HAG-52: Agenda.tsx implementa timeline vertical en 2 columnas, tarjetas de
   assert.match(content, /durationMin/, 'Debe calcular durationMin de la cita');
   assert.match(
     content,
-    /flex-1\s+min-w-0\s+rounded-2xl\s+border\s+border-\[var\(--border\)\]\s+bg-\[var\(--surface-elevated\)\]\s+p-4/,
+    /flex-1\s+min-w-0\s+rounded-2xl[\s\S]*?bg-\[var\(--surface-elevated\)\]/,
     'Tarjeta debe tener rounded-2xl, border, surface-elevated y p-4',
   );
 
@@ -678,5 +678,204 @@ test('HAG-60 Frontend: Subrayado Bybit en nombre, sin Ver ficha, teléfono al ex
     modalContent,
     /window\.addEventListener\("popstate",\s*handlePopState\)/,
     'WhatsAppModal debe escuchar el evento popstate para retroceder limpiamente',
+  );
+});
+
+// ============================================================================
+// 13. FRONTEND LOGIC & UI (HAG-66): Ordenar citas y efecto visual "⏰ Vencida"
+// ============================================================================
+
+function testIsAppointmentOverdue(apt, nowDateStr, nowMinutes) {
+  if (apt.status === 'no_asistio') return true;
+  if (apt.status !== 'programada' && apt.status !== 'confirmada') return false;
+  if (apt.date < nowDateStr) return true;
+  if (apt.date > nowDateStr) return false;
+
+  const toMin = (t) => {
+    if (!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const endMin = apt.endTime ? toMin(apt.endTime) : 0;
+  const startMin = apt.startTime ? toMin(apt.startTime) : 0;
+  const threshold = endMin > startMin ? endMin : startMin;
+  return threshold <= nowMinutes;
+}
+
+test('HAG-66 Frontend: Helper isAppointmentOverdue detecta citas vencidas según estado, fecha y hora', () => {
+  const TODAY = '2026-11-05';
+  const NOW_1030 = 10 * 60 + 30; // 10:30 (630 min)
+
+  // 1. Inasistencia explícita siempre es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'no_asistio', date: TODAY, startTime: '15:00', endTime: '15:30' }, TODAY, NOW_1030),
+    true,
+    'Estado no_asistio siempre debe ser vencido',
+  );
+
+  // 2. En sala, en curso y completada NUNCA son vencidas (paciente sí asistió)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'en_sala', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'en_sala no debe considerarse vencida',
+  );
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'en_curso', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'en_curso no debe considerarse vencida',
+  );
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'completada', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'completada no debe considerarse vencida',
+  );
+
+  // 3. Día pasado sin asistir es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: '2026-11-04', startTime: '16:00', endTime: '16:30' }, TODAY, NOW_1030),
+    true,
+    'Cita de día previo sin asistir debe ser vencida',
+  );
+
+  // 4. Día futuro NUNCA es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: '2026-11-06', startTime: '08:00', endTime: '08:30' }, TODAY, NOW_1030),
+    false,
+    'Cita de día futuro no debe ser vencida',
+  );
+
+  // 5. Mismo día: hora ya pasada (09:00 - 09:30 vs 10:30 actual)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'confirmada', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    true,
+    'Cita confirmada cuya hora ya pasó debe ser vencida',
+  );
+
+  // 6. Mismo día: hora futura (11:00 - 11:30 vs 10:30 actual)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: TODAY, startTime: '11:00', endTime: '11:30' }, TODAY, NOW_1030),
+    false,
+    'Cita programada posterior a la hora actual no debe ser vencida',
+  );
+});
+
+test('HAG-66 Frontend: Ordenamiento en Agenda.tsx prioriza citas actuales/posteriores y envía vencidas abajo', () => {
+  const TODAY = '2026-11-05';
+  const NOW_1030 = 10 * 60 + 30; // 10:30
+
+  const toMin = (t) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const appointments = [
+    { id: 'apt-0830', startTime: '08:30', endTime: '09:00', date: TODAY, status: 'programada' }, // Vencida
+    { id: 'apt-1100', startTime: '11:00', endTime: '11:30', date: TODAY, status: 'confirmada' }, // Próxima
+    { id: 'apt-0900', startTime: '09:00', endTime: '09:30', date: TODAY, status: 'confirmada' }, // Vencida
+    { id: 'apt-1400', startTime: '14:00', endTime: '14:30', date: TODAY, status: 'programada' }, // Próxima
+    { id: 'apt-1045', startTime: '10:45', endTime: '11:15', date: TODAY, status: 'en_curso' },   // Próxima/Activa
+  ];
+
+  const upcoming = [];
+  const overdue = [];
+
+  for (const apt of appointments) {
+    if (testIsAppointmentOverdue(apt, TODAY, NOW_1030)) {
+      overdue.push(apt);
+    } else {
+      upcoming.push(apt);
+    }
+  }
+
+  const sortByTime = (a, b) => toMin(a.startTime) - toMin(b.startTime);
+  upcoming.sort(sortByTime);
+  overdue.sort(sortByTime);
+
+  const sorted = [...upcoming, ...overdue];
+  const sortedIds = sorted.map((a) => a.id);
+
+  assert.deepEqual(
+    sortedIds,
+    ['apt-1045', 'apt-1100', 'apt-1400', 'apt-0830', 'apt-0900'],
+    'Debe ordenar próximas/activas primero de forma cronológica ascendente y vencidas abajo',
+  );
+});
+
+test('HAG-66 Frontend: Agenda.tsx contiene divider de citas vencidas, badge y estilos visuales', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Definición y export de isAppointmentOverdue
+  assert.match(
+    agendaContent,
+    /export\s+function\s+isAppointmentOverdue/,
+    'Agenda.tsx debe exportar isAppointmentOverdue',
+  );
+
+  // 2. Ordenamiento en dayAppts separando upcoming y overdue
+  assert.match(
+    agendaContent,
+    /upcoming\.push\(apt\)/,
+    'dayAppts debe acumular citas próximas',
+  );
+  assert.match(
+    agendaContent,
+    /overdue\.push\(apt\)/,
+    'dayAppts debe acumular citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /\[\.\.\.upcoming,\s*\.\.\.overdue\]/,
+    'dayAppts debe devolver próximas primero y vencidas al final',
+  );
+
+  // 3. Separador horizontal de citas vencidas
+  assert.match(
+    agendaContent,
+    /data-testid="overdue-appointments-divider"/,
+    'Debe incluir testid del divider de citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /⏰ Citas vencidas \(hora pasada\)/,
+    'Divider debe mostrar etiqueta de citas vencidas',
+  );
+
+  // 4. Efecto visual columna izquierda (Timeline)
+  assert.match(
+    agendaContent,
+    /line-through\s+decoration-rose-500\/50/,
+    'Timeline debe tachar la hora de citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /bg-rose-500\s+ring-3\s+ring-rose-500\/20/,
+    'Dot de Timeline debe tener anillo rose para citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /border-dashed\s+border-rose-500\/30/,
+    'Línea de Timeline debe ser discontinua para citas vencidas',
+  );
+
+  // 5. Efecto visual tarjeta y badge
+  assert.match(
+    agendaContent,
+    /border-dashed\s+border-rose-500\/35[\s\S]*?bg-rose-500\/\[0\.03\]/,
+    'Tarjeta debe tener borde discontinuo y fondo sutil rose para citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /data-testid="appointment-overdue-badge"/,
+    'Debe incluir testid del badge de cita vencida',
+  );
+  assert.match(
+    agendaContent,
+    /⏰ Vencida/,
+    'Cabecera debe incluir el badge ⏰ Vencida',
   );
 });

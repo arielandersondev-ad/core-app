@@ -637,6 +637,14 @@ describe("ResponsiveModal Unit & Integration Tests", () => {
         return result;
       }
 
+      function unmount() {
+        for (const cleanup of Object.values(cleanups)) {
+          if (typeof cleanup === "function") {
+            cleanup();
+          }
+        }
+      }
+
       rerender();
       return {
         result: {
@@ -645,6 +653,7 @@ describe("ResponsiveModal Unit & Integration Tests", () => {
           },
         },
         rerender,
+        unmount,
       };
     }
 
@@ -836,6 +845,78 @@ describe("ResponsiveModal Unit & Integration Tests", () => {
           </BottomSheet>
         );
       }).not.toThrow();
+    });
+
+    it("handles React StrictMode mounting cycle (mount -> cleanup -> remount) without closing itself or calling history.back", () => {
+      vi.useFakeTimers();
+
+      const pushStateSpy = vi.fn();
+      const backSpy = vi.fn();
+      const listeners = new Map<string, Set<(e: any) => void>>();
+
+      const mockHistoryState = { __bottomSheet: true };
+      (globalThis as any).window = {
+        history: {
+          state: mockHistoryState,
+          pushState: pushStateSpy,
+          back: backSpy,
+        },
+        addEventListener: vi.fn((event: string, cb: any) => {
+          if (!listeners.has(event)) listeners.set(event, new Set());
+          listeners.get(event)!.add(cb);
+        }),
+        removeEventListener: vi.fn((event: string, cb: any) => {
+          listeners.get(event)?.delete(cb);
+        }),
+      };
+      (globalThis as any).document = {
+        body: {
+          style: { overflow: "" },
+        },
+      };
+
+      const handleClose = vi.fn();
+
+      // Render 1: primer montaje en StrictMode
+      const { rerender } = renderHook((props: any) => BottomSheet(props), {
+        initialProps: {
+          open: true,
+          onClose: handleClose,
+          title: "StrictMode Sheet",
+          children: <div>Contenido</div>,
+        },
+      });
+
+      expect(pushStateSpy).toHaveBeenCalledTimes(1);
+      expect(backSpy).not.toHaveBeenCalled();
+      expect(handleClose).not.toHaveBeenCalled();
+
+      // StrictMode simula re-ejecución inmediata de render con open=true
+      rerender({
+        open: true,
+        onClose: handleClose,
+        title: "StrictMode Sheet Remounted",
+        children: <div>Contenido</div>,
+      });
+
+      // Avanzamos los timers
+      vi.runAllTimers();
+
+      // Verificamos que back NO se haya llamado y onClose NO se haya disparado
+      expect(backSpy).not.toHaveBeenCalled();
+      expect(handleClose).not.toHaveBeenCalled();
+
+      // Cuando ahora sí se cierra normalmente cambiando open a false:
+      rerender({
+        open: false,
+        onClose: handleClose,
+        title: "StrictMode Sheet Remounted",
+        children: <div>Contenido</div>,
+      });
+
+      expect(backSpy).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
     });
   });
 });

@@ -4,6 +4,7 @@ import { renderToString } from "react-dom/server";
 import {
   AppointmentTimelineItem,
   getTimelineStatusDotClass,
+  sortAppointmentsByTimelinePriority,
   AppointmentTimelineItemData,
   AppointmentTimelineItemProps,
 } from "../src/components/ui/AppointmentTimelineItem";
@@ -238,18 +239,171 @@ describe("AppointmentTimelineItem Primitives and Helpers (HAG-51)", () => {
         }
       );
 
-      // El elemento tiene estructura con acordeón y cabecera
-      const card = result.current.props.children[1].props.children;
-      const headerBtn = card.props.children[0];
-      const nameH4 = headerBtn.props.children[0].props.children[0];
-      const nameSpan = nameH4.props.children;
+      function findElementWithClass(node: any, classNameSub: string): any {
+        if (!node || typeof node !== "object") return null;
+        if (
+          typeof node.props?.className === "string" &&
+          node.props.className.includes(classNameSub)
+        ) {
+          return node;
+        }
+        if (node.props?.children) {
+          const children = Array.isArray(node.props.children)
+            ? node.props.children
+            : [node.props.children];
+          for (const child of children) {
+            const found = findElementWithClass(child, classNameSub);
+            if (found) return found;
+          }
+        }
+        return null;
+      }
 
+      const nameSpan = findElementWithClass(result.current, "decoration-dotted");
+      expect(nameSpan).not.toBeNull();
       expect(nameSpan.props.className).toContain("decoration-dotted");
       const stopPropagationSpy = vi.fn();
       nameSpan.props.onClick({ stopPropagation: stopPropagationSpy } as any);
 
       expect(stopPropagationSpy).toHaveBeenCalledTimes(1);
       expect(handleNameClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Estado visual 'Vencida' (isOverdue) y Ordenamiento Inteligente HAG-67", () => {
+    const defaultItem: AppointmentTimelineItemData = {
+      id: "apt-201",
+      startTime: "05:00",
+      durationMin: 30,
+      status: "SCHEDULED",
+      contactName: "Carlos Choque Apaza",
+      serviceName: "Limpieza",
+    };
+
+    it("renderiza estilo de cita vencida cuando isOverdue={true} se pasa por prop", () => {
+      const html = renderToString(
+        <AppointmentTimelineItem appointment={defaultItem} isOverdue={true} />
+      );
+
+      // Badge data-testid="appointment-overdue-badge" con texto 'Vencida'
+      expect(html).toContain('data-testid="appointment-overdue-badge"');
+      expect(html).toContain("Vencida");
+
+      // Hora con estilo line-through y texto rose
+      expect(html).toContain("line-through");
+      expect(html).toContain("text-rose-500/80");
+
+      // Tarjeta acordeón con border-dashed y opacidad atenuada opacity-75
+      expect(html).toContain("border-dashed");
+      expect(html).toContain("opacity-75");
+
+      // Dot y línea con estilos de overdue
+      expect(html).toContain("bg-rose-500 ring-3 ring-rose-500/20");
+      expect(html).toContain("border-dashed border-rose-500/30");
+    });
+
+    it("renderiza estilo de cita vencida cuando appointment.isOverdue = true en los datos", () => {
+      const overdueItem: AppointmentTimelineItemData = {
+        ...defaultItem,
+        isOverdue: true,
+      };
+
+      const html = renderToString(
+        <AppointmentTimelineItem appointment={overdueItem} />
+      );
+
+      expect(html).toContain('data-testid="appointment-overdue-badge"');
+      expect(html).toContain("Vencida");
+      expect(html).toContain("line-through");
+      expect(html).toContain("border-dashed");
+      expect(html).toContain("opacity-75");
+    });
+
+    it("NO renderiza badge de vencida ni line-through en la hora cuando isOverdue={false} (por defecto)", () => {
+      const html = renderToString(
+        <AppointmentTimelineItem appointment={defaultItem} isOverdue={false} />
+      );
+
+      expect(html).not.toContain('data-testid="appointment-overdue-badge"');
+      expect(html).not.toContain("Vencida");
+      expect(html).not.toContain("line-through");
+      expect(html).not.toContain("opacity-75");
+      expect(html).not.toContain("border-dashed");
+    });
+
+    it("sortAppointmentsByTimelinePriority coloca citas actuales y futuras primero, y citas vencidas al final abajo", () => {
+      // Simular hora actual: 06:00 AM (360 minutos)
+      const currentMinutes = 6 * 60; // 360
+
+      const appointments = [
+        {
+          id: "apt-past-1",
+          startTime: "05:00",
+          endTime: "05:30",
+          status: "SCHEDULED", // Terminó a las 05:30 (< 06:00), paciente no vino -> Vencida
+        },
+        {
+          id: "apt-active",
+          startTime: "05:45",
+          endTime: "06:15",
+          status: "CONFIRMED", // Termina a las 06:15 (>= 06:00) -> Actual/En curso
+        },
+        {
+          id: "apt-future-2",
+          startTime: "07:30",
+          status: "SCHEDULED", // Futura
+        },
+        {
+          id: "apt-explicit-overdue",
+          startTime: "04:30",
+          isOverdue: true, // Explícitamente vencida
+        },
+        {
+          id: "apt-future-1",
+          startTime: "06:30",
+          status: "SCHEDULED", // Futura
+        },
+      ];
+
+      const sorted = sortAppointmentsByTimelinePriority(appointments, currentMinutes);
+
+      // IDs esperados en orden:
+      // 1) Actuales / futuras por startTime ascendente:
+      //    - apt-active (05:45)
+      //    - apt-future-1 (06:30)
+      //    - apt-future-2 (07:30)
+      // 2) Vencidas al final por startTime ascendente:
+      //    - apt-explicit-overdue (04:30)
+      //    - apt-past-1 (05:00)
+      expect(sorted.map((a) => a.id)).toEqual([
+        "apt-active",
+        "apt-future-1",
+        "apt-future-2",
+        "apt-explicit-overdue",
+        "apt-past-1",
+      ]);
+
+      // Las citas vencidas deben tener isOverdue: true
+      const overdueResults = sorted.filter((a) => a.isOverdue);
+      expect(overdueResults.map((a) => a.id)).toEqual([
+        "apt-explicit-overdue",
+        "apt-past-1",
+      ]);
+    });
+
+    it("sortAppointmentsByTimelinePriority ordena correctamente cuando solo se usan flags isOverdue sin currentMinutes", () => {
+      const appointments = [
+        { id: "1", startTime: "08:00", isOverdue: true },
+        { id: "2", startTime: "09:00", isOverdue: false },
+        { id: "3", startTime: "07:00", isOverdue: false },
+        { id: "4", startTime: "06:00", isOverdue: true },
+      ];
+
+      const sorted = sortAppointmentsByTimelinePriority(appointments);
+
+      // Primero las no vencidas: 07:00 (id 3), 09:00 (id 2)
+      // Al final las vencidas: 06:00 (id 4), 08:00 (id 1)
+      expect(sorted.map((a) => a.id)).toEqual(["3", "2", "4", "1"]);
     });
   });
 });

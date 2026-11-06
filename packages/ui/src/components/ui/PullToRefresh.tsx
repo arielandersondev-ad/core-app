@@ -31,19 +31,14 @@ export function PullToRefresh({
   refreshingLabel = "Actualizando...",
   className = "",
 }: PullToRefreshProps) {
-  const {
-    pullDistance,
-    state,
-    isRefreshing,
-    progress,
-    handlers,
-  } = usePullToRefresh({
-    onRefresh,
-    threshold,
-    maxPullDistance,
-    disabled,
-    isRefreshing: controlledRefreshing,
-  });
+  const { pullDistance, state, isRefreshing, progress, handlers } =
+    usePullToRefresh({
+      onRefresh,
+      threshold,
+      maxPullDistance,
+      disabled,
+      isRefreshing: controlledRefreshing,
+    });
 
   const isVisible = pullDistance > 0 || isRefreshing;
 
@@ -51,7 +46,7 @@ export function PullToRefresh({
     <div
       data-testid="pull-to-refresh"
       {...handlers}
-      className={`relative w-full overflow-hidden ${className}`}
+      className={`relative w-full h-full overflow-hidden ${className}`}
     >
       {/* Indicador animado superior */}
       <div
@@ -95,7 +90,10 @@ export function PullToRefresh({
                 state === "ready" ? "rotate-180" : "rotate-0"
               }`}
               style={{
-                transform: state === "ready" ? "rotate(180deg)" : `rotate(${progress * 180}deg)`,
+                transform:
+                  state === "ready"
+                    ? "rotate(180deg)"
+                    : `rotate(${progress * 180}deg)`,
               }}
               viewBox="0 0 24 24"
               fill="none"
@@ -111,16 +109,14 @@ export function PullToRefresh({
             {state === "refreshing"
               ? refreshingLabel
               : state === "ready"
-              ? readyLabel
-              : pullingLabel}
+                ? readyLabel
+                : pullingLabel}
           </span>
         </div>
       </div>
 
       {/* Contenido hijo */}
-      <div className="relative w-full">
-        {children}
-      </div>
+      <div className="relative w-full h-full">{children}</div>
     </div>
   );
 }

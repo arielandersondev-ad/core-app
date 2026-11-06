@@ -60,35 +60,75 @@ export function BottomSheet({
   // Historial de navegador (Back en móvil / popstate)
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const openRef = useRef(open);
+  openRef.current = open;
   const pushedHistoryRef = useRef(false);
   const closedByPopStateRef = useRef(false);
+  const unmountCleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!open) return;
     if (typeof window === "undefined" || typeof window.history?.pushState !== "function") return;
 
-    window.history.pushState(
-      { ...(window.history.state || {}), __bottomSheet: true },
-      ""
-    );
-    pushedHistoryRef.current = true;
-    closedByPopStateRef.current = false;
+    // Si React StrictMode ejecutó cleanup -> setup sincrónicamente al montar, cancelar el cleanup diferido
+    if (unmountCleanupTimerRef.current !== null) {
+      clearTimeout(unmountCleanupTimerRef.current);
+      unmountCleanupTimerRef.current = null;
+    }
 
-    const handlePopState = () => {
+    if (!pushedHistoryRef.current) {
+      window.history.pushState(
+        { ...(window.history.state || {}), __bottomSheet: true },
+        ""
+      );
+      pushedHistoryRef.current = true;
+      closedByPopStateRef.current = false;
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
       closedByPopStateRef.current = true;
       pushedHistoryRef.current = false;
+      if (typeof event?.stopImmediatePropagation === "function") {
+        event.stopImmediatePropagation();
+      }
       onCloseRef.current();
     };
 
     window.addEventListener("popstate", handlePopState);
 
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
+    const performHistoryCleanup = () => {
       if (pushedHistoryRef.current && !closedByPopStateRef.current) {
         pushedHistoryRef.current = false;
-        if (window.history.state?.__bottomSheet) {
+        if (typeof window !== "undefined" && window.history?.state?.__bottomSheet) {
+          const ignoreProgrammaticPopState = (e: Event) => {
+            window.removeEventListener("popstate", ignoreProgrammaticPopState, true);
+            if (typeof e?.stopImmediatePropagation === "function") {
+              e.stopImmediatePropagation();
+            }
+          };
+          window.addEventListener("popstate", ignoreProgrammaticPopState, true);
           window.history.back();
+          setTimeout(() => {
+            if (typeof window !== "undefined") {
+              window.removeEventListener("popstate", ignoreProgrammaticPopState, true);
+            }
+          }, 150);
         }
+      }
+    };
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (!openRef.current) {
+        // El prop `open` pasó explícitamente a `false` mientras el componente sigue montado
+        performHistoryCleanup();
+      } else {
+        // El componente se desmontó mientras `open === true` (ej. ciclo StrictMode mount->cleanup->mount o unmount condicional del padre).
+        // Diferimos al siguiente tick para que si es StrictMode el remount inmediato lo cancele sin llamar a history.back().
+        unmountCleanupTimerRef.current = setTimeout(() => {
+          unmountCleanupTimerRef.current = null;
+          performHistoryCleanup();
+        }, 0);
       }
     };
   }, [open]);
