@@ -1,9 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState } from 'react';
 import type { RoleListItem } from '@/features/role/types/role';
-import { Badge } from '@/shared/components/ui/Badge';
-import { Icons } from '@/shared/components/ui/Icons';
+import { Badge, Icons } from '@/shared/components/ui';
 
 type RoleSelectorPanelProps = {
   roles: RoleListItem[];

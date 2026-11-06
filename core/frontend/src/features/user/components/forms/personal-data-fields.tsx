@@ -1,5 +1,5 @@
 import type {FieldErrors, UseFormRegister} from 'react-hook-form';
-import { Input } from '@/shared/components/ui/Input';
+import { Input } from '@/shared/components/ui';
 import { CreateUserFormValues } from '../../chemas/create-user.schema';
 
 type PersonalDataFieldsProps = {

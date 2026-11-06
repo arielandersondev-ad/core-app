@@ -1,9 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useId, useState } from 'react';
-import { Badge } from '@/shared/components/ui/Badge';
-import { Button } from '@/shared/components/ui/Button';
-import { EmptyState, Icons } from '@/shared/components/ui';
+import { Badge, Button, EmptyState, Icons } from '@/shared/components/ui';
 import { getPermissionGroupPresentation } from '../data/permission-group-presentation';
 import type { PermissionGroup } from '../types/role';
 
