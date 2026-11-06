@@ -59,6 +59,8 @@ export interface Appointment {
   patientName?: string;
   personName?: string;
   patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   professionalId: string;
   serviceId: string;
   serviceIds?: string[];
@@ -77,6 +79,8 @@ export interface ClinicalEntry {
   patientName?: string;
   personName?: string;
   patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   date: string;
   professionalId: string;
   appointmentId?: string;
@@ -91,6 +95,8 @@ export interface Session {
   patientName?: string;
   personName?: string;
   patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   serviceId: string;
   professionalId: string;
   appointmentId?: string;
@@ -105,6 +111,8 @@ export interface Payment {
   patientName?: string;
   personName?: string;
   patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   serviceId?: string;
   appointmentId?: string;
   amount: number;

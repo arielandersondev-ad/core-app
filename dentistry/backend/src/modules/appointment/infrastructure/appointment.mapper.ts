@@ -41,14 +41,19 @@ export interface AppointmentRow {
   createdAt: Date;
   updatedAt: Date;
   services?: AppointmentServiceRow[];
+  patientName?: string | null;
+  patientPhone?: string | null;
+  personName?: string | null;
+  personPhone?: string | null;
+  serviceName?: string | null;
 }
 
 export function toAppointmentEntity(row: AppointmentRow): Appointment {
   const serviceItems = [...(row.services ?? [])]
     .sort(
       (a, b) =>
-        a.createdAt.getTime() - b.createdAt.getTime() ||
-        a.id.localeCompare(b.id),
+        (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0) ||
+        (a.id ?? '').localeCompare(b.id ?? ''),
     )
     .map((s) => ({
       id: s.id,
@@ -61,6 +66,8 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     }));
 
   const serviceIds = serviceItems.map((s) => s.serviceId);
+  const primaryServiceName =
+    row.serviceName ?? serviceItems[0]?.serviceName ?? null;
 
   return new Appointment({
     id: row.id,
@@ -85,5 +92,10 @@ export function toAppointmentEntity(row: AppointmentRow): Appointment {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     services: serviceItems,
+    patientName: row.patientName ?? null,
+    patientPhone: row.patientPhone ?? null,
+    personName: row.personName ?? null,
+    personPhone: row.personPhone ?? null,
+    serviceName: primaryServiceName,
   });
 }

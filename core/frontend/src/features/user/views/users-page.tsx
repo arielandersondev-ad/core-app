@@ -11,6 +11,7 @@ import {
   EmptyState,
   Icons,
   InfiniteScrollSentinel,
+  PullToRefresh,
   MobileFloatingActionMenu,
   MobileFilterSheet,
   FilterTriggerButton,
@@ -162,6 +163,12 @@ export default function UserList() {
     setPage(1);
     void loadPage(1, true);
   }, [debouncedSearch, status, organizationId, loadPage]);
+
+  // Pull-to-refresh handler para móviles
+  const handlePullRefresh = useCallback(async () => {
+    setPage(1);
+    await loadPage(1, true);
+  }, [loadPage]);
 
   // Compact metrics for mobile strip (< 1024px)
   const compactMetrics: CompactStatItem[] = useMemo(
@@ -387,144 +394,146 @@ export default function UserList() {
         </div>
       </MobileFilterSheet>
 
-      {/* 4. Listado Bimodal & Infinite Scroll */}
-      {isLoading && items.length === 0 ? (
-        <div className="p-12 flex flex-col items-center justify-center gap-3 bg-surface border border-border rounded-xl shadow-xs">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-xs font-mono text-muted">Cargando directorio de usuarios…</p>
-        </div>
-      ) : !error && displayedItems.length === 0 ? (
-        <div className="flex-1 min-h-64 flex rounded-xl border border-dashed border-border bg-surface my-2">
-          <EmptyState
-            message="No se encontraron usuarios"
-            description={
-              debouncedSearch || status !== 'all' || organizationId !== 'all' || role !== 'all'
-                ? 'Prueba ajustando los términos de búsqueda o los filtros aplicados.'
-                : 'Aún no hay usuarios registrados en el sistema.'
-            }
-            action={
-              <button
-                type="button"
-                onClick={() => setIsCreateUserOpen(true)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                {Icons.plus} Crear usuario
-              </button>
-            }
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales <article> */}
-          <div className="grid gap-3 md:hidden">
-            {displayedItems.map((user) => (
-              <UserMobileCard key={user.id} user={user} />
-            ))}
+      {/* 4. Listado Bimodal & Infinite Scroll con PullToRefresh */}
+      <PullToRefresh onRefresh={handlePullRefresh}>
+        {isLoading && items.length === 0 ? (
+          <div className="p-12 flex flex-col items-center justify-center gap-3 bg-surface border border-border rounded-xl shadow-xs">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-xs font-mono text-muted">Cargando directorio de usuarios…</p>
           </div>
-
-          {/* VISTA DESKTOP (>= 768px / hidden md:block): Tabla tradicional completa */}
-          <div className="hidden overflow-x-auto rounded-md border border-border bg-surface md:block">
-            <table className="w-full min-w-[760px] text-left text-sm">
-              <thead className="border-b border-border bg-background/50 text-xs uppercase tracking-wide text-muted">
-                <tr>
-                  {['Usuario', 'Organización', 'Sucursales', 'Roles', 'Estado', 'Acciones'].map(
-                    (label) => (
-                      <th
-                        key={label}
-                        className={`px-4 py-3 ${label === 'Acciones' ? 'text-right' : ''}`}
-                      >
-                        {label}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedItems.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="border-b border-border last:border-0 hover:bg-background/40 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar name={`${user.firstName} ${user.lastName}`} size="sm" />
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            {user.firstName} {user.lastName}
-                          </p>
-                          <p className="text-xs text-muted">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted">
-                      {user.memberships.map((item) => item.organizationName).join(', ') || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-muted">
-                      {user.memberships.flatMap((item) => item.branchNames).join(', ') || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-muted">
-                      {user.memberships.flatMap((item) => item.roleNames).join(', ') || '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={
-                          user.status === 'ACTIVE'
-                            ? 'active'
-                            : user.status === 'SUSPENDED'
-                            ? 'suspended'
-                            : 'inactive'
-                        }
-                      >
-                        {user.status === 'ACTIVE'
-                          ? 'Activo'
-                          : user.status === 'SUSPENDED'
-                          ? 'Suspendido'
-                          : 'Inactivo'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/users/${user.id}`}
-                          className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background transition-colors"
-                        >
-                          Detalle
-                        </Link>
-                        <Link
-                          href={`/users/${user.id}/permissions`}
-                          className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background transition-colors"
-                        >
-                          Permisos
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Centinela y Footer para Scroll Infinito */}
-          <InfiniteScrollSentinel
-            onLoadMore={() => {
-              if (hasMore && !isLoading && !isLoadingMore) {
-                void loadPage(page + 1, false);
+        ) : !error && displayedItems.length === 0 ? (
+          <div className="flex-1 min-h-64 flex rounded-xl border border-dashed border-border bg-surface my-2">
+            <EmptyState
+              message="No se encontraron usuarios"
+              description={
+                debouncedSearch || status !== 'all' || organizationId !== 'all' || role !== 'all'
+                  ? 'Prueba ajustando los términos de búsqueda o los filtros aplicados.'
+                  : 'Aún no hay usuarios registrados en el sistema.'
               }
-            }}
-            hasMore={hasMore}
-            isLoading={isLoading}
-            isLoadingMore={isLoadingMore}
-            total={total}
-            currentCount={displayedItems.length}
-            loadingMessage="Cargando más usuarios…"
-            endMessage={
-              displayedItems.length > 0
-                ? `Has llegado al final del listado (${displayedItems.length} de ${total} usuarios)`
-                : undefined
-            }
-          />
-        </div>
-      )}
+              action={
+                <button
+                  type="button"
+                  onClick={() => setIsCreateUserOpen(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  {Icons.plus} Crear usuario
+                </button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales <article> */}
+            <div className="grid gap-3 md:hidden">
+              {displayedItems.map((user) => (
+                <UserMobileCard key={user.id} user={user} />
+              ))}
+            </div>
+
+            {/* VISTA DESKTOP (>= 768px / hidden md:block): Tabla tradicional completa */}
+            <div className="hidden overflow-x-auto rounded-md border border-border bg-surface md:block">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className="border-b border-border bg-background/50 text-xs uppercase tracking-wide text-muted">
+                  <tr>
+                    {['Usuario', 'Organización', 'Sucursales', 'Roles', 'Estado', 'Acciones'].map(
+                      (label) => (
+                        <th
+                          key={label}
+                          className={`px-4 py-3 ${label === 'Acciones' ? 'text-right' : ''}`}
+                        >
+                          {label}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedItems.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-border last:border-0 hover:bg-background/40 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Avatar name={`${user.firstName} ${user.lastName}`} size="sm" />
+                          <div>
+                            <p className="font-semibold text-foreground">
+                              {user.firstName} {user.lastName}
+                            </p>
+                            <p className="text-xs text-muted">{user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        {user.memberships.map((item) => item.organizationName).join(', ') || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        {user.memberships.flatMap((item) => item.branchNames).join(', ') || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-muted">
+                        {user.memberships.flatMap((item) => item.roleNames).join(', ') || '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={
+                            user.status === 'ACTIVE'
+                              ? 'active'
+                              : user.status === 'SUSPENDED'
+                              ? 'suspended'
+                              : 'inactive'
+                          }
+                        >
+                          {user.status === 'ACTIVE'
+                            ? 'Activo'
+                            : user.status === 'SUSPENDED'
+                            ? 'Suspendido'
+                            : 'Inactivo'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/users/${user.id}`}
+                            className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background transition-colors"
+                          >
+                            Detalle
+                          </Link>
+                          <Link
+                            href={`/users/${user.id}/permissions`}
+                            className="inline-flex items-center justify-center rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background transition-colors"
+                          >
+                            Permisos
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Centinela y Footer para Scroll Infinito */}
+            <InfiniteScrollSentinel
+              onLoadMore={() => {
+                if (hasMore && !isLoading && !isLoadingMore) {
+                  void loadPage(page + 1, false);
+                }
+              }}
+              hasMore={hasMore}
+              isLoading={isLoading}
+              isLoadingMore={isLoadingMore}
+              total={total}
+              currentCount={displayedItems.length}
+              loadingMessage="Cargando más usuarios…"
+              endMessage={
+                displayedItems.length > 0
+                  ? `Has llegado al final del listado (${displayedItems.length} de ${total} usuarios)`
+                  : undefined
+              }
+            />
+          </div>
+        )}
+      </PullToRefresh>
 
       {/* Floating Action Menu para móvil (< 768px / md:hidden) */}
       <MobileFloatingActionMenu

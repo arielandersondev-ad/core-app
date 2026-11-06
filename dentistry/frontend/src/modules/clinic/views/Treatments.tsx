@@ -20,6 +20,7 @@ import {
   MobileFloatingActionMenu,
   MobileFilterSheet,
   FilterTriggerButton,
+  PullToRefresh,
 } from "@/shared/components/ui";
 import {
   fetchDentalServicesPaginated,
@@ -239,6 +240,11 @@ export default function Treatments({
     },
     [debouncedSearch, selectedCategory, statusFilter, localCatalog],
   );
+
+  const handleRefresh = useCallback(async () => {
+    setPage(1);
+    await loadPage(1, true);
+  }, [loadPage]);
 
   // Requirement: Filter resilience. Reset to page 1 whenever filters change.
   useEffect(() => {
@@ -512,7 +518,8 @@ export default function Treatments({
           }
         />
       ) : (
-        <div className="flex flex-col gap-4">
+        <PullToRefresh onRefresh={handleRefresh}>
+          <div className="flex flex-col gap-4">
           {/* VISTA MÓVIL (< 768px / md:hidden): Tarjetas verticales <article> */}
           <div className="md:hidden flex flex-col gap-3">
             {items.map((svc) => (
@@ -692,6 +699,7 @@ export default function Treatments({
             )}
           </div>
         </div>
+      </PullToRefresh>
       )}
 
       {/* Menú Flotante de Acciones Rápidas Móvil (Speed-Dial FAB) */}

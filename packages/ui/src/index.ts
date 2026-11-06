@@ -7,6 +7,7 @@ export * from "./components/ui/Select";
 export * from "./components/ui/Combobox";
 export * from "./components/ui/Badge";
 export * from "./components/ui/AppointmentBadges";
+export * from "./components/ui/AppointmentTimelineItem";
 export * from "./components/ui/Card";
 export * from "./components/ui/StatCard";
 export * from "./components/ui/CompactStatSummary";
@@ -26,6 +27,7 @@ export * from "./components/ui/Avatar";
 export * from "./components/ui/InfiniteScrollSentinel";
 export * from "./components/ui/MobileFloatingActionMenu";
 export * from "./components/ui/MobileFilterSheet";
+export * from "./components/ui/PullToRefresh";
 export * from "./components/ui/types";
 
 // Design System Layout Primitives
@@ -36,6 +38,7 @@ export * from "./components/layout/FilterToolbar";
 // Design System Hooks
 export * from "./hooks/useIsMobile";
 export * from "./hooks/useInfiniteScroll";
+export * from "./hooks/usePullToRefresh";
 
 // Design System Utils
 export * from "./utils/formatters";

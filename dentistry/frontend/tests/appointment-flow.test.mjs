@@ -433,3 +433,449 @@ test('HAG-45: Agenda.tsx enriquece tarjetas en Feed y Grilla con badges Paciente
     'Debe renderizar cleanedNote truncada cuando existe motivo o nota clínica',
   );
 });
+
+// ============================================================================
+// 7. HAG-49: Agenda.tsx y AppointmentDetailSheet.tsx con datos reales sin mocks
+// ============================================================================
+
+test('HAG-49: Agenda.tsx erradica getPatientById, traslada datos reales en mapDtoToAppointment y descarta Paciente / Contacto', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const content = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Cero importación o uso de getPatientById
+  assert.equal(
+    content.includes('getPatientById'),
+    false,
+    'Agenda.tsx no debe importar ni utilizar getPatientById',
+  );
+
+  // 2. Cero aparición de la etiqueta ambigua "Paciente / Contacto"
+  assert.equal(
+    content.includes('Paciente / Contacto'),
+    false,
+    'Agenda.tsx debe erradicar completamente el texto "Paciente / Contacto"',
+  );
+
+  // 3. Prioridad al nombre real del paciente o persona con fallback "Paciente sin nombre"
+  assert.match(
+    content,
+    /apt\.patientName\s*\|\|\s*apt\.personName\s*\|\|\s*"Paciente sin nombre"/,
+    'Debe mostrar con prioridad el nombre real de paciente o persona',
+  );
+
+  // 4. mapDtoToAppointment traslada patientName, personName, patientPhone, personPhone y serviceName
+  assert.match(
+    content,
+    /patientName:\s*dto\.patientName/,
+    'mapDtoToAppointment debe trasladar patientName',
+  );
+  assert.match(
+    content,
+    /personName:\s*dto\.personName/,
+    'mapDtoToAppointment debe trasladar personName',
+  );
+  assert.match(
+    content,
+    /patientPhone:\s*dto\.patientPhone\s*\|\|\s*dto\.personPhone/,
+    'mapDtoToAppointment debe trasladar patientPhone con fallback personPhone',
+  );
+  assert.match(
+    content,
+    /personPhone:\s*dto\.personPhone/,
+    'mapDtoToAppointment debe trasladar personPhone',
+  );
+  assert.match(
+    content,
+    /serviceName/,
+    'mapDtoToAppointment debe trasladar serviceName',
+  );
+
+  // 5. Teléfono real de paciente/persona utilizado para display y WhatsApp
+  assert.match(
+    content,
+    /apt\.patientPhone\s*\|\|\s*apt\.personPhone/,
+    'Debe usar el teléfono real proveniente de la API para contacto directo y WhatsApp',
+  );
+});
+
+test('HAG-49: AppointmentDetailSheet.tsx consume datos reales de paciente/persona y usa formatCurrency', () => {
+  const detailSheetPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/components/AppointmentDetailSheet.tsx',
+  );
+  const content = fs.readFileSync(detailSheetPath, 'utf8');
+
+  // 1. Extrae patientName / personName y teléfonos reales del appointment devuelto
+  assert.match(
+    content,
+    /apt\.patientName\s*\|\|\s*apt\.personName/,
+    'Debe extraer nombres reales de paciente/persona desde el appointment',
+  );
+  assert.match(
+    content,
+    /apt\.patientPhone\s*\|\|\s*apt\.personPhone/,
+    'Debe extraer teléfonos reales desde el appointment',
+  );
+
+  // 2. Soporte para initialAppointment para hidratación sin parpadeos
+  assert.match(
+    content,
+    /initialAppointment/,
+    'Debe soportar initialAppointment para visualización instantánea',
+  );
+
+  // 3. Uso de formatCurrency de @app/ui (cero 'Bs. {totalPrice}' hardcodeado)
+  assert.match(
+    content,
+    /import\s*\{[^}]*formatCurrency[^}]*\}\s*from\s*"@app\/ui"/,
+    'Debe importar formatCurrency desde @app/ui',
+  );
+  assert.equal(
+    /Total:\s*Bs\.\s*\{totalPrice/.test(content),
+    false,
+    'No debe hardcodear Total: Bs. en los precios',
+  );
+});
+
+// ============================================================================
+// 8. HAG-52: Rediseño de lista de citas en Agenda.tsx con Timeline y tarjetas colapsables
+// ============================================================================
+
+test('HAG-52: Agenda.tsx implementa timeline vertical en 2 columnas, tarjetas desplegables y acciones táctiles', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const content = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Estructura en 2 columnas: Columna izquierda de timeline con riel vertical
+  assert.match(
+    content,
+    /w-12\s+sm:w-14\s+flex\s+flex-col\s+items-center\s+pt-3\.5\s+shrink-0/,
+    'Debe implementar la columna izquierda del timeline con ancho w-12 sm:w-14',
+  );
+  assert.match(
+    content,
+    /w-px\s+flex-1\s+bg-\[var\(--border\)\]\s+my-1\.5/,
+    'Debe contener la línea vertical conectora del timeline',
+  );
+  assert.match(
+    content,
+    /getTimelineDotColor/,
+    'Debe incluir helper getTimelineDotColor para dots de colores según estado',
+  );
+  assert.match(content, /bg-amber-400/, 'Debe soportar dot ámbar para programada/en_sala/en_curso');
+  assert.match(content, /bg-emerald-500/, 'Debe soportar dot verde para confirmada/completada');
+  assert.match(content, /bg-rose-500/, 'Debe soportar dot coral para no_asistio/cancelada');
+
+  // 2. Columna derecha: Tarjeta acordeón desplegable con expandedId
+  assert.match(content, /expandedId/, 'Debe manejar estado expandedId');
+  assert.match(content, /durationMin/, 'Debe calcular durationMin de la cita');
+  assert.match(
+    content,
+    /flex-1\s+min-w-0\s+rounded-2xl[\s\S]*?bg-\[var\(--surface-elevated\)\]/,
+    'Tarjeta debe tener rounded-2xl, border, surface-elevated y p-4',
+  );
+
+  // 3. Vista colapsada: Servicio y duración
+  assert.match(
+    content,
+    /\{svcName\}\s*·\s*\{durationMin\}\s*min/,
+    'Vista colapsada debe desplegar `${svcName} · ${durationMin} min`',
+  );
+
+  // 4. Botón táctil WhatsApp y botón táctil de llamada
+  assert.match(
+    content,
+    /h-10\s+w-12\s+rounded-xl\s+border\s+border-\[var\(--border\)\]\s+bg-\[var\(--background\)\]/,
+    'Debe implementar botones táctiles rounded-xl para WhatsApp y teléfono',
+  );
+
+  // 5. Botón primario verde ancho con paleta #6cc24a
+  assert.match(
+    content,
+    /bg-\[#6cc24a\]\s+hover:bg-\[#5db33c\]/,
+    'Debe tener botón primario CTA en verde #6cc24a',
+  );
+
+  // 6. Botón secundario No Asistió
+  assert.match(
+    content,
+    /No asistió/,
+    'Debe incluir botón secundario No asistió en la vista expandida',
+  );
+});
+
+// ============================================================================
+// 12. FRONTEND LOGIC & UI (HAG-60): Subrayado Bybit, WhatsAppReal, popstate Back
+// ============================================================================
+
+test('HAG-60 Frontend: Subrayado Bybit en nombre, sin Ver ficha, teléfono al expandir, Icons.whatsappReal y popstate Back', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+
+  const modalPath = path.resolve(
+    __dirname,
+    '../src/shared/components/ui/WhatsAppModal.tsx',
+  );
+  const modalContent = fs.readFileSync(modalPath, 'utf8');
+
+  // 1. Subrayado punteado estilo Bybit en el nombre del paciente
+  assert.match(
+    agendaContent,
+    /underline\s+decoration-dotted\s+decoration-\[var\(--muted\)\]\/70\s+underline-offset-4\s+hover:decoration-\[var\(--primary\)\]/,
+    'Debe aplicar subrayado punteado Bybit en el nombre del paciente',
+  );
+
+  // 2. Clic en el nombre abre directamente el detalle sin importar si estaba colapsada o expandida
+  assert.match(
+    agendaContent,
+    /setSelectedDetailCitaId\(apt\.id\);\s*setIsDetailSheetOpen\(true\);/,
+    'Clic en el nombre del paciente debe abrir directamente el modal de detalle',
+  );
+
+  // 3. Quitar "Ver ficha" por completo de la tarjeta
+  assert.equal(
+    agendaContent.includes('Ver ficha'),
+    false,
+    'No debe existir el texto "Ver ficha" en Agenda.tsx',
+  );
+
+  // 4. Número de teléfono sutil debajo del nombre SOLO cuando está expandida
+  assert.match(
+    agendaContent,
+    /isExpanded\s*&&\s*\([\s\S]*?\{displayPhone\s*&&\s*\(\s*<p className="text-\[11px\] font-mono text-\[var\(--muted\)\]\/75 leading-tight mt-0\.5 mb-1">\s*\{displayPhone\}/,
+    'Debe mostrar displayPhone sutil debajo del nombre solo cuando isExpanded',
+  );
+
+  // 5. Restaurar icono oficial de WhatsApp en la tarjeta de Agenda
+  assert.match(
+    agendaContent,
+    /\{Icons\.whatsappReal\}/,
+    'Debe usar Icons.whatsappReal en el botón táctil de Agenda.tsx',
+  );
+
+  // 6. WhatsAppModal: icono oficial whatsappReal en cabecera y botón principal
+  assert.match(
+    modalContent,
+    /\{Icons\.whatsappReal\}/,
+    'WhatsAppModal debe usar Icons.whatsappReal',
+  );
+
+  // 7. WhatsAppModal: soporte de retroceso / botón Atrás con popstate y __bottomSheet
+  assert.match(
+    modalContent,
+    /__bottomSheet:\s*true/,
+    'WhatsAppModal debe registrar __bottomSheet en history.state',
+  );
+  assert.match(
+    modalContent,
+    /window\.addEventListener\("popstate",\s*handlePopState\)/,
+    'WhatsAppModal debe escuchar el evento popstate para retroceder limpiamente',
+  );
+});
+
+// ============================================================================
+// 13. FRONTEND LOGIC & UI (HAG-66): Ordenar citas y efecto visual "⏰ Vencida"
+// ============================================================================
+
+function testIsAppointmentOverdue(apt, nowDateStr, nowMinutes) {
+  if (apt.status === 'no_asistio') return true;
+  if (apt.status !== 'programada' && apt.status !== 'confirmada') return false;
+  if (apt.date < nowDateStr) return true;
+  if (apt.date > nowDateStr) return false;
+
+  const toMin = (t) => {
+    if (!t) return 0;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const endMin = apt.endTime ? toMin(apt.endTime) : 0;
+  const startMin = apt.startTime ? toMin(apt.startTime) : 0;
+  const threshold = endMin > startMin ? endMin : startMin;
+  return threshold <= nowMinutes;
+}
+
+test('HAG-66 Frontend: Helper isAppointmentOverdue detecta citas vencidas según estado, fecha y hora', () => {
+  const TODAY = '2026-11-05';
+  const NOW_1030 = 10 * 60 + 30; // 10:30 (630 min)
+
+  // 1. Inasistencia explícita siempre es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'no_asistio', date: TODAY, startTime: '15:00', endTime: '15:30' }, TODAY, NOW_1030),
+    true,
+    'Estado no_asistio siempre debe ser vencido',
+  );
+
+  // 2. En sala, en curso y completada NUNCA son vencidas (paciente sí asistió)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'en_sala', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'en_sala no debe considerarse vencida',
+  );
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'en_curso', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'en_curso no debe considerarse vencida',
+  );
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'completada', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    false,
+    'completada no debe considerarse vencida',
+  );
+
+  // 3. Día pasado sin asistir es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: '2026-11-04', startTime: '16:00', endTime: '16:30' }, TODAY, NOW_1030),
+    true,
+    'Cita de día previo sin asistir debe ser vencida',
+  );
+
+  // 4. Día futuro NUNCA es vencida
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: '2026-11-06', startTime: '08:00', endTime: '08:30' }, TODAY, NOW_1030),
+    false,
+    'Cita de día futuro no debe ser vencida',
+  );
+
+  // 5. Mismo día: hora ya pasada (09:00 - 09:30 vs 10:30 actual)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'confirmada', date: TODAY, startTime: '09:00', endTime: '09:30' }, TODAY, NOW_1030),
+    true,
+    'Cita confirmada cuya hora ya pasó debe ser vencida',
+  );
+
+  // 6. Mismo día: hora futura (11:00 - 11:30 vs 10:30 actual)
+  assert.equal(
+    testIsAppointmentOverdue({ status: 'programada', date: TODAY, startTime: '11:00', endTime: '11:30' }, TODAY, NOW_1030),
+    false,
+    'Cita programada posterior a la hora actual no debe ser vencida',
+  );
+});
+
+test('HAG-66 Frontend: Ordenamiento en Agenda.tsx prioriza citas actuales/posteriores y envía vencidas abajo', () => {
+  const TODAY = '2026-11-05';
+  const NOW_1030 = 10 * 60 + 30; // 10:30
+
+  const toMin = (t) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const appointments = [
+    { id: 'apt-0830', startTime: '08:30', endTime: '09:00', date: TODAY, status: 'programada' }, // Vencida
+    { id: 'apt-1100', startTime: '11:00', endTime: '11:30', date: TODAY, status: 'confirmada' }, // Próxima
+    { id: 'apt-0900', startTime: '09:00', endTime: '09:30', date: TODAY, status: 'confirmada' }, // Vencida
+    { id: 'apt-1400', startTime: '14:00', endTime: '14:30', date: TODAY, status: 'programada' }, // Próxima
+    { id: 'apt-1045', startTime: '10:45', endTime: '11:15', date: TODAY, status: 'en_curso' },   // Próxima/Activa
+  ];
+
+  const upcoming = [];
+  const overdue = [];
+
+  for (const apt of appointments) {
+    if (testIsAppointmentOverdue(apt, TODAY, NOW_1030)) {
+      overdue.push(apt);
+    } else {
+      upcoming.push(apt);
+    }
+  }
+
+  const sortByTime = (a, b) => toMin(a.startTime) - toMin(b.startTime);
+  upcoming.sort(sortByTime);
+  overdue.sort(sortByTime);
+
+  const sorted = [...upcoming, ...overdue];
+  const sortedIds = sorted.map((a) => a.id);
+
+  assert.deepEqual(
+    sortedIds,
+    ['apt-1045', 'apt-1100', 'apt-1400', 'apt-0830', 'apt-0900'],
+    'Debe ordenar próximas/activas primero de forma cronológica ascendente y vencidas abajo',
+  );
+});
+
+test('HAG-66 Frontend: Agenda.tsx contiene divider de citas vencidas, badge y estilos visuales', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+
+  // 1. Definición y export de isAppointmentOverdue
+  assert.match(
+    agendaContent,
+    /export\s+function\s+isAppointmentOverdue/,
+    'Agenda.tsx debe exportar isAppointmentOverdue',
+  );
+
+  // 2. Ordenamiento en dayAppts separando upcoming y overdue
+  assert.match(
+    agendaContent,
+    /upcoming\.push\(apt\)/,
+    'dayAppts debe acumular citas próximas',
+  );
+  assert.match(
+    agendaContent,
+    /overdue\.push\(apt\)/,
+    'dayAppts debe acumular citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /\[\.\.\.upcoming,\s*\.\.\.overdue\]/,
+    'dayAppts debe devolver próximas primero y vencidas al final',
+  );
+
+  // 3. Separador horizontal de citas vencidas
+  assert.match(
+    agendaContent,
+    /data-testid="overdue-appointments-divider"/,
+    'Debe incluir testid del divider de citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /⏰ Citas vencidas \(hora pasada\)/,
+    'Divider debe mostrar etiqueta de citas vencidas',
+  );
+
+  // 4. Efecto visual columna izquierda (Timeline)
+  assert.match(
+    agendaContent,
+    /line-through\s+decoration-rose-500\/50/,
+    'Timeline debe tachar la hora de citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /bg-rose-500\s+ring-3\s+ring-rose-500\/20/,
+    'Dot de Timeline debe tener anillo rose para citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /border-dashed\s+border-rose-500\/30/,
+    'Línea de Timeline debe ser discontinua para citas vencidas',
+  );
+
+  // 5. Efecto visual tarjeta y badge
+  assert.match(
+    agendaContent,
+    /border-dashed\s+border-rose-500\/35[\s\S]*?bg-rose-500\/\[0\.03\]/,
+    'Tarjeta debe tener borde discontinuo y fondo sutil rose para citas vencidas',
+  );
+  assert.match(
+    agendaContent,
+    /data-testid="appointment-overdue-badge"/,
+    'Debe incluir testid del badge de cita vencida',
+  );
+  assert.match(
+    agendaContent,
+    /⏰ Vencida/,
+    'Cabecera debe incluir el badge ⏰ Vencida',
+  );
+});

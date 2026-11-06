@@ -7,10 +7,10 @@ import { DEV_PERSONAS, type DevPersona } from "../types/personas";
 
 function findPrivateKey(): string {
   const possiblePaths = [
-    process.env.JWT_PRIVATE_KEY_PATH && path.resolve(process.cwd(), "../../", process.env.JWT_PRIVATE_KEY_PATH),
-    path.resolve(process.cwd(), "../../core/backend/secrets/jwt-private.pem"),
-    path.resolve(process.cwd(), "../core/backend/secrets/jwt-private.pem"),
-    path.resolve(process.cwd(), "secrets/jwt-private.pem"),
+    process.env.JWT_PRIVATE_KEY_PATH && path.resolve(/*turbopackIgnore: true*/ process.cwd(), "../../", process.env.JWT_PRIVATE_KEY_PATH),
+    path.resolve(/*turbopackIgnore: true*/ process.cwd(), "../../core/backend/secrets/jwt-private.pem"),
+    path.resolve(/*turbopackIgnore: true*/ process.cwd(), "../core/backend/secrets/jwt-private.pem"),
+    path.resolve(/*turbopackIgnore: true*/ process.cwd(), "secrets/jwt-private.pem"),
     "D:/core-app/core/backend/secrets/jwt-private.pem",
   ];
 

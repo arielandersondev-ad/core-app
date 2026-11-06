@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   DentalWhatsAppContext,
   DENTAL_WHATSAPP_TEMPLATES,
@@ -29,6 +29,82 @@ export function WhatsAppModal({
     useState<WhatsAppTemplateKey>(defaultTemplate);
   const [customText, setCustomText] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Historial de navegador (Back en móvil / popstate)
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const pushedHistoryRef = useRef(false);
+  const closedByPopStateRef = useRef(false);
+  const unmountCleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (
+      typeof window === "undefined" ||
+      typeof window.history?.pushState !== "function"
+    )
+      return;
+
+    if (unmountCleanupTimerRef.current !== null) {
+      clearTimeout(unmountCleanupTimerRef.current);
+      unmountCleanupTimerRef.current = null;
+    }
+
+    if (!pushedHistoryRef.current) {
+      window.history.pushState(
+        { ...(window.history.state || {}), __bottomSheet: true },
+        ""
+      );
+      pushedHistoryRef.current = true;
+      closedByPopStateRef.current = false;
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      closedByPopStateRef.current = true;
+      pushedHistoryRef.current = false;
+      if (typeof event?.stopImmediatePropagation === "function") {
+        event.stopImmediatePropagation();
+      }
+      onCloseRef.current();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    const performHistoryCleanup = () => {
+      if (pushedHistoryRef.current && !closedByPopStateRef.current) {
+        pushedHistoryRef.current = false;
+        if (typeof window !== "undefined" && window.history?.state?.__bottomSheet) {
+          const ignoreProgrammaticPopState = (e: Event) => {
+            window.removeEventListener("popstate", ignoreProgrammaticPopState, true);
+            if (typeof e?.stopImmediatePropagation === "function") {
+              e.stopImmediatePropagation();
+            }
+          };
+          window.addEventListener("popstate", ignoreProgrammaticPopState, true);
+          window.history.back();
+          setTimeout(() => {
+            if (typeof window !== "undefined") {
+              window.removeEventListener("popstate", ignoreProgrammaticPopState, true);
+            }
+          }, 150);
+        }
+      }
+    };
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (!isOpenRef.current) {
+        performHistoryCleanup();
+      } else {
+        unmountCleanupTimerRef.current = setTimeout(() => {
+          unmountCleanupTimerRef.current = null;
+          performHistoryCleanup();
+        }, 0);
+      }
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (context) {
@@ -88,7 +164,7 @@ export function WhatsAppModal({
         <div className="px-5 py-3.5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[var(--surface)]">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-              {Icons.whatsapp}
+              {Icons.whatsappReal}
             </div>
             <div className="min-w-0">
               <h3 className="font-display text-sm sm:text-base font-bold text-[var(--foreground)] truncate">
@@ -184,7 +260,7 @@ export function WhatsAppModal({
             className="flex-1 h-11 px-5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
           >
             <span className="w-5 h-5 flex items-center justify-center">
-              {Icons.whatsapp}
+              {Icons.whatsappReal}
             </span>
             <span>Abrir WhatsApp</span>
           </button>
