@@ -402,12 +402,22 @@ test('HAG-45: CreateAppointmentModal permite odontólogo y servicios opcionales 
   );
 });
 
+// Helper para leer la vista de Agenda modularizada consolidada
+const readAgendaBundle = () => {
+  const dir = path.resolve(__dirname, '../src/modules/clinic/views');
+  const files = [
+    'Agenda.tsx',
+    'agenda/AgendaHeader.tsx',
+    'agenda/AgendaMetricsStrip.tsx',
+    'agenda/AgendaTimeline.tsx',
+    'agenda/AgendaAppointmentCard.tsx',
+    'agenda/hooks/useAgendaAppointments.ts',
+  ];
+  return files.map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+};
+
 test('HAG-45: Agenda.tsx enriquece tarjetas en Feed y Grilla con badges Paciente/Persona, teléfono y píldora Por asignar', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const content = fs.readFileSync(agendaPath, 'utf8');
+  const content = readAgendaBundle();
 
   // 1. Badge sutil de Paciente y Persona
   assert.match(content, />\s*Persona\s*<\/span>/, 'Debe renderizar badge para Persona');
@@ -439,11 +449,7 @@ test('HAG-45: Agenda.tsx enriquece tarjetas en Feed y Grilla con badges Paciente
 // ============================================================================
 
 test('HAG-49: Agenda.tsx erradica getPatientById, traslada datos reales en mapDtoToAppointment y descarta Paciente / Contacto', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const content = fs.readFileSync(agendaPath, 'utf8');
+  const content = readAgendaBundle();
 
   // 1. Cero importación o uso de getPatientById
   assert.equal(
@@ -545,11 +551,7 @@ test('HAG-49: AppointmentDetailSheet.tsx consume datos reales de paciente/person
 // ============================================================================
 
 test('HAG-52: Agenda.tsx implementa timeline vertical en 2 columnas, tarjetas desplegables y acciones táctiles', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const content = fs.readFileSync(agendaPath, 'utf8');
+  const content = readAgendaBundle();
 
   // 1. Estructura en 2 columnas: Columna izquierda de timeline con riel vertical
   assert.match(
@@ -614,11 +616,7 @@ test('HAG-52: Agenda.tsx implementa timeline vertical en 2 columnas, tarjetas de
 // ============================================================================
 
 test('HAG-60 Frontend: Subrayado Bybit en nombre, sin Ver ficha, teléfono al expandir, Icons.whatsappReal y popstate Back', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+  const agendaContent = readAgendaBundle();
 
   const modalPath = path.resolve(
     __dirname,
@@ -803,11 +801,7 @@ test('HAG-66 Frontend: Ordenamiento en Agenda.tsx prioriza citas actuales/poster
 });
 
 test('HAG-66 Frontend: Agenda.tsx contiene divider de citas vencidas, badge y estilos visuales', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+  const agendaContent = readAgendaBundle();
 
   // 1. Definición y export de isAppointmentOverdue
   assert.match(
@@ -885,11 +879,7 @@ test('HAG-66 Frontend: Agenda.tsx contiene divider de citas vencidas, badge y es
 // ============================================================================
 
 test('HAG-83 Frontend: TanStack Query en Agenda.tsx y CreateAppointmentModal con estados declarativos', () => {
-  const agendaPath = path.resolve(
-    __dirname,
-    '../src/modules/clinic/views/Agenda.tsx',
-  );
-  const agendaContent = fs.readFileSync(agendaPath, 'utf8');
+  const agendaContent = readAgendaBundle();
 
   const modalPath = path.resolve(
     __dirname,
@@ -980,4 +970,36 @@ test('HAG-83 Frontend: TanStack Query en Agenda.tsx y CreateAppointmentModal con
     /Guardando cita\.\.\./,
     'CreateAppointmentModal debe mostrar texto de progreso Guardando cita... en botón submit',
   );
+});
+
+// ============================================================================
+// 15. FRONTEND MODULARIZATION (HAG-86): Vista modularizada Agenda y subcomponentes
+// ============================================================================
+
+test('HAG-86 Frontend: Agenda.tsx modularizado (< 150 líneas) y subcomponentes desacoplados', () => {
+  const agendaPath = path.resolve(
+    __dirname,
+    '../src/modules/clinic/views/Agenda.tsx',
+  );
+  const agendaLines = fs.readFileSync(agendaPath, 'utf8').split('\n');
+
+  // 1. Orquestador delgado menor a 150 líneas
+  assert.ok(
+    agendaLines.length < 150,
+    `Agenda.tsx debe tener menos de 150 líneas (actual: ${agendaLines.length})`,
+  );
+
+  // 2. Existencia de subcomponentes desacoplados
+  const subcomponents = [
+    'agenda/AgendaHeader.tsx',
+    'agenda/AgendaMetricsStrip.tsx',
+    'agenda/AgendaTimeline.tsx',
+    'agenda/AgendaAppointmentCard.tsx',
+    'agenda/hooks/useAgendaAppointments.ts',
+  ];
+
+  for (const file of subcomponents) {
+    const filePath = path.resolve(__dirname, '../src/modules/clinic/views', file);
+    assert.ok(fs.existsSync(filePath), `Debe existir subcomponente ${file}`);
+  }
 });
