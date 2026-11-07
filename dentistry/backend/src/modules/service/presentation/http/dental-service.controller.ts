@@ -149,8 +149,8 @@ export class DentalServiceController {
     @Param('id') id: string,
     @Body() dto?: ToggleDentalServiceStatusDto,
   ) {
-    const organizationId = principal?.organizationId ?? dto?.organizationId!;
-    const updatedByMembershipId = principal?.membershipId ?? dto?.updatedByMembershipId!;
+    const organizationId = (principal?.organizationId ?? dto?.organizationId)!;
+    const updatedByMembershipId = (principal?.membershipId ?? dto?.updatedByMembershipId)!;
 
     return this.toggleStatusUseCase.execute({
       id,

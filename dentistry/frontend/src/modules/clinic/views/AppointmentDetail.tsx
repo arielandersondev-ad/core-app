@@ -268,7 +268,7 @@ export default function AppointmentDetail({
         });
       }
       setFeedbackMessage("Estado actualizado correctamente.");
-    } catch (_err) {
+    } catch {
       setFeedbackMessage("Estado actualizado localmente.");
     } finally {
       setIsUpdating(false);
@@ -290,7 +290,7 @@ export default function AppointmentDetail({
       }
       setSessionSaved(true);
       setFeedbackMessage("Evolución guardada correctamente.");
-    } catch (_err) {
+    } catch {
       setSessionSaved(true);
       setFeedbackMessage("Evolución guardada localmente.");
     } finally {

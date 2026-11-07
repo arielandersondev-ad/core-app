@@ -143,7 +143,7 @@ export function WhatsAppModal({
       await navigator.clipboard.writeText(customText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (_e) {
+    } catch {
       // Clipboard fallback
     }
   };

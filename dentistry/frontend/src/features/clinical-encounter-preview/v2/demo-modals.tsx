@@ -117,12 +117,11 @@ export function CompleteEncounterModal({
 
 export function VoidEncounterModal({
   open,
-  encounter,
   onClose,
   onConfirm,
 }: {
   open: boolean;
-  encounter: ClinicalEncounter;
+  encounter?: ClinicalEncounter;
   onClose: () => void;
   onConfirm: (reason: string) => void;
 }) {

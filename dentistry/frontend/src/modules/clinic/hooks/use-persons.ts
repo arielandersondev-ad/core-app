@@ -9,7 +9,6 @@ import {
   type Person,
   type CreatePersonInput,
   type ConvertPersonToPatientInput,
-  type ConvertPersonToPatientResponse,
 } from "../api/persons";
 
 export const personQueryKeys = {

@@ -68,11 +68,10 @@ function mapMockToTreatment(mock: Service): TreatmentItem {
   };
 }
 
-export default function Treatments({
-  onNavigate,
-}: {
+export default function Treatments(props: {
   onNavigate?: (s: string, p?: Record<string, string>) => void;
 }) {
+  void props;
   // Filters state
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");

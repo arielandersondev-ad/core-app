@@ -90,7 +90,7 @@ export function AppointmentDetailSheet({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // TanStack Query hook
-  const { data: queryAppointment, error: queryError, refetch: refetchAppointment } =
+  const { refetch: refetchAppointment } =
     useAppointmentDetail(open && citaId ? citaId : "");
 
   // Kebab menu state (3 vertical dots)

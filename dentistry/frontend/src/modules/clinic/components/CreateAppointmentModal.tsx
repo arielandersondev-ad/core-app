@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ResponsiveModal,
   Button,
@@ -22,14 +22,9 @@ import {
   DentalServiceDto,
 } from "@/modules/clinic/api/services";
 import {
-  createAppointment,
-  AppointmentDto,
-} from "@/modules/clinic/api/appointments";
-import {
   useCurrentSession,
   useCreateAppointment,
 } from "@/modules/clinic/hooks";
-import type { PatientDto } from "@/features/patient/types/patient";
 import {
   DEV_ORG_ID,
   DEV_BRANCH_ID_CENTRAL,

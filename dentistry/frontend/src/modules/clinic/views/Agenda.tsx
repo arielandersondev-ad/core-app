@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import { Appointment, getServiceById, formatCurrency } from "@/modules/clinic/__mocks__/data";
-import { type AppointmentDto, fetchAppointments } from "@/modules/clinic/api/appointments";
-import { useAppointments, useUpdateAppointmentStatus, useCancelAppointment } from "@/modules/clinic/hooks";
 import { Icons } from "@/shared/components/ui/Icons";
 import { MobileFloatingActionMenu, PullToRefresh } from "@/shared/components/ui";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
 import { CreateAppointmentModal, CreatePatientModal, RegisterPaymentModal, AppointmentDetailSheet } from "@/modules/clinic/components";
 import { DentalWhatsAppContext, WhatsAppTemplateKey } from "@/shared/utils/whatsapp-generator";
-import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay, type QuickStatus } from "./agenda/hooks/useAgendaAppointments";
+import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay } from "./agenda/hooks/useAgendaAppointments";
 import { AgendaHeader } from "./agenda/AgendaHeader";
 import { AgendaMetricsStrip } from "./agenda/AgendaMetricsStrip";
 import { AgendaTimeline } from "./agenda/AgendaTimeline";
@@ -19,7 +17,8 @@ export function isAppointmentOverdue(apt: Appointment, nowDateStr: string, nowMi
   return checkIsAppointmentOverdue(apt, nowDateStr, nowMinutes);
 }
 
-export default function Agenda({ onNavigate }: { onNavigate: (s: string, p?: Record<string, string>) => void }) {
+export default function Agenda(props: { onNavigate?: (s: string, p?: Record<string, string>) => void }) {
+  void props;
   const agenda = useAgendaAppointments();
   const [waContext, setWaContext] = useState<DentalWhatsAppContext | null>(null);
   const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");

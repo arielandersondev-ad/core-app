@@ -9,7 +9,6 @@ import {
 } from "@/modules/clinic/__mocks__/data";
 import {
   type AppointmentDto,
-  fetchAppointments,
 } from "@/modules/clinic/api/appointments";
 import {
   useAppointments,
