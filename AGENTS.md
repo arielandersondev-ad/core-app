@@ -60,3 +60,13 @@
   5. Ejecutar `npm run contract:emit` y `npm run build` en `packages/db`.
   6. Recompilar los backends dependientes para verificar tipos.
 
+## Higiene Estricta de Imports y Variables No Usadas (HARNESS-RULE-02)
+
+- **Organize Imports Obligatorio:** Antes de solicitar el cierre de ticket (`act: 'done'`), cada agente debe aplicar el equivalente a "Organize Imports": eliminar cualquier importación o variable que haya quedado sin uso tras sus modificaciones. El Quality Gate fallará si detecta imports huérfanos.
+- **Parámetros y Variables:** Si un parámetro es requerido por contrato pero no se usa, debe prefijarse con guion bajo (`_req`, `_event`). Si es una variable local y no se usa, debe eliminarse.
+- **Validación Pre-Commit:** Antes de cada commit, ejecutar sobre los archivos modificados:
+  - `npx eslint --fix <archivos-modificados>`
+  - `npx eslint <archivos-modificados> --rule "unused-imports/no-unused-imports: error" --rule "@typescript-eslint/no-unused-vars: error"`
+- **Rol Quality & Hygiene Officer (Quality Gatekeeper — Kevin `kevin-mw24f2fi` / Angela `angela-mw1m45tq`):** Revisará `git diff --name-only` / `git show --name-only` y ejercerá **Veto inmediato** rechazando cualquier tarea que deje imports zombis o warnings de `@typescript-eslint/no-unused-vars`.
+
+

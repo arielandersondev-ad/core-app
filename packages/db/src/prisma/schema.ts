@@ -265,7 +265,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         activatedFeatureTrials: rel.hasMany(OrganizationFeatureTrial, {
           by: "activatedByUserId",
         }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "User",
         checks: [
           check({
@@ -312,7 +312,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           by: "organizationId",
         }),
         auditLogs: rel.hasMany(AuditLog, { by: "organizationId" }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Organization",
         checks: [
           check({
@@ -436,7 +436,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
       })),
       Permission: Permission.relations({
         rolePermissions: rel.hasMany(RolePermission, { by: "permissionId" }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Permission",
       })),
       RolePermission: RolePermission.relations({
@@ -488,7 +488,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         featureTrials: rel.hasMany(OrganizationFeatureTrial, {
           by: "sourcePlanId",
         }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Plan",
         checks: [
           check({ name: "Plan_name", expression: 'length(btrim("name")) > 0' }),
