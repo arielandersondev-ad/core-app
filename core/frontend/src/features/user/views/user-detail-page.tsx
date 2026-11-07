@@ -78,7 +78,7 @@ export default function UserDetail() {
   const org = useMemo(() => {
     if (!user?.orgId) return null;
     return rawOrgs.find((o) => o.id === user.orgId);
-  }, [rawOrgs, user?.orgId]);
+  }, [rawOrgs, user]);
 
   const [tab, setTab] = useState<Tab>('info');
   const [permissions, setPermissions] = useState<Permission[]>(() =>

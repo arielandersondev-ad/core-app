@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Toggle, Button, Card, Separator } from '@/shared/components/ui';
+import { Toggle, Button, Card } from '@/shared/components/ui';
 import { useUsers } from '@/features/user/hooks/use-users';
 import { type Permission, MODULES } from '@/shared/utils/format';
 
