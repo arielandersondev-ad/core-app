@@ -4,7 +4,6 @@ import { MobileCardItem } from "./MobileCardItem";
 import { Badge } from "./Badge";
 import { Avatar } from "./Avatar";
 import { Button } from "./Button";
-import { Icons } from "./Icons";
 
 const meta: Meta<typeof ResponsiveTable> = {
   title: "UI/ResponsiveTable",

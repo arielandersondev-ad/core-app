@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Icons } from "./Icons";
-import { formatCurrency } from "../../utils/formatters";
 
 export type AppointmentTimelineStatus =
   | "SCHEDULED"

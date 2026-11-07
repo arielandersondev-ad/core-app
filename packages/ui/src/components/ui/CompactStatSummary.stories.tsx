@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { CompactStatSummary, type CompactStatItem } from "./CompactStatSummary";
 import { Icons } from "./Icons";
-import { Badge } from "./Badge";
 
 const meta: Meta<typeof CompactStatSummary> = {
   title: "UI/CompactStatSummary",

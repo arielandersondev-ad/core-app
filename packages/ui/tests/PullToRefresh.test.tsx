@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import React from "react";
 import { act } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
@@ -9,7 +9,6 @@ import {
 import {
   usePullToRefresh,
   type UsePullToRefreshOptions,
-  type UsePullToRefreshReturn,
 } from "../src/hooks/usePullToRefresh";
 import {
   PullToRefresh as ExportedPullToRefresh,

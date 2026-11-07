@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Modal } from "./Modal";
-import { ModalFooter } from "./ModalFooter";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Select } from "./Select";

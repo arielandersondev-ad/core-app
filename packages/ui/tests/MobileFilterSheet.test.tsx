@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import React from "react";
 import { renderToString } from "react-dom/server";
 import {
   MobileFilterSheet,
   FilterBottomSheet,
   FilterTriggerButton,
-  type MobileFilterSheetProps,
-  type FilterTriggerButtonProps,
 } from "../src/index";
 
 describe("MobileFilterSheet & FilterTriggerButton Unit & Integration Tests (HAG-38)", () => {

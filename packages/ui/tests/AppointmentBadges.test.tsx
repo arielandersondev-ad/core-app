@@ -1,12 +1,9 @@
 import { describe, it, expect } from "vitest";
-import React from "react";
 import { renderToString } from "react-dom/server";
 import {
   Badge,
   ContactTypeBadge,
   AppointmentStatusBadge,
-  type ContactType,
-  type AppointmentStatusKey,
 } from "../src/index";
 
 describe("Appointment & Contact Badges Unit Tests (HAG-46)", () => {

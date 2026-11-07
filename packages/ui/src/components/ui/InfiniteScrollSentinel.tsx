@@ -4,9 +4,8 @@ import {
   type ReactNode,
   type HTMLAttributes,
   useRef,
-  useEffect,
 } from "react";
-import { useInfiniteScroll, type UseInfiniteScrollOptions } from "../../hooks/useInfiniteScroll";
+import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 
 export interface InfiniteScrollSentinelProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {

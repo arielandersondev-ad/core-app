@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, ChangeEvent, KeyboardEvent } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { Label } from "./Label";
 import { Icons } from "./Icons";
 
@@ -65,8 +65,8 @@ export function DatePicker({
   error,
   hint,
   pickerSize = "sm",
-  minDate,
-  maxDate,
+  minDate: _minDate,
+  maxDate: _maxDate,
   placeholder = "YYYY-MM-DD",
   disabled = false,
   className = "",
