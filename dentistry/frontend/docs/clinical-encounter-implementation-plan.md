@@ -1,8 +1,30 @@
 # Plan de implementación: atenciones clínicas persistentes
 
-**Estado:** planificación; no autoriza cambios de esquema, migraciones ni endpoints.  
-**Fecha de sondeo:** 2026-11-06.  
-**Alcance:** Dentistry frontend y sus contratos HTTP ya disponibles. Quedan fuera identificación 3D y facturación/proforma.
+**Estado:** la feature existe como interfaz aislada (UI-only) con fuente mock; el contrato HTTP sigue pendiente. Este documento no autoriza cambios de esquema, migraciones ni endpoints.  
+**Fecha de sondeo:** 2026-11-06. **Última actualización:** 2026-11-08.  
+**Alcance:** Dentistry frontend y sus contratos HTTP ya disponibles. Quedan fuera identificación 3D y facturación/proforma.  
+**Contrato HTTP solicitado:** [clinical-encounter-api-requirements.md](clinical-encounter-api-requirements.md).
+
+## Estado actual verificado (2026-11-08)
+
+| Aspecto | Hecho comprobado en el código |
+| --- | --- |
+| Ubicación | `dentistry/frontend/src/features/clinical-encounter/` con `api`, `components`, `config`, `data`, `hooks`, `services`, `types` y `utils`. No existe `views/`: las páginas de la feature viven en `components/*-page.tsx`. |
+| Integración | UI-only. `services/clinical-encounter.http.ts` implementa los doce métodos del datasource rechazando con `ClinicalEncounterApiUnavailableError`; las pantallas usan los hooks, que en desarrollo resuelven contra el mock. |
+| Fuente de datos | `config/clinical-encounter-mode.ts` lee `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO`: en desarrollo/test el mock está activo por defecto y se apaga con `"false"`; en producción queda apagado duro aunque el flag sea `"true"`. |
+| Datos mock | `data/mock.ts` y `services/clinical-encounter.mock.ts` mantienen estado en memoria por paciente, con latencia simulada. No hay `localStorage` ni data URLs. |
+| Permisos usados | `dentistry:encounters:read`, `dentistry:encounters:create`, `dentistry:encounters:update` y `dentistry:encounters:void`, declarados en `features/dev-auth/types/personas.ts` y comprobados en las páginas de listado, alta, detalle y `patient-health-profile-page.tsx`. El perfil de salud comprueba `dentistry:encounters:read` para lectura y `dentistry:encounters:update` para edición; Recepción no dispone de esos permisos. |
+| Rutas UI | Implementadas el 2026-11-08 en `src/app/(platform)/patients/[patientId]/`; cada `page.tsx` solo pasa ids a un componente de la feature. |
+| Verificación | No se ejecutaron `tsc` ni pruebas en esta tarea documental: **verificar en Ola 3**. Existen pruebas de mock, utilidades, formulario de alta, detalle, filtros y perfil de salud en `tests/clinical-encounter-*.test.mjs`, pero su resultado no se certifica aquí. |
+
+| Ruta UI | Estado |
+| --- | --- |
+| `/patients/[patientId]/clinical-encounters` | Implementada; compone `ClinicalEncounterListPage`. |
+| `/patients/[patientId]/clinical-encounters/new` | Implementada; compone `ClinicalEncounterCreatePage`. |
+| `/patients/[patientId]/clinical-encounters/[encounterId]` | Implementada; compone `ClinicalEncounterDetailPage`. |
+| `/patients/[patientId]/health-profile` | Implementada; compone `PatientHealthProfilePage`. |
+
+Estas rutas son de interfaz, no contrato HTTP, y no están aprobadas por Backend. El contrato HTTP propuesto se detalla en el documento enlazado.
 
 ## Resultado del sondeo
 
@@ -46,13 +68,13 @@ La solicitud concreta está en [clinical-encounter-api-requirements.md](clinical
 
 ### Catálogo UI y Storybook
 
-`@app/ui` ya exporta, entre otros: `PageContainer`, `PageHeader`, `FilterToolbar`, `Button`, `Input`, `Select`, `Combobox`, `DatePicker`, `TimePicker`, `ReadonlyField`, `FormSectionHeader`, `Badge`, `Card`, `EmptyState`, `ResponsiveModal`, `MobileFilterSheet`, `MobileCardItem` y `ResponsiveTable`.
+`@app/ui` ya exporta, entre otros: `PageContainer`, `PageHeader`, `FilterToolbar`, `Button`, `Input`, `Select`, `Combobox`, `DatePicker`, `TimePicker`, `SectionHeader`, `Badge`, `Card`, `EmptyState`, `ResponsiveModal`, `MobileFilterSheet`, `MobileCardItem` y `ResponsiveTable`.
 
 Patrones que se usarán:
 
 - `PageHeader` y `PageContainer` para listado, detalle y contexto del paciente.
 - `FilterToolbar` más `MobileFilterSheet` para filtros secundarios de historial; `ResponsiveTable` en escritorio y `MobileCardItem` en móvil. No usar el `DynamicTable` local para esta feature porque su propio `AGENTS.md` registra problemas de hooks, key de filas y falta de modo controlado.
-- `ResponsiveModal`, `FormSectionHeader`, `Combobox`, `DatePicker`, `TimePicker` y `ReadonlyField` para creación/edición de la atención. En móvil, `ResponsiveModal` entrega un `BottomSheet` accesible automáticamente.
+- `ResponsiveModal`, `SectionHeader`, `Combobox`, `DatePicker` y `TimePicker` para creación/edición de la atención. En móvil, `ResponsiveModal` entrega un `BottomSheet` accesible automáticamente. Los campos de solo lectura usan el `ReadonlyField` local de la feature (`components/clinical-encounter-readonly-field.tsx`), no un componente de `@app/ui`.
 - `Combobox` para paciente, tratamiento/procedimiento y, solo después de contrato aprobado, profesional y sucursal. Su `onSearchChange` permite búsqueda remota con debounce; no cargar catálogos ilimitados en el navegador.
 - Los estados de objetivo, avance y cierre se representan con `Badge`; estados sin datos con `EmptyState`.
 
@@ -66,7 +88,7 @@ Antes de escribir cualquier componente compartido nuevo se comprobará el catál
 4. Nest sigue siendo quien deriva identidad, organización y permisos de la sesión. El cliente no envía `organizationId`, `createdByMembershipId`, `completedByMembershipId`, ni claves/buckets de almacenamiento como autoridad.
 5. Las fechas civiles se mantienen como `YYYY-MM-DD`; instantes como `startedAt` y `endedAt` viajan como ISO 8601. La edad se calcula desde la fecha civil sin desplazarla por zona horaria.
 6. Una acción para varias piezas se expande en el formulario a varias filas `ClinicalEncounterProcedure`, con la misma descripción y una pieza FDI por fila. No se guarda una lista dentro de `toothNumber`.
-7. `procedureSummary` es un texto narrativo opcional; no se infiere ni se exige a partir de las filas. Una atención puede completarse con cero filas de procedimiento.
+7. `procedureSummary` es un texto narrativo opcional en la UI; no se infiere ni se exige a partir de las filas. Una atención puede completarse con cero filas de procedimiento. **La obligatoriedad de `procedureSummary` al completar está en disputa documental**; hasta que Backend decida, el frontend no lo exige. Ver [clinical-encounter-api-requirements.md](clinical-encounter-api-requirements.md), sección de decisiones pendientes.
 8. No se habilita edición destructiva de una acción clínica: el contrato debe usar la transición `VOIDED` y su motivo si esa capacidad se incluye. No se borra historial clínico desde la UI.
 9. Los archivos no se codifican en data URLs ni se suben por el BFF JSON. El proveedor, bucket, key, checksum y estado de carga los controla el backend mediante un flujo de almacenamiento autorizado.
 10. No se amplía alcance hacia odontograma/identificación 3D, cobros, proforma, migraciones, cambios de dependencias o cambios visuales ajenos.
@@ -94,31 +116,26 @@ Antes de escribir cualquier componente compartido nuevo se comprobará el catál
 
 ### Fase 2 — Feature de atenciones clínicas
 
-**Nueva estructura prevista:**
+**Estructura real implementada:**
 
 ```text
 dentistry/frontend/src/features/clinical-encounter/
-├── api/endpoints.ts
-├── api/query-options.ts
-├── components/
-│   ├── clinical-encounter-form.tsx
-│   ├── clinical-encounter-list.tsx
-│   ├── clinical-encounter-procedure-editor.tsx
-│   ├── clinical-encounter-status-badge.tsx
-│   ├── patient-health-profile-card.tsx
-│   └── file-upload-panel.tsx
-├── hooks/
-├── schemas/
-├── services/
-├── types/
-├── utils/age.ts
-└── views/
-    ├── clinical-encounter-list-page.tsx
-    ├── clinical-encounter-detail-page.tsx
-    └── clinical-encounter-create-page.tsx
+├── api/
+│   ├── endpoints.ts          # rutas anidadas bajo /patients/:id (propuesta)
+│   └── query-options.ts
+├── components/               # paneles, campos, badges, toast-stack,
+│                             # patient-context-boundary, páginas *-page y
+│                             # modales (procedure, complete, void)
+├── config/clinical-encounter-mode.ts
+├── data/mock.ts
+├── hooks/                    # use-clinical-encounter-data, mutations, toasts
+├── services/                 # service (selector de fuente), http, mock, error
+├── types/clinical-encounter.ts
+└── utils/                    # age, dates, format, procedures, y helpers de
+                              # formulario, filtros y detalle
 ```
 
-Rutas previstas, sujetas al contrato HTTP: `/patients/[patientId]/clinical-encounters`, `/patients/[patientId]/clinical-encounters/new` y `/patients/[patientId]/clinical-encounters/[encounterId]`. Cada página de `app` se limita a pasar ids a una vista.
+Rutas implementadas, sujetas al contrato HTTP: `/patients/[patientId]/clinical-encounters`, `/patients/[patientId]/clinical-encounters/new`, `/patients/[patientId]/clinical-encounters/[encounterId]` y `/patients/[patientId]/health-profile`. Cada página de `app` se limita a pasar ids a un componente `*-page` de la feature; `PatientContextBoundary` resuelve el paciente real con el contrato existente de `features/patient`.
 
 1. Implementar queries con claves que incluyan paciente, filtros y paginación; invalidar listado, detalle de atención y detalle de paciente después de mutaciones exitosas.
 2. El formulario de alta permite crear sin `appointmentId`, con paciente y sucursal, profesional de la política aprobada, inicio, exploración (`examinationSummary`), observaciones clínicas y resumen de procedimientos opcional. El cierre se muestra separado de la creación inicial.
@@ -141,15 +158,16 @@ Rutas previstas, sujetas al contrato HTTP: `/patients/[patientId]/clinical-encou
 ### Fase 5 — Storybook, accesibilidad y verificación
 
 1. Revisar en Storybook las combinaciones de componentes de formulario existentes antes de añadir CSS propio. Crear stories únicamente para composición que pueda ser compartida; mantener los datos clínicos ficticios y sin identificadores reales.
-2. Probar teclado, foco, escape/backdrop, mensajes de error, lectura de labels, estado de carga y layout en escritorio/móvil. Los campos de solo lectura usan `ReadonlyField`, no inputs deshabilitados.
+2. Probar teclado, foco, escape/backdrop, mensajes de error, lectura de labels, estado de carga y layout en escritorio/móvil. Los campos de solo lectura usan el `ReadonlyField` local de la feature, no inputs deshabilitados.
 3. Validar alta sin cita, alta y cierre sin procedimientos, una fila por cada pieza de lote, objetivo no dental, enlace válido/inválido a `TreatmentProcedure`, filiación parcial, perfil vacío y radiografía.
 4. Ejecutar las verificaciones proporcionadas y reportar resultados reales: `tsc --noEmit` con cero errores, pruebas frontend relevantes y `npm run build` de Dentistry. Para modificaciones de UI compartida, además pruebas y build de Storybook. Si cambia backend, compilar Dentistry backend antes de sus tests.
 5. Hacer un commit atómico solo cuando exista ticket y pase el quality gate: `<type>(<scope>): <id-ticket> - <descripción>`. No mezclar los cambios de terceros ya presentes.
 
 ## Criterios de salida
 
-- La interfaz no contiene mocks ni `localStorage` para datos clínicos persistentes.
+- La interfaz no contiene mocks ni `localStorage` para datos clínicos persistentes, y la fuente mock queda desactivada en producción.
 - Toda llamada tiene controlador Nest autenticado/autorizado y regla BFF equivalente.
+- El adaptador HTTP cubre las doce operaciones del datasource y traduce los errores del backend a mensajes accionables.
 - Se puede crear y completar una atención sin cita ni procedimientos.
 - Cada procedimiento realizado conserva descripción, objetivo válido, pieza solo cuando corresponde y vínculo opcional verificable a `TreatmentProcedure`.
 - Filiación y perfil de salud usan los campos del contrato, y edad se muestra derivada.

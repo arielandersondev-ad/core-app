@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   formatCivilDate,
-  formatDateTime,
   formatTime,
   formatTimeRange,
   timeToMinutes,

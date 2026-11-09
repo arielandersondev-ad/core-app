@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { patientDetailOptions } from "@/features/patient/api/query-options";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { Button } from "@/shared/components/ui";
+import { Button, Icons } from "@/shared/components/ui";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
 import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
@@ -67,7 +67,21 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
         description={`Paciente ${patient.status === "ACTIVE" ? "activo" : "inactivo"}`}
         breadcrumbs={[{ label: "Pacientes", href: "/patients" }, { label: patient.fullName }]}
         action={<div className="flex flex-wrap gap-2">
-          {session.permissions.includes("dentistry:patients:update") && <Button variant="primary" onClick={() => setEditing(true)}>Editar paciente</Button>}
+          {session.permissions.includes("dentistry:encounters:create") && (
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/new`} className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius)] bg-[var(--primary)] px-4 font-display text-sm font-semibold text-[var(--primary-foreground)] shadow-2xs transition-all hover:bg-[var(--primary-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">
+              <span className="flex shrink-0 items-center" aria-hidden="true">
+                {Icons.plus}
+              </span>
+              Nueva atención
+            </Link>
+          )}
+          {session.permissions.includes("dentistry:encounters:read") && (
+            <>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className="inline-flex h-10 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] px-4 font-display text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--neutral-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">Atenciones clínicas</Link>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className="inline-flex h-10 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] px-4 font-display text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--neutral-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">Perfil de salud</Link>
+            </>
+          )}
+          {session.permissions.includes("dentistry:patients:update") && <Button variant="outline" onClick={() => setEditing(true)}>Editar paciente</Button>}
           {session.permissions.includes("dentistry:patients:delete") && <Button variant="danger" onClick={() => setConfirmingDelete(true)}>Eliminar paciente</Button>}
         </div>}
       />

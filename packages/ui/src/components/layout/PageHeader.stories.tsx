@@ -38,3 +38,40 @@ export const Default: Story = {
     ),
   },
 };
+
+/**
+ * Las acciones ya no se ocultan en móvil: la fila principal apila título y
+ * acciones, y cada acción ocupa el ancho disponible (`flex-1`) hasta `md`.
+ */
+export const AccionesEnMovil: Story = {
+  args: {
+    title: "María González",
+    description: "Ficha clínica, datos de contacto y tratamientos activos.",
+    badge: <Badge variant="neutral">En tratamiento</Badge>,
+    breadcrumbs: [
+      { label: "Pacientes", href: "#" },
+      { label: "María González" },
+    ],
+    action: (
+      <>
+        <Button variant="ghost" size="sm" leftIcon={Icons.filter}>
+          Filtrar
+        </Button>
+        <Button variant="outline" size="sm" leftIcon={Icons.calendar}>
+          Agendar
+        </Button>
+        <Button variant="primary" size="sm" leftIcon={Icons.plus}>
+          Nueva atención
+        </Button>
+      </>
+    ),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Verifica el comportamiento responsive: en móvil las acciones se muestran debajo del título, a ancho completo y sin ocultarse.",
+      },
+    },
+  },
+};

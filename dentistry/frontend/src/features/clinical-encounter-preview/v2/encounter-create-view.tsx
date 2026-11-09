@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ReadonlyField } from "@app/ui";
+//import { ReadonlyField } from "@app/ui";
 import {
   Badge,
   Button,
@@ -161,7 +161,8 @@ export function EncounterCreateView({
           icon={Icons.branch}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <ReadonlyField label="Paciente" value={patient.fullName} badge="fijo" />
+            {/* <ReadonlyField label="Paciente" value={patient.fullName} badge="fijo" /> */}
+            <input  value={patient.fullName}  /> 
             <Select
               id="ce-create-branch"
               label="Sucursal *"

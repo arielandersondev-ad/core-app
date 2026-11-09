@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Badge, Button, Icons } from "@/shared/components/ui";
 import { NAV_ITEMS, PageContainer } from "@/shared/components/layout";
@@ -184,9 +183,6 @@ export function ClinicalEncounterDemoV2() {
             <br />
             Sin validación ni datos reales.
           </p>
-          <Link href="/clinical-encounter-demo" className="mt-3 inline-block text-[11px] text-muted hover:text-primary">
-            Ver versión anterior →
-          </Link>
         </div>
       </aside>
 

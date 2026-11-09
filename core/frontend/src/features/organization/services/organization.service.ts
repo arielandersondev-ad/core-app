@@ -6,8 +6,15 @@ import type { branchMinimalList } from '../types/branch';
 
 export const organizationService = {
   async list(): Promise<OrganizationListItem[]> {
-    const { data } = await api.get<OrganizationListItem[]>(ORGANIZATION_ENDPOINTS.collection);
-    return data;
+    const { data } = await api.get<OrganizationListItem[] | { items?: OrganizationListItem[] }>(
+      ORGANIZATION_ENDPOINTS.collection,
+    );
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return Array.isArray(data?.items) ? data.items : [];
   },
 
   async createSetup(data: OrganizationSetupPayload): Promise<void> {

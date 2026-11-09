@@ -70,7 +70,7 @@ export function PageHeader({
         </nav>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
@@ -86,7 +86,7 @@ export function PageHeader({
         </div>
 
         {action && (
-          <div className="hidden md:inline-flex flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <div className="flex w-full flex-wrap items-center gap-2 [&>*]:flex-1 sm:w-auto sm:shrink-0 md:[&>*]:flex-none">
             {action}
           </div>
         )}

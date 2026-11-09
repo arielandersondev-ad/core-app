@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ReadonlyField } from "@app/ui";
+//import { ReadonlyField } from "@app/ui";
 import { Button, Combobox, Input, Label, Select, ResponsiveModal } from "@/shared/components/ui";
 import type { ClinicalEncounter, ClinicalFile, EncounterProcedure, HealthProfile, TargetType } from "../types";
 import { DateField, DemoTags, InfoRow, TargetBadge, TimeField } from "./demo-ui";
@@ -91,8 +91,16 @@ export function CompleteEncounterModal({
     >
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReadonlyField label="Profesional que completa" value={encounter.professionalName} />
-          <ReadonlyField label="Procedimientos registrados" value={String(encounter.procedures.length)} badge="filas" />
+          {
+            /*
+            
+            <ReadonlyField label="Profesional que completa" value={encounter.professionalName} />
+            <ReadonlyField label="Procedimientos registrados" value={String(encounter.procedures.length)} badge="filas" />
+            
+            */ 
+          }
+          <input  value={encounter.professionalName} />
+          <input  value={String(encounter.procedures.length)} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <DateField id="ce-complete-date" label="Fecha de cierre" value={date} onChange={setDate} />
@@ -558,12 +566,12 @@ export function CreateEncounterReviewModal({
     >
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReadonlyField label="Paciente" value={patientName} badge="fijo" />
-          <ReadonlyField label="Inicio" value={formatDateTimeShort(startedAtIso)} />
-          <ReadonlyField label="Sucursal" value={branchName} />
-          <ReadonlyField label="Profesional" value={professionalName} />
-          {appointmentLabel && <ReadonlyField label="Cita enlazada" value={appointmentLabel} />}
-          {treatmentLabel && <ReadonlyField label="Tratamiento enlazado" value={treatmentLabel} />}
+          <input value={patientName} />
+          <input value={formatDateTimeShort(startedAtIso)} />
+          <input value={branchName} />
+          <input value={professionalName} />
+          {appointmentLabel && <input  value={appointmentLabel} />}
+          {treatmentLabel && <input value={treatmentLabel} />}
         </div>
 
         <div className="space-y-3 border-t border-border pt-4">
