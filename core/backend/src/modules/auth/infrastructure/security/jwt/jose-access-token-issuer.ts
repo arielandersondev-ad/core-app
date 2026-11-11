@@ -28,6 +28,7 @@ export class JoseAccessTokenIssuer extends AccessTokenIssuer {
 
   async sign( principal: AuthenticatedPrincipal, audience: TokenAudience ): Promise<string> {
     return await new SignJWT({
+      sid: principal.sessionId,
       membershipId: principal.membershipId,
       organizationId: principal.organizationId,
       branchIds: principal.branchIds,

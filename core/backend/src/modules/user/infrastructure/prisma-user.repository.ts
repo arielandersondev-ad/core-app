@@ -3,6 +3,7 @@ import { PrismaService } from '../../../common/infrastructure/prisma.service.js'
 import { writeAuditLog } from '../../../common/infrastructure/prisma-audit.writer.js';
 import {
   CreateUserWithAccess,
+  FailedLoginPolicy,
   MembershipSummary,
   User,
   UserAuthRecord,
@@ -243,6 +244,12 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async findAuthRecord(email: string): Promise<UserAuthRecord | null> {
+    return this.loadAuthRecord(email, true);
+  }
+
+  // enforceLock=false se usa al renovar sesiones: el bloqueo por intentos fallidos frena el
+  // login por contraseña, pero no debe permitir que un atacante cierre sesiones ajenas.
+  private async loadAuthRecord(email: string, enforceLock: boolean): Promise<UserAuthRecord | null> {
     const userRow = await this.prisma.orm.core.User.where({ email }).first();
 
     if (!userRow || userRow.deletedAt || userRow.status !== 'ACTIVE') {
@@ -257,7 +264,7 @@ export class PrismaUserRepository extends UserRepository {
       !auth ||
       auth.deletedAt ||
       auth.passwordHash.trim().length === 0 ||
-      (auth.lockedUntil !== null && auth.lockedUntil > new Date())
+      (enforceLock && auth.lockedUntil !== null && auth.lockedUntil > new Date())
     ) {
       return null;
     }
@@ -344,7 +351,43 @@ export class PrismaUserRepository extends UserRepository {
       branchIds: [...branchIds],
       permissions: [...permissions].sort(),
       passwordHash: auth.passwordHash,
+      passwordChangedAt: auth.passwordChangedAt,
     };
+  }
+
+  async findAuthRecordByUserId(userId: string): Promise<UserAuthRecord | null> {
+    const user = await this.prisma.orm.core.User.first({ id: userId });
+    if (!user) return null;
+    const record = await this.loadAuthRecord(user.email, false);
+    return record && record.user.id === userId ? record : null;
+  }
+
+  async registerFailedLogin(userId: string, policy: FailedLoginPolicy): Promise<void> {
+    const credential = await this.prisma.orm.core.UserCredential.where({ userId }).first();
+    if (!credential || credential.deletedAt) return;
+
+    const attempts = credential.failedAttempts + 1;
+    if (attempts >= policy.maxAttempts) {
+      await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+        failedAttempts: 0,
+        lockedUntil: new Date(policy.now.getTime() + policy.lockDurationMs),
+      });
+      return;
+    }
+
+    await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+      failedAttempts: attempts,
+    });
+  }
+
+  async clearFailedLogins(userId: string): Promise<void> {
+    const credential = await this.prisma.orm.core.UserCredential.where({ userId }).first();
+    if (!credential || (credential.failedAttempts === 0 && credential.lockedUntil === null)) return;
+
+    await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
   }
 
   async findCurrentSession(

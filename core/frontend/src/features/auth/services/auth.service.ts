@@ -1,9 +1,9 @@
 import 'server-only';
 import axios, { isAxiosError } from 'axios';
 import { AUTH_ENDPOINTS } from '@/features/auth/api/endpoints';
-import type { AuthResult, LoginCredentials } from '@/features/auth/types/auth.types';
+import type { LoginCredentials } from '@/features/auth/types/auth.types';
 import { env } from '@/infrastructure/config/env';
-import { SESSION_MAX_AGE_SECONDS } from '@/infrastructure/auth/session';
+import { parseSessionTokens, type SessionTokens } from '@/infrastructure/auth/session';
 
 export class AuthenticationError extends Error {
   constructor(message: string, public readonly status: number) {
@@ -21,32 +21,18 @@ function getErrorMessage(payload: unknown) {
 }
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResult> {
+  async login(credentials: LoginCredentials): Promise<SessionTokens> {
     try {
-      const { data } = await axios.post<AuthResult>(
+      const { data } = await axios.post<unknown>(
         `${env.apiUrl}${AUTH_ENDPOINTS.login}`,
         credentials,
         { timeout: 15_000 },
       );
-      if (
-        !data ||
-        typeof data !== 'object' ||
-        typeof data.access_token !== 'string' ||
-        data.access_token.length === 0 ||
-        data.token_type !== 'Bearer'
-      ) {
+      const tokens = parseSessionTokens(data);
+      if (!tokens) {
         throw new AuthenticationError('El servidor devolvió una respuesta de sesión inválida.', 502);
       }
-
-      const expiresIn = data.expires_in;
-      return {
-        access_token: data.access_token,
-        token_type: 'Bearer',
-        expires_in:
-          typeof expiresIn === 'number' && Number.isSafeInteger(expiresIn) && expiresIn > 0
-            ? Math.min(expiresIn, SESSION_MAX_AGE_SECONDS)
-            : SESSION_MAX_AGE_SECONDS,
-      };
+      return tokens;
     } catch (error) {
       if (error instanceof AuthenticationError) {
         throw error;

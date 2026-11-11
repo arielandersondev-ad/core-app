@@ -93,6 +93,8 @@ function validateEnvironment(service: 'core' | 'dentistry') {
   if (service === 'core') {
     required('JWT_KEY_ID');
     integer('JWT_EXPIRES_IN_SECONDS', 1800, 1800);
+    integer('AUTH_SESSION_EXPIRES_IN_SECONDS', 43_200, 604_800);
+    integer('AUTH_SESSION_IDLE_TIMEOUT_SECONDS', 7_200, 604_800);
 
     if (required('JWT_CORE_AUDIENCE') !== 'core-api') {
       throw new Error('Configuración: JWT_CORE_AUDIENCE debe ser core-api');

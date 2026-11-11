@@ -90,6 +90,7 @@ export class JoseAccessTokenVerifier extends AccessTokenVerifier {
 
     return {
       sub,
+      sessionId: requiredUuid(payload, 'sid'),
       membershipId: requiredUuid(payload, 'membershipId'),
       organizationId: requiredUuid(payload, 'organizationId'),
       branchIds: requiredStringArray(payload, 'branchIds', UUID_PATTERN),

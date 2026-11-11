@@ -116,6 +116,7 @@ test('Core acepta su token y rechaza Dentistry con la misma clave pública', asy
     const verifier = new JoseAccessTokenVerifier();
     const base = {
       sub: '00000000-0000-0000-0000-000000000001',
+      sessionId: '00000000-0000-0000-0000-000000000006',
       membershipId: '00000000-0000-0000-0000-000000000002',
       organizationId: '00000000-0000-0000-0000-000000000003',
       branchIds: ['00000000-0000-0000-0000-000000000004'],
@@ -124,8 +125,10 @@ test('Core acepta su token y rechaza Dentistry con la misma clave pública', asy
     const dentistry = await issuer.sign({ ...base, permissions: ['dentistry:patients:read'] }, TOKEN_AUDIENCES.dentistry);
 
     assert.deepEqual((await verifier.verify(core)).permissions, ['users:read']);
+    assert.equal((await verifier.verify(core)).sessionId, base.sessionId);
     await assert.rejects(verifier.verify(dentistry));
-    const signSpecial = (audience, ttl) => new SignJWT({
+    const signSpecial = (audience, ttl, extra = { sid: base.sessionId }) => new SignJWT({
+      ...extra,
       membershipId: base.membershipId,
       organizationId: base.organizationId,
       branchIds: base.branchIds,
@@ -141,6 +144,8 @@ test('Core acepta su token y rechaza Dentistry con la misma clave pública', asy
       .sign(privateKey);
     const multiAudience = await signSpecial(['core-api', 'dentistry-api'], '900s');
     await assert.rejects(verifier.verify(multiAudience));
+    const withoutSession = await signSpecial('core-api', '900s', {});
+    await assert.rejects(verifier.verify(withoutSession));
     const overlong = await signSpecial('core-api', '1801s');
     await assert.rejects(verifier.verify(overlong));
     const [header, payload, signature] = core.split('.');
