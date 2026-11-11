@@ -14,6 +14,9 @@ export type CreatePatientInput = Pick<
       | 'documentType'
       | 'documentNumber'
       | 'address'
+      | 'maritalStatus'
+      | 'occupation'
+      | 'origin'
       | 'notes'
       | 'status'
     >

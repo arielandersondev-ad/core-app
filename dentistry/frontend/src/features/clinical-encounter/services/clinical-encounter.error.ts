@@ -1,14 +1,7 @@
 export class ClinicalEncounterApiUnavailableError extends Error {
-  constructor(message = "La API de atenciones clínicas todavía no está disponible.") {
+  constructor(message = "Esta función clínica todavía no está disponible.") {
     super(message);
     this.name = "ClinicalEncounterApiUnavailableError";
-  }
-}
-
-export class ClinicalEncounterStateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ClinicalEncounterStateError";
   }
 }
 

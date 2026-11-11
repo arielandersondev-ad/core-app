@@ -1,6 +1,6 @@
 # Plan de implementación: atenciones clínicas persistentes
 
-**Estado:** la feature existe como interfaz aislada (UI-only) con fuente mock; el contrato HTTP sigue pendiente. Este documento no autoriza cambios de esquema, migraciones ni endpoints.  
+**Estado (2026-11-11):** la feature está conectada al backend real mediante el BFF; el mock y su flag se eliminaron. Archivos y radiografías (E6) siguen pendientes. Este documento no autoriza cambios de esquema, migraciones ni endpoints.  
 **Fecha de sondeo:** 2026-11-06. **Última actualización:** 2026-11-08.  
 **Alcance:** Dentistry frontend y sus contratos HTTP ya disponibles. Quedan fuera identificación 3D y facturación/proforma.  
 **Contrato HTTP solicitado:** [clinical-encounter-api-requirements.md](clinical-encounter-api-requirements.md).
@@ -10,9 +10,8 @@
 | Aspecto | Hecho comprobado en el código |
 | --- | --- |
 | Ubicación | `dentistry/frontend/src/features/clinical-encounter/` con `api`, `components`, `config`, `data`, `hooks`, `services`, `types` y `utils`. No existe `views/`: las páginas de la feature viven en `components/*-page.tsx`. |
-| Integración | UI-only. `services/clinical-encounter.http.ts` implementa los doce métodos del datasource rechazando con `ClinicalEncounterApiUnavailableError`; las pantallas usan los hooks, que en desarrollo resuelven contra el mock. |
-| Fuente de datos | `config/clinical-encounter-mode.ts` lee `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO`: en desarrollo/test el mock está activo por defecto y se apaga con `"false"`; en producción queda apagado duro aunque el flag sea `"true"`. |
-| Datos mock | `data/mock.ts` y `services/clinical-encounter.mock.ts` mantienen estado en memoria por paciente, con latencia simulada. No hay `localStorage` ni data URLs. |
+| Integración | `services/clinical-encounter.http.ts` llama al BFF para atenciones, procedimientos, perfil de salud y datos de referencia; los tres métodos de archivos rechazan con `ClinicalEncounterApiUnavailableError` y la UI muestra “Adjuntos aún no disponibles”. Las mutaciones comprueban el contexto de sesión como `features/patient`. |
+| Fuente de datos | Única: HTTP. Se retiraron `config/clinical-encounter-mode.ts`, `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO`, `data/mock.ts` y `services/clinical-encounter.mock.ts`. |
 | Permisos usados | `dentistry:encounters:read`, `dentistry:encounters:create`, `dentistry:encounters:update` y `dentistry:encounters:void`, declarados en `features/dev-auth/types/personas.ts` y comprobados en las páginas de listado, alta, detalle y `patient-health-profile-page.tsx`. El perfil de salud comprueba `dentistry:encounters:read` para lectura y `dentistry:encounters:update` para edición; Recepción no dispone de esos permisos. |
 | Rutas UI | Implementadas el 2026-11-08 en `src/app/(platform)/patients/[patientId]/`; cada `page.tsx` solo pasa ids a un componente de la feature. |
 | Verificación | No se ejecutaron `tsc` ni pruebas en esta tarea documental: **verificar en Ola 3**. Existen pruebas de mock, utilidades, formulario de alta, detalle, filtros y perfil de salud en `tests/clinical-encounter-*.test.mjs`, pero su resultado no se certifica aquí. |
@@ -126,10 +125,8 @@ dentistry/frontend/src/features/clinical-encounter/
 ├── components/               # paneles, campos, badges, toast-stack,
 │                             # patient-context-boundary, páginas *-page y
 │                             # modales (procedure, complete, void)
-├── config/clinical-encounter-mode.ts
-├── data/mock.ts
 ├── hooks/                    # use-clinical-encounter-data, mutations, toasts
-├── services/                 # service (selector de fuente), http, mock, error
+├── services/                 # service (datasource HTTP), http, error
 ├── types/clinical-encounter.ts
 └── utils/                    # age, dates, format, procedures, y helpers de
                               # formulario, filtros y detalle

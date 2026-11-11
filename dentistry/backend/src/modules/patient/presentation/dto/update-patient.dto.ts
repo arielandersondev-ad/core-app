@@ -56,5 +56,17 @@ export class UpdatePatientDto {
 
   @IsOptional()
   @IsString()
+  maritalStatus?: string | null;
+
+  @IsOptional()
+  @IsString()
+  occupation?: string | null;
+
+  @IsOptional()
+  @IsString()
+  origin?: string | null;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }

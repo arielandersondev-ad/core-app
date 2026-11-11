@@ -1,6 +1,4 @@
-import { CLINICAL_ENCOUNTER_DEMO_ENABLED } from "@/features/clinical-encounter/config/clinical-encounter-mode";
 import { createClinicalEncounterHttpDataSource } from "@/features/clinical-encounter/services/clinical-encounter.http";
-import { createClinicalEncounterMockDataSource } from "@/features/clinical-encounter/services/clinical-encounter.mock";
 import type {
   AddClinicalFileInput,
   ClinicalEncounter,
@@ -15,15 +13,15 @@ import type {
   PatientHealthProfileInput,
   VoidClinicalEncounterInput,
 } from "@/features/clinical-encounter/types/clinical-encounter";
+import type { PaginatedResult } from "@/shared/types/pagination";
 
 export {
   ClinicalEncounterApiUnavailableError,
   ClinicalEncounterPartialCreateError,
-  ClinicalEncounterStateError,
 } from "@/features/clinical-encounter/services/clinical-encounter.error";
 
 export interface ClinicalEncounterDataSource {
-  list(patientId: string, filters?: ClinicalEncounterListFilters): Promise<ClinicalEncounter[]>;
+  list(patientId: string, filters?: ClinicalEncounterListFilters): Promise<PaginatedResult<ClinicalEncounter>>;
   get(patientId: string, encounterId: string): Promise<ClinicalEncounter>;
   create(input: CreateClinicalEncounterInput): Promise<ClinicalEncounter>;
   complete(
@@ -49,9 +47,7 @@ let cachedDataSource: ClinicalEncounterDataSource | null = null;
 
 export function getClinicalEncounterDataSource(): ClinicalEncounterDataSource {
   if (!cachedDataSource) {
-    cachedDataSource = CLINICAL_ENCOUNTER_DEMO_ENABLED
-      ? createClinicalEncounterMockDataSource()
-      : createClinicalEncounterHttpDataSource();
+    cachedDataSource = createClinicalEncounterHttpDataSource();
   }
 
   return cachedDataSource;

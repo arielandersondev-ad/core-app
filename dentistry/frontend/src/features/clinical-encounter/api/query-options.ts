@@ -2,6 +2,9 @@ import { keepPreviousData, mutationOptions, queryOptions, type QueryClient } fro
 import { patientQueryKeys } from "@/features/patient/api/query-options";
 import { ClinicalEncounterPartialCreateError } from "@/features/clinical-encounter/services/clinical-encounter.error";
 import { getClinicalEncounterDataSource } from "@/features/clinical-encounter/services/clinical-encounter.service";
+import { fetchCurrentSession } from "@/infrastructure/auth/client-session";
+import { assertSameSessionContext } from "@/infrastructure/auth/session-context";
+import type { CurrentSession } from "@/infrastructure/auth/session";
 import type {
   AddClinicalEncounterProceduresVariables,
   AddClinicalFileInput,
@@ -26,6 +29,11 @@ export const clinicalEncounterQueryKeys = {
   filesRoot: (patientId: string) => [ROOT, patientId, "files"] as const,
   referenceData: (patientId: string) => [ROOT, patientId, "reference-data"] as const,
 };
+
+/** Evita guardar con una sesión distinta de la que abrió el formulario. */
+async function assertSessionUnchanged(session: CurrentSession): Promise<void> {
+  assertSameSessionContext(session, await fetchCurrentSession());
+}
 
 function invalidatePatientDetail(client: QueryClient, patientId: string) {
   return client.invalidateQueries({ queryKey: patientQueryKeys.detail(patientId) });
@@ -71,9 +79,10 @@ export function encounterReferenceDataOptions(patientId: string) {
   });
 }
 
-export function clinicalEncounterCreateOptions(client: QueryClient) {
+export function clinicalEncounterCreateOptions(client: QueryClient, session: CurrentSession) {
   return mutationOptions({
     mutationFn: async ({ encounter, procedures }: CreateClinicalEncounterWithProceduresInput) => {
+      await assertSessionUnchanged(session);
       const source = getClinicalEncounterDataSource();
       const created = await source.create(encounter);
       const detailKey = clinicalEncounterQueryKeys.detail(encounter.patientId, created.id);
@@ -121,10 +130,16 @@ export function clinicalEncounterCreateOptions(client: QueryClient) {
   });
 }
 
-export function clinicalEncounterCompleteOptions(client: QueryClient, patientId: string) {
+export function clinicalEncounterCompleteOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: ({ encounterId, input }: CompleteClinicalEncounterVariables) =>
-      getClinicalEncounterDataSource().complete(patientId, encounterId, input),
+    mutationFn: async ({ encounterId, input }: CompleteClinicalEncounterVariables) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().complete(patientId, encounterId, input);
+    },
     retry: false,
     onSuccess: async (_encounter, { encounterId }) => {
       await Promise.all([
@@ -140,10 +155,16 @@ export function clinicalEncounterCompleteOptions(client: QueryClient, patientId:
   });
 }
 
-export function clinicalEncounterVoidOptions(client: QueryClient, patientId: string) {
+export function clinicalEncounterVoidOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: ({ encounterId, input }: VoidClinicalEncounterVariables) =>
-      getClinicalEncounterDataSource().void(patientId, encounterId, input),
+    mutationFn: async ({ encounterId, input }: VoidClinicalEncounterVariables) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().void(patientId, encounterId, input);
+    },
     retry: false,
     onSuccess: async (_encounter, { encounterId }) => {
       await Promise.all([
@@ -159,10 +180,16 @@ export function clinicalEncounterVoidOptions(client: QueryClient, patientId: str
   });
 }
 
-export function clinicalEncounterAddProceduresOptions(client: QueryClient, patientId: string) {
+export function clinicalEncounterAddProceduresOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: ({ encounterId, procedures }: AddClinicalEncounterProceduresVariables) =>
-      getClinicalEncounterDataSource().addProcedures(patientId, encounterId, procedures),
+    mutationFn: async ({ encounterId, procedures }: AddClinicalEncounterProceduresVariables) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().addProcedures(patientId, encounterId, procedures);
+    },
     retry: false,
     onSuccess: async (_procedures, { encounterId }) => {
       await Promise.all([
@@ -178,10 +205,16 @@ export function clinicalEncounterAddProceduresOptions(client: QueryClient, patie
   });
 }
 
-export function patientHealthProfileSaveOptions(client: QueryClient, patientId: string) {
+export function patientHealthProfileSaveOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: (input: PatientHealthProfileInput) =>
-      getClinicalEncounterDataSource().saveHealthProfile(patientId, input),
+    mutationFn: async (input: PatientHealthProfileInput) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().saveHealthProfile(patientId, input);
+    },
     retry: false,
     onSuccess: async (profile) => {
       // La respuesta ya trae el perfil autoritativo con updatedAt/rowVersion.
@@ -191,10 +224,16 @@ export function patientHealthProfileSaveOptions(client: QueryClient, patientId: 
   });
 }
 
-export function clinicalFileAddOptions(client: QueryClient, patientId: string) {
+export function clinicalFileAddOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: (input: AddClinicalFileInput) =>
-      getClinicalEncounterDataSource().addFile(patientId, input),
+    mutationFn: async (input: AddClinicalFileInput) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().addFile(patientId, input);
+    },
     retry: false,
     onSuccess: async () => {
       await Promise.all([
@@ -207,9 +246,16 @@ export function clinicalFileAddOptions(client: QueryClient, patientId: string) {
   });
 }
 
-export function clinicalFileRemoveOptions(client: QueryClient, patientId: string) {
+export function clinicalFileRemoveOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
   return mutationOptions({
-    mutationFn: (fileId: string) => getClinicalEncounterDataSource().removeFile(patientId, fileId),
+    mutationFn: async (fileId: string) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().removeFile(patientId, fileId);
+    },
     retry: false,
     onSuccess: async () => {
       await Promise.all([

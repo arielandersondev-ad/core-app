@@ -3,7 +3,8 @@
 **Dirigido a:** Dentistry Backend y responsable del BFF.  
 **Estado:** propuesta. Falta el acuerdo y la implementación. Este documento no es una especificación implementada ni autoriza cambios en `@app/db`.  
 **Última actualización:** 2026-11-11. Se re-verificó el estado del código y se añadieron la [ruta de puesta en marcha](#10-plan-de-puesta-en-marcha) y las [necesidades de la ficha y el listado de pacientes](#13-agregados-para-el-listado-y-la-ficha-del-paciente).  
-**Documento relacionado:** [clinical-encounter-implementation-plan.md](clinical-encounter-implementation-plan.md).
+**Documento relacionado:** [clinical-encounter-implementation-plan.md](clinical-encounter-implementation-plan.md).  
+**Actualización Backend (2026-11-11):** E1–E5 implementadas en `dentistry/backend` (`modules/clinical-encounter` y `modules/patient`) con las decisiones de §10.1; ver su `README.md`. Frontend conectado: allow-list BFF (§7), adaptador HTTP y listado con envelope; se retiró el mock. Pendientes: alta de permisos en Core y E6. Corrección: `appointmentId` es único en BD también para atenciones anuladas, así que el 409 de §2.3 aplica a cualquier atención existente de la cita.
 
 ## Motivo
 

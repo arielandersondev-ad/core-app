@@ -38,7 +38,7 @@ const ROUTES: readonly ProxyRule[] = [
     method: "GET",
     pattern: /^patients$/,
     query: {
-      parameters: ["search", "status", "page", "pageSize", "limit", "offset"],
+      parameters: ["search", "status", "page", "pageSize", "limit", "offset", "createdFrom", "createdTo"],
       errorMessage: "Filtro de pacientes inválido.",
     },
   },
@@ -46,6 +46,24 @@ const ROUTES: readonly ProxyRule[] = [
   { method: "GET", pattern: new RegExp(`^patients/${UUID}$`) },
   { method: "PATCH", pattern: new RegExp(`^patients/${UUID}$`) },
   { method: "DELETE", pattern: new RegExp(`^patients/${UUID}$`) },
+  // Atenciones clínicas y perfil de salud (docs/clinical-encounter-api-requirements.md §7).
+  {
+    method: "GET",
+    pattern: new RegExp(`^patients/${UUID}/clinical-encounters$`),
+    query: {
+      parameters: ["status", "practitionerMembershipId", "search", "page", "pageSize"],
+      maxValueLength: 100,
+      errorMessage: "Filtro de atenciones inválido.",
+    },
+  },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/reference-data$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/procedures$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/complete$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/void$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
+  { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
   {
     method: "GET",
     pattern: /^persons$/,

@@ -10,38 +10,46 @@ import {
   clinicalFileRemoveOptions,
   patientHealthProfileSaveOptions,
 } from "@/features/clinical-encounter/api/query-options";
+import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 
 export function useCreateClinicalEncounter() {
   const client = useQueryClient();
-  return useMutation(clinicalEncounterCreateOptions(client));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalEncounterCreateOptions(client, session));
 }
 
 export function useCompleteClinicalEncounter(patientId: string) {
   const client = useQueryClient();
-  return useMutation(clinicalEncounterCompleteOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalEncounterCompleteOptions(client, session, patientId));
 }
 
 export function useVoidClinicalEncounter(patientId: string) {
   const client = useQueryClient();
-  return useMutation(clinicalEncounterVoidOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalEncounterVoidOptions(client, session, patientId));
 }
 
 export function useAddClinicalEncounterProcedures(patientId: string) {
   const client = useQueryClient();
-  return useMutation(clinicalEncounterAddProceduresOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalEncounterAddProceduresOptions(client, session, patientId));
 }
 
 export function useSavePatientHealthProfile(patientId: string) {
   const client = useQueryClient();
-  return useMutation(patientHealthProfileSaveOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(patientHealthProfileSaveOptions(client, session, patientId));
 }
 
 export function useAddClinicalFile(patientId: string) {
   const client = useQueryClient();
-  return useMutation(clinicalFileAddOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalFileAddOptions(client, session, patientId));
 }
 
 export function useRemoveClinicalFile(patientId: string) {
   const client = useQueryClient();
-  return useMutation(clinicalFileRemoveOptions(client, patientId));
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalFileRemoveOptions(client, session, patientId));
 }

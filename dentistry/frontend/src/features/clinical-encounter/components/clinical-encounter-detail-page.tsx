@@ -31,7 +31,7 @@ import {
   useVoidClinicalEncounter,
 } from "@/features/clinical-encounter/hooks/use-clinical-encounter-mutations";
 import { useToasts } from "@/features/clinical-encounter/hooks/use-toasts";
-import { ClinicalEncounterStateError } from "@/features/clinical-encounter/services/clinical-encounter.service";
+import { ClinicalEncounterApiUnavailableError } from "@/features/clinical-encounter/services/clinical-encounter.service";
 import type {
   ClinicalEncounterProcedureDraft,
   ClinicalFile,
@@ -77,12 +77,10 @@ function encountersListHref(patientId: string): string {
 }
 
 function isNotFoundError(error: unknown): boolean {
-  if (error instanceof ApiError) return error.status === 404;
-  return error instanceof Error && /no (se )?encontr/i.test(error.message);
+  return error instanceof ApiError && error.status === 404;
 }
 
 function mutationErrorMessage(error: unknown): string {
-  if (error instanceof ClinicalEncounterStateError) return error.message;
   if (error instanceof ProcedureValidationError) return error.message;
   if (error instanceof ApiError) return error.message;
   if (error instanceof Error && error.message.trim()) return error.message;
@@ -213,7 +211,8 @@ function EncounterDetailContent({
   const canVoidEncounter = session.permissions.includes(VOID_PERMISSION);
   // Decisión (A): completar cierra el registro clínico, pero los metadatos de
   // archivos (adjuntar/quitar) siguen siendo gestionables con permiso de update.
-  const canEditFiles = canUpdate && encounter.status !== "VOIDED";
+  const filesUnavailable = filesQuery.error instanceof ClinicalEncounterApiUnavailableError;
+  const canEditFiles = canUpdate && encounter.status !== "VOIDED" && !filesUnavailable;
   const canAddProcedureNow = canAddProcedures(encounter.status) && canUpdate;
   const canCompleteNow = canComplete(encounter.status) && canUpdate;
   const canVoidNow = canVoid(encounter.status) && canVoidEncounter;
@@ -232,7 +231,7 @@ function EncounterDetailContent({
       ? "Cargando…"
       : referenceFailed
         ? "No disponible"
-        : (appointmentLabel ?? "No disponible")
+        : (appointmentLabel ?? "Cita vinculada")
     : "Sin cita";
   const treatmentValue = encounter.treatmentId
     ? referencePending
@@ -563,6 +562,13 @@ function EncounterDetailContent({
               <p role="status" className="text-sm text-muted">
                 Cargando archivos…
               </p>
+            ) : filesUnavailable ? (
+              <EmptyState
+                className="py-6"
+                message="Adjuntos aún no disponibles"
+                description="El registro de radiografías y documentos se habilitará en una próxima entrega."
+                icon={Icons.inventory}
+              />
             ) : filesQuery.isError ? (
               <div role="alert" className="space-y-3 text-sm">
                 <p className="text-foreground">No se pudieron cargar los archivos.</p>

@@ -13,6 +13,9 @@ export type Patient = {
   documentType: string | null;
   documentNumber: string | null;
   address: string | null;
+  maritalStatus: string | null;
+  occupation: string | null;
+  origin: string | null;
   notes: string | null;
   status: PatientStatus;
   createdByMembershipId: string;

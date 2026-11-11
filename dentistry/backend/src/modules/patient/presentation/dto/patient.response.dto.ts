@@ -13,6 +13,9 @@ export class PatientResponseDto {
   documentType: string | null;
   documentNumber: string | null;
   address: string | null;
+  maritalStatus: string | null;
+  occupation: string | null;
+  origin: string | null;
   notes: string | null;
   status: string;
   createdAt: string;
@@ -32,6 +35,9 @@ export class PatientResponseDto {
     dto.documentType = patient.documentType;
     dto.documentNumber = patient.documentNumber;
     dto.address = patient.address;
+    dto.maritalStatus = patient.maritalStatus ?? null;
+    dto.occupation = patient.occupation ?? null;
+    dto.origin = patient.origin ?? null;
     dto.notes = patient.notes;
     dto.status = patient.status;
     dto.createdAt = patient.createdAt.toISOString();

@@ -9,8 +9,9 @@ function encountersCollection(patientId: string): string {
 }
 
 /**
- * Rutas propuestas para cuando exista el contrato HTTP real. El adaptador HTTP
- * actual no las invoca todavía.
+ * Rutas del contrato acordado con Dentistry Backend, servidas por el BFF
+ * (`infrastructure/http/dentistry-proxy.ts`). `files` y `fileById` siguen sin
+ * endpoint (entrega E6).
  */
 export const CLINICAL_ENCOUNTER_ENDPOINTS = {
   collection: encountersCollection,

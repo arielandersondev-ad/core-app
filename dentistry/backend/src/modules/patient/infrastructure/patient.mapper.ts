@@ -16,6 +16,9 @@ export interface PatientRow {
   documentType: string | null;
   documentNumber: string | null;
   address: string | null;
+  maritalStatus: string | null;
+  occupation: string | null;
+  origin: string | null;
   notes: string | null;
   status: string;
   createdByMembershipId: string;
@@ -38,6 +41,9 @@ export function toPatientEntity(row: PatientRow): Patient {
     documentType: row.documentType?.trim() || null,
     documentNumber: row.documentNumber?.trim() || null,
     address: row.address?.trim() ?? null,
+    maritalStatus: row.maritalStatus?.trim() || null,
+    occupation: row.occupation?.trim() || null,
+    origin: row.origin?.trim() || null,
     notes: row.notes?.trim() ?? null,
     status: row.status as PatientStatus,
     createdByMembershipId: row.createdByMembershipId,

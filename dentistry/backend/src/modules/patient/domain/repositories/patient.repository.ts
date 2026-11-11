@@ -10,6 +10,9 @@ export type FindPatientsFilters = {
   organizationId: string;
   search?: string;
   status?: Patient['status'];
+  /** Fechas civiles (UTC-midnight) interpretadas en la zona de la organización. */
+  createdFrom?: Date;
+  createdTo?: Date;
 } & Partial<PaginationInput>;
 
 export abstract class PatientRepository {

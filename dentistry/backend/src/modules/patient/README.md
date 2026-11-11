@@ -24,8 +24,10 @@ Los DTO HTTP no aceptan esos campos de contexto. La configuración actual de
 `ValidationPipe` elimina los campos desconocidos del body y de los DTO de query;
 si un cliente antiguo los envía, no sustituyen los valores del token.
 
-El listado acepta `search`, `status`, `page` y `pageSize`, y devuelve
-`{ items, pagination }`. Los identificadores de ruta deben ser UUID válidos.
+El listado acepta `search`, `status`, `page`, `pageSize` y `createdFrom` /
+`createdTo` (fechas civiles `YYYY-MM-DD`, inclusivas, interpretadas en la zona
+horaria de la organización), y devuelve `{ items, pagination }`. Alta y edición
+aceptan además `maritalStatus`, `occupation` y `origin` (texto opcional). Los identificadores de ruta deben ser UUID válidos.
 Los datos y el conteo se restringen a la organización autenticada. La lectura
 o edición de un id ajeno devuelve 404.
 

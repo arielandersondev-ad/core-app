@@ -198,7 +198,8 @@ function EncounterListResults({
     );
   }
 
-  const encounters = query.data;
+  const encounters = query.data.items;
+  const totalItems = query.data.pagination.totalItems;
 
   if (encounters.length === 0) {
     return (
@@ -295,8 +296,9 @@ function EncounterListResults({
       caption="Atenciones clínicas del paciente"
       footer={
         <span>
-          {encounters.length === 1 ? "1 atención" : `${encounters.length} atenciones`}
+          {totalItems === 1 ? "1 atención" : `${totalItems} atenciones`}
           {isFiltering ? " con los filtros aplicados" : " en el historial"}
+          {totalItems > encounters.length && ` · mostrando las ${encounters.length} más recientes`}
         </span>
       }
       renderCard={(encounter) => (

@@ -6,6 +6,7 @@ import { PatientModule } from './modules/patient/patient.module.js';
 import { PersonModule } from './modules/person/person.module.js';
 import { DentistryAuthModule } from './modules/auth/dentistry-auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { ClinicalEncounterModule } from './modules/clinical-encounter/clinical-encounter.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { HealthModule } from './modules/health/health.module.js';
     DentalServiceModule,
     PatientModule,
     PersonModule,
+    ClinicalEncounterModule,
   ],
   controllers: [],
   providers: [],

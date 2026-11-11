@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -51,6 +52,21 @@ export class PatientController {
       page: query.page,
       pageSize: query.pageSize,
     };
+    const createdFrom = parseCivilDate(query.createdFrom, 'createdFrom');
+    if (createdFrom) {
+      filters.createdFrom = createdFrom;
+    }
+    const createdTo = parseCivilDate(query.createdTo, 'createdTo');
+    if (createdTo) {
+      filters.createdTo = createdTo;
+    }
+    if (
+      filters.createdFrom &&
+      filters.createdTo &&
+      filters.createdFrom > filters.createdTo
+    ) {
+      throw new BadRequestException('createdFrom no puede ser posterior a createdTo');
+    }
     if (query.limit !== undefined) {
       filters.limit = query.limit;
     }
@@ -101,6 +117,9 @@ export class PatientController {
       documentType: dto.documentType,
       documentNumber: dto.documentNumber,
       address: dto.address,
+      maritalStatus: dto.maritalStatus,
+      occupation: dto.occupation,
+      origin: dto.origin,
       notes: dto.notes,
       createdByMembershipId: principal.membershipId,
     });
@@ -126,6 +145,9 @@ export class PatientController {
       documentType: dto.documentType,
       documentNumber: dto.documentNumber,
       address: dto.address,
+      maritalStatus: dto.maritalStatus,
+      occupation: dto.occupation,
+      origin: dto.origin,
       notes: dto.notes,
       updatedByMembershipId: principal.membershipId,
     });

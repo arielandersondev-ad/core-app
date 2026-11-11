@@ -18,6 +18,9 @@ export interface UpdatePatientCommand {
   documentType?: string | null;
   documentNumber?: string | null;
   address?: string | null;
+  maritalStatus?: string | null;
+  occupation?: string | null;
+  origin?: string | null;
   notes?: string | null;
   updatedByMembershipId: string;
 }
@@ -69,6 +72,18 @@ export class UpdatePatientUseCase {
         command.address === undefined
           ? patient.address
           : (command.address?.trim() ?? null),
+      maritalStatus:
+        command.maritalStatus === undefined
+          ? patient.maritalStatus
+          : command.maritalStatus?.trim() || null,
+      occupation:
+        command.occupation === undefined
+          ? patient.occupation
+          : command.occupation?.trim() || null,
+      origin:
+        command.origin === undefined
+          ? patient.origin
+          : command.origin?.trim() || null,
       notes:
         command.notes === undefined
           ? patient.notes

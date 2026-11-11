@@ -6,6 +6,7 @@ import {
 import { or } from '@prisma/orm-postgres/orm-client';
 import { hasPostgresCode } from '../../../common/infrastructure/postgres-error.js';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
+import { startOfCivilDateIn } from '../../../common/validation/civil-date.js';
 import {
   createPaginatedResult,
   DEFAULT_PAGE,
@@ -38,6 +39,9 @@ export class PrismaPatientRepository extends PatientRepository {
       documentType: patient.documentType,
       documentNumber: patient.documentNumber,
       address: patient.address,
+      maritalStatus: patient.maritalStatus,
+      occupation: patient.occupation,
+      origin: patient.origin,
       notes: patient.notes,
       status: patient.status,
       createdByMembershipId: patient.createdByMembershipId,
@@ -75,6 +79,19 @@ export class PrismaPatientRepository extends PatientRepository {
 
     if (filters.status !== undefined) {
       query = query.where({ status: filters.status });
+    }
+
+    if (filters.createdFrom || filters.createdTo) {
+      const timeZone = await this.organizationTimeZone(filters.organizationId);
+      if (filters.createdFrom) {
+        const from = startOfCivilDateIn(filters.createdFrom, timeZone);
+        query = query.where((patient) => patient.createdAt.gte(from));
+      }
+      if (filters.createdTo) {
+        const nextDay = new Date(filters.createdTo.getTime() + 86_400_000);
+        const to = startOfCivilDateIn(nextDay, timeZone);
+        query = query.where((patient) => patient.createdAt.lt(to));
+      }
     }
 
     const search = filters.search?.trim();
@@ -126,6 +143,13 @@ export class PrismaPatientRepository extends PatientRepository {
     );
   }
 
+  private async organizationTimeZone(organizationId: string): Promise<string> {
+    const organization = await this.prisma.orm.core.Organization.first({
+      id: organizationId,
+    });
+    return organization?.timezone || 'UTC';
+  }
+
   async update(patient: Patient): Promise<Patient> {
     const row = await this.prisma.orm.dentistry.Patient.where({
       id: patient.id,
@@ -141,6 +165,9 @@ export class PrismaPatientRepository extends PatientRepository {
         documentType: patient.documentType,
         documentNumber: patient.documentNumber,
         address: patient.address,
+        maritalStatus: patient.maritalStatus,
+        occupation: patient.occupation,
+        origin: patient.origin,
         notes: patient.notes,
         status: patient.status,
         updatedByMembershipId: patient.updatedByMembershipId
