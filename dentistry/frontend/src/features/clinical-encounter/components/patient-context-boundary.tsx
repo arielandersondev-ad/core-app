@@ -7,7 +7,7 @@ import { patientDetailOptions } from "@/features/patient/api/query-options";
 import type { PatientDto } from "@/features/patient/types/patient";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { PageContainer } from "@/shared/components/layout";
-import { Button } from "@/shared/components/ui";
+import { Button, StatusMessage } from "@/shared/components/ui";
 
 /**
  * Resuelve el paciente real antes de montar una vista de la feature.
@@ -29,9 +29,7 @@ export function PatientContextBoundary({
   if (query.isPending) {
     return (
       <PageContainer>
-        <p role="status" className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted">
-          Cargando paciente…
-        </p>
+        <StatusMessage variant="loading" message="Cargando paciente…" />
       </PageContainer>
     );
   }
@@ -47,19 +45,22 @@ export function PatientContextBoundary({
 
     return (
       <PageContainer>
-        <div role="alert" className="rounded-xl border border-border bg-surface p-8 text-center">
-          <p className="mb-4 text-sm text-foreground">{message}</p>
-          {!isMissing && !isForbidden && (
-            <Button variant="outline" onClick={() => { void query.refetch(); }}>
-              Reintentar
-            </Button>
-          )}
-          <div className="mt-4">
-            <Link href="/patients" className="text-sm text-primary hover:underline">
-              Volver a pacientes
-            </Link>
-          </div>
-        </div>
+        <StatusMessage
+          variant="error"
+          message={message}
+          action={
+            <>
+              {!isMissing && !isForbidden && (
+                <Button variant="outline" onClick={() => { void query.refetch(); }}>
+                  Reintentar
+                </Button>
+              )}
+              <Link href="/patients" className="text-sm text-primary hover:underline">
+                Volver a pacientes
+              </Link>
+            </>
+          }
+        />
       </PageContainer>
     );
   }

@@ -25,6 +25,7 @@ import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-ses
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import {
   Button,
+  buttonClassName,
   EmptyState,
   Icons,
   Input,
@@ -34,11 +35,8 @@ import {
   type ResponsiveTableColumn,
 } from "@/shared/components/ui";
 
-const PRIMARY_LINK_CLASSES =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius)] bg-[var(--primary)] px-4 font-display text-sm font-semibold text-[var(--primary-foreground)] shadow-2xs transition-all hover:bg-[var(--primary-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40";
-
-const OUTLINE_LINK_CLASSES =
-  "inline-flex h-8 items-center justify-center gap-1.5 rounded-[var(--radius)] border border-[var(--border)] px-3 font-display text-xs font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--neutral-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40";
+const PRIMARY_LINK_CLASSES = buttonClassName();
+const OUTLINE_LINK_CLASSES = buttonClassName({ variant: "outline", size: "sm" });
 
 const statusFilterOptions = [
   { value: ALL_ENCOUNTER_STATUSES, label: "Todas" },
@@ -91,7 +89,7 @@ function ClinicalEncounterListContent({ patient }: { patient: PatientDto }) {
         action={
           canRead && canCreate ? (
             <Link href={createHref} className={PRIMARY_LINK_CLASSES}>
-              <span className="shrink-0">{Icons.plus}</span>
+              <span aria-hidden="true" className="shrink-0">{Icons.plus}</span>
               Nueva atención
             </Link>
           ) : undefined
@@ -218,7 +216,7 @@ function EncounterListResults({
         action={
           !isFiltering && canCreate ? (
             <Link href={createHref} className={PRIMARY_LINK_CLASSES}>
-              <span className="shrink-0">{Icons.plus}</span>
+              <span aria-hidden="true" className="shrink-0">{Icons.plus}</span>
               Nueva atención
             </Link>
           ) : undefined
@@ -283,7 +281,7 @@ function EncounterListResults({
           className={OUTLINE_LINK_CLASSES}
         >
           Ver detalle
-          <span className="shrink-0">{Icons.chevronRight}</span>
+          <span aria-hidden="true" className="shrink-0">{Icons.chevronRight}</span>
         </Link>
       ),
     },
@@ -326,7 +324,7 @@ function EncounterListResults({
               className={OUTLINE_LINK_CLASSES}
             >
               Ver detalle
-              <span className="shrink-0">{Icons.chevronRight}</span>
+              <span aria-hidden="true" className="shrink-0">{Icons.chevronRight}</span>
             </Link>
           }
         >

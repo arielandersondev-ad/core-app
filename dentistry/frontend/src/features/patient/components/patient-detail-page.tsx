@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { patientDetailOptions } from "@/features/patient/api/query-options";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { Button, Icons } from "@/shared/components/ui";
+import { Button, buttonClassName, Icons, StatusMessage } from "@/shared/components/ui";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
 import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
@@ -36,7 +36,7 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
   const [updatedMessage, setUpdatedMessage] = useState("");
 
   if (query.isPending) {
-    return <PageContainer><p role="status" className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted">Cargando paciente…</p></PageContainer>;
+    return <PageContainer><StatusMessage variant="loading" message="Cargando paciente…" /></PageContainer>;
   }
 
   if (query.isError) {
@@ -49,11 +49,14 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
 
     return (
       <PageContainer>
-        <div role="alert" className="rounded-xl border border-border bg-surface p-8 text-center">
-          <p className="mb-4 text-sm text-foreground">{message}</p>
-          {!isMissing && <Button variant="outline" onClick={() => { void query.refetch(); }}>Reintentar</Button>}
-          <div className="mt-4"><Link href="/patients" className="text-sm text-primary hover:underline">Volver a pacientes</Link></div>
-        </div>
+        <StatusMessage
+          variant="error"
+          message={message}
+          action={<>
+            {!isMissing && <Button variant="outline" onClick={() => { void query.refetch(); }}>Reintentar</Button>}
+            <Link href="/patients" className="text-sm text-primary hover:underline">Volver a pacientes</Link>
+          </>}
+        />
       </PageContainer>
     );
   }
@@ -68,7 +71,7 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
         breadcrumbs={[{ label: "Pacientes", href: "/patients" }, { label: patient.fullName }]}
         action={<div className="flex flex-wrap gap-2">
           {session.permissions.includes("dentistry:encounters:create") && (
-            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/new`} className="inline-flex h-10 items-center justify-center gap-2 rounded-[var(--radius)] bg-[var(--primary)] px-4 font-display text-sm font-semibold text-[var(--primary-foreground)] shadow-2xs transition-all hover:bg-[var(--primary-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/new`} className={buttonClassName()}>
               <span className="flex shrink-0 items-center" aria-hidden="true">
                 {Icons.plus}
               </span>
@@ -77,8 +80,8 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
           )}
           {session.permissions.includes("dentistry:encounters:read") && (
             <>
-              <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className="inline-flex h-10 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] px-4 font-display text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--neutral-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">Atenciones clínicas</Link>
-              <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className="inline-flex h-10 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] px-4 font-display text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--neutral-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40">Perfil de salud</Link>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className={buttonClassName({ variant: "outline" })}>Atenciones clínicas</Link>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className={buttonClassName({ variant: "outline" })}>Perfil de salud</Link>
             </>
           )}
           {session.permissions.includes("dentistry:patients:update") && <Button variant="outline" onClick={() => setEditing(true)}>Editar paciente</Button>}

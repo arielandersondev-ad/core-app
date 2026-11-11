@@ -7,7 +7,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./styles": "./src/styles/tokens.css"
+    "./styles": "./src/styles/tokens.css",
+    "./theme": "./src/theme/theme.ts",
+    "./theme-decorations": "./src/theme/ThemeDecorations.tsx"
   },
   "scripts": {
     "test": "npx vitest run",

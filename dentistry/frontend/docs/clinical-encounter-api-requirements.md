@@ -1,8 +1,8 @@
 # Solicitud de contrato HTTP: atenciones clínicas de Dentistry
 
 **Dirigido a:** Dentistry Backend y responsable del BFF.  
-**Estado:** propuesta; pendiente de acuerdo e implementación. No es especificación implementada ni autorización para cambiar `@app/db`.  
-**Última actualización:** 2026-11-08.  
+**Estado:** propuesta. Falta el acuerdo y la implementación. Este documento no es una especificación implementada ni autoriza cambios en `@app/db`.  
+**Última actualización:** 2026-11-11. Se re-verificó el estado del código y se añadieron la [ruta de puesta en marcha](#10-plan-de-puesta-en-marcha) y las [necesidades de la ficha y el listado de pacientes](#13-agregados-para-el-listado-y-la-ficha-del-paciente).  
 **Documento relacionado:** [clinical-encounter-implementation-plan.md](clinical-encounter-implementation-plan.md).
 
 ## Motivo
@@ -10,6 +10,26 @@
 El contrato Prisma ya contiene `PatientHealthProfile`, `ClinicalEncounter`, `ClinicalEncounterProcedure`, `Treatment`, `TreatmentProcedure`, `ClinicalFile` y `Radiograph`, pero el sondeo de controladores de `dentistry/backend` no halló rutas para esos recursos. Los únicos controladores observados son pacientes, citas, personas, servicios y un health check de infraestructura; el BFF de Dentistry solo permite pacientes, citas, personas y servicios.
 
 La feature `dentistry/frontend/src/features/clinical-encounter/` ya existe como interfaz aislada: el adaptador `services/clinical-encounter.http.ts` rechaza todas las operaciones con `ClinicalEncounterApiUnavailableError` y, en desarrollo, la UI consume `services/clinical-encounter.mock.ts`. El frontend no puede persistir atención clínica usando el prototipo `ClinicalHistory` ni mapearlo a `notes`; tampoco puede inventar rutas. Se solicita acordar los siguientes recursos, payloads y permisos antes de habilitar el adaptador HTTP.
+
+## Estado verificado (2026-11-11)
+
+Se comprobó sobre la rama `dev` (commit `642c640`). Nada de lo pedido en las secciones 1–7 existe todavía fuera del frontend.
+
+| Pieza | Estado | Evidencia |
+| --- | --- | --- |
+| Modelos en `@app/db` | **Existen**: `PatientHealthProfile`, `ClinicalEncounter`, `ClinicalEncounterProcedure`, `Treatment`, `TreatmentProcedure`, `ClinicalFile`. | `packages/db/src/prisma/schema.ts` (líneas ~681–1016). |
+| Migración clínica | **Preparada**: `20261105T1833_dentistry_clinical_procedures`. Hay que confirmar en cada entorno si ya está aplicada. | `packages/db/migrations/app/`. |
+| Controladores Dentistry | **No existen.** Solo hay `appointments`, `auth`, `health`, `patients`, `persons` y `services`. | `dentistry/backend/src/modules/*/presentation/http/*.controller.ts`. |
+| Permisos `dentistry:encounters:*` | **No existen en Backend.** Ningún controlador los exige. Solo los declaran las personas de desarrollo del frontend. | `features/dev-auth/types/personas.ts`. |
+| Allow-list BFF | **Sin reglas clínicas.** Solo cubre `appointments`, `patients`, `persons` y `services`. | `src/infrastructure/http/dentistry-proxy.ts`. |
+| Route handler BFF | Exporta solo `GET`, `POST`, `PATCH` y `DELETE`. | `src/app/api/dentistry/[...path]/route.ts`. |
+| Adaptador HTTP del frontend | Los 12 métodos rechazan con `ClinicalEncounterApiUnavailableError`. | `services/clinical-encounter.http.ts`. |
+| Rutas propuestas del frontend | Codificadas pero no usadas. Son anidadas bajo `/patients/:patientId`. | `api/endpoints.ts`. |
+| Utilidades HTTP reutilizables | **Existen**: `requestJson`, `fetchCurrentSession` y `assertSameSessionContext`. | `src/infrastructure/http/request-json.ts`, `src/infrastructure/auth/session-context.ts`, `src/features/auth/services/current-session.client.ts`. |
+| Pantallas | **Existen**: listado, alta, detalle y perfil de salud, alimentados por el mock. | `src/app/(platform)/patients/[patientId]/...`. |
+| Flag de demo | `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO`. | `config/clinical-encounter-mode.ts`. |
+
+> Observación al margen: las personas de desarrollo declaran `dentistry:services:manage`, pero Backend exige `dentistry:services:create|update|delete`. Esta solicitud no lo corrige; se anota para no repetir el mismo desfase con los permisos clínicos.
 
 ## Leyenda: contrato existente y propuesta
 
@@ -68,7 +88,7 @@ No se deben devolver detalles internos, SQL ni ids de otras organizaciones.
 
 ## 1. Paciente y perfil de salud
 
-### Extensión de paciente existente
+### 1.1 Extensión de paciente existente
 
 Se requiere que `GET /patients/:id`, `POST /patients` y `PATCH /patients/:id` representen, cuando aplique:
 
@@ -83,7 +103,7 @@ Se requiere que `GET /patients/:id`, `POST /patients` y `PATCH /patients/:id` re
 
 `birthDate` y `sex` permanecen opcionales. La edad no se recibe ni persiste. Confirmar si estos campos pueden añadirse al CRUD existente y con qué permiso, manteniendo las validaciones de fecha civil actuales. La UI ya usa el contrato de `features/patient` para resolver el paciente; hoy `maritalStatus`, `occupation` y `origin` no están en `PatientDto`.
 
-### Perfil de salud
+### 1.2 Perfil de salud
 
 Un perfil único por paciente. La UI espera un objeto con los seis textos, `updatedAt` y `rowVersion`; el tipo no incluye un indicador de existencia.
 
@@ -126,6 +146,19 @@ Un perfil único por paciente. La UI espera un objeto con los seis textos, `upda
 **Notas de estado e idempotencia:** `PUT` es idempotente para el mismo payload. El servidor deriva `patientId`, autoría y `updatedAt`. Si el perfil no existe, se recomienda responder 200 con los seis campos en `null` y `rowVersion: 0` para que la UI muestre “Sin registrar”; la alternativa 404 con código `HEALTH_PROFILE_NOT_FOUND` obliga al adaptador a sintetizar el objeto vacío. **Pendiente Backend.** Confirmar si se requiere versionado por `rowVersion` y el código que diferencia ausencia de perfil de perfil vacío.
 
 > Restricción del BFF: `dentistry-proxy.ts` solo tipa y reenvía `GET | POST | PATCH | DELETE`, y `app/api/dentistry/[...path]/route.ts` solo exporta esos cuatro métodos. Si Backend exige `PUT`, el BFF debe ampliarse; si no, la operación debe ser `PATCH` o `POST`. **Pendiente Backend/BFF.**
+
+### 1.3 Agregados para el listado y la ficha del paciente
+
+Salen de la revisión de UI del 2026-11-11 (listado de pacientes, detalle del paciente, atenciones y alta). Son lecturas sobre datos ya modelados y no requieren cambios en `@app/db`.
+
+| Necesidad de la UI | Problema actual | Solución solicitada | Prioridad |
+| --- | --- | --- | --- |
+| KPI “Pacientes activos” | Se cuenta solo sobre las filas ya cargadas, así que el número es falso. | **No requiere endpoint nuevo.** Se resuelve con `GET /patients?status=ACTIVE&pageSize=1` leyendo `pagination.totalItems`. Es tarea del frontend. | Alta |
+| KPI “Nuevos este mes” | Mismo problema. No hay filtro por fecha de alta. | Añadir `createdFrom` / `createdTo` (fecha civil `YYYY-MM-DD`, en la zona horaria de la organización) a `GET /patients`. La alternativa es `GET /patients/summary` → `{ "total": 0, "active": 0, "inactive": 0, "createdThisMonth": 0 }`. Con el filtro basta y además sirve para futuros listados. Si se aprueba, añadir los dos parámetros al `QueryPolicy` de `^patients$`. | Media |
+| Resumen clínico en la ficha: última atención y atención en curso | La ficha solo muestra datos de contacto. | Reutilizar 2.1 con `pageSize=1`: el orden `startedAt` descendente da la última atención, y `status=IN_PROGRESS` da la que está abierta. **Requiere el envelope con `pagination` (P4)** para saber si hay más. Así no hace falta un endpoint específico. | Alta |
+| Alertas de salud en la ficha (alergias, condiciones relevantes) | No se muestran fuera de la página de perfil. | Reutilizar `GET /patients/:patientId/health-profile` (sección 1.2). Hace falta que un perfil inexistente responda 200 con campos `null` (recomendación de la sección 1) para no pintar error en la ficha. | Alta |
+| Etiqueta de sexo | Se muestra el enum crudo (`MALE` / `FEMALE` / `OTHER`). | **Sin cambio de API.** El mapeo es del frontend. | — |
+| Filtros del historial en la URL | Se pierden al volver desde el detalle. | **Sin cambio de API.** Es del frontend. Basta con que 2.1 acepte `status`, `search`, `page` y `pageSize`. | — |
 
 ## 2. Atenciones clínicas
 
@@ -501,6 +534,7 @@ No se edita el archivo en esta tarea. El formato vigente usa `ProxyMethod` (`GET
 | DELETE | `^patients/UUID/clinical-files/UUID$` | — | |
 | POST | `^clinical-files/upload-intents$` | — | Solo si se adopta el flujo de subida. |
 | POST | `^clinical-files/UUID/complete$` | — | Solo si se adopta el flujo de subida. |
+| GET (existente) | `^patients$` | Añadir `createdFrom` y `createdTo` a los parámetros actuales | Solo si se aprueba 1.3 (entrega E5). |
 
 Si se eligen rutas globales en lugar de anidadas, la tabla cambia a `^clinical-encounters$` (con `patientId` en la query), `^clinical-encounters/UUID$`, etc. **No se debe añadir ninguna regla hasta que la forma de ruta esté aprobada.**
 
@@ -554,7 +588,7 @@ Hay dos reglas incompatibles:
 
 ## 9. Qué falta para pasar de mock a HTTP real
 
-1. **Backend:** implementar controladores, DTOs, casos de uso y guardas para cada operación aprobada. Confirmar si la migración local `20261105T1344_dentistry_clinical_procedures` está aplicada en el entorno destino antes de exponer endpoints; el contrato local ya contiene los campos, pero el diccionario registra que la migración estaba preparada y no aplicada.
+1. **Backend:** implementar controladores, DTOs, casos de uso y guardas para cada operación aprobada. Confirmar si la migración `20261105T1833_dentistry_clinical_procedures` está aplicada en el entorno destino antes de exponer endpoints; el contrato local ya contiene los campos, pero el diccionario registra que la migración estaba preparada y no aplicada.
 2. **Contrato:** congelar rutas (P1), envelope (P4), permisos (P5), errores (P11) y la decisión de `procedureSummary` (P2).
 3. **BFF:** añadir las reglas de la sección 7 y decidir si se amplía `ProxyMethod` para `PUT` (P3). Sin allow-list, el proxy responde 404 `Ruta o método no permitido.` aunque el backend exista.
 4. **Adaptador HTTP:** implementar `services/clinical-encounter.http.ts` con `requestJson`, comprobación de contexto de sesión como en `features/patient` (`fetchCurrentSession` + `assertSameSessionContext`) y mapeo de errores a `ApiError`/mensajes. Hoy los doce métodos rechazan con `ClinicalEncounterApiUnavailableError`.
@@ -562,8 +596,51 @@ Hay dos reglas incompatibles:
 6. **Perfil de salud:** definir la respuesta para perfil inexistente y, si se usa `PUT`, ampliar el BFF.
 7. **Archivos:** definir el flujo de subida y descarga; el adaptador no debe enviar binarios por el BFF ni aceptar claves de storage.
 8. **Flag:** con el adaptador real, apagar `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO` (`false`) en desarrollo y pruebas. En producción ya está apagado duro. El flag es `NEXT_PUBLIC_`, por lo que se inlinea en build: cambiarlo exige reconstruir.
-9. **Rutas y vistas UI:** las cuatro rutas de `src/app/(platform)/patients/[patientId]` y sus componentes `*-page` ya existen (verificado el 2026-11-08). Lo pendiente es que esas pantallas dejen de depender del mock cuando el adaptador real esté activo.
+9. **Rutas y vistas UI:** las cuatro rutas de `src/app/(platform)/patients/[patientId]` y sus componentes `*-page` ya existen (verificado el 2026-11-11). Lo pendiente es que esas pantallas dejen de depender del mock cuando el adaptador real esté activo.
 10. **Pruebas:** añadir pruebas del adaptador (mapeo request/response, errores, paginación), del proxy (método, patrón y query permitidos) y de integración en Backend. Hoy existen pruebas de mock, utilidades, formulario de alta, detalle, filtros y perfil de salud (`tests/clinical-encounter-*.test.mjs`), que no cubren HTTP.
+
+11. **Catálogo de permisos:** Backend no exige hoy ningún `dentistry:encounters:*`. Los códigos aprobados (P5) deben darse de alta en el catálogo de permisos de Core y asignarse a roles, porque el token de Dentistry solo transporta los permisos `dentistry:*` que Core concede (`audience-permission-filter.ts`). Ese alta se hace por el procedimiento canónico, nunca con SQL directo. Luego hay que alinear `personas.ts`.
+
+## 10. Plan de puesta en marcha
+
+### 10.1 Decisiones recomendadas para desbloquear
+
+Las propone el frontend para que Backend pueda empezar. Cada una sigue requiriendo confirmación explícita.
+
+| # | Recomendación | Motivo |
+| --- | --- | --- |
+| P1 | **Rutas anidadas** bajo `/patients/:patientId` | Son las que ya codifica `endpoints.ts`, siguen el patrón de los recursos de paciente y facilitan la allow-list. |
+| P2 | **No exigir `procedureSummary`** para completar | Coincide con el schema (`optional()`), con la extensión del diccionario del 2026-11-05 y con la UI. |
+| P3 | **`PATCH`** para el perfil de salud | Funciona con el BFF actual sin tocar `ProxyMethod` ni `route.ts`. |
+| P4 | **Envelope `{ items, pagination }`** | Hace falta para el resumen clínico de la ficha (1.3) y es consistente con `/patients`. |
+| P5 | Reutilizar `dentistry:encounters:read|create|update|void` en la primera entrega | Evita crear permisos que hoy ninguna pantalla distingue. Los permisos de archivos se deciden con P7. |
+| P6 | **El profesional es la membresía de la sesión.** Las sucursales salen de una fuente autorizada derivada del principal. | Elimina el selector de profesional y el uso de `GET /clinic/professionals`. |
+| P8 | Anular o corregir procedimientos **queda fuera de la primera entrega** | La UI no lo invoca hoy. |
+| P11 | Añadir `code` estable a los errores | Evita que la UI compare textos en español. |
+
+### 10.2 Entregas incrementales
+
+Cada entrega se puede activar por separado: Backend implementa y prueba, Frontend añade la allow-list y la conexión en el adaptador, y luego se habilita en QA.
+
+| Entrega | Endpoints | Desbloquea | Depende de |
+| --- | --- | --- | --- |
+| **E1: Registrar una atención** | `GET .../clinical-encounters/reference-data` (4), `POST .../clinical-encounters` (2.3), `GET .../clinical-encounters/:id` (2.2), `POST .../:id/procedures` (3.1) | Pantalla “Nueva atención” completa y detalle de solo lectura | P1, P5, P6; migración aplicada |
+| **E2: Historial** | `GET .../clinical-encounters` con envelope (2.1) | Listado de atenciones y resumen clínico de la ficha | P4 |
+| **E3: Ciclo de vida** | `POST .../:id/complete` (2.4), `POST .../:id/void` (2.5) | Acciones de cerrar y anular en el detalle | P2 |
+| **E4: Perfil de salud** | `GET` y `PATCH .../health-profile` (1.2) | Página de perfil y alertas en la ficha | P3 |
+| **E5: Agregados de pacientes** | `createdFrom` / `createdTo` en `GET /patients` (1.3) | KPIs veraces del listado | — |
+| **E6: Archivos** | Sección 6 | Adjuntos y radiografías | P7, P9 |
+
+### 10.3 Pasos por entrega
+
+1. **Backend:** módulo `clinical-encounter` en `dentistry/backend` (controlador, DTOs, casos de uso, repositorio sobre `@app/db`) con `DentistryJwtGuard`, `DentistryPermissionGuard` y `@RequirePermission`, igual que `patient.controller.ts`. Pruebas HTTP de autorización como `tests/patient-http-auth.test.mjs`.
+2. **Permisos:** alta de los códigos en el catálogo de Core y asignación a roles (punto 11 de la sección 9).
+3. **BFF:** añadir solo las reglas de la entrega en `dentistry-proxy.ts` (tabla de la sección 7), con pruebas de método, patrón y query.
+4. **Adaptador:** implementar los métodos de la entrega en `clinical-encounter.http.ts` con `requestJson` y la comprobación de sesión. Los métodos que todavía no tienen endpoint siguen rechazando con `ClinicalEncounterApiUnavailableError`.
+5. **Activación:** construir con `NEXT_PUBLIC_CLINICAL_ENCOUNTER_DEMO=false` en el entorno de prueba. Como el flag se inlinea en build, hay que reconstruir.
+6. **Validación en QA:** flujo completo con las personas Odontólogo y Recepción, verificando los casos 403, 404 y 409 de cada operación.
+
+> Sobre la activación parcial: el flag elige el datasource completo (mock o HTTP). Para activar E1 sin E2–E6 hay que decidir entre dos opciones. **(a)** Mantener el mock hasta completar E1+E2 y E3. **(b)** Hacer que el adaptador HTTP delegue en el mock, solo en desarrollo, los métodos no disponibles. Se recomienda **(a)**: la pantalla de detalle necesita E3 para no ofrecer acciones que fallen. **Pendiente Frontend.**
 
 ## Aceptación requerida
 

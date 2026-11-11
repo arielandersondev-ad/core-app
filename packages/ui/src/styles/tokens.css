@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./christmas.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -89,6 +90,108 @@
   --card: var(--surface);
   --card-foreground: var(--foreground);
   --ring: var(--primary);
+}
+
+/*
+ * Tema "Invernal" (winter): variante oscura con paleta propia
+ * ------------------------------------------------------------------
+ * Se activa con <html class="dark winter"> (ver src/theme/theme.ts).
+ * Mantiene `.dark` para que las utilidades `dark:` sigan aplicando.
+ * `.dark.winter` tiene más especificidad que `.dark`, así que gana sin
+ * depender del orden.
+ *
+ * Paleta base (fondos y superficies; todos los tonos son oscuros):
+ *   #050505  Pozo        → surface-subtle: inputs hundidos, wells, estados vacíos
+ *   #0D0D11  Noche       → background: lienzo de la app (negro azulado)
+ *   #1A1A1A  Grafito     → surface/card: paneles y tablas
+ *   #1D1B3A  Índigo      → primary-subtle: selección, badges de información
+ *   #2E1A37  Ciruela     → accent: hover destacado, énfasis secundario
+ *   #0F201B  Bosque      → success-subtle: estados clínicos completados/activos
+ *
+ * Tonos derivados (hacen falta porque la paleta no trae colores de texto ni de
+ * acción). Se aclaran desde el mismo matiz de cada fondo para mantener la armonía.
+ * Contraste WCAG medido:
+ *   foreground #ECEAF3: 16.3:1 sobre Noche, 14.6:1 sobre Grafito
+ *   muted      #A3A1B3: ≥ 6.2:1 sobre todas las superficies
+ *   primary    #A29CFF: 7.2:1 sobre Grafito, 6.9:1 sobre Índigo; texto oscuro encima 8.1:1
+ *   success    #6AD8AD: 9.7:1 sobre Bosque
+ *   secondary  #D3AEE3: 8.3:1 sobre Ciruela
+ *   danger     #F58A8A: 6.6:1 sobre su subtle
+ *   warning    #F2BC6B: 8.6:1 sobre su subtle
+ *
+ * Principios:
+ *   - Elevación por luminosidad: la superficie más elevada es la más clara
+ *     (Pozo < Noche < Grafito < elevated/popover). No se usan sombras para separar.
+ *   - Con fondos de acento claros (primary, success, danger, warning) el texto
+ *     va oscuro (Noche), nunca blanco.
+ *   - Cada color de estado se pinta sobre su propio subtle; no se mezclan entre sí.
+ */
+.dark.winter {
+  /* Superficies */
+  --background: #0d0d11;
+  --surface: #1a1a1a;
+  --surface-elevated: #232228;
+  --surface-subtle: #050505;
+  --popover: #232228;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+
+  /* Texto y bordes */
+  --foreground: #eceaf3;
+  --muted: #a3a1b3;
+  --muted-foreground: #a3a1b3;
+  --border: #3a3747;
+
+  /* Acción principal: índigo */
+  --primary: #a29cff;
+  --primary-accent: #bcb8ff;
+  --primary-subtle: #1d1b3a;
+  --primary-foreground: #0d0d11;
+  --ring: var(--primary);
+
+  /* Secundario y acento: ciruela */
+  --secondary: #d3aee3;
+  --secondary-foreground: #0d0d11;
+  --hazelnut: #d3aee3;
+  --gold-accent: #e2c48f;
+  --accent: #2e1a37;
+  --accent-foreground: var(--foreground);
+
+  /* Neutro para hover de ghost/outline sobre Grafito */
+  --neutral-subtle: #26252d;
+
+  /* Estados */
+  --success: #6ad8ad;
+  --success-foreground: #0d0d11;
+  --success-subtle: #0f201b;
+
+  --danger: #f58a8a;
+  --danger-foreground: #0d0d11;
+  --danger-subtle: #3a1a22;
+  --destructive: #f58a8a;
+  --destructive-foreground: #0d0d11;
+
+  --warning: #f2bc6b;
+  --warning-foreground: #0d0d11;
+  --warning-subtle: #33260f;
+}
+
+
+/* Ajustes comunes a los temas oscuros (Oscuro e Invernal) */
+.dark {
+  color-scheme: dark;
+}
+
+/* Windows no hereda el tema en los controles nativos */
+.dark select,
+.dark option {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+.dark.winter ::selection {
+  background-color: var(--primary-subtle);
+  color: var(--foreground);
 }
 
 @theme inline {

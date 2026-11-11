@@ -21,6 +21,7 @@ export * from "./components/ui/DatePicker";
 export * from "./components/ui/TimePicker";
 export * from "./components/ui/Toggle";
 export * from "./components/ui/EmptyState";
+export * from "./components/ui/StatusMessage";
 export * from "./components/ui/Separator";
 export * from "./components/ui/SectionHeader";
 export * from "./components/ui/Avatar";
@@ -39,6 +40,11 @@ export * from "./components/layout/FilterToolbar";
 export * from "./hooks/useIsMobile";
 export * from "./hooks/useInfiniteScroll";
 export * from "./hooks/usePullToRefresh";
+export * from "./hooks/useThemePreference";
+
+// Design System Theme
+export * from "./theme/theme";
+export * from "./theme/ThemeDecorations";
 
 // Design System Utils
 export * from "./utils/formatters";

@@ -1,0 +1,207 @@
+/*
+ * Tema "Navideño" (christmas)
+ * ------------------------------------------------------------------
+ * Se activa con <html class="dark winter christmas">. Hereda la paleta
+ * Invernal y solo agrega colores festivos para la decoración
+ * (componente ThemeDecorations).
+ *
+ * Reglas de UX:
+ *   - La decoración es aria-hidden y pointer-events: none.
+ *   - Solo se animan transform y opacity (compositor). Sin box-shadow animado.
+ *   - Titileo lento (1.8–3.4 s por ciclo), muy por debajo del umbral de
+ *     destellos WCAG 2.3.1.
+ *   - `.effects-paused` deja las luces fijas y oculta la nieve (control de pausa).
+ *   - Con prefers-reduced-motion: luces fijas y sin nieve.
+ *   - La nieve es escasa, pequeña y translúcida para no tapar datos.
+ */
+
+.dark.winter.christmas {
+  --festive-red: #f0616d;
+  --festive-gold: #f5c76b;
+  --festive-green: #6ad8ad;
+  --festive-ice: #9ec9ff;
+  --festive-wire: #57526b;
+  --festive-snow: #eceaf3;
+}
+
+.xmas-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Guirnalda ─────────────────────────────────────────────────── */
+
+.xmas-garland {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  height: 22px;
+}
+
+/* Cada segmento dibuja un tramo de cable combado y cuelga una bombilla al final */
+.xmas-segment {
+  position: relative;
+  flex: 1 1 0;
+  height: 9px;
+  border-bottom: 1.5px solid var(--festive-wire);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+
+.xmas-bulb {
+  position: absolute;
+  top: 7px;
+  right: -3px;
+  width: 6px;
+  height: 10px;
+  border-radius: 45% 45% 50% 50% / 35% 35% 65% 65%;
+  background: var(--bulb-color);
+  transform-origin: 50% 0;
+  animation: xmas-twinkle var(--twinkle-duration, 2.4s) ease-in-out var(--twinkle-delay, 0s) infinite;
+}
+
+/* Casquillo */
+.xmas-bulb::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 1px;
+  width: 4px;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--festive-wire);
+}
+
+/* Halo: se anima su opacidad, no su sombra */
+.xmas-bulb::after {
+  content: "";
+  position: absolute;
+  inset: -7px -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--bulb-color) 0%, transparent 70%);
+  opacity: 0.55;
+  animation: inherit;
+}
+
+.xmas-bulb--red { --bulb-color: var(--festive-red); }
+.xmas-bulb--gold { --bulb-color: var(--festive-gold); }
+.xmas-bulb--green { --bulb-color: var(--festive-green); }
+.xmas-bulb--ice { --bulb-color: var(--festive-ice); }
+
+@keyframes xmas-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* En pantallas angostas, la mitad de bombillas (las de posición par en el DOM,
+   que son los índices impares): menos ruido y tramos más largos */
+@media (max-width: 640px) {
+  .xmas-segment:nth-child(even) {
+    display: none;
+  }
+}
+
+/* ── Nieve ─────────────────────────────────────────────────────── */
+
+.xmas-snow {
+  position: absolute;
+  inset: 0;
+}
+
+.xmas-flake {
+  position: absolute;
+  top: -12px;
+  border-radius: 50%;
+  background: var(--festive-snow);
+  will-change: transform;
+  animation: xmas-fall var(--fall-duration, 20s) linear var(--fall-delay, 0s) infinite;
+}
+
+@keyframes xmas-fall {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(var(--drift, 0px), 52vh, 0); }
+  100% { transform: translate3d(0, 104vh, 0); }
+}
+
+/* ── Nieve acumulada en botones primarios ──────────────────────────
+ * Nieve que envuelve la esquina redondeada superior izquierda (sigue el
+ * radio de 12px de --radius) con un hilo que baja por el borde
+ * (::before, SVG estático) y una gota que se forma en la
+ * punta y cae cada tanto (::after, animada). Solo en `.ui-button--primary`
+ * (gancho de buttonClassName): la acción principal de cada pantalla.
+ */
+
+.dark.winter.christmas .ui-button--primary {
+  position: relative;
+}
+
+.dark.winter.christmas .ui-button--primary::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -3px;
+  width: 32px;
+  height: 28px;
+  pointer-events: none;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -3 32 28'%3E%3Cpath fill='%23F4F3FA' d='M1.5 21C1.5 23.6 4.5 23.6 4.5 21V15.5C4.5 10 9.5 6.4 15 6.4H22C26 6.4 29 6.9 31 6C30.6 3.6 28 2.4 25 2C23 -.4 20 -1.2 17 -.4C14 -2 9.5 -1.6 6.5 .6C3.2 2.6 1.2 6.4 .9 10.5C.7 12.4 .9 14 1.2 15.5Z'/%3E%3Cpath fill='%23D8D6EA' d='M4.5 16C4.5 10.5 9.5 6.4 15 6.4H22C26 6.4 29 6.9 31 6C28 7.6 25 7.4 22 7.6L15 7.8C10.5 7.9 6 11 5.6 16.5Z'/%3E%3Cpath fill='%23FFFFFF' opacity='.75' d='M7 2C10 .2 14 -.2 17 .6C14 .9 10.5 1.2 7 2Z'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 1px 0.5px rgb(13 13 17 / 0.35));
+}
+
+/* Gota: nace en la punta del hilo (borde izquierdo), crece y cae */
+.dark.winter.christmas .ui-button--primary::after {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: -1.5px;
+  width: 3px;
+  height: 4px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: #f4f3fa;
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 50% 0;
+  animation: xmas-drip 6.5s ease-in infinite;
+}
+
+/* Desfase para que los botones de una misma vista no goteen a la vez */
+.dark.winter.christmas .ui-button--primary:nth-of-type(2n)::after {
+  animation-delay: -2.7s;
+}
+
+.dark.winter.christmas .ui-button--primary:nth-of-type(3n)::after {
+  animation-delay: -4.6s;
+}
+
+@keyframes xmas-drip {
+  0%, 55% { opacity: 0; transform: translateY(0) scale(0); }
+  70%, 84% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(16px) scale(0.7); }
+}
+
+/* ── Pausa y movimiento reducido ───────────────────────────────── */
+
+/* Pausado = luces fijas encendidas (no congeladas a medio titileo) */
+.effects-paused .xmas-bulb,
+.effects-paused .xmas-bulb::after {
+  animation: none;
+}
+
+.effects-paused .xmas-snow,
+.dark.winter.christmas.effects-paused .ui-button--primary::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-bulb,
+  .xmas-bulb::after {
+    animation: none;
+  }
+
+  .xmas-snow,
+  .dark.winter.christmas .ui-button--primary::after {
+    display: none;
+  }
+}

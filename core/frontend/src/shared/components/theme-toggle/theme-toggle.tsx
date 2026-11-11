@@ -1,6 +1,15 @@
 'use client';
 
-import { useTheme } from "@/shared/hooks/use-theme";
+import type { ReactNode } from "react";
+import {
+  Icons,
+  THEME_LABELS,
+  nextThemePreference,
+  themeHasEffects,
+  useThemeEffects,
+  useThemePreference,
+  type ThemePreference,
+} from "@/shared/components/ui";
 
 type ThemeToggleProps = {
   variant?: "panel" | "icon";
@@ -47,53 +56,93 @@ function MoonIcon() {
   );
 }
 
+const THEME_ICONS: Record<ThemePreference, ReactNode> = {
+  light: <SunIcon />,
+  dark: <MoonIcon />,
+  winter: <span aria-hidden="true">{Icons.snowflake}</span>,
+  christmas: <span aria-hidden="true">{Icons.tree}</span>,
+  system: <span aria-hidden="true">{Icons.monitor}</span>,
+};
+
+const FOCUS_RING = [
+  "focus-visible:outline-none focus-visible:ring-2",
+  "focus-visible:ring-primary focus-visible:ring-offset-2",
+  "focus-visible:ring-offset-surface",
+].join(" ");
+
+function EffectsPauseButton() {
+  const { paused, togglePaused } = useThemeEffects();
+  const label = "Pausar efectos del tema";
+
+  return (
+    <button
+      type="button"
+      onClick={togglePaused}
+      aria-label={label}
+      aria-pressed={paused}
+      title={label}
+      className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background/70 text-muted transition-colors hover:bg-surface-elevated hover:text-foreground ${FOCUS_RING}`}
+    >
+      <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        {paused ? (
+          <path d="M8 5v14l11-7z" />
+        ) : (
+          <>
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </>
+        )}
+      </svg>
+    </button>
+  );
+}
+
+/**
+ * Rota entre Claro → Oscuro → Invernal → Navideño → Sistema.
+ * Muestra el tema activo; la etiqueta accesible anuncia el siguiente.
+ * En temas con animación (Navideño), la variante panel ofrece pausarla.
+ */
 export function ThemeToggle({
   variant = "panel",
 }: ThemeToggleProps) {
-  const { dark: isDark, toggleDark } = useTheme();
-  const accessibleLabel = isDark
-    ? "Activar modo claro"
-    : "Activar modo oscuro";
+  const { preference, cyclePreference } = useThemePreference();
+  const current = THEME_LABELS[preference];
+  const accessibleLabel = `Tema ${current}. Cambiar a ${THEME_LABELS[nextThemePreference(preference)]}`;
 
   if (variant === "icon") {
     return (
       <button
         type="button"
-        onClick={toggleDark}
+        onClick={cyclePreference}
         aria-label={accessibleLabel}
-        aria-pressed={isDark}
         title={accessibleLabel}
         className={[
           "inline-flex size-10 items-center justify-center rounded-lg",
           "border border-border bg-surface-elevated text-muted",
           "transition-colors hover:text-foreground",
-          "focus-visible:outline-none focus-visible:ring-2",
-          "focus-visible:ring-primary focus-visible:ring-offset-2",
-          "focus-visible:ring-offset-surface",
+          FOCUS_RING,
         ].join(" ")}
       >
-        {isDark ? <MoonIcon /> : <SunIcon />}
+        {THEME_ICONS[preference]}
       </button>
     );
   }
 
   return (
+    <div className="flex items-center gap-2">
     <button
       type="button"
-      onClick={toggleDark}
+      onClick={cyclePreference}
       aria-label={accessibleLabel}
-      aria-pressed={isDark}
       className={[
-        "group flex w-full items-center gap-3 rounded-lg border",
+        "group flex min-w-0 flex-1 items-center gap-3 rounded-lg border",
         "border-border bg-background/70 px-3 py-2.5 text-left",
         "transition-colors hover:bg-surface-elevated",
-        "focus-visible:outline-none focus-visible:ring-2",
-        "focus-visible:ring-primary focus-visible:ring-offset-2",
-        "focus-visible:ring-offset-surface",
+        FOCUS_RING,
       ].join(" ")}
     >
       <span className="text-muted transition-colors group-hover:text-foreground">
-        {isDark ? <MoonIcon /> : <SunIcon />}
+        {THEME_ICONS[preference]}
       </span>
 
       <span className="min-w-0 flex-1">
@@ -102,28 +151,11 @@ export function ThemeToggle({
         </span>
 
         <span className="block text-[11px] text-muted">
-          {isDark ? "Modo oscuro" : "Modo claro"}
+          Tema {current}
         </span>
       </span>
-
-      <span
-        aria-hidden="true"
-        className={[
-          "relative h-5 w-9 shrink-0 rounded-full border border-border",
-          "transition-colors",
-          isDark ? "bg-primary" : "bg-surface-elevated",
-        ].join(" ")}
-      >
-        <span
-          className={[
-            "absolute top-0.5 size-4 rounded-full shadow-sm",
-            "transition-transform",
-            isDark
-              ? "translate-x-4 bg-primary-foreground"
-              : "translate-x-0.5 bg-muted",
-          ].join(" ")}
-        />
-      </span>
     </button>
+    {themeHasEffects(preference) && <EffectsPauseButton />}
+    </div>
   );
 }

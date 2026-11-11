@@ -1,11 +1,32 @@
 'use client';
 
-import { Card, Separator, Toggle, SectionHeader, Icons } from '@/shared/components/ui';
-import { useTheme } from '@/shared/hooks/use-theme';
+import type { ReactNode } from 'react';
+import {
+  Card,
+  Separator,
+  SectionHeader,
+  Icons,
+  THEME_DESCRIPTIONS,
+  THEME_LABELS,
+  THEME_OPTIONS,
+  themeHasEffects,
+  useThemeEffects,
+  useThemePreference,
+  type ThemePreference,
+} from '@/shared/components/ui';
 import { logoutAction } from '@/features/auth/actions/logout-action';
 
+const THEME_ICONS: Record<ThemePreference, ReactNode> = {
+  light: Icons.sun,
+  dark: Icons.moon,
+  winter: Icons.snowflake,
+  christmas: Icons.tree,
+  system: Icons.monitor,
+};
+
 export default function Settings() {
-  const { dark, toggleDark } = useTheme();
+  const { preference, setPreference } = useThemePreference();
+  const { paused, togglePaused } = useThemeEffects();
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-4 md:p-8 gap-6 max-w-3xl mx-auto bg-background">
@@ -32,20 +53,55 @@ export default function Settings() {
       {/* ── Apariencia ── */}
       <SectionHeader>Apariencia</SectionHeader>
       <Card className="mx-4">
-        <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">{dark ? Icons.moon : Icons.sun}</span>
-            <div>
-              <p className="text-sm font-display font-semibold text-foreground">
-                {dark ? 'Tema oscuro' : 'Tema claro'}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {dark ? 'Interfaz oscura activa' : 'Interfaz clara activa'}
-              </p>
-            </div>
+        <fieldset className="px-4 py-4">
+          <legend className="sr-only">Tema de la interfaz</legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {THEME_OPTIONS.map((option) => (
+              <label
+                key={option}
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-3 transition-colors hover:bg-muted/5 has-[:checked]:border-primary has-[:checked]:bg-primary-subtle has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/40"
+              >
+                <input
+                  type="radio"
+                  name="theme"
+                  value={option}
+                  checked={preference === option}
+                  onChange={() => setPreference(option)}
+                  className="sr-only"
+                />
+                <span aria-hidden="true" className="text-muted-foreground">{THEME_ICONS[option]}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-display font-semibold text-foreground">
+                    {THEME_LABELS[option]}
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {THEME_DESCRIPTIONS[option]}
+                  </span>
+                </span>
+              </label>
+            ))}
           </div>
-          <Toggle checked={dark} onChange={toggleDark} />
-        </div>
+        </fieldset>
+        {themeHasEffects(preference) && (
+          <>
+            <Separator />
+            <div className="flex items-center justify-between gap-3 px-4 py-4">
+              <div>
+                <p className="text-sm font-display font-semibold text-foreground">Animaciones del tema</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {paused ? 'Luces fijas y sin nieve' : 'Luces que titilan y nieve ligera'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={togglePaused}
+                className="h-9 shrink-0 rounded-sm border border-border px-4 text-sm font-semibold text-muted transition-colors hover:bg-muted/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                {paused ? 'Reanudar animaciones' : 'Pausar animaciones'}
+              </button>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* ── Sistema ── */}

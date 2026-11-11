@@ -22,6 +22,44 @@ const sizeMap: Record<ButtonSize, string> = {
   lg: "h-12 px-5 text-sm sm:text-base gap-2.5",
 };
 
+const BASE_CLASSES =
+  "inline-flex items-center justify-center font-display font-semibold rounded-[var(--radius)] transition-[background-color,border-color,color,opacity,box-shadow] duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40";
+
+export interface ButtonClassNameOptions {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+  className?: string;
+}
+
+/**
+ * Clases visuales de Button para aplicarlas a elementos de navegación
+ * (`<a>` / `next/link`) sin duplicar strings de estilos en cada feature.
+ * Usar `<Button>` para acciones y `buttonClassName()` sobre un link para navegación.
+ *
+ * `ui-button` y `ui-button--<variant>` no tienen estilos propios: son ganchos
+ * estables para que los temas (p. ej. styles/christmas.css) decoren botones
+ * sin depender de clases utilitarias.
+ */
+export function buttonClassName({
+  variant = "primary",
+  size = "md",
+  fullWidth = false,
+  className = "",
+}: ButtonClassNameOptions = {}): string {
+  return [
+    "ui-button",
+    `ui-button--${variant}`,
+    BASE_CLASSES,
+    btnMap[variant],
+    sizeMap[size],
+    fullWidth ? "w-full" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -51,12 +89,14 @@ export function Button({
     <button
       type={type}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center font-display font-semibold rounded-[var(--radius)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/40 ${btnMap[variant]} ${sizeMap[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      aria-busy={loading || undefined}
+      className={buttonClassName({ variant, size, fullWidth, className })}
       {...rest}
     >
       {loading ? (
         <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+          aria-hidden="true"
+          className="animate-spin motion-reduce:animate-none -ml-1 mr-2 h-4 w-4 text-current"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -76,11 +116,17 @@ export function Button({
           />
         </svg>
       ) : (
-        leftIcon && <span className="shrink-0 flex items-center">{leftIcon}</span>
+        leftIcon && (
+          <span aria-hidden="true" className="shrink-0 flex items-center">
+            {leftIcon}
+          </span>
+        )
       )}
       {children}
       {!loading && rightIcon && (
-        <span className="shrink-0 flex items-center">{rightIcon}</span>
+        <span aria-hidden="true" className="shrink-0 flex items-center">
+          {rightIcon}
+        </span>
       )}
     </button>
   );
