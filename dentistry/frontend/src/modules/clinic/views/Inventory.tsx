@@ -29,7 +29,10 @@ import {
   PullToRefresh,
   ResponsiveModal,
 } from "@/shared/components/ui";
-import { CreateInventoryModal } from "@/modules/clinic/components";
+import {
+  CreateInventoryModal,
+  RegisterInventoryMovementModal,
+} from "@/modules/clinic/components";
 
 const PAGE_SIZE = 15;
 
@@ -80,6 +83,11 @@ export default function Inventory() {
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>(initialInventory);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isMovementModalOpen, setIsMovementModalOpen] =
+    useState(false);
+  const [movementTargetId, setMovementTargetId] = useState<
+    string | undefined
+  >(undefined);
 
   // Active filter count for mobile badge
   const activeFilterCount = useMemo(() => {
@@ -248,14 +256,26 @@ export default function Inventory() {
         title="Inventario Clínico"
         description="Control de existencias de insumos odontológicos, instrumental y reposición de materiales"
         action={
-          <Button
-            variant="primary"
-            onClick={() => setIsModalOpen(true)}
-            className="font-semibold text-xs shadow-xs"
-          >
-            <span className="text-base leading-none font-bold">+</span>
-            Nuevo insumo
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMovementTargetId(undefined);
+                setIsMovementModalOpen(true);
+              }}
+              className="font-semibold text-xs"
+            >
+              Registrar movimiento
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setIsModalOpen(true)}
+              className="font-semibold text-xs shadow-xs"
+            >
+              <span className="text-base leading-none font-bold">+</span>
+              Nuevo insumo
+            </Button>
+          </div>
         }
       />
 
@@ -724,6 +744,19 @@ export default function Inventory() {
           : undefined
       }
       maxWidth="max-w-lg"
+      footer={
+        <Button
+          variant="primary"
+          onClick={() => {
+            const id = selectedItem?.id;
+            setSelectedItem(null);
+            setMovementTargetId(id);
+            setIsMovementModalOpen(true);
+          }}
+        >
+          Registrar movimiento
+        </Button>
+      }
     >
       {selectedItem && (
         <div className="flex flex-col gap-4">
@@ -825,6 +858,28 @@ export default function Inventory() {
         </div>
       )}
     </ResponsiveModal>
+
+    <RegisterInventoryMovementModal
+      key={movementTargetId ?? "any"}
+      open={isMovementModalOpen}
+      onClose={() => setIsMovementModalOpen(false)}
+      items={inventoryList}
+      defaultItemId={movementTargetId}
+      onSuccess={(movement) => {
+        // El stock denormalizado se recalcula desde la bitácora para que
+        // siempre concilien.
+        setInventoryList((current) =>
+          current.map((item) =>
+            item.id === movement.itemId
+              ? {
+                  ...item,
+                  stock: stockFromMovements(item.id),
+                }
+              : item,
+          ),
+        );
+      }}
+    />
 
     <CreateInventoryModal
         open={isModalOpen}
