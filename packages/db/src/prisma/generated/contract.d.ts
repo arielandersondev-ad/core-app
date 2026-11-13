@@ -30,9 +30,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216'>;
+  StorageHashBase<'f5c0089e6a6991ed41f5356139ae71499adcae0c935ec1f9a0f076c580919723'>;
 export type ExecutionHash =
-  ExecutionHashBase<'b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31'>;
+  ExecutionHashBase<'ca53b227b5211005c5109795d525fa4f416e1daad177707f36ecf8b1a7fd2a1c'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -527,6 +527,44 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
+    readonly InventoryItem: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly branchId: CodecTypes['pg/uuid@1']['output'];
+      readonly sku: CodecTypes['pg/text@1']['output'];
+      readonly name: CodecTypes['pg/text@1']['output'];
+      readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly category: CodecTypes['pg/text@1']['output'] | null;
+      readonly unit: CodecTypes['pg/text@1']['output'];
+      readonly minStock: CodecTypes['pg/int4@1']['output'];
+      readonly currentStock: CodecTypes['pg/int4@1']['output'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly deletedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
+    };
+    readonly InventoryMovement: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly branchId: CodecTypes['pg/uuid@1']['output'];
+      readonly itemId: CodecTypes['pg/uuid@1']['output'];
+      readonly type: CodecTypes['pg/text@1']['output'];
+      readonly quantity: CodecTypes['pg/int4@1']['output'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly lotNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly expiryDate: CodecTypes['pg/date@1']['output'] | null;
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly relatedTreatmentId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly relatedClinicalEncounterId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
     readonly Patient: {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
@@ -1009,6 +1047,44 @@ export type FieldInputTypes = {
       readonly notes: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly InventoryItem: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly branchId: CodecTypes['pg/uuid@1']['input'];
+      readonly sku: CodecTypes['pg/text@1']['input'];
+      readonly name: CodecTypes['pg/text@1']['input'];
+      readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly category: CodecTypes['pg/text@1']['input'] | null;
+      readonly unit: CodecTypes['pg/text@1']['input'];
+      readonly minStock: CodecTypes['pg/int4@1']['input'];
+      readonly currentStock: CodecTypes['pg/int4@1']['input'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly deletedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
+    };
+    readonly InventoryMovement: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly branchId: CodecTypes['pg/uuid@1']['input'];
+      readonly itemId: CodecTypes['pg/uuid@1']['input'];
+      readonly type: CodecTypes['pg/text@1']['input'];
+      readonly quantity: CodecTypes['pg/int4@1']['input'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly lotNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly expiryDate: CodecTypes['pg/date@1']['input'] | null;
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly relatedTreatmentId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly relatedClinicalEncounterId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
     };
     readonly Patient: {
       readonly id: CodecTypes['pg/uuid@1']['input'];
@@ -1493,6 +1569,44 @@ export type StorageColumnTypes = {
       readonly unit: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
+    readonly InventoryItem: {
+      readonly branchId: CodecTypes['pg/uuid@1']['output'];
+      readonly category: CodecTypes['pg/text@1']['output'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly currentStock: CodecTypes['pg/int4@1']['output'];
+      readonly deletedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
+      readonly description: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly isActive: CodecTypes['pg/bool@1']['output'];
+      readonly minStock: CodecTypes['pg/int4@1']['output'];
+      readonly name: CodecTypes['pg/text@1']['output'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['output'];
+      readonly sku: CodecTypes['pg/text@1']['output'];
+      readonly unit: CodecTypes['pg/text@1']['output'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
+    };
+    readonly InventoryMovement: {
+      readonly branchId: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly currency: CodecTypes['pg/text@1']['output'];
+      readonly expiryDate: CodecTypes['pg/date@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly itemId: CodecTypes['pg/uuid@1']['output'];
+      readonly lotNumber: CodecTypes['pg/text@1']['output'] | null;
+      readonly organizationId: CodecTypes['pg/uuid@1']['output'];
+      readonly quantity: CodecTypes['pg/int4@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly relatedClinicalEncounterId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly relatedTreatmentId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly type: CodecTypes['pg/text@1']['output'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['output'] | null;
+    };
     readonly Patient: {
       readonly address: CodecTypes['pg/text@1']['output'] | null;
       readonly birthDate: CodecTypes['pg/date@1']['output'] | null;
@@ -1976,6 +2090,44 @@ export type StorageColumnInputTypes = {
       readonly serviceId: CodecTypes['pg/uuid@1']['input'];
       readonly unit: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
+    readonly InventoryItem: {
+      readonly branchId: CodecTypes['pg/uuid@1']['input'];
+      readonly category: CodecTypes['pg/text@1']['input'] | null;
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly currentStock: CodecTypes['pg/int4@1']['input'];
+      readonly deletedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
+      readonly description: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly isActive: CodecTypes['pg/bool@1']['input'];
+      readonly minStock: CodecTypes['pg/int4@1']['input'];
+      readonly name: CodecTypes['pg/text@1']['input'];
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly rowVersion: CodecTypes['pg/int4@1']['input'];
+      readonly sku: CodecTypes['pg/text@1']['input'];
+      readonly unit: CodecTypes['pg/text@1']['input'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
+    };
+    readonly InventoryMovement: {
+      readonly branchId: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly currency: CodecTypes['pg/text@1']['input'];
+      readonly expiryDate: CodecTypes['pg/date@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly itemId: CodecTypes['pg/uuid@1']['input'];
+      readonly lotNumber: CodecTypes['pg/text@1']['input'] | null;
+      readonly organizationId: CodecTypes['pg/uuid@1']['input'];
+      readonly quantity: CodecTypes['pg/int4@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly relatedClinicalEncounterId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly relatedTreatmentId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly type: CodecTypes['pg/text@1']['input'];
+      readonly unitCostMinor: CodecTypes['pg/int4@1']['input'] | null;
     };
     readonly Patient: {
       readonly address: CodecTypes['pg/text@1']['input'] | null;
@@ -4709,6 +4861,276 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly InventoryItem: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly branchId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly sku: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly name: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly description: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly category: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly unit: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly minStock: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly currentStock: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+                readonly unitCostMinor: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly currency: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'BOB'>;
+                  };
+                };
+                readonly isActive: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly updatedByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly deletedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: true;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+                readonly rowVersion: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
+                  };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['organizationId', 'id'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'inventory_item_org_branch_idx_9d922e31';
+                  readonly prefix: 'inventory_item_org_branch_idx';
+                  readonly columns: readonly ['organizationId', 'branchId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'inventory_item_branch_sku_uidx_90a80faf';
+                  readonly prefix: 'inventory_item_branch_sku_uidx';
+                  readonly columns: readonly ['branchId', 'sku'];
+                  readonly where: '"deletedAt" IS NULL';
+                  readonly unique: true;
+                },
+                {
+                  readonly name: 'inventory_item_org_active_idx_c89f2a48';
+                  readonly prefix: 'inventory_item_org_active_idx';
+                  readonly columns: readonly ['organizationId', 'isActive'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [];
+            };
+            readonly InventoryMovement: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly organizationId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly branchId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly itemId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly type: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly quantity: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly unitCostMinor: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly currency: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'BOB'>;
+                  };
+                };
+                readonly lotNumber: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly expiryDate: {
+                  readonly nativeType: 'date';
+                  readonly codecId: 'pg/date@1';
+                  readonly nullable: true;
+                };
+                readonly reason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly relatedTreatmentId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly relatedClinicalEncounterId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly createdByMembershipId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'inventory_movement_item_created_idx_d577e708';
+                  readonly prefix: 'inventory_movement_item_created_idx';
+                  readonly columns: readonly ['itemId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'inventory_movement_org_type_idx_ff4b8294';
+                  readonly prefix: 'inventory_movement_org_type_idx';
+                  readonly columns: readonly ['organizationId', 'type'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'inventory_movement_branch_created_idx_7c12b2dc';
+                  readonly prefix: 'inventory_movement_branch_created_idx';
+                  readonly columns: readonly ['organizationId', 'branchId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'InventoryMovement_organizationId_itemId_idx_ed264bce';
+                  readonly prefix: 'InventoryMovement_organizationId_itemId_idx';
+                  readonly columns: readonly ['organizationId', 'itemId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'InventoryMovement';
+                    readonly columns: readonly ['organizationId', 'itemId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'dentistry' & NamespaceId;
+                    readonly tableName: 'InventoryItem';
+                    readonly columns: readonly ['organizationId', 'id'];
+                  };
+                },
+              ];
+            };
             readonly Patient: {
               columns: {
                 readonly id: {
@@ -5916,6 +6338,14 @@ type ContractBase = Omit<
     readonly Radiograph: {
       readonly namespace: 'dentistry' & NamespaceId;
       readonly model: 'Radiograph';
+    };
+    readonly InventoryItem: {
+      readonly namespace: 'dentistry' & NamespaceId;
+      readonly model: 'InventoryItem';
+    };
+    readonly InventoryMovement: {
+      readonly namespace: 'dentistry' & NamespaceId;
+      readonly model: 'InventoryMovement';
     };
   };
   readonly domain: {
@@ -8338,6 +8768,224 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly InventoryItem: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly branchId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly sku: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly name: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly description: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly category: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly unit: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly minStock: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly currentStock: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly unitCostMinor: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly currency: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdByMembershipId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly updatedByMembershipId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly deletedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly rowVersion: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly movements: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'InventoryMovement';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['itemId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'InventoryItem';
+              readonly namespaceId: 'dentistry';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly branchId: { readonly column: 'branchId' };
+                readonly sku: { readonly column: 'sku' };
+                readonly name: { readonly column: 'name' };
+                readonly description: { readonly column: 'description' };
+                readonly category: { readonly column: 'category' };
+                readonly unit: { readonly column: 'unit' };
+                readonly minStock: { readonly column: 'minStock' };
+                readonly currentStock: { readonly column: 'currentStock' };
+                readonly unitCostMinor: { readonly column: 'unitCostMinor' };
+                readonly currency: { readonly column: 'currency' };
+                readonly isActive: { readonly column: 'isActive' };
+                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
+                readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
+                readonly deletedAt: { readonly column: 'deletedAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly rowVersion: { readonly column: 'rowVersion' };
+              };
+            };
+          };
+          readonly InventoryMovement: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly organizationId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly branchId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly itemId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly type: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly quantity: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly unitCostMinor: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly currency: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly lotNumber: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiryDate: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date@1' };
+              };
+              readonly reason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly relatedTreatmentId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly relatedClinicalEncounterId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdByMembershipId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly item: {
+                readonly to: {
+                  readonly namespace: 'dentistry' & NamespaceId;
+                  readonly model: 'InventoryItem';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['organizationId', 'itemId'];
+                  readonly targetFields: readonly ['organizationId', 'id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'InventoryMovement';
+              readonly namespaceId: 'dentistry';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly organizationId: { readonly column: 'organizationId' };
+                readonly branchId: { readonly column: 'branchId' };
+                readonly itemId: { readonly column: 'itemId' };
+                readonly type: { readonly column: 'type' };
+                readonly quantity: { readonly column: 'quantity' };
+                readonly unitCostMinor: { readonly column: 'unitCostMinor' };
+                readonly currency: { readonly column: 'currency' };
+                readonly lotNumber: { readonly column: 'lotNumber' };
+                readonly expiryDate: { readonly column: 'expiryDate' };
+                readonly reason: { readonly column: 'reason' };
+                readonly relatedTreatmentId: { readonly column: 'relatedTreatmentId' };
+                readonly relatedClinicalEncounterId: {
+                  readonly column: 'relatedClinicalEncounterId';
+                };
+                readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+              };
+            };
+          };
           readonly Patient: {
             readonly fields: {
               readonly id: {
@@ -9580,6 +10228,31 @@ type ContractBase = Omit<
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
           readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'InventoryItem';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'InventoryItem';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'dentistry';
+            readonly table: 'InventoryMovement';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
         },
         {
           readonly ref: {

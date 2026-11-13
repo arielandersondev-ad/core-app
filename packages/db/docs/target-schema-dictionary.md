@@ -406,6 +406,7 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembe
 | `sex` | text? | M | Dato de filiación; conservar catálogo actual `MALE`, `FEMALE`, `OTHER`. NULL = no registrado. No mezclarlo con identidad de género sin definir otro campo. |
 | `documentType`, `documentNumber` | text? | M | Identificación opcional, ambos informados conjuntamente. No usar nombre como identidad. |
 | `address` | text? | C | Domicilio descrito, sin descomposición adicional en 0.1. |
+| `maritalStatus`, `occupation`, `origin` | text? | C | Estado civil, ocupación y procedencia opcionales; datos de filiación, no clasificación clínica. |
 | `notes` | text? | M | Notas de filiación/contacto; no reemplaza antecedentes, diagnóstico o procedimiento. |
 | `status` | text | C | `ACTIVE`, `INACTIVE`; inactivar no elimina expediente ni libera cupo. |
 
@@ -781,6 +782,86 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembe
 | `notes` | text? | C | Notas o motivo de registro rápido. |
 | `convertedToPatientId` | UUID? | C | Paciente al que fue convertida. |
 | `convertedAt` | TIMESTAMPTZ? | C | Instante de conversión. |
+
+### 5.9 TreatmentProcedure
+<!-- source: TreatmentProcedure -->
+
+**Definición:** paso planificado de un tratamiento. No es una acción realizada ni un movimiento de inventario.
+
+Campos comunes: `id`, `organizationId`, `patientId`, `treatmentId`, `createdByMembershipId`, `updatedByMembershipId`, `createdAt`, `updatedAt`, `rowVersion`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `targetType` | text | C | TOOTH, REGION, FULL_MOUTH u OTHER. |
+| `toothNumber` | text? | C | Notación dental; no entero aritmético. |
+| `targetDescription` | text? | C | Detalle cuando el objetivo no es una pieza. |
+| `description` | text | C | Descripción del paso planificado. |
+| `position` | integer | C | Orden del paso dentro del tratamiento; mayor que cero. |
+| `status` | text | C | PLANNED, IN_PROGRESS, COMPLETED o CANCELED. |
+
+FK compuesta a Treatment por organización y paciente.
+
+### 5.10 ClinicalEncounterProcedure
+<!-- source: ClinicalEncounterProcedure -->
+
+**Definición:** acción realizada durante una atención clínica. Es un hecho histórico, no un plan.
+
+Campos comunes: `id`, `organizationId`, `patientId`, `clinicalEncounterId`, `createdByMembershipId`, `updatedByMembershipId`, `createdAt`, `updatedAt`, `rowVersion`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `treatmentProcedureId` | UUID? | C | Paso planificado del mismo paciente, cuando aplica. |
+| `targetType` | text | C | TOOTH, REGION, FULL_MOUTH u OTHER. |
+| `toothNumber` | text? | C | Notación dental. |
+| `targetDescription` | text? | C | Detalle del objetivo. |
+| `description` | text | C | Texto libre de la acción realizada. |
+| `status` | text | C | RECORDED o VOIDED. |
+| `voidedAt` | TIMESTAMPTZ? | C | Obligatorio al anular. |
+| `voidedByMembershipId` | UUID? | C | Autor de la anulación. |
+| `voidReason` | text? | C | Motivo obligatorio al anular. |
+
+### 5.11 InventoryItem
+<!-- source: InventoryItem -->
+
+**Definición:** artículo de inventario con stock por sucursal. `currentStock` es denormalizado y debe conciliar con InventoryMovement.
+
+Campos comunes: `id`, `organizationId`, `branchId`, `createdByMembershipId`, `updatedByMembershipId`, `createdAt`, `updatedAt`, `deletedAt`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `sku` | text | C | Código único por sucursal entre artículos no eliminados; no vacío. |
+| `name` | text | C | Nombre del artículo; no vacío. |
+| `description`, `category` | text? | C | Descripción y clasificación libre. |
+| `unit` | text | C | Unidad de medida; no vacía. |
+| `minStock` | integer | C | Umbral de alerta; mayor o igual que cero. |
+| `currentStock` | integer | C | Existencia actual; mayor o igual que cero. |
+| `unitCostMinor` | integer? | C | Costo unitario en minor units; no negativo. |
+| `currency` | text | C | Código ISO de tres letras; BOB por defecto. |
+| `isActive` | boolean | C | Disponible para nuevas operaciones. |
+| `rowVersion` | integer | C | Control de concurrencia; mayor que cero. |
+
+UNIQUE `(branchId, sku)` entre no eliminados. UNIQUE `(organizationId, id)` para FK compuestas.
+
+### 5.12 InventoryMovement
+<!-- source: InventoryMovement -->
+
+**Definición:** movimiento de inventario inmutable. El signo se deriva de `type`: IN suma, OUT resta y ADJUSTMENT conserva su propio signo.
+
+Campos comunes: `id`, `organizationId`, `branchId`, `itemId`, `createdByMembershipId`, `createdAt`.
+
+| Campo | Tipo | Marca | Definición/regla |
+|---|---|---|---|
+| `type` | text | C | IN, OUT o ADJUSTMENT. |
+| `quantity` | integer | C | Distinto de cero; positivo en IN/OUT y con signo en ADJUSTMENT. |
+| `unitCostMinor` | integer? | C | Costo del movimiento en minor units; no negativo. |
+| `currency` | text | C | Código ISO de tres letras; BOB por defecto. |
+| `lotNumber` | text? | C | Lote del insumo, para trazabilidad. |
+| `expiryDate` | DATE? | C | Vencimiento del lote; fecha civil. |
+| `reason` | text? | C | Motivo o referencia del movimiento. |
+| `relatedTreatmentId` | UUID? | C | Tratamiento relacionado; validado por la API. |
+| `relatedClinicalEncounterId` | UUID? | C | Atención relacionada; validada por la API. |
+
+FK compuesta a InventoryItem por organización. Índices `(itemId, createdAt)`, `(organizationId, type)` y `(organizationId, branchId, createdAt)`.
 
 ## 6. Relaciones y fuentes de verdad
 

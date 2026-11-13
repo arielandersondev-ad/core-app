@@ -21,7 +21,18 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
   bitácora pueda reconciliar desde el primer día.
 - Los mocks viven en `src/modules/clinic/__mocks__/data.ts`.
 
-## Mapeo mock → contrato futuro
+## Estado de implementación
+
+- Contrato: `InventoryItem` e `InventoryMovement` agregados a
+  `src/prisma/schema.ts` con UUID nativo, `timestamptz`, `deletedAt` y CHECKs.
+- Contrato emitido: `f5c0089e6a6991ed41f5356139ae71499adcae0c935ec1f9a0f076c580919723`.
+- Migración planificada: `20261113T2018_inventory_items_and_movements`
+  (11 operaciones aditivas).
+- **No aplicada**: el paquete está en el grafo, pero `migrate` requiere
+  autorización explícita.
+- Backend y cliente API: pendientes.
+
+## Mapeo mock → contrato
 
 | Mock actual | Contrato propuesto | Nota |
 |---|---|---|
@@ -46,6 +57,7 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
 | `branchId` | UUID | Stock por sucursal |
 | `sku` | text | Único por `(branchId, sku)` |
 | `name` | text | Obligatorio |
+| `description` | text? | — |
 | `category` | text? | — |
 | `unit` | text | Obligatorio |
 | `minStock` | int | `>= 0` |
@@ -57,6 +69,7 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
 | `updatedByMembershipId` | UUID? | — |
 | `deletedAt` | timestamptz? | Borrado lógico |
 | `createdAt` / `updatedAt` | timestamptz | — |
+| `rowVersion` | int | Control de concurrencia; `> 0` |
 
 `InventoryMovement`
 
@@ -70,15 +83,17 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
 | `unitCostMinor` | int? | Costo del movimiento (para promedio/COGS) |
 | `currency` | text | `BOB` por defecto |
 | `lotNumber` | text? | Trazabilidad por lote |
-| `expiresAt` | date? | Vencimiento del insumo |
+| `expiryDate` | date? | Vencimiento del insumo (fecha civil) |
 | `reason` | text? | — |
-| `relatedTreatmentId` | UUID? | FK opcional |
-| `relatedClinicalEncounterId` | UUID? | FK opcional |
+| `relatedTreatmentId` | UUID? | Referencia validada por la API, sin FK física |
+| `relatedClinicalEncounterId` | UUID? | Referencia validada por la API, sin FK física |
 | `createdByMembershipId` | UUID | — |
 | `createdAt` | timestamptz | — |
 
 Índices: `(itemId, createdAt)`, `(organizationId, type)`,
-`(branchId, sku)` único, `(organizationId, branchId)`.
+`(organizationId, branchId, createdAt)`, `(branchId, sku)` único parcial
+(`deletedAt IS NULL`), `(organizationId, branchId)`, `(organizationId, isActive)`.
+FK compuesta `(organizationId, itemId)` a `InventoryItem`.
 
 ## Por qué estas columnas antes del primer `migrate`
 
@@ -90,10 +105,11 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
 - **CHECK en `type`/`quantity`/`currentStock`**: hoy nada impide stock negativo
   ni tipos inválidos.
 
-## Fuera de alcance de esta rama
+## Pendiente de la Fase 1
 
+- Aplicar la migración `20261113T2018_inventory_items_and_movements` con
+  autorización explícita y verificar con `db:verify`.
 - Módulo backend de inventario y endpoints.
-- Migración de las tablas.
 - Refactor de dinero en los mocks del frontend (`price` → `basePriceMinor`).
   La API real ya usa minor units y `@app/ui` ya expone `formatMinorCurrency`;
   el cambio queda para una rama propia.

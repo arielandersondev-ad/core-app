@@ -8,15 +8,15 @@ const baseline = read('../migrations/snapshots/826ded8772e9b65bde90c34fca480644b
 const tables = Object.fromEntries(Object.entries(contract.storage.namespaces).flatMap(([ns, value]) => Object.entries(value.entries.table).map(([name, table]) => [name, { ns, ...table }])));
 const expected = {
   core: ['User', 'UserCredential', 'AuthSession', 'Organization', 'Branch', 'OrganizationMembership', 'OrganizationMembershipBranch', 'Role', 'Permission', 'RolePermission', 'OrganizationMembershipRole', 'Plan', 'OrganizationPlanAssignment', 'OrganizationFeatureTrial', 'AuditLog'],
-  dentistry: ['Patient', 'PatientHealthProfile', 'PatientPractitionerAssignment', 'PatientBranchAssignment', 'BranchSchedulingPolicy', 'Appointment', 'ClinicalEncounter', 'DentalService', 'DentalServiceSupply', 'AppointmentService', 'Treatment', 'Payment', 'ClinicalFile', 'Radiograph', 'Person'],
+  dentistry: ['Patient', 'PatientHealthProfile', 'PatientPractitionerAssignment', 'PatientBranchAssignment', 'BranchSchedulingPolicy', 'Appointment', 'ClinicalEncounter', 'ClinicalEncounterProcedure', 'DentalService', 'DentalServiceSupply', 'AppointmentService', 'Treatment', 'TreatmentProcedure', 'Payment', 'ClinicalFile', 'Radiograph', 'Person', 'InventoryItem', 'InventoryMovement'],
 };
 
-test('the target has exactly the 29 canonical tables, with no aliases or duplicate roots', () => {
+test('the target has exactly the 34 canonical tables, with no aliases or duplicate roots', () => {
   for (const [ns, names] of Object.entries(expected)) {
     assert.deepEqual(Object.keys(contract.storage.namespaces[ns].entries.table).sort(), [...names].sort());
     assert.deepEqual(Object.keys(contract.domain.namespaces[ns].models).sort(), [...names].sort());
   }
-  assert.equal(Object.keys(contract.roots).length, 30);
+  assert.equal(Object.keys(contract.roots).length, 34);
   for (const [name, table] of Object.entries(tables)) {
     assert.match(name, /^[A-Z][A-Za-z]+$/);
     for (const column of Object.keys(table.columns)) assert.match(column, /^[a-z][A-Za-z0-9]*$/);
@@ -43,7 +43,7 @@ test('every documented target column exists exactly once and no undocumented col
       for (const match of cell.matchAll(/`([^`]+)`/g)) documented.get(model).add(match[1].split('→').at(-1).trim());
     }
   }
-  assert.equal(documented.size, 30);
+  assert.equal(documented.size, 34);
   for (const [name, columns] of documented) assert.deepEqual(Object.keys(tables[name].columns).sort(), [...columns].sort(), name);
 });
 

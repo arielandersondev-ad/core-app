@@ -994,6 +994,54 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
     },
   });
 
+  const InventoryItem = model("InventoryItem", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      branchId: field.uuidNative(),
+      sku: field.text(),
+      name: field.text(),
+      description: field.text().optional(),
+      category: field.text().optional(),
+      unit: field.text(),
+      minStock: field.int().default(0),
+      currentStock: field.int().default(0),
+      unitCostMinor: field.int().optional(),
+      currency: field.text().default("BOB"),
+      isActive: field.boolean().default(true),
+      createdByMembershipId: field.uuidNative(),
+      updatedByMembershipId: field.uuidNative().optional(),
+      deletedAt: field.temporal.timestamptz().optional(),
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+      rowVersion: field.int().default(1),
+    },
+  });
+
+  const InventoryMovement = model("InventoryMovement", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      branchId: field.uuidNative(),
+      itemId: field.uuidNative(),
+      type: field.text(),
+      quantity: field.int(),
+      unitCostMinor: field.int().optional(),
+      currency: field.text().default("BOB"),
+      lotNumber: field.text().optional(),
+      expiryDate: field
+        .column({ codecId: "pg/date@1", nativeType: "date" })
+        .optional(),
+      reason: field.text().optional(),
+      relatedTreatmentId: field.uuidNative().optional(),
+      relatedClinicalEncounterId: field.uuidNative().optional(),
+      createdByMembershipId: field.uuidNative(),
+      createdAt: field.temporal.createdAt(),
+    },
+  });
+
   return {
     models: {
       Patient: Patient.attributes(({ fields, constraints }) => ({
@@ -1932,6 +1980,115 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
             name: "radiograph_laterality",
             expression:
               "\"laterality\" IS NULL OR \"laterality\" IN ('LEFT', 'RIGHT', 'BILATERAL')",
+          }),
+        ],
+      })),
+      InventoryItem: InventoryItem.attributes(({ fields, constraints }) => ({
+        uniques: [constraints.unique([fields.organizationId, fields.id])],
+      }))
+        .relations({
+          movements: rel.hasMany(InventoryMovement, { by: "itemId" }),
+        })
+        .sql(({ cols, constraints }) => ({
+          table: "InventoryItem",
+          indexes: [
+            constraints.index(
+              [cols.organizationId, cols.branchId],
+              { name: "inventory_item_org_branch_idx" },
+            ),
+            constraints.index(
+              [cols.branchId, cols.sku],
+              {
+                name: "inventory_item_branch_sku_uidx",
+                unique: true,
+                where: '"deletedAt" IS NULL',
+              },
+            ),
+            constraints.index(
+              [cols.organizationId, cols.isActive],
+              { name: "inventory_item_org_active_idx" },
+            ),
+          ],
+          checks: [
+            check({
+              name: "inventory_item_name",
+              expression:
+                'length(btrim("name")) > 0 AND length(btrim("sku")) > 0 AND length(btrim("unit")) > 0',
+            }),
+            check({
+              name: "inventory_item_min_stock",
+              expression: '"minStock" >= 0',
+            }),
+            check({
+              name: "inventory_item_current_stock",
+              expression: '"currentStock" >= 0',
+            }),
+            check({
+              name: "inventory_item_unit_cost",
+              expression:
+                '"unitCostMinor" IS NULL OR "unitCostMinor" >= 0',
+            }),
+            check({
+              name: "inventory_item_currency",
+              expression: "\"currency\" ~ '^[A-Z]{3}$'",
+            }),
+            check({
+              name: "inventory_item_version",
+              expression: '"rowVersion" > 0',
+            }),
+          ],
+        })),
+      InventoryMovement: InventoryMovement.relations({
+        item: rel.belongsTo(InventoryItem, {
+          from: ["organizationId", "itemId"],
+          to: ["organizationId", "id"],
+        }),
+      }).sql(({ cols, constraints }) => ({
+        table: "InventoryMovement",
+        foreignKeys: [
+          constraints.foreignKey(
+            [cols.organizationId, cols.itemId],
+            [InventoryItem.refs.organizationId, InventoryItem.refs.id],
+            { onDelete: "restrict" },
+          ),
+        ],
+        indexes: [
+          constraints.index(
+            [cols.itemId, cols.createdAt],
+            { name: "inventory_movement_item_created_idx" },
+          ),
+          constraints.index(
+            [cols.organizationId, cols.type],
+            { name: "inventory_movement_org_type_idx" },
+          ),
+          constraints.index(
+            [cols.organizationId, cols.branchId, cols.createdAt],
+            { name: "inventory_movement_branch_created_idx" },
+          ),
+        ],
+        checks: [
+          check({
+            name: "inventory_movement_type",
+            expression:
+              "\"type\" IN ('IN', 'OUT', 'ADJUSTMENT')",
+          }),
+          check({
+            name: "inventory_movement_quantity",
+            expression: '"quantity" <> 0',
+          }),
+          check({
+            name: "inventory_movement_direction",
+            expression:
+              "\"type\" = 'ADJUSTMENT' OR \"quantity\" > 0",
+          }),
+          check({
+            name: "inventory_movement_unit_cost",
+            expression:
+              '"unitCostMinor" IS NULL OR "unitCostMinor" >= 0',
+          }),
+          check({
+            name: "inventory_movement_currency",
+            expression: "\"currency\" ~ '^[A-Z]{3}$'",
           }),
         ],
       })),

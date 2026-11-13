@@ -5,7 +5,7 @@ Una sola base Neon. Dos schemas PostgreSQL:
 | Schema       | Contenido                        | Antes     |
 | ------------ | -------------------------------- | --------- |
 | `core`       | Tablas del Core (15 modelos en el contrato objetivo) | `public` |
-| `dentistry`  | Tablas de la vertical odontología (14 modelos objetivo) | `dentistry` |
+| `dentistry`  | Tablas de la vertical odontología (19 modelos objetivo) | `dentistry` |
 | `public`     | Solo objetos del framework (`prisma_contract.marker`) | tablas Core |
 
 ## Reglas

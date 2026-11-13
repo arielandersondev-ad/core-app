@@ -1,0 +1,437 @@
+[
+  {
+    "id": "table.InventoryItem",
+    "label": "Create table \"InventoryItem\"",
+    "summary": "Creates table \"InventoryItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "InventoryItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"InventoryItem\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"InventoryItem\"",
+        "sql": "CREATE TABLE \"dentistry\".\"InventoryItem\" (\n  \"branchId\" uuid NOT NULL,\n  \"category\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" uuid NOT NULL,\n  \"currency\" text DEFAULT 'BOB' NOT NULL,\n  \"currentStock\" int4 DEFAULT 0 NOT NULL,\n  \"deletedAt\" timestamptz,\n  \"description\" text,\n  \"id\" uuid NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"minStock\" int4 DEFAULT 0 NOT NULL,\n  \"name\" text NOT NULL,\n  \"organizationId\" uuid NOT NULL,\n  \"rowVersion\" int4 DEFAULT 1 NOT NULL,\n  \"sku\" text NOT NULL,\n  \"unit\" text NOT NULL,\n  \"unitCostMinor\" int4,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"updatedByMembershipId\" uuid,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"inventory_item_currency_bbe8c718\" CHECK (\"currency\" ~ '^[A-Z]{3}$'),\n  CONSTRAINT \"inventory_item_current_stock_2a235ec0\" CHECK (\"currentStock\" >= 0),\n  CONSTRAINT \"inventory_item_min_stock_70584dcc\" CHECK (\"minStock\" >= 0),\n  CONSTRAINT \"inventory_item_name_0ae1ec01\" CHECK (length(btrim(\"name\")) > 0 AND length(btrim(\"sku\")) > 0 AND length(btrim(\"unit\")) > 0),\n  CONSTRAINT \"inventory_item_unit_cost_2d621560\" CHECK (\"unitCostMinor\" IS NULL OR \"unitCostMinor\" >= 0),\n  CONSTRAINT \"inventory_item_version_dd7c92f3\" CHECK (\"rowVersion\" > 0)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"InventoryItem\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.InventoryMovement",
+    "label": "Create table \"InventoryMovement\"",
+    "summary": "Creates table \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "table",
+        "name": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"InventoryMovement\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryMovement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"InventoryMovement\"",
+        "sql": "CREATE TABLE \"dentistry\".\"InventoryMovement\" (\n  \"branchId\" uuid NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdByMembershipId\" uuid NOT NULL,\n  \"currency\" text DEFAULT 'BOB' NOT NULL,\n  \"expiryDate\" date,\n  \"id\" uuid NOT NULL,\n  \"itemId\" uuid NOT NULL,\n  \"lotNumber\" text,\n  \"organizationId\" uuid NOT NULL,\n  \"quantity\" int4 NOT NULL,\n  \"reason\" text,\n  \"relatedClinicalEncounterId\" uuid,\n  \"relatedTreatmentId\" uuid,\n  \"type\" text NOT NULL,\n  \"unitCostMinor\" int4,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"inventory_movement_currency_bbe8c718\" CHECK (\"currency\" ~ '^[A-Z]{3}$'),\n  CONSTRAINT \"inventory_movement_direction_21566819\" CHECK (\"type\" = 'ADJUSTMENT' OR \"quantity\" > 0),\n  CONSTRAINT \"inventory_movement_quantity_846f9dc1\" CHECK (\"quantity\" <> 0),\n  CONSTRAINT \"inventory_movement_type_539b6a05\" CHECK (\"type\" IN ('IN', 'OUT', 'ADJUSTMENT')),\n  CONSTRAINT \"inventory_movement_unit_cost_2d621560\" CHECK (\"unitCostMinor\" IS NULL OR \"unitCostMinor\" >= 0)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"InventoryMovement\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryMovement\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.InventoryItem.InventoryItem_organizationId_id_key",
+    "label": "Add unique constraint on \"InventoryItem\" (organizationId, id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "unique",
+        "name": "InventoryItem_organizationId_id_key",
+        "table": "InventoryItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"InventoryItem_organizationId_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InventoryItem_organizationId_id_key",
+          "dentistry",
+          "\"dentistry\".\"InventoryItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"InventoryItem_organizationId_id_key\"",
+        "sql": "ALTER TABLE \"dentistry\".\"InventoryItem\" ADD CONSTRAINT \"InventoryItem_organizationId_id_key\" UNIQUE (\"organizationId\", \"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"InventoryItem_organizationId_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InventoryItem_organizationId_id_key",
+          "dentistry",
+          "\"dentistry\".\"InventoryItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryItem.inventory_item_branch_sku_uidx_90a80faf",
+    "label": "Create index \"inventory_item_branch_sku_uidx_90a80faf\" on \"InventoryItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_item_branch_sku_uidx_90a80faf",
+        "table": "InventoryItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_item_branch_sku_uidx_90a80faf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_branch_sku_uidx_90a80faf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_item_branch_sku_uidx_90a80faf\"",
+        "sql": "CREATE UNIQUE INDEX \"inventory_item_branch_sku_uidx_90a80faf\" ON \"dentistry\".\"InventoryItem\" (\"branchId\", \"sku\") WHERE (\"deletedAt\" IS NULL)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_item_branch_sku_uidx_90a80faf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_branch_sku_uidx_90a80faf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryItem.inventory_item_org_active_idx_c89f2a48",
+    "label": "Create index \"inventory_item_org_active_idx_c89f2a48\" on \"InventoryItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_item_org_active_idx_c89f2a48",
+        "table": "InventoryItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_item_org_active_idx_c89f2a48\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_org_active_idx_c89f2a48\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_item_org_active_idx_c89f2a48\"",
+        "sql": "CREATE INDEX \"inventory_item_org_active_idx_c89f2a48\" ON \"dentistry\".\"InventoryItem\" (\"organizationId\", \"isActive\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_item_org_active_idx_c89f2a48\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_org_active_idx_c89f2a48\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryItem.inventory_item_org_branch_idx_9d922e31",
+    "label": "Create index \"inventory_item_org_branch_idx_9d922e31\" on \"InventoryItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_item_org_branch_idx_9d922e31",
+        "table": "InventoryItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_item_org_branch_idx_9d922e31\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_org_branch_idx_9d922e31\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_item_org_branch_idx_9d922e31\"",
+        "sql": "CREATE INDEX \"inventory_item_org_branch_idx_9d922e31\" ON \"dentistry\".\"InventoryItem\" (\"organizationId\", \"branchId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_item_org_branch_idx_9d922e31\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_item_org_branch_idx_9d922e31\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryMovement.InventoryMovement_organizationId_itemId_idx_ed264bce",
+    "label": "Create index \"InventoryMovement_organizationId_itemId_idx_ed264bce\" on \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "InventoryMovement_organizationId_itemId_idx_ed264bce",
+        "table": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"InventoryMovement_organizationId_itemId_idx_ed264bce\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryMovement_organizationId_itemId_idx_ed264bce\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"InventoryMovement_organizationId_itemId_idx_ed264bce\"",
+        "sql": "CREATE INDEX \"InventoryMovement_organizationId_itemId_idx_ed264bce\" ON \"dentistry\".\"InventoryMovement\" (\"organizationId\", \"itemId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"InventoryMovement_organizationId_itemId_idx_ed264bce\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"InventoryMovement_organizationId_itemId_idx_ed264bce\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryMovement.inventory_movement_branch_created_idx_7c12b2dc",
+    "label": "Create index \"inventory_movement_branch_created_idx_7c12b2dc\" on \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_movement_branch_created_idx_7c12b2dc",
+        "table": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_movement_branch_created_idx_7c12b2dc\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_branch_created_idx_7c12b2dc\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_movement_branch_created_idx_7c12b2dc\"",
+        "sql": "CREATE INDEX \"inventory_movement_branch_created_idx_7c12b2dc\" ON \"dentistry\".\"InventoryMovement\" (\"organizationId\", \"branchId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_movement_branch_created_idx_7c12b2dc\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_branch_created_idx_7c12b2dc\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryMovement.inventory_movement_item_created_idx_d577e708",
+    "label": "Create index \"inventory_movement_item_created_idx_d577e708\" on \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_movement_item_created_idx_d577e708",
+        "table": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_movement_item_created_idx_d577e708\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_item_created_idx_d577e708\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_movement_item_created_idx_d577e708\"",
+        "sql": "CREATE INDEX \"inventory_movement_item_created_idx_d577e708\" ON \"dentistry\".\"InventoryMovement\" (\"itemId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_movement_item_created_idx_d577e708\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_item_created_idx_d577e708\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.InventoryMovement.inventory_movement_org_type_idx_ff4b8294",
+    "label": "Create index \"inventory_movement_org_type_idx_ff4b8294\" on \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "inventory_movement_org_type_idx_ff4b8294",
+        "table": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"inventory_movement_org_type_idx_ff4b8294\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_org_type_idx_ff4b8294\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"inventory_movement_org_type_idx_ff4b8294\"",
+        "sql": "CREATE INDEX \"inventory_movement_org_type_idx_ff4b8294\" ON \"dentistry\".\"InventoryMovement\" (\"organizationId\", \"type\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"inventory_movement_org_type_idx_ff4b8294\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"inventory_movement_org_type_idx_ff4b8294\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.InventoryMovement.InventoryMovement_organizationId_itemId_fkey",
+    "label": "Add foreign key \"InventoryMovement_organizationId_itemId_fkey\" on \"InventoryMovement\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "foreignKey",
+        "name": "InventoryMovement_organizationId_itemId_fkey",
+        "table": "InventoryMovement"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"InventoryMovement_organizationId_itemId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InventoryMovement_organizationId_itemId_fkey",
+          "dentistry",
+          "\"dentistry\".\"InventoryMovement\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"InventoryMovement_organizationId_itemId_fkey\"",
+        "sql": "ALTER TABLE \"dentistry\".\"InventoryMovement\"\nADD CONSTRAINT \"InventoryMovement_organizationId_itemId_fkey\"\nFOREIGN KEY (\"organizationId\", \"itemId\")\nREFERENCES \"dentistry\".\"InventoryItem\" (\"organizationId\", \"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"InventoryMovement_organizationId_itemId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "InventoryMovement_organizationId_itemId_fkey",
+          "dentistry",
+          "\"dentistry\".\"InventoryMovement\""
+        ]
+      }
+    ]
+  }
+]

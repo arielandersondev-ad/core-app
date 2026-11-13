@@ -48,6 +48,14 @@
       "model": "DentalServiceSupply",
       "namespace": "dentistry"
     },
+    "InventoryItem": {
+      "model": "InventoryItem",
+      "namespace": "dentistry"
+    },
+    "InventoryMovement": {
+      "model": "InventoryMovement",
+      "namespace": "dentistry"
+    },
     "Organization": {
       "model": "Organization",
       "namespace": "core"
@@ -4313,6 +4321,402 @@
               },
               "namespaceId": "dentistry",
               "table": "DentalServiceSupply"
+            }
+          },
+          "InventoryItem": {
+            "fields": {
+              "branchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "category": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdByMembershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "currentStock": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "description": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "minStock": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "rowVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sku": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unit": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unitCostMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedByMembershipId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "movements": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "itemId"
+                  ]
+                },
+                "to": {
+                  "model": "InventoryMovement",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "branchId": {
+                  "column": "branchId"
+                },
+                "category": {
+                  "column": "category"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdByMembershipId": {
+                  "column": "createdByMembershipId"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "currentStock": {
+                  "column": "currentStock"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "description": {
+                  "column": "description"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isActive": {
+                  "column": "isActive"
+                },
+                "minStock": {
+                  "column": "minStock"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "rowVersion": {
+                  "column": "rowVersion"
+                },
+                "sku": {
+                  "column": "sku"
+                },
+                "unit": {
+                  "column": "unit"
+                },
+                "unitCostMinor": {
+                  "column": "unitCostMinor"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "updatedByMembershipId": {
+                  "column": "updatedByMembershipId"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "InventoryItem"
+            }
+          },
+          "InventoryMovement": {
+            "fields": {
+              "branchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdByMembershipId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "currency": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiryDate": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/date@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "itemId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "lotNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "organizationId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "quantity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "relatedClinicalEncounterId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "relatedTreatmentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unitCostMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "item": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "organizationId",
+                    "itemId"
+                  ],
+                  "targetFields": [
+                    "organizationId",
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "InventoryItem",
+                  "namespace": "dentistry"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "branchId": {
+                  "column": "branchId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdByMembershipId": {
+                  "column": "createdByMembershipId"
+                },
+                "currency": {
+                  "column": "currency"
+                },
+                "expiryDate": {
+                  "column": "expiryDate"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "itemId": {
+                  "column": "itemId"
+                },
+                "lotNumber": {
+                  "column": "lotNumber"
+                },
+                "organizationId": {
+                  "column": "organizationId"
+                },
+                "quantity": {
+                  "column": "quantity"
+                },
+                "reason": {
+                  "column": "reason"
+                },
+                "relatedClinicalEncounterId": {
+                  "column": "relatedClinicalEncounterId"
+                },
+                "relatedTreatmentId": {
+                  "column": "relatedTreatmentId"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "unitCostMinor": {
+                  "column": "unitCostMinor"
+                }
+              },
+              "namespaceId": "dentistry",
+              "table": "InventoryMovement"
             }
           },
           "Patient": {
@@ -9587,6 +9991,385 @@
               },
               "uniques": []
             },
+            "InventoryItem": {
+              "checks": [
+                {
+                  "expression": "\"currency\" ~ '^[A-Z]{3}$'",
+                  "name": "inventory_item_currency_bbe8c718",
+                  "prefix": "inventory_item_currency"
+                },
+                {
+                  "expression": "\"currentStock\" >= 0",
+                  "name": "inventory_item_current_stock_2a235ec0",
+                  "prefix": "inventory_item_current_stock"
+                },
+                {
+                  "expression": "\"minStock\" >= 0",
+                  "name": "inventory_item_min_stock_70584dcc",
+                  "prefix": "inventory_item_min_stock"
+                },
+                {
+                  "expression": "length(btrim(\"name\")) > 0 AND length(btrim(\"sku\")) > 0 AND length(btrim(\"unit\")) > 0",
+                  "name": "inventory_item_name_0ae1ec01",
+                  "prefix": "inventory_item_name"
+                },
+                {
+                  "expression": "\"unitCostMinor\" IS NULL OR \"unitCostMinor\" >= 0",
+                  "name": "inventory_item_unit_cost_2d621560",
+                  "prefix": "inventory_item_unit_cost"
+                },
+                {
+                  "expression": "\"rowVersion\" > 0",
+                  "name": "inventory_item_version_dd7c92f3",
+                  "prefix": "inventory_item_version"
+                }
+              ],
+              "columns": {
+                "branchId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "category": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "BOB"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "currentStock": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "description": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "isActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "minStock": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "organizationId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "rowVersion": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sku": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "unit": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "unitCostMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "updatedByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "branchId",
+                    "sku"
+                  ],
+                  "name": "inventory_item_branch_sku_uidx_90a80faf",
+                  "prefix": "inventory_item_branch_sku_uidx",
+                  "unique": true,
+                  "where": "\"deletedAt\" IS NULL"
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "isActive"
+                  ],
+                  "name": "inventory_item_org_active_idx_c89f2a48",
+                  "prefix": "inventory_item_org_active_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "branchId"
+                  ],
+                  "name": "inventory_item_org_branch_idx_9d922e31",
+                  "prefix": "inventory_item_org_branch_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "organizationId",
+                    "id"
+                  ]
+                }
+              ]
+            },
+            "InventoryMovement": {
+              "checks": [
+                {
+                  "expression": "\"currency\" ~ '^[A-Z]{3}$'",
+                  "name": "inventory_movement_currency_bbe8c718",
+                  "prefix": "inventory_movement_currency"
+                },
+                {
+                  "expression": "\"type\" = 'ADJUSTMENT' OR \"quantity\" > 0",
+                  "name": "inventory_movement_direction_21566819",
+                  "prefix": "inventory_movement_direction"
+                },
+                {
+                  "expression": "\"quantity\" <> 0",
+                  "name": "inventory_movement_quantity_846f9dc1",
+                  "prefix": "inventory_movement_quantity"
+                },
+                {
+                  "expression": "\"type\" IN ('IN', 'OUT', 'ADJUSTMENT')",
+                  "name": "inventory_movement_type_539b6a05",
+                  "prefix": "inventory_movement_type"
+                },
+                {
+                  "expression": "\"unitCostMinor\" IS NULL OR \"unitCostMinor\" >= 0",
+                  "name": "inventory_movement_unit_cost_2d621560",
+                  "prefix": "inventory_movement_unit_cost"
+                }
+              ],
+              "columns": {
+                "branchId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdByMembershipId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "BOB"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "expiryDate": {
+                  "codecId": "pg/date@1",
+                  "nativeType": "date",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "itemId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "lotNumber": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "organizationId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "quantity": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "relatedClinicalEncounterId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "relatedTreatmentId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "unitCostMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "organizationId",
+                      "itemId"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "InventoryMovement"
+                  },
+                  "target": {
+                    "columns": [
+                      "organizationId",
+                      "id"
+                    ],
+                    "namespaceId": "dentistry",
+                    "tableName": "InventoryItem"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "organizationId",
+                    "itemId"
+                  ],
+                  "name": "InventoryMovement_organizationId_itemId_idx_ed264bce",
+                  "prefix": "InventoryMovement_organizationId_itemId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "branchId",
+                    "createdAt"
+                  ],
+                  "name": "inventory_movement_branch_created_idx_7c12b2dc",
+                  "prefix": "inventory_movement_branch_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "itemId",
+                    "createdAt"
+                  ],
+                  "name": "inventory_movement_item_created_idx_d577e708",
+                  "prefix": "inventory_movement_item_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "organizationId",
+                    "type"
+                  ],
+                  "name": "inventory_movement_org_type_idx_ff4b8294",
+                  "prefix": "inventory_movement_org_type_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Patient": {
               "checks": [
                 {
@@ -11123,10 +11906,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216"
+    "storageHash": "f5c0089e6a6991ed41f5356139ae71499adcae0c935ec1f9a0f076c580919723"
   },
   "execution": {
-    "executionHash": "b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31",
+    "executionHash": "ca53b227b5211005c5109795d525fa4f416e1daad177707f36ecf8b1a7fd2a1c",
     "mutations": {
       "defaults": [
         {
@@ -11398,6 +12181,43 @@
             "column": "updatedAt",
             "namespace": "dentistry",
             "table": "DentalServiceSupply"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "InventoryItem"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "dentistry",
+            "table": "InventoryItem"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "dentistry",
+            "table": "InventoryMovement"
           }
         },
         {
