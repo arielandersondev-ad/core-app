@@ -148,7 +148,7 @@ test("HAG-36 Inventario (Inventory.tsx): Integra MobileFilterSheet y FilterTrigg
   );
   assert.match(
     content,
-    /<MobileFilterSheet[\s\S]*?title="Filtros de Inventario"[\s\S]*?onClear=\{[\s\S]*?setSelectedCategory\("all"\)[\s\S]*?setFilter\("all"\)/,
+    /<MobileFilterSheet[\s\S]*?title="Filtros de Inventario"[\s\S]*?onClear=\{[\s\S]*?(setSelectedCategory|changeCategory)\("all"\)[\s\S]*?(setFilter|changeFilter)\("all"\)/,
     "MobileFilterSheet en Inventario debe restablecer categoría y filtro de stock",
   );
 });
