@@ -139,6 +139,7 @@ packages/db test:schema        -> 8/8
 packages/db test:semantic      -> 7/7
 packages/db build              -> OK
 dentistry/backend build        -> OK
+dentistry/backend test         -> 79/79
 dentistry/frontend tsc        -> 0 errores
 dentistry/frontend test       -> 133/133
 dentistry/frontend build      -> OK
@@ -239,6 +240,7 @@ Rama: `feature/inventory-api`, apilada sobre
   `dentistry:services:manage` para escritura, hasta crear permisos propios de
   inventario.
 - `npm run build` del backend: OK.
+- `npm test` del backend: 79/79 (incluye 9 casos nuevos de inventario).
 
 ### 7.4 Frontend (hecho)
 
