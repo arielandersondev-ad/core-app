@@ -17,7 +17,7 @@ trabajo.
 | `main` | `fe2dc3f` | 2026-10-23 | Producción. **No se tocó.** |
 | `dev` | `c15d5a9` | 2026-11-11 | Integración. **No se tocó.** |
 | `feature/inventory-consultations` | `4ec2286` | 2026-11-13 | Rama oficial de la Fase 0. Reconstruida sobre `dev`. |
-| `feature/inventory-api` | Fase 1 | 2026-11-13 | Rama apilada: contrato, backend y cliente API. |
+| `feature/inventory-api` | `f8cbb21` | 2026-11-13 | Rama apilada: contrato, backend y cliente API. |
 | `backup/inventory-consultations-2026-11-13` | `a9ab4b0` | 2026-10-03 | Respaldo de la rama vieja. No se mergea. |
 
 Reglas acordadas:
