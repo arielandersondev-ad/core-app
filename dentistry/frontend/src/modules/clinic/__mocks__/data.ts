@@ -133,6 +133,21 @@ export interface InventoryItem {
   lastRefill: string;
 }
 
+export type InventoryMovementType = "IN" | "OUT" | "ADJUSTMENT";
+
+export interface InventoryMovement {
+  id: string;
+  itemId: string;
+  type: InventoryMovementType;
+  /** Absolute for IN/OUT; signed for ADJUSTMENT. */
+  quantity: number;
+  occurredAt: string;
+  reason: string;
+  relatedTreatmentId?: string;
+  /** Mock professional id; the API will use createdByMembershipId. */
+  professionalId?: string;
+}
+
 // ── Profesionales ──────────────────────────────────────────────────
 export const professionals: Professional[] = [
   {
@@ -885,6 +900,37 @@ export const inventory: InventoryItem[] = [
   },
 ];
 
+// ── Movimientos de inventario ────────────────────────────────────────
+// Reconciliación: cada artículo arranca en 0 y sus movimientos suman su
+// `stock` actual. La última entrada coincide con `lastRefill`.
+export const inventoryMovements: InventoryMovement[] = [
+  { id: "mov-01", itemId: "inv-1", type: "IN", quantity: 12, occurredAt: "2026-08-10", reason: "Compra mensual — Distribuidora Andina", professionalId: "pro-1" },
+  { id: "mov-02", itemId: "inv-1", type: "OUT", quantity: 6, occurredAt: "2026-08-12", reason: "Profilaxis y destartraje (2 pacientes)" },
+
+  { id: "mov-03", itemId: "inv-2", type: "IN", quantity: 20, occurredAt: "2026-08-01", reason: "Reposición trimestral de bioseguridad", professionalId: "pro-1" },
+  { id: "mov-04", itemId: "inv-2", type: "OUT", quantity: 8, occurredAt: "2026-08-14", reason: "Consumo diario de consultorio" },
+
+  { id: "mov-05", itemId: "inv-3", type: "IN", quantity: 10, occurredAt: "2026-07-20", reason: "Compra por lote — depósito central", professionalId: "pro-1" },
+  { id: "mov-06", itemId: "inv-3", type: "OUT", quantity: 5, occurredAt: "2026-08-02", reason: "Restauraciones clase III" },
+  { id: "mov-07", itemId: "inv-3", type: "OUT", quantity: 3, occurredAt: "2026-08-16", reason: "Restauraciones clase I (2 pacientes)" },
+
+  { id: "mov-08", itemId: "inv-4", type: "IN", quantity: 30, occurredAt: "2026-08-10", reason: "Reposición mensual", professionalId: "pro-1" },
+  { id: "mov-09", itemId: "inv-4", type: "OUT", quantity: 22, occurredAt: "2026-08-25", reason: "Consumo por 22 atenciones" },
+
+  { id: "mov-10", itemId: "inv-5", type: "IN", quantity: 6, occurredAt: "2026-06-30", reason: "Compra por lote — Limafo", professionalId: "pro-2" },
+  { id: "mov-11", itemId: "inv-5", type: "OUT", quantity: 2, occurredAt: "2026-07-18", reason: "Instrumentación de 2 endodoncias" },
+
+  { id: "mov-12", itemId: "inv-6", type: "IN", quantity: 8, occurredAt: "2026-07-01", reason: "Compra por lote", professionalId: "pro-1" },
+  { id: "mov-13", itemId: "inv-6", type: "OUT", quantity: 4, occurredAt: "2026-08-09", reason: "Profilaxis en 4 pacientes" },
+  { id: "mov-14", itemId: "inv-6", type: "ADJUSTMENT", quantity: -1, occurredAt: "2026-08-21", reason: "Merma por tubo con vencimiento" },
+
+  { id: "mov-15", itemId: "inv-7", type: "IN", quantity: 15, occurredAt: "2026-08-05", reason: "Reposición mensual", professionalId: "pro-1" },
+  { id: "mov-16", itemId: "inv-7", type: "OUT", quantity: 10, occurredAt: "2026-08-20", reason: "Consumo por atenciones" },
+
+  { id: "mov-17", itemId: "inv-8", type: "IN", quantity: 6, occurredAt: "2026-08-12", reason: "Compra por lote", professionalId: "pro-1" },
+  { id: "mov-18", itemId: "inv-8", type: "OUT", quantity: 5, occurredAt: "2026-08-19", reason: "Grabado ácido en 5 resinas" },
+];
+
 // ── Helpers ────────────────────────────────────────────────────────
 export function getPatientById(id: string) {
   return patients.find((p) => p.id === id);
@@ -983,4 +1029,47 @@ export function inventoryStatus(item: InventoryItem): InventoryStatus {
   if (item.stock < item.minStock)
     return item.stock <= item.minStock * 0.3 ? "critico" : "bajo";
   return "ok";
+}
+
+export function formatMovementDate(iso: string) {
+  return new Date(iso).toLocaleDateString("es-BO", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export function getMovementsByItem(itemId: string) {
+  return inventoryMovements
+    .filter((m) => m.itemId === itemId)
+    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+}
+
+/** Date of the most recent IN movement for an item, derived from the ledger. */
+export function lastRestockAt(itemId: string) {
+  const restocks = inventoryMovements.filter(
+    (m) => m.itemId === itemId && m.type === "IN"
+  );
+
+  return restocks.reduce<string | undefined>(
+    (latest, m) =>
+      latest === undefined || m.occurredAt > latest
+        ? m.occurredAt
+        : latest,
+    undefined
+  );
+}
+
+/** Quantity with the sign implied by `type`; ADJUSTMENT carries its own. */
+export function signedQuantity(movement: InventoryMovement) {
+  if (movement.type === "IN") return Math.abs(movement.quantity);
+  if (movement.type === "OUT") return -Math.abs(movement.quantity);
+  return movement.quantity;
+}
+
+/** Stock implied by the ledger, starting from zero. */
+export function stockFromMovements(itemId: string) {
+  return inventoryMovements
+    .filter((m) => m.itemId === itemId)
+    .reduce((total, m) => total + signedQuantity(m), 0);
 }

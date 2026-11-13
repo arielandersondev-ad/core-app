@@ -3,8 +3,16 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   inventory as initialInventory,
+  inventoryMovements,
   inventoryStatus,
+  formatMovementDate,
+  getMovementsByItem,
+  getProfessionalById,
+  lastRestockAt,
+  signedQuantity,
+  stockFromMovements,
   InventoryItem,
+  InventoryMovementType,
 } from "@/modules/clinic/__mocks__/data";
 import { PageContainer, PageHeader, FilterToolbar } from "@/shared/components/layout";
 import {
@@ -19,6 +27,7 @@ import {
   MobileFilterSheet,
   FilterTriggerButton,
   PullToRefresh,
+  ResponsiveModal,
 } from "@/shared/components/ui";
 import { CreateInventoryModal } from "@/modules/clinic/components";
 
@@ -42,6 +51,27 @@ const statusConfig = {
   },
 };
 
+const movementConfig: Record<
+  InventoryMovementType,
+  { label: string; color: string }
+> = {
+  IN: {
+    label: "Entrada",
+    color:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+  },
+  OUT: {
+    label: "Salida",
+    color:
+      "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+  },
+  ADJUSTMENT: {
+    label: "Ajuste",
+    color:
+      "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+  },
+};
+
 export default function Inventory() {
   const [filter, setFilter] = useState<"all" | "ok" | "bajo" | "critico">("all");
   const [search, setSearch] = useState("");
@@ -49,6 +79,7 @@ export default function Inventory() {
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>(initialInventory);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
   // Active filter count for mobile badge
   const activeFilterCount = useMemo(() => {
@@ -62,6 +93,23 @@ export default function Inventory() {
   const [page, setPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Cualquier cambio de filtro reinicia la paginación acumulada.
+  const changeFilter = useCallback(
+    (value: "all" | "ok" | "bajo" | "critico") => {
+      setFilter(value);
+      setPage(1);
+    },
+    [],
+  );
+  const changeSearch = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
+  const changeCategory = useCallback((value: string) => {
+    setSelectedCategory(value);
+    setPage(1);
+  }, []);
 
   // Extract categories
   const categories = useMemo(
@@ -83,11 +131,6 @@ export default function Inventory() {
       return matchStatus && matchCategory && matchSearch;
     });
   }, [inventoryList, filter, selectedCategory, search]);
-
-  // Reset pagination on filter change
-  useEffect(() => {
-    setPage(1);
-  }, [filter, selectedCategory, search]);
 
   // Sliced items for infinite scroll progressive accumulation
   const visibleItems = useMemo(() => {
@@ -138,6 +181,24 @@ export default function Inventory() {
     [inventoryList],
   );
 
+  // Ledger: movimientos y conciliación entre stock y bitácora
+  const movementCount = inventoryMovements.length;
+  const reconciliationRows = useMemo(
+    () =>
+      inventoryList.filter(
+        (item) =>
+          getMovementsByItem(item.id).length > 0 &&
+          stockFromMovements(item.id) !== item.stock,
+      ),
+    [inventoryList],
+  );
+  const selectedMovements = selectedItem
+    ? getMovementsByItem(selectedItem.id)
+    : [];
+  const derivedRestock = selectedItem
+    ? lastRestockAt(selectedItem.id)
+    : undefined;
+
   // Compact metrics for mobile strip (< 1024px / lg:hidden)
   const compactMetrics: CompactStatItem[] = useMemo(
     () => [
@@ -147,7 +208,7 @@ export default function Inventory() {
         value: inventoryList.length,
         icon: Icons.branch,
         active: filter === "all",
-        onClick: () => setFilter("all"),
+        onClick: () => changeFilter("all"),
       },
       {
         id: "ok",
@@ -156,7 +217,7 @@ export default function Inventory() {
         variant: "success",
         icon: Icons.check,
         active: filter === "ok",
-        onClick: () => setFilter(filter === "ok" ? "all" : "ok"),
+        onClick: () => changeFilter(filter === "ok" ? "all" : "ok"),
       },
       {
         id: "bajo",
@@ -165,7 +226,7 @@ export default function Inventory() {
         variant: "warning",
         icon: Icons.alertTriangle,
         active: filter === "bajo",
-        onClick: () => setFilter(filter === "bajo" ? "all" : "bajo"),
+        onClick: () => changeFilter(filter === "bajo" ? "all" : "bajo"),
       },
       {
         id: "critico",
@@ -174,10 +235,10 @@ export default function Inventory() {
         variant: "danger",
         icon: Icons.alertTriangle,
         active: filter === "critico",
-        onClick: () => setFilter(filter === "critico" ? "all" : "critico"),
+        onClick: () => changeFilter(filter === "critico" ? "all" : "critico"),
       },
     ],
-    [inventoryList.length, counts, filter],
+    [inventoryList.length, counts, filter, changeFilter],
   );
 
   return (
@@ -215,7 +276,7 @@ export default function Inventory() {
           value={inventoryList.length}
           sublabel="En catálogo"
           icon={Icons.branch}
-          onClick={() => setFilter("all")}
+          onClick={() => changeFilter("all")}
           active={filter === "all"}
         />
         <StatCard
@@ -224,7 +285,7 @@ export default function Inventory() {
           sublabel="Niveles adecuados"
           variant="success"
           icon={Icons.check}
-          onClick={() => setFilter(filter === "ok" ? "all" : "ok")}
+          onClick={() => changeFilter(filter === "ok" ? "all" : "ok")}
           active={filter === "ok"}
         />
         <StatCard
@@ -233,7 +294,7 @@ export default function Inventory() {
           sublabel="Próximos a reponer"
           variant="warning"
           icon={Icons.alertTriangle}
-          onClick={() => setFilter(filter === "bajo" ? "all" : "bajo")}
+          onClick={() => changeFilter(filter === "bajo" ? "all" : "bajo")}
           active={filter === "bajo"}
         />
         <StatCard
@@ -242,7 +303,7 @@ export default function Inventory() {
           sublabel="Atención urgente"
           variant="danger"
           icon={Icons.alertTriangle}
-          onClick={() => setFilter(filter === "critico" ? "all" : "critico")}
+          onClick={() => changeFilter(filter === "critico" ? "all" : "critico")}
           active={filter === "critico"}
         />
       </div>
@@ -283,6 +344,22 @@ export default function Inventory() {
         </div>
       )}
 
+      {/* 3b. Banner de conciliación stock ↔ bitácora */}
+      {reconciliationRows.length > 0 && (
+        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/70 dark:bg-amber-950/20 dark:border-amber-900 flex items-start gap-3 shadow-xs">
+          <span className="text-xl flex-shrink-0 text-amber-600">⚠</span>
+          <div>
+            <p className="text-sm font-display font-bold text-amber-700 dark:text-amber-400">
+              {reconciliationRows.length} artículo(s) no cuadran con su bitácora
+            </p>
+            <p className="text-xs text-[var(--muted)] mt-0.5">
+              El stock registrado difiere de la suma de entradas, salidas y
+              ajustes. Revisa antes del próximo reabasto.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 4. Filtros y Búsqueda */}
       <FilterToolbar>
         {/* Desktop View (hidden md:flex): Toolbar horizontal completa */}
@@ -293,7 +370,7 @@ export default function Inventory() {
               leftIcon={Icons.search}
               placeholder="Buscar por artículo o categoría…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => changeSearch(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -301,7 +378,7 @@ export default function Inventory() {
               <Select
                 selectSize="sm"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => changeCategory(e.target.value)}
                 options={[
                   { value: "all", label: "Todas las categorías" },
                   ...categories.map((c) => ({ value: c, label: c })),
@@ -313,7 +390,7 @@ export default function Inventory() {
                 selectSize="sm"
                 value={filter}
                 onChange={(e) =>
-                  setFilter(e.target.value as "all" | "ok" | "bajo" | "critico")
+                  changeFilter(e.target.value as "all" | "ok" | "bajo" | "critico")
                 }
                 options={[
                   { value: "all", label: "Todos los estados" },
@@ -334,7 +411,7 @@ export default function Inventory() {
               leftIcon={Icons.search}
               placeholder="Buscar artículo…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => changeSearch(e.target.value)}
             />
           </div>
           <FilterTriggerButton
@@ -351,8 +428,8 @@ export default function Inventory() {
         title="Filtros de Inventario"
         activeCount={activeFilterCount}
         onClear={() => {
-          setSelectedCategory("all");
-          setFilter("all");
+          changeCategory("all");
+          changeFilter("all");
         }}
         onApply={() => setIsFilterSheetOpen(false)}
       >
@@ -364,7 +441,7 @@ export default function Inventory() {
             <Select
               selectSize="md"
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => changeCategory(e.target.value)}
               options={[
                 { value: "all", label: "Todas las categorías" },
                 ...categories.map((c) => ({ value: c, label: c })),
@@ -380,7 +457,7 @@ export default function Inventory() {
               selectSize="md"
               value={filter}
               onChange={(e) =>
-                setFilter(e.target.value as "all" | "ok" | "bajo" | "critico")
+                changeFilter(e.target.value as "all" | "ok" | "bajo" | "critico")
               }
               options={[
                 { value: "all", label: "Todos los estados" },
@@ -407,7 +484,8 @@ export default function Inventory() {
             return (
               <article
                 key={item.id}
-                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xs flex flex-col gap-3 hover:border-[var(--primary)]/40 transition-colors"
+                onClick={() => setSelectedItem(item)}
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xs flex flex-col gap-3 hover:border-[var(--primary)]/40 transition-colors cursor-pointer"
               >
                 {/* Cabecera: Nombre de artículo y badges */}
                 <div className="flex items-start justify-between gap-2.5">
@@ -472,11 +550,14 @@ export default function Inventory() {
                 <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]/60 text-xs text-[var(--muted)] font-mono">
                   <span>
                     Último reabasto:{" "}
-                    {new Date(item.lastRefill).toLocaleDateString("es-PE", {
+                    {new Date(item.lastRefill).toLocaleDateString("es-BO", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
                     })}
+                  </span>
+                  <span className="text-[var(--primary)] font-semibold">
+                    Ver bitácora →
                   </span>
                 </div>
               </article>
@@ -497,6 +578,7 @@ export default function Inventory() {
                     "Unidad",
                     "Último reabasto",
                     "Estado",
+                    "Bitácora",
                   ].map((h) => (
                     <th
                       key={h}
@@ -517,7 +599,8 @@ export default function Inventory() {
                   return (
                     <tr
                       key={item.id}
-                      className="hover:bg-[var(--background)]/60 transition-colors"
+                      onClick={() => setSelectedItem(item)}
+                      className="hover:bg-[var(--background)]/60 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3.5">
                         <p className="text-sm font-display font-semibold text-[var(--foreground)]">
@@ -561,7 +644,7 @@ export default function Inventory() {
                         {item.unit}
                       </td>
                       <td className="px-4 py-3.5 text-xs font-mono text-[var(--muted)] whitespace-nowrap">
-                        {new Date(item.lastRefill).toLocaleDateString("es-PE", {
+                        {new Date(item.lastRefill).toLocaleDateString("es-BO", {
                           day: "2-digit",
                           month: "short",
                           year: "numeric",
@@ -573,6 +656,18 @@ export default function Inventory() {
                         >
                           {statusConfig[st].label}
                         </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedItem(item);
+                          }}
+                          className="text-xs font-mono font-semibold text-[var(--primary)] hover:underline whitespace-nowrap"
+                        >
+                          Ver bitácora
+                        </button>
                       </td>
                     </tr>
                   );
@@ -588,7 +683,9 @@ export default function Inventory() {
           )}
 
           <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--background)]/30 flex items-center justify-between text-xs font-mono text-[var(--muted)]">
-            <span>{filtered.length} artículos en total</span>
+            <span>
+              {filtered.length} artículos · {movementCount} movimientos
+            </span>
             <span>
               Mostrando {visibleItems.length} de {filtered.length}
             </span>
@@ -615,6 +712,119 @@ export default function Inventory() {
         </div>
       </div>
     </PullToRefresh>
+
+    <ResponsiveModal
+      open={selectedItem !== null}
+      onClose={() => setSelectedItem(null)}
+      eyebrow="Bitácora de inventario"
+      title={selectedItem?.name ?? "Bitácora"}
+      subtitle={
+        selectedItem
+          ? `${selectedItem.category} · ${selectedItem.stock} ${selectedItem.unit} en stock`
+          : undefined
+      }
+      maxWidth="max-w-lg"
+    >
+      {selectedItem && (
+        <div className="flex flex-col gap-4">
+          <dl className="grid grid-cols-2 gap-3 text-xs">
+            <div className="border border-[var(--border)] rounded-md p-3">
+              <dt className="font-mono uppercase tracking-wider text-[9px] text-[var(--muted)]">
+                Último reabasto
+              </dt>
+              <dd className="font-mono text-[var(--foreground)] mt-1">
+                {formatMovementDate(selectedItem.lastRefill)}
+              </dd>
+              {derivedRestock && (
+                <dd
+                  className={`text-[10px] font-mono mt-1 ${
+                    derivedRestock === selectedItem.lastRefill
+                      ? "text-emerald-600"
+                      : "text-[var(--danger)]"
+                  }`}
+                >
+                  {derivedRestock === selectedItem.lastRefill
+                    ? "Coincide con la bitácora"
+                    : `Bitácora: ${formatMovementDate(derivedRestock)}`}
+                </dd>
+              )}
+            </div>
+            <div className="border border-[var(--border)] rounded-md p-3">
+              <dt className="font-mono uppercase tracking-wider text-[9px] text-[var(--muted)]">
+                Stock mínimo
+              </dt>
+              <dd className="font-mono text-[var(--foreground)] mt-1">
+                {selectedItem.minStock} {selectedItem.unit}
+              </dd>
+            </div>
+            <div className="border border-[var(--border)] rounded-md p-3">
+              <dt className="font-mono uppercase tracking-wider text-[9px] text-[var(--muted)]">
+                Stock según bitácora
+              </dt>
+              <dd className="font-mono text-[var(--foreground)] mt-1">
+                {stockFromMovements(selectedItem.id)} {selectedItem.unit}
+              </dd>
+            </div>
+            <div className="border border-[var(--border)] rounded-md p-3">
+              <dt className="font-mono uppercase tracking-wider text-[9px] text-[var(--muted)]">
+                Movimientos
+              </dt>
+              <dd className="font-mono text-[var(--foreground)] mt-1">
+                {selectedMovements.length}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="flex flex-col gap-2">
+            {selectedMovements.length === 0 ? (
+              <p className="text-xs text-[var(--muted)]">
+                Sin movimientos registrados para este artículo.
+              </p>
+            ) : (
+              selectedMovements.map((movement) => {
+                const signed = signedQuantity(movement);
+                return (
+                  <div
+                    key={movement.id}
+                    className="border border-[var(--border)] rounded-md p-3 flex flex-col gap-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono uppercase rounded-[2px] ${movementConfig[movement.type].color}`}
+                      >
+                        {movementConfig[movement.type].label}
+                      </span>
+                      <span
+                        className={`text-sm font-display font-bold ${
+                          signed > 0
+                            ? "text-emerald-600"
+                            : movement.type === "ADJUSTMENT"
+                              ? "text-[var(--muted)]"
+                              : "text-amber-600"
+                        }`}
+                      >
+                        {signed > 0 ? `+${signed}` : signed}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--muted)] leading-snug">
+                      {movement.reason}
+                    </p>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-[var(--muted)]">
+                      {formatMovementDate(movement.occurredAt)}
+                      {movement.professionalId &&
+                        ` · ${
+                          getProfessionalById(movement.professionalId)?.name ??
+                          ""
+                        }`}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </ResponsiveModal>
 
     <CreateInventoryModal
         open={isModalOpen}

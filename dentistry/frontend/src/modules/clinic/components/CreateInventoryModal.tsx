@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { inventory, InventoryItem } from "@/modules/clinic/__mocks__/data";
+import {
+  inventory,
+  inventoryMovements,
+  InventoryItem,
+} from "@/modules/clinic/__mocks__/data";
 import { Modal, Button, Input, Select, Icons } from "@/shared/components/ui";
 
 interface CreateInventoryModalProps {
@@ -71,6 +75,20 @@ export function CreateInventoryModal({
     };
 
     inventory.unshift(newItem);
+
+    // Todo stock inicial debe tener su movimiento de entrada; si no, la
+    // bitácora no puede reconciliar contra `stock`.
+    if (currentStock > 0) {
+      inventoryMovements.unshift({
+        id: `mov-${Date.now()}`,
+        itemId: newItem.id,
+        type: "IN",
+        quantity: currentStock,
+        occurredAt: newItem.lastRefill,
+        reason: "Stock inicial",
+      });
+    }
+
     setIsSubmitting(false);
 
     if (onSuccess) {
