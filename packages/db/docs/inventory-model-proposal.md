@@ -12,6 +12,9 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
   infinito y `CreateInventoryModal`.
 - Se agregó la bitácora por artículo: entradas, salidas y ajustes, con el
   profesional que registró el movimiento.
+- Se agregó el registro de movimientos desde la UI. Al guardar, el stock
+  denormalizado se recalcula desde la bitácora, de modo que ambos siempre
+  concilian.
 - Se agregó conciliación `stock` ↔ suma de movimientos. Si un artículo tiene
   movimientos y su stock no cuadra, aparece un banner de advertencia.
 - El alta de un insumo con stock inicial genera su movimiento `IN`, para que la
