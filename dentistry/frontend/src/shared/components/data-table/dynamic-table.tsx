@@ -1,4 +1,5 @@
 'use client';
+import type React from 'react';
 import { useState } from 'react';
 
 import type { DynamicTableProps, ColumnConfig } from './types';
@@ -19,7 +20,7 @@ import { formatDate } from './utils/format-date';
 import { getDensityClass } from './utils/get-density-class';
 
 export function DynamicTable<
-  T extends Record<string, any>
+  T extends object
 >({
   data,
   columns,
@@ -39,14 +40,22 @@ export function DynamicTable<
 
   showResultCount = true,
 
+  quickFilters,
+
+  quickFilterKey,
+
   emptyMessage = 'No se encontraron registros',
 
   onRowClick,
 
+  getRowId,
+
   className = '',
 }: DynamicTableProps<T>) {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
-    columns.filter((c) => c.defaultVisible !== false).map((c) => c.key as string)
+    columns
+      .filter((c) => c.defaultVisible !== false)
+      .map((c) => String(c.key))
   );
 
   const displayedColumns = columns.filter(
@@ -55,6 +64,11 @@ export function DynamicTable<
   
   const [searchTerm, setSearchTerm] =
     useState('');
+
+  const [activeQuickFilter, setActiveQuickFilter] =
+    useState<string | undefined>(
+      undefined
+    );
 
   const [currentPage, setCurrentPage] =
     useState(1);
@@ -69,7 +83,9 @@ export function DynamicTable<
     useTableFilter(
       data,
       columns,
-      searchTerm
+      searchTerm,
+      quickFilterKey,
+      activeQuickFilter
     );
 
   const sortedData = useTableSort(
@@ -78,18 +94,41 @@ export function DynamicTable<
     sortConfig
   );
 
-  const paginatedData =
-    showPagination
-      ? useTablePagination(
-          sortedData,
-          currentPage,
-          pageSize
-        )
-      : sortedData;
-
-  const totalPages = Math.ceil(
-    sortedData.length / pageSize
+  const totalPages = Math.max(
+    Math.ceil(
+      sortedData.length / pageSize
+    ),
+    1
   );
+
+  const safePage =
+    Math.min(currentPage, totalPages);
+
+  const paginatedData =
+    useTablePagination(
+      sortedData,
+      safePage,
+      pageSize
+    );
+
+  const resolveRowKey = (
+    row: T,
+    index: number
+  ) => {
+    if (getRowId)
+      return getRowId(row, index);
+
+    const candidate = (
+      row as unknown as {
+        id?: unknown;
+      }
+    ).id;
+
+    return typeof candidate === 'string' ||
+      typeof candidate === 'number'
+      ? String(candidate)
+      : String(index);
+  };
 
   const densityClass =
     getDensityClass(density);
@@ -118,7 +157,7 @@ export function DynamicTable<
   const renderCell = (
     column: ColumnConfig<T>,
     row: T
-  ) => {
+  ): React.ReactNode => {
     const value = getNestedValue(
       row,
       column.key as string
@@ -170,12 +209,12 @@ export function DynamicTable<
           ? value.toLocaleString(
               'es-ES'
             )
-          : value;
+          : String(value ?? '-');
 
       case 'image':
         return value ? (
           <img
-            src={value}
+            src={value as string}
             alt=""
             className="
               h-10
@@ -189,7 +228,10 @@ export function DynamicTable<
         );
 
       default:
-        return value ?? '-';
+        return value === null ||
+          value === undefined
+          ? '-'
+          : String(value);
     }
   };
 
@@ -209,6 +251,16 @@ export function DynamicTable<
           searchTerm={searchTerm}
           onSearch={(value) => {
             setSearchTerm(value);
+            setCurrentPage(1);
+          }}
+          quickFilters={quickFilters}
+          activeQuickFilter={activeQuickFilter}
+          onQuickFilter={(value) => {
+            setActiveQuickFilter(
+              activeQuickFilter === value
+                ? undefined
+                : value
+            );
             setCurrentPage(1);
           }}
           columns={columns.map((c) => ({
@@ -235,7 +287,7 @@ export function DynamicTable<
         ) : (
           paginatedData.map((row, rowIndex) => (
             <article
-              key={rowIndex}
+              key={resolveRowKey(row, rowIndex)}
               onClick={() => onRowClick?.(row)}
               className={`p-4 transition-colors hover:bg-background/60 ${
                 onRowClick ? 'cursor-pointer' : ''
@@ -372,7 +424,10 @@ export function DynamicTable<
                   rowIndex
                 ) => (
                   <tr
-                    key={rowIndex}
+                    key={resolveRowKey(
+                      row,
+                      rowIndex
+                    )}
                     onClick={() =>
                       onRowClick?.(
                         row
@@ -464,7 +519,7 @@ export function DynamicTable<
             totalPages > 1 && (
               <DataTablePagination
                 currentPage={
-                  currentPage
+                  safePage
                 }
                 totalPages={
                   totalPages

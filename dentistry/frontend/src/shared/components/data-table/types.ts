@@ -20,8 +20,8 @@ export interface StatusOption {
     | 'neutral';
 }
 
-export interface ColumnConfig<T = any> {
-  key: keyof T | string;
+export interface ColumnConfig<T = Record<string, unknown>> {
+  key: keyof T;
 
   label: string;
 
@@ -44,7 +44,7 @@ export interface ColumnConfig<T = any> {
   hideOnTablet?: boolean;
 
   render?: (
-    value: any,
+    value: unknown,
     row: T
   ) => React.ReactNode;
 
@@ -53,7 +53,7 @@ export interface ColumnConfig<T = any> {
   defaultVisible?: boolean;
 }
 
-export interface ActionButton<T = any> {
+export interface ActionButton<T = Record<string, unknown>> {
   label: string;
 
   icon?: React.ReactNode;
@@ -75,7 +75,7 @@ export interface QuickFilter {
   value: string;
 }
 
-export interface DynamicTableProps<T = any> {
+export interface DynamicTableProps<T = Record<string, unknown>> {
   data: T[];
 
   columns: ColumnConfig<T>[];
@@ -98,9 +98,13 @@ export interface DynamicTableProps<T = any> {
 
   quickFilters?: QuickFilter[];
 
+  quickFilterKey?: keyof T;
+
   emptyMessage?: string;
 
   className?: string;
 
   onRowClick?: (row: T) => void;
+
+  getRowId?: (row: T, index: number) => string;
 }

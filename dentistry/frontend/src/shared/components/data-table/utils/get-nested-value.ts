@@ -1,8 +1,15 @@
-export function getNestedValue( obj: any, path: string ) {
+export function getNestedValue(
+  obj: unknown,
+  path: string
+) {
   return path
     .split('.')
-    .reduce(
-      (acc, part) => acc?.[part],
+    .reduce<unknown>(
+      (acc, part) =>
+        acc !== null &&
+        acc !== undefined
+          ? (acc as Record<string, unknown>)[part]
+          : undefined,
       obj
     );
 }
