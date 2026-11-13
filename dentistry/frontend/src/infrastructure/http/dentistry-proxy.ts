@@ -102,6 +102,26 @@ const ROUTES: readonly ProxyRule[] = [
       errorMessage: "Parámetros de servicio inválidos.",
     },
   },
+  {
+    method: "GET",
+    pattern: /^inventory\/items$/,
+    query: {
+      parameters: ["branchId", "search", "status"],
+      maxValueLength: 100,
+      errorMessage: "Filtro de inventario inválido.",
+    },
+  },
+  { method: "POST", pattern: /^inventory\/items$/ },
+  { method: "PATCH", pattern: new RegExp(`^inventory/items/${UUID}$`) },
+  { method: "DELETE", pattern: new RegExp(`^inventory/items/${UUID}$`) },
+  {
+    method: "GET",
+    pattern: new RegExp(`^inventory/items/${UUID}/movements$`),
+  },
+  {
+    method: "POST",
+    pattern: new RegExp(`^inventory/items/${UUID}/movements$`),
+  },
 ];
 
 function jsonError(message: string, status: number): Response {

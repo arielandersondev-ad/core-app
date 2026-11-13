@@ -6,20 +6,26 @@ import {
   inventoryMovements,
   InventoryItem,
 } from "@/modules/clinic/__mocks__/data";
+import type { CreateInventoryItemRequest } from "@/features/inventory/types/inventory";
 import { Modal, Button, Input, Select, Icons } from "@/shared/components/ui";
 
 interface CreateInventoryModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: (item: InventoryItem) => void;
+  onCreate?: (
+    payload: CreateInventoryItemRequest,
+  ) => Promise<unknown> | unknown;
 }
 
 export function CreateInventoryModal({
   open,
   onClose,
   onSuccess,
+  onCreate,
 }: CreateInventoryModalProps) {
   const [form, setForm] = useState({
+    sku: "",
     name: "",
     category: "Materiales Dentales",
     unit: "unidades",
@@ -36,6 +42,7 @@ export function CreateInventoryModal({
 
   const handleClose = () => {
     setForm({
+      sku: "",
       name: "",
       category: "Materiales Dentales",
       unit: "unidades",
@@ -46,10 +53,14 @@ export function CreateInventoryModal({
     onClose();
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!form.name.trim()) {
       setError("Ingresa el nombre del insumo o material");
+      return;
+    }
+    if (onCreate && !form.sku.trim()) {
+      setError("Ingresa el SKU del insumo");
       return;
     }
     const currentStock = parseInt(form.stock, 10);
@@ -61,6 +72,32 @@ export function CreateInventoryModal({
     if (isNaN(minAlertStock) || minAlertStock < 0) {
       setError("Ingresa un stock mínimo de alerta válido");
       return;
+    }
+
+    if (onCreate) {
+      try {
+        setIsSubmitting(true);
+        await onCreate({
+          sku: form.sku.trim(),
+          name: form.name.trim(),
+          category: form.category,
+          unit: form.unit,
+          minStock: minAlertStock,
+          currentStock,
+          currency: "BOB",
+        });
+        setIsSubmitting(false);
+        handleClose();
+        return;
+      } catch (err) {
+        setIsSubmitting(false);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo guardar el insumo.",
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -107,6 +144,19 @@ export function CreateInventoryModal({
       maxWidth="max-w-xl"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {onCreate && (
+          <div>
+            <label className="block text-xs font-semibold text-[var(--foreground)] mb-1">
+              SKU *
+            </label>
+            <Input
+              placeholder="Ej. ANE-LID-001"
+              value={form.sku}
+              onChange={(e) => set("sku", e.target.value)}
+            />
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-semibold text-[var(--foreground)] mb-1">
             Nombre del Insumo / Material *

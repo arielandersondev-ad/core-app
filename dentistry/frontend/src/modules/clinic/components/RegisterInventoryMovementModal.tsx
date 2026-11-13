@@ -9,6 +9,7 @@ import {
   InventoryMovement,
   InventoryMovementType,
 } from "@/modules/clinic/__mocks__/data";
+import type { RegisterInventoryMovementRequest } from "@/features/inventory/types/inventory";
 import { Modal, Button, Input, Select, Icons } from "@/shared/components/ui";
 
 interface RegisterInventoryMovementModalProps {
@@ -17,6 +18,10 @@ interface RegisterInventoryMovementModalProps {
   items: InventoryItem[];
   defaultItemId?: string;
   onSuccess?: (movement: InventoryMovement) => void;
+  onRegister?: (
+    itemId: string,
+    payload: RegisterInventoryMovementRequest,
+  ) => Promise<unknown> | unknown;
 }
 
 export function RegisterInventoryMovementModal({
@@ -25,6 +30,7 @@ export function RegisterInventoryMovementModal({
   items,
   defaultItemId,
   onSuccess,
+  onRegister,
 }: RegisterInventoryMovementModalProps) {
   const [itemId, setItemId] = useState(
     defaultItemId ?? items[0]?.id ?? "",
@@ -56,7 +62,7 @@ export function RegisterInventoryMovementModal({
     onClose();
   };
 
-  const handleSubmit = (event?: React.FormEvent) => {
+  const handleSubmit = async (event?: React.FormEvent) => {
     if (event) event.preventDefault();
 
     if (!selectedItem) {
@@ -85,6 +91,29 @@ export function RegisterInventoryMovementModal({
         `Stock insuficiente: hay ${selectedItem.stock} ${selectedItem.unit}`,
       );
       return;
+    }
+
+    if (onRegister) {
+      try {
+        setIsSubmitting(true);
+        await onRegister(selectedItem.id, {
+          type,
+          quantity:
+            type === "ADJUSTMENT" ? signed : absolute,
+          reason: reason.trim() || undefined,
+        });
+        setIsSubmitting(false);
+        handleClose();
+        return;
+      } catch (err) {
+        setIsSubmitting(false);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo registrar el movimiento.",
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);

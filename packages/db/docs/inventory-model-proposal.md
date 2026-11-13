@@ -30,7 +30,8 @@ requiere contrato y migración. No autoriza ejecutar `migrate`, `db:update` ni
   (11 operaciones aditivas).
 - **No aplicada**: el paquete está en el grafo, pero `migrate` requiere
   autorización explícita.
-- Backend y cliente API: pendientes.
+- Backend y cliente API: implementados en `feature/inventory-api`.
+- Verificación end-to-end: pendiente de aplicar la migración.
 
 ## Mapeo mock → contrato
 

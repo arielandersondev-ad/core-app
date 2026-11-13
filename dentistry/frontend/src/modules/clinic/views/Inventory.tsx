@@ -8,12 +8,21 @@ import {
   formatMovementDate,
   getMovementsByItem,
   getProfessionalById,
-  lastRestockAt,
   signedQuantity,
   stockFromMovements,
   InventoryItem,
+  InventoryMovement,
   InventoryMovementType,
 } from "@/modules/clinic/__mocks__/data";
+import {
+  useInventoryItems,
+  useInventoryMutations,
+  useInventoryMovements,
+} from "@/features/inventory/hooks/use-inventory";
+import type {
+  InventoryItemDto,
+  InventoryMovementDto,
+} from "@/features/inventory/types/inventory";
 import { PageContainer, PageHeader, FilterToolbar } from "@/shared/components/layout";
 import {
   StatCard,
@@ -75,12 +84,36 @@ const movementConfig: Record<
   },
 };
 
+function fromApiItem(dto: InventoryItemDto): InventoryItem {
+  return {
+    id: dto.id,
+    name: dto.name,
+    category: dto.category ?? "Sin categoría",
+    unit: dto.unit,
+    stock: dto.currentStock,
+    minStock: dto.minStock,
+    lastRefill: dto.updatedAt.slice(0, 10),
+  };
+}
+
+function fromApiMovement(dto: InventoryMovementDto): InventoryMovement {
+  return {
+    id: dto.id,
+    itemId: dto.itemId,
+    type: dto.type,
+    quantity: dto.quantity,
+    occurredAt: dto.createdAt.slice(0, 10),
+    reason: dto.reason ?? "",
+  };
+}
+
 export default function Inventory() {
   const [filter, setFilter] = useState<"all" | "ok" | "bajo" | "critico">("all");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-  const [inventoryList, setInventoryList] = useState<InventoryItem[]>(initialInventory);
+  const [localInventory, setLocalInventory] =
+    useState<InventoryItem[]>(initialInventory);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isMovementModalOpen, setIsMovementModalOpen] =
@@ -88,6 +121,25 @@ export default function Inventory() {
   const [movementTargetId, setMovementTargetId] = useState<
     string | undefined
   >(undefined);
+
+  // API real con fallback a mocks: si el backend de inventario no está
+  // disponible (por ejemplo, migración pendiente), la UI sigue funcionando.
+  const apiItemsQuery = useInventoryItems({}, true);
+  const apiMode =
+    Boolean(apiItemsQuery.data) && !apiItemsQuery.isError;
+  const { create, move } = useInventoryMutations();
+  const apiMovementsQuery = useInventoryMovements(
+    selectedItem?.id,
+    apiMode,
+  );
+
+  const inventoryList = useMemo(
+    () =>
+      apiMode
+        ? (apiItemsQuery.data ?? []).map(fromApiItem)
+        : localInventory,
+    [apiMode, apiItemsQuery.data, localInventory],
+  );
 
   // Active filter count for mobile badge
   const activeFilterCount = useMemo(() => {
@@ -159,8 +211,12 @@ export default function Inventory() {
 
   const handleRefresh = useCallback(async () => {
     setPage(1);
-    setInventoryList([...initialInventory]);
-  }, []);
+    if (apiMode) {
+      await apiItemsQuery.refetch();
+    } else {
+      setLocalInventory([...initialInventory]);
+    }
+  }, [apiMode, apiItemsQuery]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -190,22 +246,30 @@ export default function Inventory() {
   );
 
   // Ledger: movimientos y conciliación entre stock y bitácora
-  const movementCount = inventoryMovements.length;
+  const movementCount = apiMode
+    ? (apiMovementsQuery.data?.length ?? 0)
+    : inventoryMovements.length;
   const reconciliationRows = useMemo(
     () =>
-      inventoryList.filter(
-        (item) =>
-          getMovementsByItem(item.id).length > 0 &&
-          stockFromMovements(item.id) !== item.stock,
-      ),
-    [inventoryList],
+      apiMode
+        ? []
+        : localInventory.filter(
+            (item) =>
+              getMovementsByItem(item.id).length > 0 &&
+              stockFromMovements(item.id) !== item.stock,
+          ),
+    [apiMode, localInventory],
   );
-  const selectedMovements = selectedItem
-    ? getMovementsByItem(selectedItem.id)
-    : [];
-  const derivedRestock = selectedItem
-    ? lastRestockAt(selectedItem.id)
-    : undefined;
+  const selectedMovements = apiMode
+    ? (apiMovementsQuery.data ?? []).map(fromApiMovement)
+    : selectedItem
+      ? getMovementsByItem(selectedItem.id)
+      : [];
+  const restockDates = selectedMovements
+    .filter((movement) => movement.type === "IN")
+    .map((movement) => movement.occurredAt)
+    .sort();
+  const derivedRestock = restockDates[restockDates.length - 1];
 
   // Compact metrics for mobile strip (< 1024px / lg:hidden)
   const compactMetrics: CompactStatItem[] = useMemo(
@@ -278,6 +342,13 @@ export default function Inventory() {
           </div>
         }
       />
+
+      {apiItemsQuery.isError && (
+        <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/70 dark:bg-amber-950/20 dark:border-amber-900 text-xs text-[var(--muted)]">
+          No se pudo conectar con la API de inventario. Se muestran datos de
+          demostración hasta que el backend esté disponible.
+        </div>
+      )}
 
       {/* 2. KPIs Bimodales */}
       {/* Móvil (< 1024px / lg:hidden): CompactStatSummary minimalista en franja horizontal interactiva */}
@@ -704,7 +775,8 @@ export default function Inventory() {
 
           <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--background)]/30 flex items-center justify-between text-xs font-mono text-[var(--muted)]">
             <span>
-              {filtered.length} artículos · {movementCount} movimientos
+              {filtered.length} artículos
+              {!apiMode && ` · ${movementCount} movimientos`}
             </span>
             <span>
               Mostrando {visibleItems.length} de {filtered.length}
@@ -795,7 +867,10 @@ export default function Inventory() {
                 Stock según bitácora
               </dt>
               <dd className="font-mono text-[var(--foreground)] mt-1">
-                {stockFromMovements(selectedItem.id)} {selectedItem.unit}
+                {apiMode
+                  ? selectedItem.stock
+                  : stockFromMovements(selectedItem.id)}{" "}
+                {selectedItem.unit}
               </dd>
             </div>
             <div className="border border-[var(--border)] rounded-md p-3">
@@ -865,28 +940,50 @@ export default function Inventory() {
       onClose={() => setIsMovementModalOpen(false)}
       items={inventoryList}
       defaultItemId={movementTargetId}
-      onSuccess={(movement) => {
-        // El stock denormalizado se recalcula desde la bitácora para que
-        // siempre concilien.
-        setInventoryList((current) =>
-          current.map((item) =>
-            item.id === movement.itemId
-              ? {
-                  ...item,
-                  stock: stockFromMovements(item.id),
-                }
-              : item,
-          ),
-        );
-      }}
+      onRegister={
+        apiMode
+          ? async (itemId, payload) => {
+              await move.mutateAsync({ itemId, payload });
+            }
+          : undefined
+      }
+      onSuccess={
+        apiMode
+          ? undefined
+          : (movement) => {
+              // El stock denormalizado se recalcula desde la bitácora para
+              // que siempre concilien.
+              setLocalInventory((current) =>
+                current.map((item) =>
+                  item.id === movement.itemId
+                    ? {
+                        ...item,
+                        stock: stockFromMovements(item.id),
+                      }
+                    : item,
+                ),
+              );
+            }
+      }
     />
 
     <CreateInventoryModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {
-          setInventoryList([...inventoryList]);
-        }}
+        onCreate={
+          apiMode
+            ? async (payload) => {
+                await create.mutateAsync(payload);
+              }
+            : undefined
+        }
+        onSuccess={
+          apiMode
+            ? undefined
+            : () => {
+                setLocalInventory([...localInventory]);
+              }
+        }
       />
     </PageContainer>
   );

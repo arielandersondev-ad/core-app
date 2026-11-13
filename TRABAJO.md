@@ -16,7 +16,8 @@ trabajo.
 |---|---|---|---|
 | `main` | `fe2dc3f` | 2026-10-23 | Producción. **No se tocó.** |
 | `dev` | `c15d5a9` | 2026-11-11 | Integración. **No se tocó.** |
-| `feature/inventory-consultations` | `74731d0` | 2026-11-13 | Rama oficial del trabajo. Reconstruida sobre `dev`. |
+| `feature/inventory-consultations` | `4ec2286` | 2026-11-13 | Rama oficial de la Fase 0. Reconstruida sobre `dev`. |
+| `feature/inventory-api` | Fase 1 | 2026-11-13 | Rama apilada: contrato, backend y cliente API. |
 | `backup/inventory-consultations-2026-11-13` | `a9ab4b0` | 2026-10-03 | Respaldo de la rama vieja. No se mergea. |
 
 Reglas acordadas:
@@ -131,6 +132,23 @@ frontend            -> 3001, GET /login responde 200
 Lint sobre archivos tocados: 0 errores. Queda solo el warning conocido de
 `<img>` en la columna `image` del data-table.
 
+Fase 1:
+
+```text
+packages/db test:schema        -> 8/8
+packages/db test:semantic      -> 7/7
+packages/db build              -> OK
+dentistry/backend build        -> OK
+dentistry/frontend tsc        -> 0 errores
+dentistry/frontend test       -> 133/133
+dentistry/frontend build      -> OK
+/inventory con JWT de dev      -> 200 (cae a mocks si la API no responde)
+```
+
+`test:migration` falla en el `dev` base con “PGlite is closed”; se comprobó con
+`git stash` que el fallo ya existe antes de estos cambios. No es una regresión
+de inventario.
+
 ---
 
 ## 5. Entorno local (no versionado)
@@ -164,53 +182,72 @@ gitignored.
 | Capa | Estado |
 |---|---|
 | Frontend UI de inventario | ✅ Bitácora, conciliación, registro de movimientos |
-| Frontend API client de inventario | ❌ Sigue sobre mocks |
-| Backend de inventario | ❌ No existe |
-| Contrato de inventario | ❌ No está en `schema.ts` de `dev` |
-| Tablas de inventario en Neon | ❌ No existen |
-| End-to-end real | ❌ Pendiente de Fase 1 |
+| Frontend API client de inventario | ✅ `features/inventory` con hooks y fallback |
+| Backend de inventario | ✅ Módulo `inventory` con endpoints y transacción |
+| Contrato de inventario | ✅ En `schema.ts`, emitido (`f5c0089e…`) |
+| Migración planificada | ✅ `20261113T2018_inventory_items_and_movements` |
+| Tablas de inventario en Neon | ❌ **No aplicadas** (requiere autorización) |
+| End-to-end real | ⏳ Pendiente de `migrate` y verificación |
 
-Importante: el inventario **no persiste**. Al recargar, los cambios se pierden.
+Importante: mientras la migración no se aplique, la UI funciona con mocks y
+muestra el aviso de “datos de demostración”. El código de backend y cliente API
+ya está listo.
 
 ---
 
-## 7. Fase 1 — pendiente
+## 7. Fase 1 — implementada hasta la compuerta de `migrate`
 
-Rama propuesta: `feature/inventory-api`, apilada sobre
+Rama: `feature/inventory-api`, apilada sobre
 `feature/inventory-consultations`.
 
-### 7.1 Contrato (sin tocar la base)
+### 7.1 Contrato (hecho, sin tocar la base)
 
-- Agregar `InventoryItem` e `InventoryMovement` a
+- `InventoryItem` e `InventoryMovement` agregados a
   `packages/db/src/prisma/schema.ts` con:
   - PascalCase, `uuidNative`, `timestamptz`, `deletedAt`.
-  - `unitCostMinor` + `currency`, `lotNumber`, `expiresAt`.
-  - CHECKs en `type`, `quantity`, `currentStock`.
-- `contract:emit`.
-- `test:schema` y `test:semantic`.
-- `migration:plan` y revisión del SQL.
+  - `unitCostMinor` + `currency`, `lotNumber`, `expiryDate`.
+  - CHECKs en `type`, `quantity`, `currentStock`, moneda y versión.
+- `contract:emit` → `f5c0089e6a6991ed41f5356139ae71499adcae0c935ec1f9a0f076c580919723`.
+- `test:schema` → 8/8; `test:semantic` → 7/7.
+- `migration:plan` → `20261113T2018_inventory_items_and_movements`
+  (11 operaciones aditivas, snapshot `f5c0089e…`).
+- Se corrigió de paso la deuda del diccionario/tests de `dev`:
+  faltaban `TreatmentProcedure`, `ClinicalEncounterProcedure` y las columnas
+  `maritalStatus`, `occupation`, `origin` de `Patient`.
 
-### 7.2 Base (requiere autorización explícita)
+### 7.2 Base (pendiente, requiere autorización explícita)
 
-- `migrate`.
+- `migrate` del paquete planificado.
 - `db:verify`.
 - No usar `db:update` ni `db sign`.
 
-### 7.3 Backend
+### 7.3 Backend (hecho)
 
-- Módulo `dentistry/backend/src/modules/inventory/` siguiendo el patrón de
+- Módulo `dentistry/backend/src/modules/inventory/` con el patrón de
   `appointment`.
-- Endpoints: listar/crear/editar artículos, listar movimientos, registrar
-  movimiento.
-- Registro de movimiento en transacción con actualización de stock.
-- Validación de organización/sucursal desde el token.
-- Tests del módulo.
+- Endpoints:
+  - `GET /inventory/items`
+  - `POST /inventory/items`
+  - `PATCH /inventory/items/:id`
+  - `DELETE /inventory/items/:id`
+  - `GET /inventory/items/:id/movements`
+  - `POST /inventory/items/:id/movements`
+- Registro de movimiento en transacción con actualización de stock y rechazo
+  de stock negativo.
+- Validación de organización y sucursal desde el token.
+- Permisos temporales: `dentistry:services:read` para lectura y
+  `dentistry:services:manage` para escritura, hasta crear permisos propios de
+  inventario.
+- `npm run build` del backend: OK.
 
-### 7.4 Frontend
+### 7.4 Frontend (hecho)
 
-- `src/features/inventory/` con `api/`, `services/`, `hooks/`.
-- Reemplazar el estado mock por hooks, conservando fallback a mocks.
-- Verificar persistencia: crear insumo, mover stock, recargar.
+- `src/features/inventory/` con `api/`, `services/`, `hooks/` y `types/`.
+- `Inventory.tsx` usa la API cuando está disponible y cae a mocks si falla.
+- `CreateInventoryModal` y `RegisterInventoryMovementModal` aceptan callbacks
+  de API; conservan el comportamiento mock como fallback.
+- BFF: rutas de inventario agregadas a `dentistry-proxy.ts`.
+- `tsc` 0 errores; 133/133 tests; build de Next OK; `/inventory` 200 con sesión.
 
 ### 7.5 Fuera de alcance
 
@@ -251,8 +288,10 @@ Rama propuesta: `feature/inventory-api`, apilada sobre
 
 ## 9. Riesgos y reversión
 
-- Todo el inventario es UI sobre mocks; no hay escritura en base.
-- El stock se recalcula desde la bitácora al registrar movimientos.
+- Mientras la migración no se aplique, el inventario sigue en modo mock y no
+  persiste.
+- Una vez aplicada, el stock se recalcula y actualiza en la misma transacción
+  que el movimiento.
 - Revertir la Fase 0: `git revert` de los commits, o volver a
   `backup/inventory-consultations-2026-11-13`.
 - Revertir la Fase 1: revertir la rama `feature/inventory-api`; si ya se aplicó
@@ -271,3 +310,4 @@ Rama propuesta: `feature/inventory-api`, apilada sobre
 | 2026-11-13 | Inventario sigue sobre mocks en Fase 0; backend y base van en Fase 1. |
 | 2026-11-13 | El refactor de dinero se difiere a una rama aparte. |
 | 2026-11-13 | `migrate` requiere autorización explícita antes de ejecutarse. |
+| 2026-11-13 | Fase 1 en `feature/inventory-api`: contrato, backend y cliente API hechos; migración solo planificada. |
