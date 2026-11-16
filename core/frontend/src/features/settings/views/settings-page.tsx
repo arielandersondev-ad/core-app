@@ -18,8 +18,10 @@ import { logoutAction } from '@/features/auth/actions/logout-action';
 
 const THEME_ICONS: Record<ThemePreference, ReactNode> = {
   light: Icons.sun,
+  sky: Icons.cloud,
   dark: Icons.moon,
   winter: Icons.snowflake,
+  'christmas-light': Icons.gift,
   christmas: Icons.tree,
   system: Icons.monitor,
 };

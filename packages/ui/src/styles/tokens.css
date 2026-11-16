@@ -191,6 +191,139 @@
 }
 
 
+/*
+ * Tema "Celeste" (sky): claro, celeste pastel sobre blanco hueso
+ * ------------------------------------------------------------------
+ * Se activa con <html class="sky">. `:root.sky` gana a `:root` por
+ * especificidad, sin depender del orden.
+ *
+ * Paleta base:
+ *   #F4EFE4  Hueso        → background: lienzo de la app
+ *   #FBF9F3  Hueso claro  → surface/card
+ *   #DCEDF7  Celeste      → primary-subtle: selección, badges, opción activa
+ *   #E7F2F9  Celeste niebla → accent: hover destacado
+ *   #A9D4EC  Celeste pastel → primary-accent (decorativo, nunca como texto)
+ *
+ * El celeste pastel no alcanza contraste como texto ni como fondo de botón
+ * con texto blanco, por eso la acción principal es un celeste profundo.
+ * Contraste WCAG medido (sobre surface #FBF9F3 salvo indicación):
+ *   foreground #1B2A33 14.0:1 (12.9:1 sobre background) · muted #56636D 5.9:1
+ *   primary #2A6A90 5.6:1, 4.9:1 sobre primary-subtle; texto blanco encima 5.9:1
+ *   secondary #7B6AA0 4.5:1; texto blanco encima 4.8:1
+ *   danger 7.1:1 (6.0:1 sobre su subtle) · success 5.0:1 · warning 5.5:1
+ *   border-strong #6F8899 3.5:1 (límite de controles)
+ */
+:root.sky {
+  --background: #f4efe4;
+  --surface: #fbf9f3;
+  --surface-elevated: #ffffff;
+  --surface-subtle: #f0ebdf;
+  --popover: #ffffff;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+
+  --foreground: #1b2a33;
+  --muted: #56636d;
+  --muted-foreground: #56636d;
+  --border: #e0d9c9;
+  --border-strong: #6f8899;
+
+  --primary: #2a6a90;
+  --primary-accent: #a9d4ec;
+  --primary-subtle: #dcedf7;
+  --primary-foreground: #ffffff;
+  --ring: var(--primary);
+
+  --secondary: #7b6aa0;
+  --secondary-foreground: #ffffff;
+  --hazelnut: #b39b78;
+  --gold-accent: #c9ad7a;
+  --accent: #e7f2f9;
+  --accent-foreground: var(--foreground);
+  --neutral-subtle: #ebeef0;
+
+  --success: #2d7a4a;
+  --success-foreground: #ffffff;
+  --success-subtle: #e3f1e7;
+
+  --danger: #9e2a2a;
+  --danger-foreground: #ffffff;
+  --danger-subtle: #f8e1df;
+  --destructive: #9e2a2a;
+  --destructive-foreground: #ffffff;
+
+  --warning: #9a5408;
+  --warning-foreground: #ffffff;
+  --warning-subtle: #f8ecd6;
+}
+
+:root.sky ::selection {
+  background-color: #cfe6f4;
+  color: var(--foreground);
+}
+
+/*
+ * Tema "Navideño claro" (christmas-light): claro, verde pino y arándano
+ * ------------------------------------------------------------------
+ * Se activa con <html class="christmas"> (sin .dark). Comparte la decoración
+ * de styles/christmas.css con el Navideño oscuro.
+ *
+ * Paleta base:
+ *   #EEF2EF  Escarcha  → background (blanco frío, como nieve)
+ *   #FBFBF8  Nieve     → surface/card
+ *   #DBEAE0  Pino suave → primary-subtle
+ *   #F6E3E3  Arándano suave → accent: hover destacado
+ * Contraste WCAG medido (sobre surface #FBFBF8 salvo indicación):
+ *   foreground #1B2A22 14.5:1 (13.3:1 sobre background) · muted #5A655E 5.9:1
+ *   primary #1E6A46 6.3:1, 5.3:1 sobre primary-subtle; texto blanco encima 6.6:1
+ *   secondary #A3283A 6.9:1; texto blanco encima 7.2:1
+ *   danger #B42318 6.3:1 (5.3:1 sobre su subtle) · success 5.1:1 · warning 5.6:1
+ *   border-strong #87867D 3.5:1 (límite de controles)
+ */
+:root.christmas:not(.dark) {
+  --background: #eef2ef;
+  --surface: #fbfbf8;
+  --surface-elevated: #ffffff;
+  --surface-subtle: #e8ede9;
+  --popover: #ffffff;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+
+  --foreground: #1b2a22;
+  --muted: #5a655e;
+  --muted-foreground: #5a655e;
+  --border: #d9dfda;
+  --border-strong: #87867d;
+
+  --primary: #1e6a46;
+  --primary-accent: #2f8a5e;
+  --primary-subtle: #dbeae0;
+  --primary-foreground: #ffffff;
+  --ring: var(--primary);
+
+  --secondary: #a3283a;
+  --secondary-foreground: #ffffff;
+  --hazelnut: #a3283a;
+  --gold-accent: #c99a2e;
+  --accent: #f6e3e3;
+  --accent-foreground: var(--foreground);
+  --neutral-subtle: #e6ebe7;
+
+  --success: #2d7a3a;
+  --success-foreground: #ffffff;
+  --success-subtle: #e6f2e8;
+
+  --danger: #b42318;
+  --danger-foreground: #ffffff;
+  --danger-subtle: #fbe2df;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --warning: #9a5408;
+  --warning-foreground: #ffffff;
+  --warning-subtle: #f8edd9;
+}
+
 /* Ajustes comunes a los temas oscuros (Oscuro e Invernal) */
 .dark {
   color-scheme: dark;

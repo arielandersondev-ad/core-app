@@ -5,20 +5,30 @@
  * layout raíz (Server Component) vía `@app/ui/theme`.
  *
  * Clases que se aplican sobre <html>:
- *   light      → (ninguna)
- *   dark       → .dark
- *   winter     → .dark .winter             (Invernal: oscuro con paleta propia)
- *   christmas  → .dark .winter .christmas  (Navideño: Invernal + luces y nieve)
- *   system     → .dark solo si el sistema operativo prefiere oscuro
+ *   light            → (ninguna)
+ *   sky              → .sky                      (Celeste: claro, celeste pastel y blanco hueso)
+ *   dark             → .dark
+ *   winter           → .dark .winter             (Invernal: oscuro con paleta propia)
+ *   christmas-light  → .christmas                (Navideño claro: claro + luces y nieve)
+ *   christmas        → .dark .winter .christmas  (Navideño: Invernal + luces y nieve)
+ *   system           → .dark solo si el sistema operativo prefiere oscuro
  *
- * Cada tema hereda el anterior, así las utilidades `dark:` y la paleta
- * Invernal siguen aplicando. Los tokens viven en `src/styles/tokens.css` y la
- * decoración navideña en `src/styles/christmas.css`.
+ * Los temas oscuros heredan el anterior, así las utilidades `dark:` y la paleta
+ * Invernal siguen aplicando. `.christmas` sin `.dark` es la variante clara del
+ * Navideño. Los tokens viven en `src/styles/tokens.css` y la decoración
+ * navideña en `src/styles/christmas.css`.
  *
  * `.effects-paused` (preferencia separada) detiene las animaciones decorativas.
  */
 
-export type ThemePreference = "light" | "dark" | "winter" | "christmas" | "system";
+export type ThemePreference =
+  | "light"
+  | "sky"
+  | "dark"
+  | "winter"
+  | "christmas-light"
+  | "christmas"
+  | "system";
 
 export const THEME_STORAGE_KEY = "theme";
 export const THEME_EFFECTS_STORAGE_KEY = "theme-effects";
@@ -26,24 +36,30 @@ export const THEME_EFFECTS_STORAGE_KEY = "theme-effects";
 /** Orden en que se ofrecen y rotan los temas. */
 export const THEME_OPTIONS: readonly ThemePreference[] = [
   "light",
+  "sky",
   "dark",
   "winter",
+  "christmas-light",
   "christmas",
   "system",
 ];
 
 export const THEME_LABELS: Record<ThemePreference, string> = {
   light: "Claro",
+  sky: "Celeste",
   dark: "Oscuro",
   winter: "Invernal",
+  "christmas-light": "Navideño claro",
   christmas: "Navideño",
   system: "Sistema",
 };
 
 export const THEME_DESCRIPTIONS: Record<ThemePreference, string> = {
   light: "Interfaz clara",
+  sky: "Celeste pastel y blanco hueso",
   dark: "Interfaz oscura",
   winter: "Oscuro con tonos índigo y ciruela",
+  "christmas-light": "Claro con pino, arándano, luces y nieve",
   christmas: "Invernal con luces y nieve",
   system: "Sigue la configuración del dispositivo",
 };
@@ -54,6 +70,7 @@ export interface ThemeClasses {
   dark: boolean;
   winter: boolean;
   christmas: boolean;
+  sky: boolean;
 }
 
 export function isThemePreference(value: unknown): value is ThemePreference {
@@ -62,8 +79,10 @@ export function isThemePreference(value: unknown): value is ThemePreference {
 
 /** Indica si el tema tiene decoración animada (y por tanto control de pausa). */
 export function themeHasEffects(preference: ThemePreference): boolean {
-  return preference === "christmas";
+  return preference === "christmas" || preference === "christmas-light";
 }
+
+const NO_CLASSES: ThemeClasses = { dark: false, winter: false, christmas: false, sky: false };
 
 /** Clases que debe llevar <html> para una preferencia dada. */
 export function resolveThemeClasses(
@@ -72,15 +91,19 @@ export function resolveThemeClasses(
 ): ThemeClasses {
   switch (preference) {
     case "light":
-      return { dark: false, winter: false, christmas: false };
+      return { ...NO_CLASSES };
+    case "sky":
+      return { ...NO_CLASSES, sky: true };
     case "dark":
-      return { dark: true, winter: false, christmas: false };
+      return { ...NO_CLASSES, dark: true };
     case "winter":
-      return { dark: true, winter: true, christmas: false };
+      return { ...NO_CLASSES, dark: true, winter: true };
+    case "christmas-light":
+      return { ...NO_CLASSES, christmas: true };
     case "christmas":
-      return { dark: true, winter: true, christmas: true };
+      return { ...NO_CLASSES, dark: true, winter: true, christmas: true };
     default:
-      return { dark: systemPrefersDark, winter: false, christmas: false };
+      return { ...NO_CLASSES, dark: systemPrefersDark };
   }
 }
 
@@ -92,4 +115,4 @@ export function nextThemePreference(current: ThemePreference): ThemePreference {
  * Script inline para <head>: aplica el tema antes del primer pintado y evita
  * el parpadeo. Debe reflejar `resolveThemeClasses`.
  */
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");var c=document.documentElement.classList;var x=t==="christmas";var w=t==="winter"||x;var d=t==="dark"||w||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);c.toggle("dark",d);c.toggle("winter",w);c.toggle("christmas",x);c.toggle("effects-paused",localStorage.getItem("${THEME_EFFECTS_STORAGE_KEY}")==="paused");}catch(e){}})();`;
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");var c=document.documentElement.classList;var x=t==="christmas";var w=t==="winter"||x;var d=t==="dark"||w||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);c.toggle("dark",d);c.toggle("winter",w);c.toggle("christmas",x||t==="christmas-light");c.toggle("sky",t==="sky");c.toggle("effects-paused",localStorage.getItem("${THEME_EFFECTS_STORAGE_KEY}")==="paused");}catch(e){}})();`;

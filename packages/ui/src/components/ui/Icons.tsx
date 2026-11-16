@@ -101,6 +101,19 @@ export const Icons: Record<string, ReactNode> = {
       <line x1="12" y1="18" x2="12" y2="22" />
     </svg>
   ),
+  gift: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
+      <line x1="12" y1="8" x2="12" y2="21" />
+      <path d="M12 8C10.5 4.5 7 4 7 6.5S10 8 12 8Zm0 0c1.5-3.5 5-4 5-1.5S14 8 12 8Z" />
+    </svg>
+  ),
+  cloud: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.5 19H8a5 5 0 1 1 1.2-9.86A6 6 0 0 1 20.7 11.2 4 4 0 0 1 17.5 19Z" />
+    </svg>
+  ),
   monitor: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="3" width="20" height="14" rx="2" />

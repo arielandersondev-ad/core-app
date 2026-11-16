@@ -2,12 +2,13 @@
 
 import type { CSSProperties } from "react";
 import { useThemePreference } from "../hooks/useThemePreference";
+import { themeHasEffects } from "./theme";
 
 /**
- * Capa decorativa del tema Navideño: guirnalda de luces en el borde superior
+ * Capa decorativa de los temas Navideño y Navideño claro: guirnalda de luces en el borde superior
  * y nieve ligera. Se monta una vez en el layout raíz.
  *
- * - Solo se renderiza con el tema "christmas" (en servidor nunca, sin desajuste de hidratación).
+ * - Solo se renderiza con los temas con efectos (`themeHasEffects`) (en servidor nunca, sin desajuste de hidratación).
  * - `aria-hidden` y `pointer-events: none`: no interfiere con lectores ni clics.
  * - Estilos y animaciones en `styles/christmas.css` (solo transform/opacity,
  *   pausables con `.effects-paused` y anuladas por `prefers-reduced-motion`).
@@ -58,7 +59,7 @@ const FLAKES = Array.from({ length: FLAKE_COUNT }, (_, index) => {
 
 export function ThemeDecorations() {
   const { preference } = useThemePreference();
-  if (preference !== "christmas") return null;
+  if (!themeHasEffects(preference)) return null;
 
   return (
     <div className="xmas-layer" aria-hidden="true" data-component="theme-decorations">

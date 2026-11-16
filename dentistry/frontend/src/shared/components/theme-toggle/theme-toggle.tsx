@@ -13,8 +13,10 @@ import {
 
 const THEME_ICONS: Record<ThemePreference, ReactNode> = {
   light: Icons.sun,
+  sky: Icons.cloud,
   dark: Icons.moon,
   winter: Icons.snowflake,
+  "christmas-light": Icons.gift,
   christmas: Icons.tree,
   system: Icons.monitor,
 };
@@ -26,9 +28,9 @@ type ThemeToggleProps = {
 };
 
 /**
- * Rota entre Claro → Oscuro → Invernal → Navideño → Sistema.
+ * Rota entre Claro → Celeste → Oscuro → Invernal → Navideño claro → Navideño → Sistema.
  * El icono y el texto muestran el tema activo; la etiqueta accesible anuncia el siguiente.
- * En temas con animación (Navideño), las variantes con texto ofrecen pausarla.
+ * En temas con animación (Navideño y Navideño claro), las variantes con texto ofrecen pausarla.
  */
 export function ThemeToggle({ variant = "pill" }: ThemeToggleProps) {
   const { preference, cyclePreference } = useThemePreference();

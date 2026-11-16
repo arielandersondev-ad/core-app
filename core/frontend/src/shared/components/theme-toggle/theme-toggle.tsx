@@ -58,8 +58,10 @@ function MoonIcon() {
 
 const THEME_ICONS: Record<ThemePreference, ReactNode> = {
   light: <SunIcon />,
+  sky: <span aria-hidden="true">{Icons.cloud}</span>,
   dark: <MoonIcon />,
   winter: <span aria-hidden="true">{Icons.snowflake}</span>,
+  "christmas-light": <span aria-hidden="true">{Icons.gift}</span>,
   christmas: <span aria-hidden="true">{Icons.tree}</span>,
   system: <span aria-hidden="true">{Icons.monitor}</span>,
 };
@@ -98,9 +100,9 @@ function EffectsPauseButton() {
 }
 
 /**
- * Rota entre Claro → Oscuro → Invernal → Navideño → Sistema.
+ * Rota entre Claro → Celeste → Oscuro → Invernal → Navideño claro → Navideño → Sistema.
  * Muestra el tema activo; la etiqueta accesible anuncia el siguiente.
- * En temas con animación (Navideño), la variante panel ofrece pausarla.
+ * En temas con animación (Navideño y Navideño claro), la variante panel ofrece pausarla.
  */
 export function ThemeToggle({
   variant = "panel",

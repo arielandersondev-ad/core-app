@@ -31,14 +31,9 @@ function readEffectsPaused(): boolean {
 }
 
 function applyPreference(preference: ThemePreference) {
-  const { dark, winter, christmas } = resolveThemeClasses(
-    preference,
-    window.matchMedia(DARK_QUERY).matches,
-  );
+  const resolved = resolveThemeClasses(preference, window.matchMedia(DARK_QUERY).matches);
   const classes = document.documentElement.classList;
-  classes.toggle("dark", dark);
-  classes.toggle("winter", winter);
-  classes.toggle("christmas", christmas);
+  for (const [name, enabled] of Object.entries(resolved)) classes.toggle(name, enabled);
 }
 
 function writeStorage(key: string, value: string | null) {
@@ -102,7 +97,7 @@ export function useThemePreference() {
 }
 
 /**
- * Pausa de las animaciones decorativas de un tema (luces y nieve del Navideño).
+ * Pausa de las animaciones decorativas de un tema (luces y nieve de los Navideños).
  * Es independiente del tema: se recuerda aunque el usuario cambie y vuelva.
  */
 export function useThemeEffects() {

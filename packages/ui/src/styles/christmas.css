@@ -1,9 +1,11 @@
 /*
- * Tema "Navideño" (christmas)
+ * Temas "Navideño" (christmas) y "Navideño claro" (christmas-light)
  * ------------------------------------------------------------------
- * Se activa con <html class="dark winter christmas">. Hereda la paleta
- * Invernal y solo agrega colores festivos para la decoración
- * (componente ThemeDecorations).
+ * Navideño: <html class="dark winter christmas">, hereda la paleta Invernal.
+ * Navideño claro: <html class="christmas">, paleta propia en tokens.css.
+ * Ambos comparten esta decoración (componente ThemeDecorations); solo
+ * cambian los colores festivos, más saturados en el claro para que la
+ * guirnalda y la nieve se distingan sobre fondos blancos.
  *
  * Reglas de UX:
  *   - La decoración es aria-hidden y pointer-events: none.
@@ -14,6 +16,15 @@
  *   - Con prefers-reduced-motion: luces fijas y sin nieve.
  *   - La nieve es escasa, pequeña y translúcida para no tapar datos.
  */
+
+.christmas {
+  --festive-red: #d63c4a;
+  --festive-gold: #d99a1e;
+  --festive-green: #2f9e6a;
+  --festive-ice: #3d8fd6;
+  --festive-wire: #8a8a80;
+  --festive-snow: #7fa3c0;
+}
 
 .dark.winter.christmas {
   --festive-red: #f0616d;
@@ -133,11 +144,11 @@
  * (gancho de buttonClassName): la acción principal de cada pantalla.
  */
 
-.dark.winter.christmas .ui-button--primary {
+.christmas .ui-button--primary {
   position: relative;
 }
 
-.dark.winter.christmas .ui-button--primary::before {
+.christmas .ui-button--primary::before {
   content: "";
   position: absolute;
   top: -8px;
@@ -150,8 +161,13 @@
   filter: drop-shadow(0 1px 0.5px rgb(13 13 17 / 0.35));
 }
 
+/* En el claro la nieve es blanca sobre fondo blanco: la sombra la recorta */
+.christmas:not(.dark) .ui-button--primary::before {
+  filter: drop-shadow(0 1px 1px rgb(27 42 34 / 0.4));
+}
+
 /* Gota: nace en la punta del hilo (borde izquierdo), crece y cae */
-.dark.winter.christmas .ui-button--primary::after {
+.christmas .ui-button--primary::after {
   content: "";
   position: absolute;
   top: 17px;
@@ -167,11 +183,11 @@
 }
 
 /* Desfase para que los botones de una misma vista no goteen a la vez */
-.dark.winter.christmas .ui-button--primary:nth-of-type(2n)::after {
+.christmas .ui-button--primary:nth-of-type(2n)::after {
   animation-delay: -2.7s;
 }
 
-.dark.winter.christmas .ui-button--primary:nth-of-type(3n)::after {
+.christmas .ui-button--primary:nth-of-type(3n)::after {
   animation-delay: -4.6s;
 }
 
@@ -190,7 +206,7 @@
 }
 
 .effects-paused .xmas-snow,
-.dark.winter.christmas.effects-paused .ui-button--primary::after {
+.christmas.effects-paused .ui-button--primary::after {
   display: none;
 }
 
@@ -201,7 +217,7 @@
   }
 
   .xmas-snow,
-  .dark.winter.christmas .ui-button--primary::after {
+  .christmas .ui-button--primary::after {
     display: none;
   }
 }
