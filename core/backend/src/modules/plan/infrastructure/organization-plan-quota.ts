@@ -12,7 +12,7 @@ const CURRENT_STATUSES = new Set(['ACTIVE', 'TRIALING']);
 export async function findOrganizationLimit(
   tx: TransactionContext,
   organizationId: string,
-  key: 'users' | 'branches',
+  key: 'members' | 'branches',
   now: Date = new Date(),
 ): Promise<number | null> {
   const assignments = await tx.orm.core.OrganizationPlanAssignment.where({
@@ -40,7 +40,7 @@ export async function findOrganizationLimit(
 export async function assertOrganizationQuota(
   tx: TransactionContext,
   organizationId: string,
-  key: 'users' | 'branches',
+  key: 'members' | 'branches',
   countCurrent: () => Promise<number>,
 ): Promise<void> {
   const limit = await findOrganizationLimit(tx, organizationId, key);

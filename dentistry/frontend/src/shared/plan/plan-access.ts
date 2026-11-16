@@ -11,9 +11,10 @@ export type DentistryModule =
   | "payments";
 
 export type SessionPlan = {
-  /** null: el plan no restringe módulos. */
+  /** null: plan anterior a las funciones por plan; no restringe módulos. */
   modules: DentistryModule[] | null;
-  limits: { patients: number | null; users: number | null; branches: number | null };
+  /** null: el plan no define ese cupo. */
+  limits: { patients: number | null; members: number | null; branches: number | null };
 };
 
 /** Sin plan vigente no hay módulos; con `modules: null` están todos. */
@@ -59,7 +60,7 @@ export function isSessionPlan(value: unknown): value is SessionPlan | null {
     !!limits &&
     typeof limits === "object" &&
     isLimit(limits.patients) &&
-    isLimit(limits.users) &&
+    isLimit(limits.members) &&
     isLimit(limits.branches)
   );
 }

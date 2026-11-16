@@ -428,7 +428,7 @@ export class PrismaUserRepository extends UserRepository {
           );
         }
 
-        await assertOrganizationQuota(tx, input.organizationId, 'users', async () => {
+        await assertOrganizationQuota(tx, input.organizationId, 'members', async () => {
           const { totalItems } = await tx.orm.core.OrganizationMembership.where({
             organizationId: input.organizationId,
             deletedAt: null,

@@ -6,14 +6,14 @@ export type VersionedEntitlements = { [key: string]: JsonValue } & {
 };
 
 /**
- * Optional, well-known keys of a versioned snapshot:
- * - `modules`: module codes the plan enables. Absent means no restriction
- *   (snapshots created before module gating keep every module).
- * - `limits`: positive integer quotas; an absent or null value means unlimited.
+ * Well-known keys of a versioned snapshot (packages/db target-schema-dictionary §7.1):
+ * - `features`: capability flags; only a `true` flag enables the capability.
+ * - `limits`: positive integer quotas (`patients`, `members`, `branches`).
  * Any other key is preserved untouched.
  */
-export const ENTITLEMENT_LIMIT_KEYS = ['patients', 'users', 'branches'] as const;
-const MODULE_CODE = /^[a-z][a-z0-9-]{0,49}$/;
+export const ENTITLEMENT_LIMIT_KEYS = ['patients', 'members', 'branches'] as const;
+export type EntitlementLimitKey = (typeof ENTITLEMENT_LIMIT_KEYS)[number];
+const FEATURE_CODE = /^[a-z][A-Za-z0-9]{0,49}$/;
 
 type JsonObject = { readonly [key: string]: JsonValue };
 
@@ -21,15 +21,16 @@ function isJsonObject(value: JsonValue | undefined): value is JsonObject {
   return value !== null && value !== undefined && typeof value === 'object' && !Array.isArray(value);
 }
 
-function assertModules(value: JsonValue | undefined): void {
+function assertFeatures(value: JsonValue | undefined): void {
   if (value === undefined) return;
   if (
-    !Array.isArray(value) ||
-    value.some((code) => typeof code !== 'string' || !MODULE_CODE.test(code)) ||
-    new Set(value).size !== value.length
+    !isJsonObject(value) ||
+    Object.entries(value).some(
+      ([code, enabled]) => !FEATURE_CODE.test(code) || typeof enabled !== 'boolean',
+    )
   ) {
     throw new BadRequestException(
-      'entitlements.modules debe ser una lista de códigos de módulo únicos',
+      'entitlements.features debe ser un objeto de funciones con valores booleanos',
     );
   }
 }
@@ -66,15 +67,33 @@ export function normalizeEntitlements(value: unknown): VersionedEntitlements {
       'entitlements.schemaVersion debe ser un entero positivo',
     );
   }
-  assertModules(object.modules);
+  assertFeatures(object.features);
   assertLimits(object.limits);
   return { ...object, schemaVersion };
+}
+
+/**
+ * Catalog writes must be complete: an unknown limit is invalid, not unlimited.
+ * Stored snapshots that predate this rule are still read (missing limit = no quota).
+ */
+export function normalizeCatalogEntitlements(value: unknown): VersionedEntitlements {
+  const entitlements = normalizeEntitlements(value);
+  if (!isJsonObject(entitlements.features)) {
+    throw new BadRequestException('entitlements.features es obligatorio');
+  }
+  const limits = isJsonObject(entitlements.limits) ? entitlements.limits : {};
+  for (const key of ENTITLEMENT_LIMIT_KEYS) {
+    if (typeof limits[key] !== 'number') {
+      throw new BadRequestException(`entitlements.limits.${key} es obligatorio`);
+    }
+  }
+  return entitlements;
 }
 
 /** Reads a quota from a stored snapshot; null means unlimited. */
 export function readEntitlementLimit(
   snapshot: JsonValue | undefined,
-  key: (typeof ENTITLEMENT_LIMIT_KEYS)[number],
+  key: EntitlementLimitKey,
 ): number | null {
   if (!isJsonObject(snapshot)) return null;
   const limits = snapshot.limits;

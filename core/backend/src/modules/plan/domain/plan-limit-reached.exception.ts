@@ -1,10 +1,10 @@
 import { ForbiddenException } from '@nestjs/common';
 
-export type PlanLimitResource = 'patients' | 'users' | 'branches';
+export type PlanLimitResource = 'patients' | 'members' | 'branches';
 
 const RESOURCE_LABELS: Record<PlanLimitResource, string> = {
   patients: 'pacientes',
-  users: 'usuarios',
+  members: 'usuarios',
   branches: 'sucursales',
 };
 

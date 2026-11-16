@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeEntitlements, readEntitlementLimit } from '../dist/modules/plan/domain/entitlements.js';
+import { normalizeCatalogEntitlements, normalizeEntitlements, readEntitlementLimit } from '../dist/modules/plan/domain/entitlements.js';
 import { assertOrganizationQuota, findOrganizationLimit } from '../dist/modules/plan/infrastructure/organization-plan-quota.js';
 import { PlanLimitReachedException } from '../dist/modules/plan/domain/plan-limit-reached.exception.js';
 
@@ -20,33 +20,48 @@ function txWith(assignments) {
 function assignment(overrides = {}) {
   return {
     organizationId, status: 'ACTIVE', startsAt: past, endsAt: future,
-    entitlementsSnapshot: { schemaVersion: 1, limits: { users: 2, branches: 1 } },
+    entitlementsSnapshot: { schemaVersion: 1, limits: { members: 2, branches: 1 } },
     ...overrides,
   };
 }
 
-test('acepta módulos y límites válidos y conserva claves existentes', () => {
+test('acepta funciones y límites válidos y conserva claves existentes', () => {
   const result = normalizeEntitlements({
-    modules: ['patients', 'agenda', 'inventory'],
-    limits: { patients: 300, users: 2, branches: 1, legacy: 'x' },
-    features: { files: false },
+    features: { clinicalHistory: true, payments: false },
+    limits: { patients: 300, members: 2, branches: 1, legacy: 'x' },
+    customKey: ['a'],
   });
-  assert.deepEqual(result.modules, ['patients', 'agenda', 'inventory']);
+  assert.deepEqual(result.features, { clinicalHistory: true, payments: false });
   assert.equal(result.limits.patients, 300);
   assert.equal(result.limits.legacy, 'x');
+  assert.deepEqual(result.customKey, ['a']);
   assert.equal(result.schemaVersion, 1);
 });
 
-test('acepta límites nulos como ilimitados', () => {
+test('lee como sin cupo los snapshots antiguos sin la clave', () => {
   assert.doesNotThrow(() => normalizeEntitlements({ limits: { patients: null } }));
   assert.equal(readEntitlementLimit({ limits: { patients: null } }, 'patients'), null);
   assert.equal(readEntitlementLimit({}, 'patients'), null);
-  assert.equal(readEntitlementLimit({ limits: { patients: 300 } }, 'patients'), 300);
+  assert.equal(readEntitlementLimit({ limits: { users: 2 } }, 'members'), null);
+  assert.equal(readEntitlementLimit({ limits: { members: 2 } }, 'members'), 2);
 });
 
-test('rechaza módulos inválidos o duplicados', () => {
-  for (const modules of ['patients', [1], ['Patients'], ['a', 'a'], [''], {}]) {
-    assert.throws(() => normalizeEntitlements({ modules }), { status: 400 });
+test('rechaza funciones que no son un objeto de booleanos', () => {
+  for (const features of ['payments', ['payments'], { payments: 'yes' }, { Payments: true }, { 'pay-ments': true }]) {
+    assert.throws(() => normalizeEntitlements({ features }), { status: 400 });
+  }
+});
+
+test('el catálogo exige funciones y los tres límites', () => {
+  const complete = { features: { clinicalHistory: true }, limits: { patients: 300, members: 2, branches: 1 } };
+  assert.doesNotThrow(() => normalizeCatalogEntitlements(complete));
+  assert.throws(() => normalizeCatalogEntitlements({}), { status: 400 });
+  assert.throws(() => normalizeCatalogEntitlements({ limits: complete.limits }), { status: 400 });
+  for (const key of ['patients', 'members', 'branches']) {
+    const limits = { ...complete.limits, [key]: null };
+    assert.throws(() => normalizeCatalogEntitlements({ ...complete, limits }), { status: 400 });
+    const { [key]: _omitted, ...missing } = complete.limits;
+    assert.throws(() => normalizeCatalogEntitlements({ ...complete, limits: missing }), { status: 400 });
   }
 });
 
@@ -60,19 +75,19 @@ test('rechaza límites que no son enteros positivos', () => {
 test('toma el límite más restrictivo de las asignaciones vigentes', async () => {
   const tx = txWith([
     assignment(),
-    assignment({ entitlementsSnapshot: { schemaVersion: 1, limits: { users: 5 } } }),
-    assignment({ status: 'CANCELED', entitlementsSnapshot: { schemaVersion: 1, limits: { users: 1 } } }),
-    assignment({ endsAt: past, entitlementsSnapshot: { schemaVersion: 1, limits: { users: 1 } } }),
+    assignment({ entitlementsSnapshot: { schemaVersion: 1, limits: { members: 5 } } }),
+    assignment({ status: 'CANCELED', entitlementsSnapshot: { schemaVersion: 1, limits: { members: 1 } } }),
+    assignment({ endsAt: past, entitlementsSnapshot: { schemaVersion: 1, limits: { members: 1 } } }),
   ]);
-  assert.equal(await findOrganizationLimit(tx, organizationId, 'users', now), 2);
-  assert.equal(await findOrganizationLimit(txWith([]), organizationId, 'users', now), null);
+  assert.equal(await findOrganizationLimit(tx, organizationId, 'members', now), 2);
+  assert.equal(await findOrganizationLimit(txWith([]), organizationId, 'members', now), null);
 });
 
 test('bloquea al alcanzar el cupo y permite por debajo', async () => {
   const tx = txWith([assignment()]);
-  await assert.doesNotReject(assertOrganizationQuota(tx, organizationId, 'users', async () => 1));
+  await assert.doesNotReject(assertOrganizationQuota(tx, organizationId, 'members', async () => 1));
   await assert.rejects(
-    assertOrganizationQuota(tx, organizationId, 'users', async () => 2),
+    assertOrganizationQuota(tx, organizationId, 'members', async () => 2),
     (error) => {
       assert.ok(error instanceof PlanLimitReachedException);
       assert.equal(error.getStatus(), 403);

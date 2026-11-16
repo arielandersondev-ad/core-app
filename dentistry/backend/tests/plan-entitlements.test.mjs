@@ -12,25 +12,38 @@ import { REQUIRED_MODULE } from '../dist/modules/auth/presentation/http/decorato
 
 const organizationId = '00000000-0000-0000-0000-000000000001';
 const now = new Date('2026-11-13T12:00:00.000Z');
+// Plan base del diccionario (packages/db target-schema-dictionary §7.1).
 const BASIC = {
   schemaVersion: 1,
-  modules: ['patients', 'agenda', 'appointments', 'procedures', 'unknown-module'],
-  limits: { patients: 300, users: 2, branches: 1 },
+  limits: { patients: 300, branches: 1, members: 2 },
+  features: {
+    clinicalHistory: true, appointments: true, procedureNotes: true,
+    customForms: false, payments: false, treatments: false,
+    odontogram: false, files: false, patientSelfService: false,
+  },
 };
 
-test('parsea módulos conocidos y límites del snapshot', () => {
+test('deriva los módulos de las funciones del plan y lee sus límites', () => {
   const result = parsePlanEntitlements(BASIC);
   assert.deepEqual(result.modules, ['patients', 'agenda', 'appointments', 'procedures']);
-  assert.deepEqual(result.limits, { patients: 300, users: 2, branches: 1 });
+  assert.deepEqual(result.limits, { patients: 300, members: 2, branches: 1 });
   assert.equal(isModuleEnabled(result, 'agenda'), true);
   assert.equal(isModuleEnabled(result, 'payments'), false);
+  assert.equal(isModuleEnabled(result, 'inventory'), false);
 });
 
-test('un snapshot sin módulos no restringe y sin límites es ilimitado', () => {
-  const result = parsePlanEntitlements({ schemaVersion: 1, limits: { patients: 0 } });
+test('solo una función en true habilita su módulo', () => {
+  const result = parsePlanEntitlements({
+    features: { inventory: true, dashboard: 'true', services: 1, payments: false },
+  });
+  assert.deepEqual(result.modules, ['inventory']);
+});
+
+test('un snapshot antiguo sin funciones no restringe y sin límites no aplica cupo', () => {
+  const result = parsePlanEntitlements({ schemaVersion: 1, limits: { patients: 0, users: 2 } });
   assert.equal(result.modules, null);
   assert.equal(isModuleEnabled(result, 'payments'), true);
-  assert.deepEqual(result.limits, { patients: null, users: null, branches: null });
+  assert.deepEqual(result.limits, { patients: null, members: null, branches: null });
   assert.deepEqual(parsePlanEntitlements(null).limits.patients, null);
 });
 

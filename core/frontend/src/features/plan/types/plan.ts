@@ -43,13 +43,13 @@ export type OrganizationPlanAssignment = Readonly<{
 
 export type PlanEntitlementLimits = {
   patients?: number | null;
-  users?: number | null;
+  members?: number | null;
   branches?: number | null;
 };
 
 /** Claves conocidas del snapshot; el resto se conserva sin cambios. */
 export type PlanEntitlements = Record<string, unknown> & {
-  modules?: string[];
+  features?: Record<string, boolean>;
   limits?: PlanEntitlementLimits;
 };
 

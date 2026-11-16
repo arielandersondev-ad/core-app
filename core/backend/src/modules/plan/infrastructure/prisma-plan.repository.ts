@@ -16,7 +16,7 @@ import type {
 } from '../domain/entities/organization-plan-assignment.entity.js';
 import { PlanRepository } from '../domain/repositories/plan.repository.js';
 import { toPlanEntity } from './plan.mapper.js';
-import { normalizeEntitlements } from '../domain/entitlements.js';
+import { normalizeCatalogEntitlements, normalizeEntitlements } from '../domain/entitlements.js';
 
 const PLAN_CODE_UNIQUE_CONSTRAINT = 'Plan_code_key';
 const ASSIGNMENT_UNIQUE_CONSTRAINT = 'organization_plan_vertical_uidx_1e389c18';
@@ -42,7 +42,7 @@ export class PrismaPlanRepository extends PlanRepository {
         const duplicate = await tx.orm.core.Plan.first({ code: input.code });
         if (duplicate) throw new ConflictException('Ya existe un plan con ese código');
 
-        const row = await tx.orm.core.Plan.create({ ...input, entitlements: normalizeEntitlements(input.entitlements) });
+        const row = await tx.orm.core.Plan.create({ ...input, entitlements: normalizeCatalogEntitlements(input.entitlements) });
         await writeAuditLog(tx, {
           action: 'PLAN_CREATED', resource: 'Plan', resourceId: row.id,
           metadata: { code: row.code, vertical: row.vertical },
@@ -68,7 +68,7 @@ export class PrismaPlanRepository extends PlanRepository {
       );
       const row = await tx.orm.core.Plan.where({ id: current.id }).update({
         ...input,
-        ...(input.entitlements === undefined ? {} : { entitlements: normalizeEntitlements(input.entitlements) }),
+        ...(input.entitlements === undefined ? {} : { entitlements: normalizeCatalogEntitlements(input.entitlements) }),
       });
       if (!row) throw new NotFoundException('Plan no encontrado');
       await writeAuditLog(tx, {

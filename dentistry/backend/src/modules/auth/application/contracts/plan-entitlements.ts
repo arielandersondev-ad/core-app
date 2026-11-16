@@ -13,16 +13,33 @@ export const DENTISTRY_MODULES = [
 
 export type DentistryModule = (typeof DENTISTRY_MODULES)[number];
 
+/**
+ * Plan capability (`entitlements.features`, packages/db target-schema-dictionary §7.1)
+ * that enables each module. Agenda and Citas share `appointments`; Paciente and
+ * Historial clínico share `clinicalHistory`.
+ */
+export const MODULE_FEATURES: Readonly<Record<DentistryModule, string>> = {
+  patients: 'clinicalHistory',
+  agenda: 'appointments',
+  appointments: 'appointments',
+  procedures: 'procedureNotes',
+  inventory: 'inventory',
+  dashboard: 'dashboard',
+  services: 'services',
+  treatments: 'treatments',
+  payments: 'payments',
+};
+
 export type PlanLimits = {
   patients: number | null;
-  users: number | null;
+  members: number | null;
   branches: number | null;
 };
 
 /**
  * Entitlements of the organization's current Dentistry plan.
- * `modules: null` means the snapshot predates module gating: every module is enabled.
- * A null limit means unlimited.
+ * `modules: null` means the snapshot predates capability flags: every module is enabled.
+ * A null limit means the snapshot predates that quota (not enforced).
  */
 export type PlanEntitlements = {
   modules: DentistryModule[] | null;
@@ -50,17 +67,18 @@ function readLimit(limits: unknown, key: keyof PlanLimits): number | null {
     : null;
 }
 
-/** Parses a stored snapshot defensively; unknown module codes are ignored. */
+/** Parses a stored snapshot defensively; only a feature set to `true` enables its modules. */
 export function parsePlanEntitlements(snapshot: unknown): PlanEntitlements {
   const object = isObject(snapshot) ? snapshot : {};
-  const modules = Array.isArray(object.modules)
-    ? DENTISTRY_MODULES.filter((code) => (object.modules as unknown[]).includes(code))
+  const features = object.features;
+  const modules = isObject(features)
+    ? DENTISTRY_MODULES.filter((code) => features[MODULE_FEATURES[code]] === true)
     : null;
   return {
     modules,
     limits: {
       patients: readLimit(object.limits, 'patients'),
-      users: readLimit(object.limits, 'users'),
+      members: readLimit(object.limits, 'members'),
       branches: readLimit(object.limits, 'branches'),
     },
   };

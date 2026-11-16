@@ -12,7 +12,7 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASIC = {
   modules: ["patients", "agenda", "appointments", "procedures"],
-  limits: { patients: 300, users: 2, branches: 1 },
+  limits: { patients: 300, members: 2, branches: 1 },
 };
 
 test("Plan: habilita solo los módulos incluidos", () => {
@@ -34,10 +34,11 @@ test("Plan: asocia rutas de plataforma a su módulo", () => {
 test("Plan: valida el bloque plan de /auth/me", () => {
   assert.equal(isSessionPlan(BASIC), true);
   assert.equal(isSessionPlan(null), true);
-  assert.equal(isSessionPlan({ modules: null, limits: { patients: null, users: null, branches: null } }), true);
+  assert.equal(isSessionPlan({ modules: null, limits: { patients: null, members: null, branches: null } }), true);
   assert.equal(isSessionPlan(undefined), false);
   assert.equal(isSessionPlan({ modules: "x", limits: BASIC.limits }), false);
-  assert.equal(isSessionPlan({ modules: null, limits: { patients: 0, users: null, branches: null } }), false);
+  assert.equal(isSessionPlan({ modules: null, limits: { patients: 0, members: null, branches: null } }), false);
+  assert.equal(isSessionPlan({ modules: null, limits: { patients: 300, users: 2, branches: 1 } }), false);
 });
 
 test("Plan: la navegación y el shell filtran por plan", () => {
