@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Icons } from "../icons/icons";
+import { isModuleEnabled, type DentistryModule, type SessionPlan } from "@/shared/plan/plan-access";
 
 export type AppSection =
   | "dashboard"
@@ -12,6 +13,7 @@ export type AppSection =
 
 export const NAV_ITEMS: readonly {
   section: AppSection;
+  module: DentistryModule;
   label: string;
   href: string;
   icon: ReactNode;
@@ -19,6 +21,7 @@ export const NAV_ITEMS: readonly {
 }[] = [
   {
     section: "dashboard",
+    module: "dashboard",
     label: "Dashboard",
     href: "/dashboard",
     icon: Icons.dashboard,
@@ -26,6 +29,7 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "pacientes",
+    module: "patients",
     label: "Pacientes",
     href: "/patients",
     icon: Icons.patients,
@@ -33,6 +37,7 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "agenda",
+    module: "agenda",
     label: "Agenda",
     href: "/agenda",
     icon: Icons.agenda,
@@ -40,6 +45,7 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "servicios",
+    module: "services",
     label: "Servicios",
     href: "/services",
     icon: Icons.services,
@@ -47,6 +53,7 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "tratamientos",
+    module: "treatments",
     label: "Tratamientos",
     href: "/treatments",
     icon: Icons.treatments,
@@ -54,6 +61,7 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "pagos",
+    module: "payments",
     label: "Pagos",
     href: "/payments",
     icon: Icons.payments,
@@ -61,12 +69,18 @@ export const NAV_ITEMS: readonly {
   },
   {
     section: "inventario",
+    module: "inventory",
     label: "Inventario",
     href: "/inventory",
     icon: Icons.inventory,
     showInBottomNav: false,
   },
 ] as const;
+
+/** Ítems de navegación incluidos en el plan de la organización. */
+export function navItemsForPlan(plan: SessionPlan | null) {
+  return NAV_ITEMS.filter((item) => isModuleEnabled(plan, item.module));
+}
 
 export const SECTION_TITLES: Record<AppSection, string> = {
   dashboard: "Dashboard",

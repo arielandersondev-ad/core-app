@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "./navigation";
+import { navItemsForPlan } from "./navigation";
+import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const visibleItems = NAV_ITEMS.filter((item) => item.showInBottomNav !== false);
+  const { plan } = useAuthenticatedSession();
+  const visibleItems = navItemsForPlan(plan).filter((item) => item.showInBottomNav !== false);
 
   return (
     <nav

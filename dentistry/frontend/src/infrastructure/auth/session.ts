@@ -1,3 +1,5 @@
+import type { SessionPlan } from "@/shared/plan/plan-access";
+
 export const DENTISTRY_ACCESS_COOKIE = "crowant_dentistry_access";
 export const DENTISTRY_REFRESH_COOKIE = "crowant_dentistry_refresh";
 export const ACCESS_MAX_AGE_SECONDS = 1800;
@@ -9,6 +11,8 @@ export type CurrentSession = {
   user: { id: string };
   context: { membershipId: string; organizationId: string; branchIds: string[] };
   permissions: string[];
+  /** Plan vigente de la organización; null cuando no hay ninguno. */
+  plan: SessionPlan | null;
 };
 
 export type SessionTokens = {

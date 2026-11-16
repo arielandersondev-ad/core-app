@@ -2,6 +2,7 @@ import "server-only";
 
 import { serverEnv } from "@/infrastructure/config/server-env";
 import type { CurrentSession } from "@/infrastructure/auth/session";
+import { isSessionPlan } from "@/shared/plan/plan-access";
 
 function isCurrentSession(value: unknown): value is CurrentSession {
   if (!value || typeof value !== "object") return false;
@@ -12,7 +13,8 @@ function isCurrentSession(value: unknown): value is CurrentSession {
     Array.isArray(candidate.context?.branchIds) &&
     candidate.context.branchIds.every((id) => typeof id === "string") &&
     Array.isArray(candidate.permissions) &&
-    candidate.permissions.every((permission) => typeof permission === "string");
+    candidate.permissions.every((permission) => typeof permission === "string") &&
+    isSessionPlan(candidate.plan);
 }
 
 export async function getCurrentSession(token: string): Promise<CurrentSession | null> {

@@ -17,6 +17,7 @@ import type {
 import { PasswordHasher } from '../domain/services/password-hasher.js';
 import { isPostgresUniqueViolation } from '../../../common/infrastructure/postgres-error.js';
 import { MembershipAlreadyExistsError } from '../domain/errors/membership-already-exists.error.js';
+import { assertOrganizationQuota } from '../../plan/infrastructure/organization-plan-quota.js';
 import { or } from '@prisma/orm-postgres/orm-client';
 import {
   createPaginatedResult,
@@ -426,6 +427,14 @@ export class PrismaUserRepository extends UserRepository {
             `La organización ${input.organizationId} no existe`,
           );
         }
+
+        await assertOrganizationQuota(tx, input.organizationId, 'users', async () => {
+          const { totalItems } = await tx.orm.core.OrganizationMembership.where({
+            organizationId: input.organizationId,
+            deletedAt: null,
+          }).aggregate((aggregate) => ({ totalItems: aggregate.count() }));
+          return totalItems;
+        });
 
         for (const branchId of input.branchIds) {
           const branch = await tx.orm.core.Branch.first({

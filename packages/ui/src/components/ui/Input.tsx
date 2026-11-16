@@ -51,7 +51,7 @@ export function Input({
           className={`${sizeClasses[inputSize]} w-full ${
             leftIcon ? "pl-9" : ""
           } ${rightIcon ? "pr-9" : ""} bg-[var(--surface)] border ${
-            error ? "border-[var(--danger)] ring-1 ring-[var(--danger)]/30" : "border-[var(--border)]"
+            error ? "border-[var(--danger)] ring-1 ring-[var(--danger)]/30" : "border-[var(--border-strong)]"
           } rounded-md text-[var(--foreground)] placeholder:text-[var(--muted)]/70 focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30 focus:border-[var(--primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
           {...props}
         />

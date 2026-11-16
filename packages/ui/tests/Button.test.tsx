@@ -9,6 +9,17 @@ describe("buttonClassName", () => {
     expect(classes).not.toMatch(/(^|\s)focus:/);
   });
 
+  it("uses a solid, offset focus ring (≥ 3:1 on dark surfaces)", () => {
+    const classes = buttonClassName();
+    expect(classes).toContain("focus-visible:ring-[var(--ring)] ");
+    expect(classes).toContain("focus-visible:ring-offset-2");
+    expect(classes).not.toContain("ring-[var(--ring)]/");
+  });
+
+  it("outlines controls with the strong border token", () => {
+    expect(buttonClassName({ variant: "outline" })).toContain("border-[var(--border-strong)]");
+  });
+
   it("lists transition properties explicitly instead of transition-all", () => {
     expect(buttonClassName()).not.toContain("transition-all");
   });
@@ -20,7 +31,7 @@ describe("buttonClassName", () => {
       fullWidth: true,
       className: "custom-x",
     });
-    expect(classes).toContain("border-[var(--border)]");
+    expect(classes).toContain("border-[var(--border-strong)]");
     expect(classes).toContain("h-8");
     expect(classes).toContain("w-full");
     expect(classes).toContain("custom-x");

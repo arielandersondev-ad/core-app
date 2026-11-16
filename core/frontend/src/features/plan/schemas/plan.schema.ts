@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 const optionalMoney = z.string().trim().refine((value) => value === '' || /^\d+(\.\d{1,2})?$/.test(value), 'Ingresa un monto válido con hasta 2 decimales.');
 
+const optionalLimit = z.string().trim().refine((value) => value === '' || /^[1-9]\d{0,6}$/.test(value), 'Usa un entero positivo o deja vacío para ilimitado.');
+
 export const planFormSchema = z.object({
   code: z.string().trim().min(2, 'El código es obligatorio.').max(50).regex(/^[A-Za-z][A-Za-z0-9_]*$/, 'Usa letras, números y guion bajo.'),
   name: z.string().trim().min(2, 'El nombre es obligatorio.').max(120),
@@ -12,6 +14,10 @@ export const planFormSchema = z.object({
   price: optionalMoney,
   currency: z.string().trim().length(3, 'Usa un código ISO de 3 letras.'),
   isActive: z.boolean(),
+  modules: z.array(z.string()).min(1, 'Selecciona al menos un módulo.'),
+  patientsLimit: optionalLimit,
+  usersLimit: optionalLimit,
+  branchesLimit: optionalLimit,
 });
 
 export type PlanFormInput = z.input<typeof planFormSchema>;

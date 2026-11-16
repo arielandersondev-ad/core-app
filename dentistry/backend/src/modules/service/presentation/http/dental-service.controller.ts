@@ -16,6 +16,8 @@ import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/cur
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
 import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
+import { RequireModule } from '../../../auth/presentation/http/decorators/require-module.decorator.js';
+import { DentistryModuleGuard } from '../../../auth/presentation/http/guards/dentistry-module.guard.js';
 import { CreateDentalServiceUseCase } from '../../application/use-case/create-dental-service.use-case.js';
 import { ListDentalServicesUseCase } from '../../application/use-case/list-dental-services.use-case.js';
 import { GetDentalServiceByIdUseCase } from '../../application/use-case/get-dental-service-by-id.use-case.js';
@@ -30,7 +32,8 @@ import {
 import { ListDentalServicesQueryDto } from '../dto/list-dental-services.query.dto.js';
 
 @Controller('services')
-@UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
+// La lectura del catálogo la usan otros módulos (citas); la gestión requiere el módulo.
+@UseGuards(DentistryJwtGuard, DentistryPermissionGuard, DentistryModuleGuard)
 export class DentalServiceController {
   constructor(
     private readonly createServiceUseCase: CreateDentalServiceUseCase,
@@ -43,6 +46,7 @@ export class DentalServiceController {
 
   @Post()
   @RequirePermission('dentistry:services:create')
+  @RequireModule('services')
   async create(
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Body() dto: CreateDentalServiceDto,
@@ -117,6 +121,7 @@ export class DentalServiceController {
 
   @Patch(':id')
   @RequirePermission('dentistry:services:update')
+  @RequireModule('services')
   async update(
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Param('id') id: string,
@@ -144,6 +149,7 @@ export class DentalServiceController {
 
   @Patch(':id/toggle-status')
   @RequirePermission('dentistry:services:update')
+  @RequireModule('services')
   async toggleStatus(
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Param('id') id: string,
@@ -162,6 +168,7 @@ export class DentalServiceController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @RequirePermission('dentistry:services:delete')
+  @RequireModule('services')
   async delete(
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Param('id') id: string,

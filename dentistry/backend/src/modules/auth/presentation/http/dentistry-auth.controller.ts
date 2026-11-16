@@ -1,13 +1,17 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import type { DentistryPrincipal } from '../../application/contracts/dentistry-principal.js';
+import { PlanEntitlementsReader } from '../../application/ports/plan-entitlements.reader.js';
 import { CurrentPrincipal } from './decorators/current-principal.decorator.js';
 import { DentistryJwtGuard } from './guards/dentistry-jwt.guard.js';
 
 @Controller('auth')
 @UseGuards(DentistryJwtGuard)
 export class DentistryAuthController {
+  constructor(private readonly entitlements: PlanEntitlementsReader) {}
+
   @Get('me')
-  me(@CurrentPrincipal() principal: DentistryPrincipal) {
+  async me(@CurrentPrincipal() principal: DentistryPrincipal) {
+    const plan = await this.entitlements.read(principal.organizationId);
     return {
       user: { id: principal.sub },
       context: {
@@ -16,6 +20,8 @@ export class DentistryAuthController {
         branchIds: principal.branchIds,
       },
       permissions: principal.permissions,
+      // null: sin plan vigente; modules null: el plan no restringe módulos.
+      plan,
     };
   }
 }

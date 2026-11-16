@@ -216,7 +216,7 @@ export function Combobox({
               ? "border-[var(--danger)] ring-1 ring-[var(--danger)]/30"
               : isOpen
                 ? "border-[var(--primary)] ring-2 ring-[var(--ring)]/30"
-                : "border-[var(--border)] hover:border-[var(--foreground)]/30"
+                : "border-[var(--border-strong)] hover:border-[var(--muted)]"
           } text-left flex items-center justify-between transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {selectedOption ? (

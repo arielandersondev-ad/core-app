@@ -13,7 +13,7 @@ const btnMap: Record<ButtonVariant, string> = {
   danger:
     "bg-[var(--danger)] text-[var(--danger-foreground)] hover:opacity-90 active:opacity-80 shadow-2xs",
   outline:
-    "bg-transparent border border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--neutral-subtle)] active:bg-[var(--muted)]/20",
+    "bg-transparent border border-[var(--border-strong)] text-[var(--foreground)] hover:bg-[var(--neutral-subtle)] active:bg-[var(--muted)]/20",
 };
 
 const sizeMap: Record<ButtonSize, string> = {
@@ -23,7 +23,7 @@ const sizeMap: Record<ButtonSize, string> = {
 };
 
 const BASE_CLASSES =
-  "inline-flex items-center justify-center font-display font-semibold rounded-[var(--radius)] transition-[background-color,border-color,color,opacity,box-shadow] duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]/40";
+  "inline-flex items-center justify-center font-display font-semibold rounded-[var(--radius)] transition-[background-color,border-color,color,opacity,box-shadow] duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]";
 
 export interface ButtonClassNameOptions {
   variant?: ButtonVariant;

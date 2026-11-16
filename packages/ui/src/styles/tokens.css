@@ -23,6 +23,8 @@
   --muted: #65685f;
   --muted-foreground: #65685f;
   --border: #ddd7ca;
+  /* Límite de controles (inputs, selects, outline): ≥ 3:1 sobre las superficies (WCAG 1.4.11) */
+  --border-strong: #8f877a;
 
   --danger: #9e2a2a;
   --danger-foreground: #ffffff;
@@ -48,44 +50,55 @@
   --radius: 0.75rem;
 }
 
+/*
+ * Tema "Oscuro"
+ * Contraste WCAG medido (sobre surface #141915 salvo indicación):
+ *   foreground 15.9:1 · muted 7.9:1 · primary 6.3:1
+ *   danger #EF6A5F como texto 6.0:1, 5.0:1 sobre danger-subtle; texto oscuro encima 6.4:1
+ *   primary sobre primary-subtle 4.7:1 (badges)
+ *   secondary-foreground oscuro sobre secondary 5.8:1
+ *   border-strong 3.4:1 (límite de controles); border es decorativo
+ * Elevación por luminosidad: background < surface < elevated/popover.
+ */
 .dark {
   --background: #0b0e0c;
-  --surface: #111512;
-  --surface-elevated: #181d19;
-  --surface-subtle: #141815;
+  --surface: #141915;
+  --surface-elevated: #1d231e;
+  --surface-subtle: #101411;
 
   --primary: #62a84f;
   --primary-accent: #79c165;
-  --primary-subtle: #315d39;
+  --primary-subtle: #1c3321;
   --primary-foreground: #0b0e0c;
 
   --secondary: #a88762;
-  --secondary-foreground: #f1f3ee;
+  --secondary-foreground: #0b0e0c;
   --hazelnut: #a88762;
   --gold-accent: #c5a46d;
 
   --foreground: #f1f3ee;
   --muted: #a6ada4;
   --muted-foreground: #a6ada4;
-  --border: #293029;
+  --border: #343c35;
+  --border-strong: #647065;
 
-  --danger: #c0362b;
-  --danger-foreground: #ffffff;
-  --danger-subtle: #3d1d1c;
+  --danger: #ef6a5f;
+  --danger-foreground: #0b0e0c;
+  --danger-subtle: #2e1715;
 
-  --success: #4ade80;
+  --success: #5fcf8c;
   --success-foreground: #0b0e0c;
   --success-subtle: #173622;
-  --destructive: #c0362b;
-  --destructive-foreground: #ffffff;
+  --destructive: #ef6a5f;
+  --destructive-foreground: #0b0e0c;
 
-  --warning: #f59e0b;
+  --warning: #f2b155;
   --warning-foreground: #0b0e0c;
   --warning-subtle: #382914;
-  --neutral-subtle: #20292d;
+  --neutral-subtle: #232b26;
 
-  --popover: #181d19;
-  --accent: #1a201a;
+  --popover: #1d231e;
+  --accent: #1e251f;
   --accent-foreground: var(--foreground);
   --card: var(--surface);
   --card-foreground: var(--foreground);
@@ -141,6 +154,7 @@
   --muted: #a3a1b3;
   --muted-foreground: #a3a1b3;
   --border: #3a3747;
+  --border-strong: #6e6a86;
 
   /* Acción principal: índigo */
   --primary: #a29cff;
@@ -214,6 +228,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
