@@ -8,6 +8,12 @@ function extractErrorMessages(payload: unknown): string[] {
   return values.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
 }
 
+function extractErrorCode(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object" || !("code" in payload)) return undefined;
+  const { code } = payload as { code: unknown };
+  return typeof code === "string" && code ? code : undefined;
+}
+
 const customAdapter: AxiosAdapter = async (config: InternalAxiosRequestConfig) => {
   let url = config.url || "";
   if (config.baseURL && !url.startsWith("http://") && !url.startsWith("https://")) {
@@ -57,7 +63,7 @@ const customAdapter: AxiosAdapter = async (config: InternalAxiosRequestConfig) =
   if (!response.ok) {
     const messages = extractErrorMessages(payload);
     const message = messages.length ? messages.join(", ") : (response.statusText || "No se pudo completar la petición.");
-    throw new ApiError(response.status, message, messages.length ? messages : [message]);
+    throw new ApiError(response.status, message, messages.length ? messages : [message], extractErrorCode(payload));
   }
   if (payload === undefined) {
     throw new ApiError(502, "Respuesta inválida de la aplicación.");
@@ -90,7 +96,7 @@ api.interceptors.response.use(
       if (error.response) {
         const messages = extractErrorMessages(error.response.data);
         const message = messages.length ? messages.join(", ") : (error.response.statusText || "No se pudo completar la petición.");
-        return Promise.reject(new ApiError(error.response.status, message, messages.length ? messages : [message]));
+        return Promise.reject(new ApiError(error.response.status, message, messages.length ? messages : [message], extractErrorCode(error.response.data)));
       }
       if (error.request) {
         return Promise.reject(new ApiError(0, "No se pudo conectar con la aplicación."));

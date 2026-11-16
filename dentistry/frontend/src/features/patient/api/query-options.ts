@@ -1,5 +1,5 @@
 import { mutationOptions, queryOptions, type QueryClient } from "@tanstack/react-query";
-import { createPatient, deletePatient, fetchPatientById, fetchPatients, updatePatient } from "@/features/patient/services/patient.service";
+import { createPatient, deletePatient, fetchPatientById, fetchPatientQuota, fetchPatients, updatePatient } from "@/features/patient/services/patient.service";
 import type { CreatePatientRequest, ListPatientsParams, UpdatePatientRequest } from "@/features/patient/types/patient";
 import { fetchCurrentSession } from "@/infrastructure/auth/client-session";
 import { assertSameSessionContext } from "@/infrastructure/auth/session-context";
@@ -9,7 +9,16 @@ export const patientQueryKeys = {
   all: ["patients"] as const,
   list: (params: ListPatientsParams) => ["patients", "list", params] as const,
   detail: (id: string) => ["patients", "detail", id] as const,
+  // Cuelga de `all`: crear o eliminar un paciente invalida también el cupo.
+  quota: ["patients", "quota"] as const,
 };
+
+export function patientQuotaOptions() {
+  return queryOptions({
+    queryKey: patientQueryKeys.quota,
+    queryFn: fetchPatientQuota,
+  });
+}
 
 export function patientListOptions(params: ListPatientsParams) {
   return queryOptions({

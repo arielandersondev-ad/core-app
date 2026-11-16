@@ -8,6 +8,7 @@ import { createPatientSchema } from "@/features/patient/schemas/create-patient.s
 import { initialPatientValues, patientToFormValues, type PatientFormValues } from "@/features/patient/types/patient-form";
 import type { CreatePatientRequest } from "@/features/patient/types/patient";
 import type { PatientDto } from "@/features/patient/types/patient";
+import { isPlanLimitError, PATIENT_LIMIT_MESSAGE } from "@/features/patient/utils/patient-quota";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { SessionContextChangedError } from "@/infrastructure/auth/session-context";
 
@@ -28,9 +29,11 @@ export function PatientForm({ onSubmit, onCancel, isSubmitting, error, patient }
   const needsLogin = error instanceof SessionContextChangedError || (error instanceof ApiError && error.status === 401);
   const message = error instanceof ApiError && error.status === 401
     ? "Tu sesión venció. Inicia sesión en otra pestaña y vuelve a guardar. Lo escrito se mantiene en este formulario."
-    : error instanceof ApiError && error.status === 403
-      ? `No tienes permiso para ${patient ? "actualizar" : "crear"} pacientes.`
-      : error?.message;
+    : isPlanLimitError(error)
+      ? PATIENT_LIMIT_MESSAGE
+      : error instanceof ApiError && error.status === 403
+        ? `No tienes permiso para ${patient ? "actualizar" : "crear"} pacientes.`
+        : error?.message;
 
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)} aria-label={patient ? "Editar paciente" : "Crear paciente"} aria-busy={isSubmitting} className="space-y-5">

@@ -33,6 +33,7 @@ import type {
   PatientStatus,
 } from "@/features/patient/types/patient";
 import { CreatePatientButton } from "@/features/patient/components/create-patient-button";
+import { PatientLimitNotice, PatientQuotaCounter } from "@/features/patient/components/patient-quota";
 
 export default function PatientsPage() {
   const [createdMessage, setCreatedMessage] = useState("");
@@ -177,18 +178,23 @@ export default function PatientsPage() {
         title="Pacientes"
         description="Consulta y búsqueda de pacientes de tu organización"
         action={
-          <CreatePatientButton
-            open={isCreatePatientOpen}
-            onOpenChange={setIsCreatePatientOpen}
-            onCreated={(patient) => {
-              setCreatedMessage(
-                `${patient.fullName} se registró correctamente.`,
-              );
-              changeParams({ page: 1 });
-            }}
-          />
+          <div className="flex items-center gap-3">
+            <PatientQuotaCounter />
+            <CreatePatientButton
+              open={isCreatePatientOpen}
+              onOpenChange={setIsCreatePatientOpen}
+              onCreated={(patient) => {
+                setCreatedMessage(
+                  `${patient.fullName} se registró correctamente.`,
+                );
+                changeParams({ page: 1 });
+              }}
+            />
+          </div>
         }
       />
+
+      <PatientLimitNotice />
 
       {/* 2. KPIs Bimodales */}
       {/* Móvil (< 1024px / lg:hidden): CompactStatSummary minimalista en franja horizontal */}

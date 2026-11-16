@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Button, Icons } from "@/shared/components/ui";
+import { Button, Icons, ResponsiveModal } from "@/shared/components/ui";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { CreatePatientDialog } from "@/features/patient/components/create-patient-dialog";
+import { usePatientQuota } from "@/features/patient/hooks/use-patient-quota";
 import type { PatientDto } from "@/features/patient/types/patient";
+import { isPatientLimitReached, PATIENT_LIMIT_MESSAGE } from "@/features/patient/utils/patient-quota";
 
 export function CreatePatientButton({
   onCreated,
@@ -20,6 +22,7 @@ export function CreatePatientButton({
   const session = useAuthenticatedSession();
   const searchParams = useSearchParams();
   const requested = searchParams.get("create") === "true";
+  const limitReached = isPatientLimitReached(usePatientQuota().data);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
   function setOpen(next: boolean) {
@@ -43,13 +46,21 @@ export function CreatePatientButton({
         variant="primary"
         leftIcon={Icons.plus}
         onClick={() => setOpen(true)}
+        disabled={limitReached}
+        title={limitReached ? PATIENT_LIMIT_MESSAGE : undefined}
         className="hidden md:inline-flex"
       >
         Nuevo paciente
       </Button>
-      {(isOpen || requested) && (
-        <CreatePatientDialog onClose={close} onCreated={onCreated} />
-      )}
+      {(isOpen || requested) &&
+        (limitReached ? (
+          // El menú móvil y `?create=true` también abren el alta: con el cupo lleno se explica por qué no.
+          <ResponsiveModal open onClose={close} title="Límite de pacientes alcanzado" icon={Icons.users} breakpoint={768} snapPoint="auto" maxWidth="max-w-md">
+            <p role="alert" className="text-sm text-foreground">{PATIENT_LIMIT_MESSAGE}</p>
+          </ResponsiveModal>
+        ) : (
+          <CreatePatientDialog onClose={close} onCreated={onCreated} />
+        ))}
     </>
   );
 }

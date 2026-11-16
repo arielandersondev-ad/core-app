@@ -5,6 +5,7 @@ import type {
   PatientDto,
   UpdatePatientRequest,
 } from "@/features/patient/types/patient";
+import type { PatientQuota } from "@/features/patient/utils/patient-quota";
 import { requestJson } from "@/infrastructure/http/request-json";
 import type { PaginatedResult } from "@/shared/types/pagination";
 
@@ -16,6 +17,10 @@ export function fetchPatients(params: ListPatientsParams = {}, signal?: AbortSig
   }
   const suffix = query.size ? `?${query.toString()}` : "";
   return requestJson(`${PATIENT_ENDPOINTS.collection}${suffix}`, { signal });
+}
+
+export function fetchPatientQuota(): Promise<PatientQuota> {
+  return requestJson(PATIENT_ENDPOINTS.quota);
 }
 
 export function fetchPatientById(id: string): Promise<PatientDto> {
