@@ -19,10 +19,14 @@ import { useCreateClinicalEncounter } from "@/features/clinical-encounter/hooks/
 import { useEncounterReferenceData } from "@/features/clinical-encounter/hooks/use-clinical-encounter-data";
 import { useToasts } from "@/features/clinical-encounter/hooks/use-toasts";
 import { ClinicalEncounterPartialCreateError } from "@/features/clinical-encounter/services/clinical-encounter.service";
-import type { ClinicalEncounterProcedureDraft } from "@/features/clinical-encounter/types/clinical-encounter";
+import type {
+  ClinicalEncounterProcedureDraft,
+  EncounterReferenceData,
+} from "@/features/clinical-encounter/types/clinical-encounter";
 import { nowDateValue, nowTimeValue } from "@/features/clinical-encounter/utils/dates";
 import {
   appendProcedure,
+  applyCreateDefaults,
   describeProcedure,
   emptyCreateForm,
   removeProcedureAt,
@@ -70,7 +74,14 @@ const clinicalTextFields: {
   },
 ];
 
-export function ClinicalEncounterCreatePage({ patientId }: { patientId: string }) {
+export function ClinicalEncounterCreatePage({
+  patientId,
+  requestedAppointmentId,
+}: {
+  patientId: string;
+  /** Cita a preseleccionar (`?appointmentId=`), p. ej. desde "Iniciar atención" en la agenda. */
+  requestedAppointmentId?: string;
+}) {
   const session = useAuthenticatedSession();
   const canCreate = session.permissions.includes(CREATE_PERMISSION);
 
@@ -90,43 +101,40 @@ export function ClinicalEncounterCreatePage({ patientId }: { patientId: string }
 
   return (
     <PatientContextBoundary patientId={patientId}>
-      {(patient) => <ClinicalEncounterCreateForm patientId={patient.id} patientName={patient.fullName} />}
+      {(patient) => (
+        <ClinicalEncounterCreateLoader
+          patientId={patient.id}
+          patientName={patient.fullName}
+          requestedAppointmentId={requestedAppointmentId}
+        />
+      )}
     </PatientContextBoundary>
   );
 }
 
-function ClinicalEncounterCreateForm({
-  patientId,
-  patientName,
-}: {
+function createPageNavigation(patientId: string, patientName: string) {
+  const listHref = `/patients/${patientId}/clinical-encounters`;
+  return {
+    listHref,
+    breadcrumbs: [
+      { label: "Pacientes", href: "/patients" },
+      { label: patientName, href: `/patients/${patientId}` },
+      { label: "Atenciones clínicas", href: listHref },
+      { label: "Nueva atención" },
+    ],
+  };
+}
+
+type CreateFormProps = {
   patientId: string;
   patientName: string;
-}) {
-  const router = useRouter();
+  requestedAppointmentId?: string;
+};
+
+/** Carga los datos de referencia; el formulario se monta ya con ellos para inicializarse una vez. */
+function ClinicalEncounterCreateLoader({ patientId, patientName, requestedAppointmentId }: CreateFormProps) {
   const reference = useEncounterReferenceData(patientId);
-  const create = useCreateClinicalEncounter();
-  const { toasts, pushToast, dismissToast } = useToasts();
-
-  const [values, setValues] = useState<CreateEncounterFormValues>(() => ({
-    ...emptyCreateForm(),
-    startDate: nowDateValue(),
-    startTime: nowTimeValue(),
-  }));
-  const [procedureModalOpen, setProcedureModalOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [partialEncounterId, setPartialEncounterId] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<{
-    branchId?: string;
-    startedAt?: string;
-  }>({});
-
-  const listHref = `/patients/${patientId}/clinical-encounters`;
-  const breadcrumbs = [
-    { label: "Pacientes", href: "/patients" },
-    { label: patientName, href: `/patients/${patientId}` },
-    { label: "Atenciones clínicas", href: listHref },
-    { label: "Nueva atención" },
-  ];
+  const { listHref, breadcrumbs } = createPageNavigation(patientId, patientName);
 
   if (reference.isPending) {
     return (
@@ -160,7 +168,46 @@ function ClinicalEncounterCreateForm({
     );
   }
 
-  const data = reference.data;
+  return (
+    <ClinicalEncounterCreateForm
+      patientId={patientId}
+      patientName={patientName}
+      requestedAppointmentId={requestedAppointmentId}
+      data={reference.data}
+    />
+  );
+}
+
+function ClinicalEncounterCreateForm({
+  patientId,
+  patientName,
+  requestedAppointmentId,
+  data,
+}: CreateFormProps & { data: EncounterReferenceData }) {
+  const router = useRouter();
+  const create = useCreateClinicalEncounter();
+  const { toasts, pushToast, dismissToast } = useToasts();
+
+  const [values, setValues] = useState<CreateEncounterFormValues>(() =>
+    applyCreateDefaults(
+      { ...emptyCreateForm(), startDate: nowDateValue(), startTime: nowTimeValue() },
+      data,
+      requestedAppointmentId,
+    ),
+  );
+  const [procedureModalOpen, setProcedureModalOpen] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [partialEncounterId, setPartialEncounterId] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    branchId?: string;
+    startedAt?: string;
+  }>({});
+
+  const { listHref, breadcrumbs } = createPageNavigation(patientId, patientName);
+  // La cita del enlace pudo cancelarse o vincularse a otra atención entretanto.
+  const requestedAppointmentUnavailable =
+    Boolean(requestedAppointmentId) &&
+    !data.appointments.some((appointment) => appointment.id === requestedAppointmentId);
 
   function updateField<K extends keyof CreateEncounterFormValues>(
     key: K,
@@ -280,6 +327,12 @@ function ClinicalEncounterCreateForm({
             )}
           </div>
         </div>
+      )}
+
+      {requestedAppointmentUnavailable && !formError && (
+        <p role="status" className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
+          La cita indicada ya no está disponible para vincular. Puedes registrar la atención sin cita o elegir otra.
+        </p>
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

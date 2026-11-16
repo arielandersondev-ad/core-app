@@ -59,6 +59,7 @@ const ROUTES: readonly ProxyRule[] = [
   },
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters$`) },
   { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/reference-data$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/quick$`) },
   { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}$`) },
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/procedures$`) },
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/complete$`) },

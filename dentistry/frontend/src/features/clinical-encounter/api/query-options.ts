@@ -12,6 +12,7 @@ import type {
   CompleteClinicalEncounterVariables,
   CreateClinicalEncounterWithProceduresInput,
   PatientHealthProfileInput,
+  RegisterQuickProcedureInput,
   VoidClinicalEncounterVariables,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 
@@ -125,6 +126,29 @@ export function clinicalEncounterCreateOptions(client: QueryClient, session: Cur
           queryKey: clinicalEncounterQueryKeys.lists(encounter.patientId),
         }),
         invalidatePatientDetail(client, encounter.patientId),
+      ]);
+    },
+  });
+}
+
+export function clinicalEncounterQuickProcedureOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
+  return mutationOptions({
+    mutationFn: async (input: RegisterQuickProcedureInput) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().registerQuickProcedure(patientId, input);
+    },
+    retry: false,
+    onSuccess: async (encounter) => {
+      client.setQueryData(clinicalEncounterQueryKeys.detail(patientId, encounter.id), encounter);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.lists(patientId) }),
+        // Una cita vinculada deja de estar disponible para otra atención.
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.referenceData(patientId) }),
+        invalidatePatientDetail(client, patientId),
       ]);
     },
   });

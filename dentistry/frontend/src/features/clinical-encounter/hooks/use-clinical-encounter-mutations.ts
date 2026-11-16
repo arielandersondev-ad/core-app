@@ -5,6 +5,7 @@ import {
   clinicalEncounterAddProceduresOptions,
   clinicalEncounterCompleteOptions,
   clinicalEncounterCreateOptions,
+  clinicalEncounterQuickProcedureOptions,
   clinicalEncounterVoidOptions,
   clinicalFileAddOptions,
   clinicalFileRemoveOptions,
@@ -16,6 +17,12 @@ export function useCreateClinicalEncounter() {
   const client = useQueryClient();
   const session = useAuthenticatedSession();
   return useMutation(clinicalEncounterCreateOptions(client, session));
+}
+
+export function useRegisterQuickProcedure(patientId: string) {
+  const client = useQueryClient();
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalEncounterQuickProcedureOptions(client, session, patientId));
 }
 
 export function useCompleteClinicalEncounter(patientId: string) {

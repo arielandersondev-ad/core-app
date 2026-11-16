@@ -46,6 +46,30 @@ export function emptyCreateForm(): CreateEncounterFormValues {
   };
 }
 
+/**
+ * Valores iniciales una vez cargados los datos de referencia: la única sucursal
+ * disponible queda elegida y la cita pedida por URL (`?appointmentId=`, enlace
+ * "Iniciar atención" de la agenda) se preselecciona solo si sigue disponible.
+ */
+export function applyCreateDefaults(
+  values: CreateEncounterFormValues,
+  reference: { branches: EncounterReferenceOption[]; appointments: EncounterReferenceOption[] },
+  requestedAppointmentId?: string,
+): CreateEncounterFormValues {
+  const branchId =
+    values.branchId || (reference.branches.length === 1 ? reference.branches[0].id : "");
+  const appointmentId = requestedAppointmentId?.trim() ?? "";
+  if (!appointmentId || !reference.appointments.some((item) => item.id === appointmentId)) {
+    return { ...values, branchId };
+  }
+  return {
+    ...values,
+    branchId,
+    appointmentId,
+    treatmentId: suggestedTreatmentId(appointmentId, reference.appointments) ?? values.treatmentId,
+  };
+}
+
 function normalizeText(value: string): string | null {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;

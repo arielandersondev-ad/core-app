@@ -28,4 +28,5 @@ export const CLINICAL_ENCOUNTER_ENDPOINTS = {
   fileById: (patientId: string, fileId: string) =>
     `${patientPath(patientId)}/clinical-files/${encodeURIComponent(fileId)}`,
   referenceData: (patientId: string) => `${encountersCollection(patientId)}/reference-data`,
+  quick: (patientId: string) => `${encountersCollection(patientId)}/quick`,
 } as const;

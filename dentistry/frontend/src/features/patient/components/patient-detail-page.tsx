@@ -11,6 +11,8 @@ import { Button, buttonClassName, Icons, StatusMessage } from "@/shared/componen
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
 import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
+import { QuickProcedureModal } from "@/features/clinical-encounter/components/modals/quick-procedure-modal";
+import { isModuleEnabled } from "@/shared/plan/plan-access";
 
 function PatientField({ label, value }: { label: string; value: string | null }) {
   return (
@@ -34,6 +36,11 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [updatedMessage, setUpdatedMessage] = useState("");
+  const [registeringProcedure, setRegisteringProcedure] = useState(false);
+  const [quickEncounterId, setQuickEncounterId] = useState<string | null>(null);
+  const canRegisterProcedure =
+    session.permissions.includes("dentistry:encounters:create") &&
+    isModuleEnabled(session.plan, "procedures");
 
   if (query.isPending) {
     return <PageContainer><StatusMessage variant="loading" message="Cargando paciente…" /></PageContainer>;
@@ -78,6 +85,11 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
               Nueva atención
             </Link>
           )}
+          {canRegisterProcedure && (
+            <Button variant="outline" leftIcon={Icons.tooth} onClick={() => setRegisteringProcedure(true)}>
+              Registrar procedimiento
+            </Button>
+          )}
           {session.permissions.includes("dentistry:encounters:read") && (
             <>
               <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className={buttonClassName({ variant: "outline" })}>Atenciones clínicas</Link>
@@ -89,6 +101,26 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
         </div>}
       />
       {updatedMessage && <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">{updatedMessage}</p>}
+      {quickEncounterId && (
+        <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">
+          Procedimiento registrado.{" "}
+          {session.permissions.includes("dentistry:encounters:read") && (
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/${encodeURIComponent(quickEncounterId)}`} className="font-medium underline">
+              Ver atención
+            </Link>
+          )}
+        </p>
+      )}
+      {registeringProcedure && (
+        <QuickProcedureModal
+          patientId={patient.id}
+          onClose={() => setRegisteringProcedure(false)}
+          onRegistered={(encounter) => {
+            setQuickEncounterId(encounter.id);
+            setRegisteringProcedure(false);
+          }}
+        />
+      )}
       {confirmingDelete && <DeletePatientConfirmation patientId={patient.id} patientName={patient.fullName} onCancel={() => setConfirmingDelete(false)} onDeleted={() => router.replace("/patients")} />}
       <section aria-labelledby="patient-contact-heading" className="rounded-xl border border-border bg-surface px-5">
         <h2 id="patient-contact-heading" className="border-b border-border py-4 font-display text-base font-semibold text-foreground">Datos personales y de contacto</h2>

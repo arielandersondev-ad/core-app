@@ -126,6 +126,16 @@ export interface CreateClinicalEncounterWithProceduresInput {
   procedures: ClinicalEncounterProcedureDraft[];
 }
 
+/** "Atención rápida": procedimientos sueltos registrados como atención completada. */
+export interface RegisterQuickProcedureInput {
+  branchId: string;
+  /** Instante ISO en que se realizó; si se omite, el backend usa la hora actual. */
+  performedAt?: string;
+  appointmentId?: string;
+  procedureSummary?: string | null;
+  procedures: Omit<ClinicalEncounterProcedureDraft, "treatmentProcedureId">[];
+}
+
 export interface CompleteClinicalEncounterInput {
   endedAt: string;
   procedureSummary?: string | null;

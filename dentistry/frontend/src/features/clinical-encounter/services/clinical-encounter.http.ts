@@ -100,6 +100,12 @@ export function createClinicalEncounterHttpDataSource(): ClinicalEncounterDataSo
       );
     },
 
+    async registerQuickProcedure(patientId, input) {
+      return toEncounter(
+        await postJson<ClinicalEncounterDto>(CLINICAL_ENCOUNTER_ENDPOINTS.quick(patientId), input),
+      );
+    },
+
     async complete(patientId, encounterId, input) {
       return toEncounter(
         await postJson<ClinicalEncounterDto>(CLINICAL_ENCOUNTER_ENDPOINTS.complete(patientId, encounterId), input),

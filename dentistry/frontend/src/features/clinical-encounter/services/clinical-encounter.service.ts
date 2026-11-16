@@ -11,6 +11,7 @@ import type {
   EncounterReferenceData,
   PatientHealthProfile,
   PatientHealthProfileInput,
+  RegisterQuickProcedureInput,
   VoidClinicalEncounterInput,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import type { PaginatedResult } from "@/shared/types/pagination";
@@ -24,6 +25,7 @@ export interface ClinicalEncounterDataSource {
   list(patientId: string, filters?: ClinicalEncounterListFilters): Promise<PaginatedResult<ClinicalEncounter>>;
   get(patientId: string, encounterId: string): Promise<ClinicalEncounter>;
   create(input: CreateClinicalEncounterInput): Promise<ClinicalEncounter>;
+  registerQuickProcedure(patientId: string, input: RegisterQuickProcedureInput): Promise<ClinicalEncounter>;
   complete(
     patientId: string,
     encounterId: string,
