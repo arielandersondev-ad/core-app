@@ -20,6 +20,7 @@ import {
   type FindPatientsFilters,
 } from '../domain/repositories/patient.repository.js';
 import { toPatientEntity } from './patient.mapper.js';
+import { assertPatientSeatAvailable, countPatientSeats } from './patient-quota.js';
 
 @Injectable()
 export class PrismaPatientRepository extends PatientRepository {
@@ -27,31 +28,41 @@ export class PrismaPatientRepository extends PatientRepository {
     super();
   }
 
-  async create(patient: PatientCreateData): Promise<Patient> {
-    const row = await this.prisma.orm.dentistry.Patient.create({
-      organizationId: patient.organizationId,
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      phone: patient.phone,
-      email: patient.email,
-      birthDate: patient.birthDate,
-      sex: patient.sex,
-      documentType: patient.documentType,
-      documentNumber: patient.documentNumber,
-      address: patient.address,
-      maritalStatus: patient.maritalStatus,
-      occupation: patient.occupation,
-      origin: patient.origin,
-      notes: patient.notes,
-      status: patient.status,
-      createdByMembershipId: patient.createdByMembershipId,
-      updatedByMembershipId: patient.updatedByMembershipId
-        ? patient.updatedByMembershipId
-        : null,
-      deletedAt: patient.deletedAt,
+  async create(
+    patient: PatientCreateData,
+    patientLimit: number | null,
+  ): Promise<Patient> {
+    const row = await this.prisma.transaction(async (tx) => {
+      await assertPatientSeatAvailable(tx, patient.organizationId, patientLimit);
+      return tx.orm.dentistry.Patient.create({
+        organizationId: patient.organizationId,
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        phone: patient.phone,
+        email: patient.email,
+        birthDate: patient.birthDate,
+        sex: patient.sex,
+        documentType: patient.documentType,
+        documentNumber: patient.documentNumber,
+        address: patient.address,
+        maritalStatus: patient.maritalStatus,
+        occupation: patient.occupation,
+        origin: patient.origin,
+        notes: patient.notes,
+        status: patient.status,
+        createdByMembershipId: patient.createdByMembershipId,
+        updatedByMembershipId: patient.updatedByMembershipId
+          ? patient.updatedByMembershipId
+          : null,
+        deletedAt: patient.deletedAt,
+      });
     }).catch(rethrowPatientConflict);
 
     return toPatientEntity(row);
+  }
+
+  countSeats(organizationId: string): Promise<number> {
+    return countPatientSeats(this.prisma, organizationId);
   }
 
   async findById(id: string, organizationId: string): Promise<Patient | null> {

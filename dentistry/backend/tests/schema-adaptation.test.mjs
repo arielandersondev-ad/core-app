@@ -87,7 +87,7 @@ test('el alta rechaza un documento incompleto antes de persistir', async () => {
       writes++;
       return value;
     },
-  });
+  }, { read: async () => null });
   const input = {
     organizationId,
     firstName: 'Ana',
@@ -238,7 +238,7 @@ test('el alta normaliza datos y conserva los valores por defecto sin construir u
       createdAt: new Date(),
       updatedAt: new Date(),
     }),
-  });
+  }, { read: async () => null });
   const result = await useCase.execute({
     organizationId,
     createdByMembershipId: actor,

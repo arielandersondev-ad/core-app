@@ -4,9 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../common/infrastructure/prisma.service.js';
+import { PlanEntitlementsReader } from '../../../auth/application/ports/plan-entitlements.reader.js';
 import type { Patient } from '../../../patient/domain/entities/patient.entity.js';
 import { validatePatient } from '../../../patient/application/validate-patient.js';
 import { toPatientEntity } from '../../../patient/infrastructure/patient.mapper.js';
+import { assertPatientSeatAvailable } from '../../../patient/infrastructure/patient-quota.js';
 
 export interface ConvertPersonToPatientCommand {
   organizationId: string;
@@ -33,12 +35,18 @@ export interface ConvertPersonToPatientResult {
 
 @Injectable()
 export class ConvertPersonToPatientUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly entitlements: PlanEntitlementsReader,
+  ) {}
 
   async execute(
     command: ConvertPersonToPatientCommand,
   ): Promise<ConvertPersonToPatientResult> {
     const { organizationId, personId, membershipId, patientData = {} } = command;
+
+    const plan = await this.entitlements.read(organizationId);
+    const patientLimit = plan?.limits.patients ?? null;
 
     return this.prisma.transaction(async (tx) => {
       const personRow = await tx.orm.dentistry.Person.first({
@@ -110,6 +118,9 @@ export class ConvertPersonToPatientUseCase {
           );
         }
       }
+
+      // Convertir crea un paciente: ocupa cupo del plan igual que el alta directa.
+      await assertPatientSeatAvailable(tx, organizationId, patientLimit);
 
       const createdPatientRow = await tx.orm.dentistry.Patient.create({
         organizationId,

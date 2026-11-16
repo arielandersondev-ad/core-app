@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PlanEntitlementsReader } from '../../../auth/application/ports/plan-entitlements.reader.js';
 import type { Patient } from '../../domain/entities/patient.entity.js';
 import {
   PatientRepository,
@@ -9,7 +10,10 @@ import type { CreatePatientInput } from '../contracts/create-patient.input.js';
 
 @Injectable()
 export class CreatePatientUseCase {
-  constructor(private readonly patientRepository: PatientRepository) {}
+  constructor(
+    private readonly patientRepository: PatientRepository,
+    private readonly entitlements: PlanEntitlementsReader,
+  ) {}
 
   async execute(command: CreatePatientInput): Promise<Patient> {
     const patient: PatientCreateData = {
@@ -34,6 +38,7 @@ export class CreatePatientUseCase {
     };
 
     validatePatient(patient);
-    return this.patientRepository.create(patient);
+    const plan = await this.entitlements.read(command.organizationId);
+    return this.patientRepository.create(patient, plan?.limits.patients ?? null);
   }
 }

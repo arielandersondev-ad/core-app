@@ -50,7 +50,33 @@ test(
     const { createPaginatedResult } = await import(
       '../dist/common/pagination/pagination.js'
     );
+    const { PlanEntitlementsReader } = await import(
+      '../dist/modules/auth/application/ports/plan-entitlements.reader.js'
+    );
+    const { parsePlanEntitlements } = await import(
+      '../dist/modules/auth/application/contracts/plan-entitlements.js'
+    );
+    const { PlanLimitReachedException } = await import(
+      '../dist/modules/auth/application/contracts/plan-limit-reached.exception.js'
+    );
+    const { assertPatientSeatAvailable } = await import(
+      '../dist/modules/patient/infrastructure/patient-quota.js'
+    );
+    const { ConvertPersonToPatientUseCase } = await import(
+      '../dist/modules/person/application/use-case/convert-person-to-patient.use-case.js'
+    );
     ({ db } = await import('../dist/prisma/db.js'));
+
+    // Plan vigente de la organización; cada subtest puede reemplazarlo.
+    const starterPlan = (overrides = {}) =>
+      parsePlanEntitlements({
+        schemaVersion: 1,
+        limits: { patients: 300, members: 2, branches: 1 },
+        features: { clinicalHistory: true, appointments: true, procedureNotes: true },
+        ...overrides,
+      });
+    let currentPlan = starterPlan();
+    const entitlementsReader = { read: async () => currentPlan };
 
     const principal = {
       sub: randomUUID(),
@@ -113,8 +139,19 @@ test(
         const patient = rows.get(id);
         return patient?.organizationId === organizationId ? patient : null;
       },
-      async create(data) {
-        calls.push({ operation: 'create', data });
+      async countSeats(organizationId) {
+        return [...rows.values()].filter(
+          (row) => row.organizationId === organizationId && row.deletedAt === null,
+        ).length;
+      },
+      async create(data, patientLimit) {
+        calls.push({ operation: 'create', data, patientLimit });
+        if (
+          patientLimit !== null &&
+          (await this.countSeats(data.organizationId)) >= patientLimit
+        ) {
+          throw new PlanLimitReachedException('patients', patientLimit);
+        }
         const patient = {
           ...data,
           id: randomUUID(),
@@ -141,12 +178,14 @@ test(
     Module({
       imports: [DentistryAuthModule],
       controllers: Reflect.getMetadata('controllers', PatientModule),
-      providers: Reflect.getMetadata('providers', PatientModule).map(
-        (provider) =>
+      providers: [
+        ...Reflect.getMetadata('providers', PatientModule).map((provider) =>
           provider.provide === PatientRepository
             ? { provide: PatientRepository, useValue: repository }
             : provider,
-      ),
+        ),
+        { provide: PlanEntitlementsReader, useValue: entitlementsReader },
+      ],
     })(PatientHttpTestModule);
     app = await NestFactory.create(PatientHttpTestModule, { logger: false });
     app.useGlobalPipes(
@@ -413,5 +452,137 @@ test(
         assert.equal(calls.length, before);
       },
     );
+
+    await t.test('el cupo del plan limita las altas y se consulta en /patients/quota', async (t) => {
+      t.after(() => { currentPlan = starterPlan(); });
+      const accessToken = await token();
+      const seats = () => repository.countSeats(principal.organizationId);
+      const body = { firstName: 'Carla', lastName: 'Rojas' };
+
+      let quota = await request('/patients/quota', 'GET', accessToken);
+      assert.equal(quota.status, 200);
+      assert.deepEqual(quota.body, { used: await seats(), limit: 300 });
+
+      // Por debajo del cupo se crea y el repositorio recibe el límite del plan.
+      const limit = (await seats()) + 1;
+      currentPlan = starterPlan({ limits: { patients: limit, members: 2, branches: 1 } });
+      assert.equal((await request('/patients', 'POST', accessToken, body)).status, 201);
+      assert.equal(calls.findLast((call) => call.operation === 'create').patientLimit, limit);
+
+      // Al llegar al cupo se bloquea con el código estable.
+      const blocked = await request('/patients', 'POST', accessToken, body);
+      assert.equal(blocked.status, 403);
+      assert.equal(blocked.body.code, 'PLAN_LIMIT_REACHED');
+      assert.equal(blocked.body.resource, 'patients');
+      assert.equal(blocked.body.limit, limit);
+      assert.match(blocked.body.message, /Mejora tu plan/);
+      quota = await request('/patients/quota', 'GET', accessToken);
+      assert.deepEqual(quota.body, { used: limit, limit });
+
+      // Un paciente eliminado libera cupo.
+      rows.get(own.id).deletedAt = new Date();
+      assert.equal((await request('/patients', 'POST', accessToken, body)).status, 201);
+      rows.get(own.id).deletedAt = null;
+
+      // Un plan antiguo sin la clave no aplica cupo.
+      currentPlan = starterPlan({ limits: {} });
+      assert.equal((await request('/patients', 'POST', accessToken, body)).status, 201);
+      assert.equal(calls.findLast((call) => call.operation === 'create').patientLimit, null);
+      assert.equal((await request('/patients/quota', 'GET', accessToken)).body.limit, null);
+
+      // "quota" exige el permiso de lectura.
+      const denied = await request('/patients/quota', 'GET', await token({ permissions: [] }));
+      assert.equal(denied.status, 403);
+    });
+
+    await t.test('el módulo Pacientes debe estar en el plan vigente', async (t) => {
+      t.after(() => { currentPlan = starterPlan(); });
+      const accessToken = await token();
+      const before = calls.length;
+      for (const plan of [starterPlan({ features: { appointments: true } }), null]) {
+        currentPlan = plan;
+        for (const [path, method, body] of [
+          ['/patients', 'GET'],
+          ['/patients/quota', 'GET'],
+          [`/patients/${own.id}`, 'GET'],
+          ['/patients', 'POST', { firstName: 'Ana', lastName: 'Luz' }],
+        ]) {
+          const result = await request(path, method, accessToken, body);
+          assert.equal(result.status, 403, `${method} ${path}`);
+          assert.equal(result.body.code, 'MODULE_NOT_IN_PLAN');
+          assert.equal(result.body.module, 'patients');
+        }
+      }
+      assert.equal(calls.length, before);
+    });
+
+    await t.test('el cupo se comprueba bajo bloqueo dentro de la transacción', async () => {
+      const organizationId = randomUUID();
+      function fakeTx(seats) {
+        const steps = [];
+        return {
+          steps,
+          execute: async (plan) => { steps.push(['lock', plan]); return []; },
+          orm: { dentistry: { Patient: { where: (filter) => ({
+            aggregate: async () => { steps.push(['count', filter]); return { totalItems: seats }; },
+          }) } } },
+        };
+      }
+      const unlimited = fakeTx(999);
+      await assertPatientSeatAvailable(unlimited, organizationId, null);
+      assert.equal(unlimited.steps.length, 0);
+
+      const available = fakeTx(2);
+      await assertPatientSeatAvailable(available, organizationId, 3);
+      assert.deepEqual(available.steps.map(([step]) => step), ['lock', 'count']);
+      assert.match(JSON.stringify(available.steps[0][1]), /pg_advisory_xact_lock/);
+      assert.match(JSON.stringify(available.steps[0][1]), new RegExp(organizationId));
+      assert.deepEqual(available.steps[1][1], { organizationId, deletedAt: null });
+
+      await assert.rejects(assertPatientSeatAvailable(fakeTx(3), organizationId, 3), (error) => {
+        assert.ok(error instanceof PlanLimitReachedException);
+        assert.equal(error.getResponse().code, 'PLAN_LIMIT_REACHED');
+        return true;
+      });
+    });
+
+    await t.test('convertir una persona en paciente respeta el cupo', async () => {
+      const organizationId = randomUUID();
+      const personId = randomUUID();
+      function harness(seats) {
+        const created = [];
+        const tx = {
+          execute: async () => [],
+          orm: { dentistry: {
+            Person: {
+              first: async () => ({ id: personId, organizationId, firstName: 'Luis', lastName: 'Soto', phone: null, email: null, notes: null, deletedAt: null, convertedToPatientId: null }),
+              where: () => ({ update: async () => ({}) }),
+            },
+            Patient: {
+              where: () => ({ aggregate: async () => ({ totalItems: seats }) }),
+              first: async () => null,
+              create: async (data) => {
+                const row = { ...data, id: randomUUID(), maritalStatus: null, occupation: null, origin: null, deletedAt: null, createdAt: new Date(), updatedAt: new Date() };
+                created.push(row);
+                return row;
+              },
+            },
+            Appointment: { where: () => ({ all: async () => [], update: async () => null }) },
+          } },
+        };
+        const useCase = new ConvertPersonToPatientUseCase(
+          { transaction: (work) => work(tx) },
+          { read: async () => starterPlan({ limits: { patients: 3, members: 2, branches: 1 } }) },
+        );
+        return { useCase, created };
+      }
+      const command = { organizationId, personId, membershipId: randomUUID() };
+      const full = harness(3);
+      await assert.rejects(full.useCase.execute(command), PlanLimitReachedException);
+      assert.equal(full.created.length, 0);
+      const free = harness(2);
+      const result = await free.useCase.execute(command);
+      assert.equal(result.patient.id, free.created[0].id);
+    });
   },
 );

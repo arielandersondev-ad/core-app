@@ -6,6 +6,7 @@ import { GetPatientByIdUseCase } from './application/use-case/get-patient-by-id.
 import { ListPatientsUseCase } from './application/use-case/list-patients.use-case.js';
 import { UpdatePatientUseCase } from './application/use-case/update-patient.use-case.js';
 import { DeletePatientUseCase } from './application/use-case/delete-patient.use-case.js';
+import { GetPatientQuotaUseCase } from './application/use-case/get-patient-quota.use-case.js';
 import { PatientRepository } from './domain/repositories/patient.repository.js';
 import { PrismaPatientRepository } from './infrastructure/prisma-patient.repository.js';
 import { PatientController } from './presentation/http/patient.controller.js';
@@ -23,6 +24,7 @@ import { PatientController } from './presentation/http/patient.controller.js';
     CreatePatientUseCase,
     UpdatePatientUseCase,
     DeletePatientUseCase,
+    GetPatientQuotaUseCase,
   ],
   exports: [
     PatientRepository,

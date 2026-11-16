@@ -15,12 +15,18 @@ import type { DentistryPrincipal } from '../../../auth/application/contracts/den
 import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/current-principal.decorator.js';
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
 import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
+import { RequireModule } from '../../../auth/presentation/http/decorators/require-module.decorator.js';
+import { DentistryModuleGuard } from '../../../auth/presentation/http/guards/dentistry-module.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
 import { CreatePatientUseCase } from '../../application/use-case/create-patient.use-case.js';
 import { GetPatientByIdUseCase } from '../../application/use-case/get-patient-by-id.use-case.js';
 import { ListPatientsUseCase } from '../../application/use-case/list-patients.use-case.js';
 import { UpdatePatientUseCase } from '../../application/use-case/update-patient.use-case.js';
 import { DeletePatientUseCase } from '../../application/use-case/delete-patient.use-case.js';
+import {
+  GetPatientQuotaUseCase,
+  type PatientQuota,
+} from '../../application/use-case/get-patient-quota.use-case.js';
 import { CreatePatientDto } from '../dto/create-patient.dto.js';
 import { ListPatientsQueryDto } from '../dto/list-patients.query.dto.js';
 import { PatientResponseDto } from '../dto/patient.response.dto.js';
@@ -29,7 +35,8 @@ import { parseCivilDate } from '../../../../common/validation/civil-date.js';
 import type { PaginatedResult } from '../../../../common/pagination/pagination.js';
 
 @Controller('patients')
-@UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
+@UseGuards(DentistryJwtGuard, DentistryPermissionGuard, DentistryModuleGuard)
+@RequireModule('patients')
 export class PatientController {
   constructor(
     private readonly listPatientsUseCase: ListPatientsUseCase,
@@ -37,6 +44,7 @@ export class PatientController {
     private readonly createPatientUseCase: CreatePatientUseCase,
     private readonly updatePatientUseCase: UpdatePatientUseCase,
     private readonly deletePatientUseCase: DeletePatientUseCase,
+    private readonly getPatientQuotaUseCase: GetPatientQuotaUseCase,
   ) {}
 
   @Get()
@@ -85,6 +93,13 @@ export class PatientController {
       hasMore: result.hasMore ?? false,
       pagination: result.pagination,
     };
+  }
+
+  // Debe declararse antes de `:id`: "quota" no es un UUID.
+  @Get('quota')
+  @RequirePermission('dentistry:patients:read')
+  quota(@CurrentPrincipal() principal: DentistryPrincipal): Promise<PatientQuota> {
+    return this.getPatientQuotaUseCase.execute(principal.organizationId);
   }
 
   @Get(':id')

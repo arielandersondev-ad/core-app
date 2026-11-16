@@ -16,7 +16,16 @@ export type FindPatientsFilters = {
 } & Partial<PaginationInput>;
 
 export abstract class PatientRepository {
-  abstract create(patient: PatientCreateData): Promise<Patient>;
+  /**
+   * Crea el paciente respetando el cupo del plan (`null`: sin cupo). Lanza
+   * `PlanLimitReachedException` si la organización ya lo alcanzó.
+   */
+  abstract create(
+    patient: PatientCreateData,
+    patientLimit: number | null,
+  ): Promise<Patient>;
+  /** Pacientes que ocupan cupo del plan (no eliminados). */
+  abstract countSeats(organizationId: string): Promise<number>;
   abstract findById(id: string, organizationId: string,): Promise<Patient | null>;
   abstract findByFilters(
     filters: FindPatientsFilters,

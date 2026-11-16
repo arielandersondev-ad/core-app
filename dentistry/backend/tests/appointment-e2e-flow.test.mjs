@@ -436,7 +436,7 @@ test('E2E Flujo 2: Agendamiento de Prospecto (Persona sin expediente) y posterio
   const createPersonUseCase = new CreatePersonUseCase(personRepo);
   const listPersonsUseCase = new ListPersonsUseCase(personRepo);
   const getPersonByIdUseCase = new GetPersonByIdUseCase(personRepo);
-  const convertPersonToPatientUseCase = new ConvertPersonToPatientUseCase(prisma);
+  const convertPersonToPatientUseCase = new ConvertPersonToPatientUseCase(prisma, { read: async () => null });
 
   const personController = new PersonController(
     createPersonUseCase,

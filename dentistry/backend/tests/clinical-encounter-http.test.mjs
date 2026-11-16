@@ -64,7 +64,23 @@ test(
     const { createPaginatedResult } = await import(
       '../dist/common/pagination/pagination.js'
     );
+    const { PlanEntitlementsReader } = await import(
+      '../dist/modules/auth/application/ports/plan-entitlements.reader.js'
+    );
+    const { parsePlanEntitlements } = await import(
+      '../dist/modules/auth/application/contracts/plan-entitlements.js'
+    );
     ({ db } = await import('../dist/prisma/db.js'));
+
+    // Plan vigente de la organización; los subtests de plan lo reemplazan.
+    const planWith = (features) =>
+      parsePlanEntitlements({
+        schemaVersion: 1,
+        limits: { patients: 300, members: 2, branches: 1 },
+        features,
+      });
+    const STARTER_FEATURES = { clinicalHistory: true, appointments: true, procedureNotes: true };
+    let currentPlan = planWith(STARTER_FEATURES);
 
     const branchId = randomUUID();
     const otherBranchId = randomUUID();
@@ -117,6 +133,9 @@ test(
       async findByFilters(filters) {
         patientCalls.push(filters);
         return createPaginatedResult([], { page: 1, pageSize: 20 }, 0);
+      },
+      async countSeats() {
+        return patients.size;
       },
       async create(data) {
         const row = {
@@ -305,10 +324,13 @@ test(
         ...Reflect.getMetadata('controllers', ClinicalEncounterModule),
         ...Reflect.getMetadata('controllers', PatientModule),
       ],
-      providers: withFakes([
-        ...Reflect.getMetadata('providers', ClinicalEncounterModule),
-        ...Reflect.getMetadata('providers', PatientModule),
-      ]),
+      providers: [
+        ...withFakes([
+          ...Reflect.getMetadata('providers', ClinicalEncounterModule),
+          ...Reflect.getMetadata('providers', PatientModule),
+        ]),
+        { provide: PlanEntitlementsReader, useValue: { read: async () => currentPlan } },
+      ],
     })(ClinicalHttpTestModule);
     app = await NestFactory.create(ClinicalHttpTestModule, { logger: false });
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -587,5 +609,6 @@ test(
       assert.equal(created.body.occupation, 'Docente');
       assert.equal(created.body.origin, null);
     });
+
   },
 );

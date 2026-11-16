@@ -7,6 +7,7 @@ claims. `DentistryPermissionGuard` comprueba el permiso exacto de la operación.
 | Operación | Permiso del token |
 | --- | --- |
 | `GET /patients` | `dentistry:patients:read` |
+| `GET /patients/quota` | `dentistry:patients:read` |
 | `GET /patients/:id` | `dentistry:patients:read` |
 | `POST /patients` | `dentistry:patients:create` |
 | `PATCH /patients/:id` | `dentistry:patients:update` |
@@ -41,3 +42,10 @@ requerido devuelve 403. Los cambios de permisos se reflejan al emitir un nuevo
 token; se conserva la política actual de vigencia de Dentistry.
 
 La asignación clínica por odontólogo sigue siendo una regla adicional pendiente.
+
+## Plan de la organización
+
+- Todo el controlador exige la función `clinicalHistory` del plan (`@RequireModule('patients')`); sin ella responde 403 `MODULE_NOT_IN_PLAN`.
+- `GET /patients/quota` devuelve `{ used, limit }`: pacientes no eliminados y `limits.patients` del plan (`null` si el plan no lo define).
+- El alta y la conversión de persona a paciente comprueban el cupo dentro de la transacción, bajo un bloqueo por organización (`patient-quota.ts`). Al alcanzarlo responden 403 `{ code: 'PLAN_LIMIT_REACHED', resource: 'patients', limit, message }`.
+- Inactivar un paciente no libera cupo; eliminarlo sí.
