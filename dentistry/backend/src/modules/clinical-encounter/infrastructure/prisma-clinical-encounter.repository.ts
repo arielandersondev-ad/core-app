@@ -116,28 +116,34 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
 
   async create(data: ClinicalEncounterCreateData): Promise<ClinicalEncounter> {
     const row = await this.prisma.orm.dentistry.ClinicalEncounter.create({
-      organizationId: data.organizationId,
-      patientId: data.patientId,
-      branchId: data.branchId,
-      practitionerMembershipId: data.practitionerMembershipId,
-      appointmentId: data.appointmentId,
-      treatmentId: data.treatmentId,
-      startedAt: data.startedAt,
-      chiefComplaint: data.chiefComplaint,
-      examinationSummary: data.examinationSummary,
-      diagnosisSummary: data.diagnosisSummary,
-      procedureSummary: data.procedureSummary,
-      progressNotes: data.progressNotes,
-      patientInstructions: data.patientInstructions,
-      notes: data.notes,
+      ...encounterInsert(data),
       status: 'IN_PROGRESS',
-      createdByMembershipId: data.createdByMembershipId,
-    }).catch((error: unknown) => {
-      if (hasPostgresCode(error, '23505')) {
-        throw ClinicalErrors.appointmentTaken();
-      }
-      throw error;
-    });
+    }).catch(rethrowAppointmentTaken);
+    const [encounter] = await this.hydrate(data.organizationId, [row]);
+    return encounter;
+  }
+
+  async createCompletedWithProcedures(
+    data: ClinicalEncounterCreateData,
+    procedures: ProcedureCreateData[],
+  ): Promise<ClinicalEncounter> {
+    const row = await this.prisma
+      .transaction(async (tx) => {
+        const encounter = await tx.orm.dentistry.ClinicalEncounter.create({
+          ...encounterInsert(data),
+          status: 'COMPLETED',
+          endedAt: data.startedAt,
+          completedAt: new Date(),
+          completedByMembershipId: data.createdByMembershipId,
+        });
+        for (const procedure of procedures) {
+          await tx.orm.dentistry.ClinicalEncounterProcedure.create(
+            procedureInsert(data, encounter.id, procedure, data.createdByMembershipId),
+          );
+        }
+        return encounter;
+      })
+      .catch(rethrowAppointmentTaken);
     const [encounter] = await this.hydrate(data.organizationId, [row]);
     return encounter;
   }
@@ -183,18 +189,9 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
 
       const created: ClinicalEncounterProcedure[] = [];
       for (const procedure of procedures) {
-        const row = await tx.orm.dentistry.ClinicalEncounterProcedure.create({
-          organizationId: scope.organizationId,
-          patientId: scope.patientId,
-          clinicalEncounterId: encounterId,
-          treatmentProcedureId: procedure.treatmentProcedureId,
-          targetType: procedure.targetType,
-          toothNumber: procedure.toothNumber,
-          targetDescription: procedure.targetDescription,
-          description: procedure.description,
-          status: 'RECORDED',
-          createdByMembershipId: actorMembershipId,
-        });
+        const row = await tx.orm.dentistry.ClinicalEncounterProcedure.create(
+          procedureInsert(scope, encounterId, procedure, actorMembershipId),
+        );
         created.push(toProcedureEntity(row));
       }
       return created;
@@ -446,6 +443,52 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
     }
     return names;
   }
+}
+
+function encounterInsert(data: ClinicalEncounterCreateData) {
+  return {
+    organizationId: data.organizationId,
+    patientId: data.patientId,
+    branchId: data.branchId,
+    practitionerMembershipId: data.practitionerMembershipId,
+    appointmentId: data.appointmentId,
+    treatmentId: data.treatmentId,
+    startedAt: data.startedAt,
+    chiefComplaint: data.chiefComplaint,
+    examinationSummary: data.examinationSummary,
+    diagnosisSummary: data.diagnosisSummary,
+    procedureSummary: data.procedureSummary,
+    progressNotes: data.progressNotes,
+    patientInstructions: data.patientInstructions,
+    notes: data.notes,
+    createdByMembershipId: data.createdByMembershipId,
+  };
+}
+
+function procedureInsert(
+  scope: EncounterScope,
+  clinicalEncounterId: string,
+  procedure: ProcedureCreateData,
+  actorMembershipId: string,
+) {
+  return {
+    organizationId: scope.organizationId,
+    patientId: scope.patientId,
+    clinicalEncounterId,
+    treatmentProcedureId: procedure.treatmentProcedureId,
+    targetType: procedure.targetType,
+    toothNumber: procedure.toothNumber,
+    targetDescription: procedure.targetDescription,
+    description: procedure.description,
+    status: 'RECORDED' as const,
+    createdByMembershipId: actorMembershipId,
+  };
+}
+
+/** `appointmentId` es único: una cita admite una sola atención. */
+function rethrowAppointmentTaken(error: unknown): never {
+  if (hasPostgresCode(error, '23505')) throw ClinicalErrors.appointmentTaken();
+  throw error;
 }
 
 function formatInstant(value: Date, timeZone: string | undefined): string {

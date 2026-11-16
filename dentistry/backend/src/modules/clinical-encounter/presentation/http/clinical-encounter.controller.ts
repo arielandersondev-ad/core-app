@@ -15,6 +15,8 @@ import type { DentistryPrincipal } from '../../../auth/application/contracts/den
 import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/current-principal.decorator.js';
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
 import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
+import { RequireModule } from '../../../auth/presentation/http/decorators/require-module.decorator.js';
+import { DentistryModuleGuard } from '../../../auth/presentation/http/guards/dentistry-module.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
 import { AddClinicalEncounterProceduresUseCase } from '../../application/use-case/add-clinical-encounter-procedures.use-case.js';
 import { CompleteClinicalEncounterUseCase } from '../../application/use-case/complete-clinical-encounter.use-case.js';
@@ -22,6 +24,7 @@ import { CreateClinicalEncounterUseCase } from '../../application/use-case/creat
 import { GetClinicalEncounterUseCase } from '../../application/use-case/get-clinical-encounter.use-case.js';
 import { GetEncounterReferenceDataUseCase } from '../../application/use-case/get-encounter-reference-data.use-case.js';
 import { ListClinicalEncountersUseCase } from '../../application/use-case/list-clinical-encounters.use-case.js';
+import { RegisterQuickProcedureUseCase } from '../../application/use-case/register-quick-procedure.use-case.js';
 import { VoidClinicalEncounterUseCase } from '../../application/use-case/void-clinical-encounter.use-case.js';
 import type { EncounterReferenceData } from '../../domain/repositories/clinical-encounter.repository.js';
 import {
@@ -29,6 +32,7 @@ import {
   CompleteClinicalEncounterDto,
   CreateClinicalEncounterDto,
   ListClinicalEncountersQueryDto,
+  RegisterQuickProcedureDto,
   VoidClinicalEncounterDto,
 } from '../dto/clinical-encounter.dto.js';
 import {
@@ -42,7 +46,9 @@ type ClinicalEncounterPage = {
 };
 
 @Controller('patients/:patientId/clinical-encounters')
-@UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
+@UseGuards(DentistryJwtGuard, DentistryPermissionGuard, DentistryModuleGuard)
+// El historial clínico forma parte del módulo Paciente.
+@RequireModule('patients')
 export class ClinicalEncounterController {
   constructor(
     private readonly listUseCase: ListClinicalEncountersUseCase,
@@ -52,6 +58,7 @@ export class ClinicalEncounterController {
     private readonly completeUseCase: CompleteClinicalEncounterUseCase,
     private readonly voidUseCase: VoidClinicalEncounterUseCase,
     private readonly referenceDataUseCase: GetEncounterReferenceDataUseCase,
+    private readonly quickProcedureUseCase: RegisterQuickProcedureUseCase,
   ) {}
 
   @Get()
@@ -130,6 +137,29 @@ export class ClinicalEncounterController {
       progressNotes: dto.progressNotes,
       patientInstructions: dto.patientInstructions,
       notes: dto.notes,
+      actorMembershipId: principal.membershipId,
+    });
+    return ClinicalEncounterResponseDto.fromEntity(encounter);
+  }
+
+  /** Atención rápida: procedimientos sueltos como una atención ya completada. */
+  @Post('quick')
+  @RequireModule('procedures')
+  @RequirePermission('dentistry:encounters:create')
+  async registerQuick(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Body() dto: RegisterQuickProcedureDto,
+  ): Promise<ClinicalEncounterResponseDto> {
+    const encounter = await this.quickProcedureUseCase.execute({
+      organizationId: principal.organizationId,
+      patientId,
+      authorizedBranchIds: principal.branchIds,
+      branchId: dto.branchId,
+      appointmentId: dto.appointmentId,
+      performedAt: dto.performedAt ? new Date(dto.performedAt) : undefined,
+      procedureSummary: dto.procedureSummary,
+      procedures: dto.procedures,
       actorMembershipId: principal.membershipId,
     });
     return ClinicalEncounterResponseDto.fromEntity(encounter);

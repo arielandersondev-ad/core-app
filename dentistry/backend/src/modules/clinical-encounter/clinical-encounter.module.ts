@@ -10,6 +10,7 @@ import { GetClinicalEncounterUseCase } from './application/use-case/get-clinical
 import { GetEncounterReferenceDataUseCase } from './application/use-case/get-encounter-reference-data.use-case.js';
 import { GetPatientHealthProfileUseCase } from './application/use-case/get-patient-health-profile.use-case.js';
 import { ListClinicalEncountersUseCase } from './application/use-case/list-clinical-encounters.use-case.js';
+import { RegisterQuickProcedureUseCase } from './application/use-case/register-quick-procedure.use-case.js';
 import { SavePatientHealthProfileUseCase } from './application/use-case/save-patient-health-profile.use-case.js';
 import { VoidClinicalEncounterUseCase } from './application/use-case/void-clinical-encounter.use-case.js';
 import { ClinicalEncounterRepository } from './domain/repositories/clinical-encounter.repository.js';
@@ -39,6 +40,7 @@ import { PatientHealthProfileController } from './presentation/http/patient-heal
     CompleteClinicalEncounterUseCase,
     VoidClinicalEncounterUseCase,
     GetEncounterReferenceDataUseCase,
+    RegisterQuickProcedureUseCase,
     GetPatientHealthProfileUseCase,
     SavePatientHealthProfileUseCase,
   ],

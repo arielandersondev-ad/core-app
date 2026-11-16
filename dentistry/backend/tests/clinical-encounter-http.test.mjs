@@ -218,6 +218,26 @@ test(
         encounters.set(row.id, row);
         return structuredClone(row);
       },
+      async createCompletedWithProcedures(data, drafts) {
+        const created = await this.create(data);
+        const row = encounters.get(created.id);
+        Object.assign(row, {
+          status: 'COMPLETED',
+          endedAt: data.startedAt,
+          completedAt: new Date(),
+          completedByMembershipId: data.createdByMembershipId,
+          procedures: drafts.map((draft) => ({
+            ...draft,
+            id: randomUUID(),
+            clinicalEncounterId: row.id,
+            status: 'RECORDED',
+            voidedAt: null,
+            voidedByMembershipId: null,
+            voidReason: null,
+          })),
+        });
+        return structuredClone(row);
+      },
       async transition(scope, id, expectedRowVersion, change) {
         encounterRepositoryCalls++;
         const row = encounters.get(id);
@@ -377,6 +397,7 @@ test(
         [`${base}/reference-data`, 'GET', READ],
         [`${base}/${someId}`, 'GET', READ],
         [base, 'POST', CREATE, createBody()],
+        [`${base}/quick`, 'POST', CREATE, { branchId, procedures: [] }],
         [`${base}/${someId}/procedures`, 'POST', UPDATE, { procedures: [] }],
         [`${base}/${someId}/complete`, 'POST', UPDATE, { endedAt: '2026-11-11T15:00:00Z' }],
         [`${base}/${someId}/void`, 'POST', VOID, { reason: 'x' }],
@@ -610,5 +631,101 @@ test(
       assert.equal(created.body.origin, null);
     });
 
+    await t.test('atención rápida: registra procedimientos como atención completada', async () => {
+      const accessToken = await token();
+      const quick = `${base}/quick`;
+      const procedure = { targetType: 'TOOTH', toothNumber: '16', description: ' Restauración ' };
+      const result = await request(quick, 'POST', accessToken, {
+        branchId,
+        performedAt: '2026-11-16T15:30:00.000Z',
+        procedureSummary: '  Sin complicaciones  ',
+        procedures: [procedure, { targetType: 'WHOLE_MOUTH', description: 'Profilaxis' }],
+        practitionerMembershipId: randomUUID(),
+        status: 'IN_PROGRESS',
+      });
+      assert.equal(result.status, 201);
+      assert.equal(result.body.status, 'COMPLETED');
+      assert.equal(result.body.startedAt, '2026-11-16T15:30:00.000Z');
+      assert.equal(result.body.endedAt, '2026-11-16T15:30:00.000Z');
+      assert.equal(result.body.practitionerMembershipId, principal.membershipId);
+      assert.equal(result.body.completedByMembershipId, principal.membershipId);
+      assert.equal(result.body.appointmentId, null);
+      assert.equal(result.body.procedureSummary, 'Sin complicaciones');
+      assert.deepEqual(
+        result.body.procedures.map((item) => [item.targetType, item.toothNumber, item.description]),
+        [['TOOTH', '16', 'Restauración'], ['WHOLE_MOUTH', null, 'Profilaxis']],
+      );
+      const listed = await request(`${base}/${result.body.id}`, 'GET', accessToken);
+      assert.equal(listed.body.status, 'COMPLETED');
+
+      // Sin fecha se registra con la hora actual.
+      const now = await request(quick, 'POST', accessToken, { branchId, procedures: [procedure] });
+      assert.equal(now.status, 201);
+      assert.ok(Math.abs(Date.parse(now.body.startedAt) - Date.now()) < 60_000);
+
+      const invalid = [
+        [{ branchId, procedures: [] }, 400, undefined],
+        [{ branchId }, 400, undefined],
+        [{ branchId, procedures: [{ targetType: 'TOOTH', toothNumber: '99', description: 'x' }] }, 400, 'INVALID_PROCEDURE_TARGET'],
+        [{ branchId, procedures: [{ targetType: 'WHOLE_MOUTH', toothNumber: '11', description: 'x' }] }, 400, 'INVALID_PROCEDURE_TARGET'],
+        [{ branchId, procedures: [{ targetType: 'TOOTH', toothNumber: '11', description: ' ' }] }, 400, undefined],
+        [{ branchId, performedAt: 'ayer', procedures: [procedure] }, 400, undefined],
+        [{ branchId: otherBranchId, procedures: [procedure] }, 403, 'BRANCH_FORBIDDEN'],
+        [{ branchId, appointmentId: randomUUID(), procedures: [procedure] }, 404, 'APPOINTMENT_NOT_FOUND'],
+      ];
+      for (const [body, status, code] of invalid) {
+        const rejected = await request(quick, 'POST', accessToken, body);
+        assert.equal(rejected.status, status, JSON.stringify(body));
+        if (code) assert.equal(rejected.body.code, code);
+      }
+
+      // Desde una cita: solo queda vinculada y una cita admite una sola atención.
+      const canceled = { id: randomUUID(), organizationId: principal.organizationId, patientId: patient.id, branchId, status: 'CANCELED' };
+      const confirmed = { ...canceled, id: randomUUID(), status: 'CONFIRMED' };
+      appointments.set(canceled.id, canceled);
+      appointments.set(confirmed.id, confirmed);
+      const notEligible = await request(quick, 'POST', accessToken, { branchId, appointmentId: canceled.id, procedures: [procedure] });
+      assert.equal(notEligible.status, 422);
+      assert.equal(notEligible.body.code, 'APPOINTMENT_NOT_ELIGIBLE');
+      const linked = await request(quick, 'POST', accessToken, { branchId, appointmentId: confirmed.id, procedures: [procedure] });
+      assert.equal(linked.status, 201);
+      assert.equal(linked.body.appointmentId, confirmed.id);
+      assert.equal(appointments.get(confirmed.id).status, 'CONFIRMED');
+      const taken = await request(quick, 'POST', accessToken, { branchId, appointmentId: confirmed.id, procedures: [procedure] });
+      assert.equal(taken.status, 409);
+      assert.equal(taken.body.code, 'ENCOUNTER_APPOINTMENT_TAKEN');
+
+      const foreign = await request(`/patients/${foreignPatient.id}/clinical-encounters/quick`, 'POST', accessToken, { branchId, procedures: [procedure] });
+      assert.equal(foreign.status, 404);
+    });
+
+    await t.test('el historial y la atención rápida dependen de las funciones del plan', async (t) => {
+      t.after(() => { currentPlan = planWith(STARTER_FEATURES); });
+      const accessToken = await token();
+      const quickBody = { branchId, procedures: [{ targetType: 'WHOLE_MOUTH', description: 'Profilaxis' }] };
+
+      // Sin "procedureNotes": el historial funciona, la atención rápida no.
+      currentPlan = planWith({ clinicalHistory: true });
+      assert.equal((await request(base, 'GET', accessToken)).status, 200);
+      const quick = await request(`${base}/quick`, 'POST', accessToken, quickBody);
+      assert.equal(quick.status, 403);
+      assert.equal(quick.body.code, 'MODULE_NOT_IN_PLAN');
+      assert.equal(quick.body.module, 'procedures');
+
+      // Sin "clinicalHistory": no hay historial ni perfil de salud.
+      currentPlan = planWith({ procedureNotes: true });
+      for (const [path, method, body] of [
+        [base, 'GET'],
+        [`${base}/reference-data`, 'GET'],
+        [base, 'POST', createBody()],
+        [`/patients/${patient.id}/health-profile`, 'GET'],
+        [`/patients/${patient.id}/health-profile`, 'PATCH', {}],
+      ]) {
+        const result = await request(path, method, accessToken, body);
+        assert.equal(result.status, 403, `${method} ${path}`);
+        assert.equal(result.body.code, 'MODULE_NOT_IN_PLAN');
+        assert.equal(result.body.module, 'patients');
+      }
+    });
   },
 );

@@ -11,6 +11,8 @@ import type { DentistryPrincipal } from '../../../auth/application/contracts/den
 import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/current-principal.decorator.js';
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
 import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
+import { RequireModule } from '../../../auth/presentation/http/decorators/require-module.decorator.js';
+import { DentistryModuleGuard } from '../../../auth/presentation/http/guards/dentistry-module.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
 import { GetPatientHealthProfileUseCase } from '../../application/use-case/get-patient-health-profile.use-case.js';
 import { SavePatientHealthProfileUseCase } from '../../application/use-case/save-patient-health-profile.use-case.js';
@@ -21,7 +23,9 @@ import {
 
 /** P3/P5: PATCH (compatible con el BFF) y permisos `dentistry:encounters:*`. */
 @Controller('patients/:patientId/health-profile')
-@UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
+@UseGuards(DentistryJwtGuard, DentistryPermissionGuard, DentistryModuleGuard)
+// El historial clínico forma parte del módulo Paciente.
+@RequireModule('patients')
 export class PatientHealthProfileController {
   constructor(
     private readonly getUseCase: GetPatientHealthProfileUseCase,

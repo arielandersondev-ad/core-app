@@ -112,6 +112,47 @@ export class AddClinicalEncounterProceduresDto {
   procedures: ProcedureDraftDto[];
 }
 
+export class QuickProcedureDraftDto {
+  @IsIn(PROCEDURE_TARGET_TYPES)
+  targetType: ProcedureTargetType;
+
+  @IsOptional()
+  @IsString()
+  toothNumber?: string | null;
+
+  @IsOptional()
+  @IsString()
+  targetDescription?: string | null;
+
+  @IsString()
+  @IsNotEmpty()
+  description: string;
+}
+
+export class RegisterQuickProcedureDto {
+  @IsUUID('all')
+  branchId: string;
+
+  @IsOptional()
+  @IsISO8601({ strict: true })
+  performedAt?: string;
+
+  @IsOptional()
+  @IsUUID('all')
+  appointmentId?: string;
+
+  @IsOptional()
+  @IsString()
+  procedureSummary?: string | null;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => QuickProcedureDraftDto)
+  procedures: QuickProcedureDraftDto[];
+}
+
 export class CompleteClinicalEncounterDto {
   @IsISO8601({ strict: true })
   endedAt: string;

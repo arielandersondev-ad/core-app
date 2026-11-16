@@ -89,6 +89,16 @@ export abstract class ClinicalEncounterRepository {
   /** Lanza 409 si la cita ya tiene una atención (unique de `appointmentId`). */
   abstract create(data: ClinicalEncounterCreateData): Promise<ClinicalEncounter>;
 
+  /**
+   * Atención rápida: crea la atención ya `COMPLETED` (inicio = fin = `startedAt`)
+   * con sus procedimientos en una sola transacción. Lanza 409 si la cita ya
+   * tiene una atención.
+   */
+  abstract createCompletedWithProcedures(
+    data: ClinicalEncounterCreateData,
+    procedures: ProcedureCreateData[],
+  ): Promise<ClinicalEncounter>;
+
   /** Devuelve null si la atención cambió de versión o de estado entretanto. */
   abstract transition(
     scope: EncounterScope,

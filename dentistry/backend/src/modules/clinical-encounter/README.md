@@ -12,6 +12,7 @@ listado `{ items, pagination }`, permisos `dentistry:encounters:*`, profesional
 | `GET /patients/:patientId/clinical-encounters/reference-data` | `dentistry:encounters:read` |
 | `GET /patients/:patientId/clinical-encounters/:encounterId` | `dentistry:encounters:read` |
 | `POST /patients/:patientId/clinical-encounters` | `dentistry:encounters:create` |
+| `POST /patients/:patientId/clinical-encounters/quick` | `dentistry:encounters:create` |
 | `POST /patients/:patientId/clinical-encounters/:encounterId/procedures` | `dentistry:encounters:update` |
 | `POST /patients/:patientId/clinical-encounters/:encounterId/complete` | `dentistry:encounters:update` |
 | `POST /patients/:patientId/clinical-encounters/:encounterId/void` | `dentistry:encounters:void` |
@@ -45,3 +46,10 @@ para viajar en el token. Este módulo no crea permisos.
 
 Pendiente: archivos y radiografías (E6), anular/corregir procedimientos (P8) y
 búsqueda por nombre de profesional o sucursal en el listado.
+
+## Plan de la organización y atención rápida
+
+- Ambos controladores exigen la función `clinicalHistory` del plan (`@RequireModule('patients')`).
+- `POST .../quick` exige además `procedureNotes` (`@RequireModule('procedures')`). Body: `{ branchId, performedAt?, appointmentId?, procedureSummary?, procedures: [{ targetType, toothNumber?, targetDescription?, description }] }` (1–50 procedimientos).
+- Crea en una transacción una atención ya `COMPLETED` (inicio = fin = `performedAt`, por defecto ahora) a nombre de la membresía de la sesión, con sus procedimientos. Responde 201 con la atención.
+- La cita, si se envía, solo queda vinculada: su estado no cambia. Aplican las mismas reglas que en el alta (404, 422 `APPOINTMENT_NOT_ELIGIBLE`, 409 `ENCOUNTER_APPOINTMENT_TAKEN`).

@@ -25,8 +25,6 @@ export type CreateClinicalEncounterCommand = EncounterScope &
     actorMembershipId: string;
   };
 
-const INELIGIBLE_APPOINTMENT_STATUSES = new Set(['CANCELED', 'NO_SHOW']);
-
 @Injectable()
 export class CreateClinicalEncounterUseCase {
   constructor(
@@ -50,17 +48,11 @@ export class CreateClinicalEncounterUseCase {
     }
 
     if (command.appointmentId) {
-      const appointment = await this.encounterRepository.findAppointment(
+      await this.access.assertEligibleAppointment(
         scope,
         command.appointmentId,
+        command.branchId,
       );
-      if (!appointment) throw ClinicalErrors.appointmentNotFound();
-      if (
-        INELIGIBLE_APPOINTMENT_STATUSES.has(appointment.status) ||
-        appointment.branchId !== command.branchId
-      ) {
-        throw ClinicalErrors.appointmentNotEligible();
-      }
     }
     if (
       command.treatmentId &&

@@ -91,7 +91,7 @@ export class AddClinicalEncounterProceduresUseCase {
 }
 
 /** Regla de objetivo: pieza FDI solo y siempre para `TOOTH`. */
-function toCreateData(draft: ProcedureDraft): ProcedureCreateData {
+export function toCreateData(draft: ProcedureDraft): ProcedureCreateData {
   const toothNumber = normalizeText(draft.toothNumber);
   const description = normalizeText(draft.description);
   if (!description) {

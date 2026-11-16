@@ -26,6 +26,25 @@ export class ClinicalEncounterAccess {
     }
   }
 
+  /** La cita debe ser del paciente, de la misma sucursal y no cancelada ni ausente. */
+  async assertEligibleAppointment(
+    scope: EncounterScope,
+    appointmentId: string,
+    branchId: string,
+  ): Promise<void> {
+    const appointment = await this.encounterRepository.findAppointment(
+      scope,
+      appointmentId,
+    );
+    if (!appointment) throw ClinicalErrors.appointmentNotFound();
+    if (
+      INELIGIBLE_APPOINTMENT_STATUSES.has(appointment.status) ||
+      appointment.branchId !== branchId
+    ) {
+      throw ClinicalErrors.appointmentNotEligible();
+    }
+  }
+
   /** Paciente accesible + atención del paciente en una sucursal autorizada. */
   async loadEncounter(
     scope: EncounterScope,
@@ -44,6 +63,8 @@ export class ClinicalEncounterAccess {
     return encounter;
   }
 }
+
+const INELIGIBLE_APPOINTMENT_STATUSES = new Set(['CANCELED', 'NO_SHOW']);
 
 /** Recorta y convierte la cadena vacía en null: vacío no es una respuesta clínica. */
 export function normalizeText(
