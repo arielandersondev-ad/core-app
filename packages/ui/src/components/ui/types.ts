@@ -7,6 +7,8 @@ export type BadgeVariant =
   | "active"
   | "inactive"
   | "suspended"
-  | "role";
+  | "role"
+  | "patient"
+  | "person";
 
 export type BadgeSize = "sm" | "md";

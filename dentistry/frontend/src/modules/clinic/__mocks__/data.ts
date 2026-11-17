@@ -56,6 +56,11 @@ export interface Professional {
 export interface Appointment {
   id: string;
   patientId: string;
+  patientName?: string;
+  personName?: string;
+  patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   professionalId: string;
   serviceId: string;
   serviceIds?: string[];
@@ -64,11 +69,18 @@ export interface Appointment {
   endTime: string;
   status: AppointmentStatus;
   notes: string;
+  reason?: string;
+  patientType?: "patient" | "person";
 }
 
 export interface ClinicalEntry {
   id: string;
   patientId: string;
+  patientName?: string;
+  personName?: string;
+  patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   date: string;
   professionalId: string;
   appointmentId?: string;
@@ -80,6 +92,11 @@ export interface ClinicalEntry {
 export interface Session {
   id: string;
   patientId: string;
+  patientName?: string;
+  personName?: string;
+  patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   serviceId: string;
   professionalId: string;
   appointmentId?: string;
@@ -91,6 +108,11 @@ export interface Session {
 export interface Payment {
   id: string;
   patientId: string;
+  patientName?: string;
+  personName?: string;
+  patientPhone?: string;
+  personPhone?: string;
+  serviceName?: string;
   serviceId?: string;
   appointmentId?: string;
   amount: number;
@@ -464,7 +486,7 @@ export const patients: Patient[] = [
 ];
 
 // ── Citas (incluyendo hoy) ─────────────────────────────────────────
-const TODAY = "2026-08-25";
+const TODAY = new Date().toISOString().slice(0, 10);
 
 export const appointments: Appointment[] = [
   {

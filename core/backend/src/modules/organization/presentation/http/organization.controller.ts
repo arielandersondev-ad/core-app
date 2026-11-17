@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { CreateOrganizationUseCase } from "../../application/use-case/create-organization.use-case.js";
 import { ListOrganizationsUseCase } from "../../application/use-case/list-organizations.use-case.js";
 import { ListBranchesByOrganizationUseCase } from "../../application/use-case/list-branches.use-case.js";
+import { ListOrganizationsQueryDto } from '../dto/list-organizations.query.dto.js';
 import { CreateOrganizationDto } from "../dto/create-organization.dto.js";
 import { CreateOrganizationSetupUseCase } from '../../application/use-case/create-organization-setup.use-case.js';
 import { ReqCreateOrganizationSetupDto } from '../dto/organization-setup.dto.js';
@@ -35,8 +36,10 @@ export class OrganizationController {
 
 	@Get()
 	@RequireCoreAccess('organizations:read')
-	async listOrganizations() {
-			return await this.listOrganizationsUseCase.execute();
+	async listOrganizations(
+		@Query() query: ListOrganizationsQueryDto
+	) {
+		return await this.listOrganizationsUseCase.execute(query);
 	}
 
 	@Get(':organizationId/branches')

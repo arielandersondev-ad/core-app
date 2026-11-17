@@ -1,3 +1,5 @@
+import { Transform } from 'class-transformer';
+import type { PatientSex } from '../../domain/entities/patient.entity.js';
 import {
   IsDateString,
   IsIn,
@@ -6,17 +8,15 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 
 export class CreatePatientDto {
-  @IsUUID()
-  organizationId: string;
-
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   firstName: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   lastName: string;
@@ -37,7 +37,7 @@ export class CreatePatientDto {
   @IsOptional()
   @IsString()
   @IsIn(['MALE', 'FEMALE', 'OTHER'])
-  sex?: string;
+  sex?: PatientSex;
 
   @IsOptional()
   @IsString()
@@ -53,8 +53,17 @@ export class CreatePatientDto {
 
   @IsOptional()
   @IsString()
-  notes?: string;
+  maritalStatus?: string | null;
 
-  @IsUUID()
-  createdByMembershipId: string;
+  @IsOptional()
+  @IsString()
+  occupation?: string | null;
+
+  @IsOptional()
+  @IsString()
+  origin?: string | null;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

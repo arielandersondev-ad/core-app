@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "./navigation";
+import { navItemsForPlan } from "./navigation";
+import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
 import { Icons } from "../icons/icons";
 import { logoutAction } from "@/features/auth/actions/logout-action";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { plan } = useAuthenticatedSession();
 
   return (
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-surface">
@@ -24,7 +26,7 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 flex flex-col gap-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(({ section, label, href, icon }) => {
+        {navItemsForPlan(plan).map(({ section, label, href, icon }) => {
           const active =
             href === "/dashboard"
               ? pathname === "/dashboard"

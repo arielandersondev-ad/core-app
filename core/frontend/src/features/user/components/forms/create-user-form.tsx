@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useCreateUser } from '@/features/user/hooks/use-users';
 
-import { Button } from '@/shared/components/ui/Button';
+import { Button } from '@/shared/components/ui';
 import { PersonalDataFields } from './personal-data-fields';
 import { UserAssignmentFields } from './user-assignment-fields';
 import { createUserDefaultValues, CreateUserFormValues, createUserSchema, toCreateUserItem } from '../../chemas/create-user.schema';

@@ -41,6 +41,18 @@ export type OrganizationPlanAssignment = Readonly<{
   updatedAt: string;
 }>;
 
+export type PlanEntitlementLimits = {
+  patients?: number | null;
+  members?: number | null;
+  branches?: number | null;
+};
+
+/** Claves conocidas del snapshot; el resto se conserva sin cambios. */
+export type PlanEntitlements = Record<string, unknown> & {
+  features?: Record<string, boolean>;
+  limits?: PlanEntitlementLimits;
+};
+
 export type CreatePlanPayload = {
   code: string;
   name: string;
@@ -48,12 +60,12 @@ export type CreatePlanPayload = {
   type: PlanType;
   vertical: PlanVertical;
   durationDays: number;
-  entitlements: Record<string, never>;
+  entitlements: PlanEntitlements;
   priceMinor?: number;
   currency?: string;
 };
 
-export type UpdatePlanPayload = Partial<Omit<CreatePlanPayload, 'code' | 'vertical' | 'entitlements'>> & {
+export type UpdatePlanPayload = Partial<Omit<CreatePlanPayload, 'code' | 'vertical'>> & {
   isActive?: boolean;
 };
 

@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname, "../../"),
   },
+  devIndicators: false,
+  allowedDevOrigins: ["uncriticisable-imogene-summerly.ngrok-free.dev"],
 };
 
 export default nextConfig;

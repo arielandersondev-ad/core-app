@@ -17,10 +17,9 @@ import {
   TODAY_DATE,
 } from "@/modules/clinic/__mocks__/data";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { StatCard, Icons } from "@/shared/components/ui";
+import { StatCard, Icons, EmptyState, Button } from "@/shared/components/ui";
 import {
   CreateAppointmentModal,
-  CreatePatientModal,
   RegisterPaymentModal,
 } from "@/modules/clinic/components";
 
@@ -47,7 +46,6 @@ export default function ClinicDashboard({
 }) {
   const router = useRouter();
   const [isApptModalOpen, setIsApptModalOpen] = useState(false);
-  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const formattedDate = new Date(TODAY_DATE + "T12:00:00").toLocaleDateString(
@@ -84,7 +82,7 @@ export default function ClinicDashboard({
           {
             label: "Nuevo paciente",
             icon: "👤",
-            action: () => setIsPatientModalOpen(true),
+            action: () => onNavigate("crear-paciente"),
           },
           {
             label: "Registrar pago",
@@ -171,9 +169,22 @@ export default function ClinicDashboard({
 
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden shadow-xs">
             {todayAppts.length === 0 ? (
-              <div className="py-12 text-center text-sm text-[var(--muted)]">
-                Sin citas programadas para el día de hoy
-              </div>
+              <EmptyState
+                icon={<span className="text-2xl">🦷</span>}
+                message="Sin citas programadas para el día de hoy"
+                description="El sillón odontológico está libre para nuevas reservas o urgencias"
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsApptModalOpen(true)}
+                    className="rounded-xl shadow-xs"
+                  >
+                    + Agendar Cita
+                  </Button>
+                }
+                className="py-10"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -335,14 +346,6 @@ export default function ClinicDashboard({
         onClose={() => setIsApptModalOpen(false)}
         onSuccess={() => {
           onNavigate("agenda");
-        }}
-      />
-
-      <CreatePatientModal
-        open={isPatientModalOpen}
-        onClose={() => setIsPatientModalOpen(false)}
-        onSuccess={() => {
-          onNavigate("pacientes");
         }}
       />
 

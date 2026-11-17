@@ -1,22 +1,24 @@
 import 'server-only';
 import { cookies } from 'next/headers';
-import { getSessionMaxAge, SESSION_COOKIE } from './session';
+import { REFRESH_COOKIE, SESSION_COOKIE, sessionCookies, type SessionTokens } from './session';
 
 export async function getSessionToken(): Promise<string | null> {
   return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
 }
 
-export async function setSessionToken(token: string, expiresIn: unknown) {
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: getSessionMaxAge(expiresIn),
-    priority: 'high',
-  });
+export async function getRefreshToken(): Promise<string | null> {
+  return (await cookies()).get(REFRESH_COOKIE)?.value ?? null;
+}
+
+export async function setSession(tokens: SessionTokens) {
+  const store = await cookies();
+  for (const cookie of sessionCookies(tokens)) {
+    store.set(cookie.name, cookie.value, cookie.options);
+  }
 }
 
 export async function clearSession() {
-  (await cookies()).delete(SESSION_COOKIE);
+  const store = await cookies();
+  store.delete(SESSION_COOKIE);
+  store.delete(REFRESH_COOKIE);
 }

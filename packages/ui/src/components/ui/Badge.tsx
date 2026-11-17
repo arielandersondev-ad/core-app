@@ -19,6 +19,10 @@ const variantClasses: Record<BadgeVariant, string> = {
   inactive: "bg-[var(--neutral-subtle)] text-[var(--muted)]",
   suspended: "bg-[var(--warning-subtle)] text-[var(--warning)]",
   role: "bg-[var(--primary-subtle)] text-[var(--primary)]",
+  patient:
+    "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25",
+  person:
+    "bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/25",
 };
 
 const sizeClasses: Record<BadgeSize, string> = {

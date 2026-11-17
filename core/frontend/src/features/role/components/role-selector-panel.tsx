@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { RoleListItem } from '@/features/role/types/role';
-import { Badge } from '@/shared/components/ui/Badge';
-import { Icons } from '@/shared/components/ui/Icons';
+import { Badge, Icons } from '@/shared/components/ui';
 
 type RoleSelectorPanelProps = {
   roles: RoleListItem[];
@@ -62,7 +61,7 @@ export function RoleSelectorPanel({
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por nombre o código"
+            placeholder="Buscar por nombre o cÃ³digo"
             className="h-10 w-full rounded-md border border-border bg-background pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </label>
@@ -106,7 +105,7 @@ export function RoleSelectorPanel({
         ) : (
           <div className="px-4 py-10 text-center">
             <p className="text-sm font-medium">No encontramos roles</p>
-            <p className="mt-1 text-xs text-muted">Prueba con otro nombre o código.</p>
+            <p className="mt-1 text-xs text-muted">Prueba con otro nombre o cÃ³digo.</p>
           </div>
         )}
       </div>

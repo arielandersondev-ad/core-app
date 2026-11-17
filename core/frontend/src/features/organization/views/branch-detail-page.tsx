@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Badge,
@@ -7,13 +8,9 @@ import {
   Avatar,
   Icons,
 } from '@/shared/components/ui';
-import {
-  getBranchById,
-  getOrgById,
-  getUsersByBranch,
-  formatDate,
-  roleLabels,
-} from '@/shared/data/platform.mock';
+import { useOrganizations, useBranches } from '../hooks/use-organizations';
+import { useUsers } from '@/features/user/hooks/use-users';
+import { formatDate, roleLabels } from '@/shared/utils/format';
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
@@ -30,9 +27,58 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 export default function BranchDetail() {
   const params = useParams<{ id: string; branchId: string }>();
   const router = useRouter();
+  const orgId = params.id;
   const branchId = params.branchId;
 
-  const branch = getBranchById(branchId);
+  const { data: orgs = [], isLoading: loadingOrgs } = useOrganizations();
+  const { data: rawBranches = [], isLoading: loadingBranches } = useBranches(orgId);
+  const { data: rawUsers = [] } = useUsers();
+
+  const org = useMemo(() => orgs.find((o) => o.id === orgId), [orgs, orgId]);
+  const rawBranch = useMemo(() => rawBranches.find((b) => b.id === branchId), [rawBranches, branchId]);
+
+  const branch = useMemo(() => {
+    if (!rawBranch) return null;
+    return {
+      id: rawBranch.id,
+      name: rawBranch.name,
+      city: (rawBranch as unknown as { city?: string }).city || 'Principal',
+      address: (rawBranch as unknown as { address?: string }).address || 'Dirección de sucursal',
+      phone: (rawBranch as unknown as { phone?: string }).phone || 'No registrado',
+      email: (rawBranch as unknown as { email?: string }).email || 'No registrado',
+      manager: (rawBranch as unknown as { manager?: string }).manager || 'Sin asignar',
+      createdAt: (rawBranch as unknown as { createdAt?: string }).createdAt || new Date().toISOString(),
+      status: rawBranch.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+    };
+  }, [rawBranch]);
+
+  const users = useMemo(() => {
+    return rawUsers
+      .filter((u) =>
+        u.memberships?.some(
+          (m) =>
+            m.organizationId === orgId &&
+            (branch?.name ? m.branchNames?.includes(branch.name) : true)
+        )
+      )
+      .map((u) => ({
+        id: u.id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+        email: u.email,
+        role: (u.memberships?.[0]?.roleNames?.[0] || 'operator').toLowerCase(),
+        status: u.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+        lastLogin: u.createdAt,
+      }));
+  }, [rawUsers, orgId, branch]);
+
+  if (loadingOrgs || loadingBranches) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <p className="text-sm font-mono text-muted-foreground">Cargando sucursal...</p>
+      </div>
+    );
+  }
+
   if (!branch) {
     return (
       <div className="flex items-center justify-center h-full p-8">
@@ -40,9 +86,6 @@ export default function BranchDetail() {
       </div>
     );
   }
-
-  const org = getOrgById(branch.orgId);
-  const users = getUsersByBranch(branchId);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-4 md:p-8 gap-6">
@@ -58,7 +101,7 @@ export default function BranchDetail() {
               {branch.status === 'active' ? 'Activa' : 'Inactiva'}
             </Badge>
           </div>
-          <p className="text-sm text-muted font-mono">{org?.name} · {branch.city}</p>
+          <p className="text-sm text-muted font-mono">{org?.name || 'Organización'} · {branch.city}</p>
         </div>
         <div className="flex gap-2 self-start md:self-center">
           <button
@@ -98,7 +141,7 @@ export default function BranchDetail() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border bg-background/50">
-                      {['Usuario', 'Rol', 'Estado', 'Último acceso', ''].map((h) => (
+                      {['Usuario', 'Rol', 'Estado', 'Registrado', ''].map((h) => (
                         <th key={h} className="text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-widest text-muted">{h}</th>
                       ))}
                     </tr>
@@ -119,14 +162,14 @@ export default function BranchDetail() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[11px] font-mono text-muted">{roleLabels[user.role]}</td>
+                        <td className="px-4 py-3 text-[11px] font-mono text-muted">{roleLabels[user.role] || user.role}</td>
                         <td className="px-4 py-3">
-                          <Badge variant={user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive'}>
-                            {user.status === 'active' ? 'Activo' : user.status === 'suspended' ? 'Suspendido' : 'Inactivo'}
+                          <Badge variant={user.status === 'active' ? 'active' : 'inactive'}>
+                            {user.status === 'active' ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-[11px] font-mono text-muted">
-                          {new Date(user.lastLogin).toLocaleDateString('es-PE')}
+                          {formatDate(user.lastLogin)}
                         </td>
                         <td className="px-4 py-3 text-muted opacity-0 group-hover:opacity-100 transition-opacity">
                           {Icons.chevronRight}
@@ -150,10 +193,10 @@ export default function BranchDetail() {
                       <p className="text-sm font-display font-semibold text-foreground truncate">{user.name}</p>
                       <p className="text-[11px] font-mono text-muted truncate">{user.email}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive'}>
-                          {user.status === 'active' ? 'Activo' : user.status === 'suspended' ? 'Susp.' : 'Inac.'}
+                        <Badge variant={user.status === 'active' ? 'active' : 'inactive'}>
+                          {user.status === 'active' ? 'Activo' : 'Inac.'}
                         </Badge>
-                        <span className="text-[10px] font-mono text-muted">{roleLabels[user.role]}</span>
+                        <span className="text-[10px] font-mono text-muted">{roleLabels[user.role] || user.role}</span>
                       </div>
                     </div>
                     <span className="text-muted">{Icons.chevronRight}</span>

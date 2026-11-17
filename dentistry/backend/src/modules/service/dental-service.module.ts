@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../common/infrastructure/prisma.module.js';
+import { DentistryAuthModule } from '../auth/dentistry-auth.module.js';
 import { DentalServiceRepository } from './domain/repositories/dental-service.repository.js';
 import { PrismaDentalServiceRepository } from './infrastructure/prisma-dental-service.repository.js';
 import { CreateDentalServiceUseCase } from './application/use-case/create-dental-service.use-case.js';
@@ -11,7 +12,7 @@ import { DeleteDentalServiceUseCase } from './application/use-case/delete-dental
 import { DentalServiceController } from './presentation/http/dental-service.controller.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, DentistryAuthModule],
   controllers: [DentalServiceController],
   providers: [
     {

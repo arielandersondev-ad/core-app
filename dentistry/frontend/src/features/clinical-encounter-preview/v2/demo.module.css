@@ -1,0 +1,122 @@
+/* Animaciones del prototipo v2 de atención clínica (solo presentación). */
+
+@keyframes ceViewIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ceRowIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ceModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ceToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes cePulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--warning) 50%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes ceDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.viewIn {
+  animation: ceViewIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rowIn {
+  animation: ceRowIn 0.32s ease both;
+}
+
+.modalIn {
+  animation: ceModalIn 0.22s ease both;
+}
+
+.toastIn {
+  animation: ceToastIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pulse {
+  animation: cePulse 2.1s ease-out infinite;
+}
+
+.liveDot {
+  animation: ceDot 1.4s ease-in-out infinite;
+}
+
+.hoverLift {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.hoverLift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -14px color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.rowIn,
+.hoverLift,
+.viewIn {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewIn,
+  .rowIn,
+  .modalIn,
+  .toastIn,
+  .pulse,
+  .liveDot,
+  .hoverLift {
+    animation: none !important;
+    transition: none !important;
+  }
+}

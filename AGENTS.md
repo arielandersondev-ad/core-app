@@ -40,3 +40,33 @@
 - Los scripts lint de backend usan --fix; no tratarlos como verificaciones de solo lectura.
 - En renombres de archivos verificar mayúsculas/minúsculas e imports ESM .js para el entorno Linux/Docker.
 - Preservar cambios ajenos del workspace y separar tareas por propiedad de archivos. El plan contiene paquetes de agentes, no una orden de delegación automática.
+
+## Políticas de Git y Commits Atómicos
+
+- Cada agente debe realizar un commit atómico por ticket completado antes de marcar la tarea como finalizada (`act: "done"`).
+- Formato obligatorio: `<type>(<scope>): <id-ticket> - <descripción>` (ej. `feat(ui): HAG-65 - Ordenamiento prioritario y badge Vencida`).
+- Quality Gate: Nunca hacer commit sin antes validar que `tsc --noEmit` pase con 0 errores y que los tests pertinentes estén 100% en verde.
+- No dejar el workspace sucio con archivos temporales, scripts de scratch o cambios sin commitear.
+- Al mantener commits atómicos y certificados, cualquier regresión puede revertirse limpiamente con `git revert <hash>` sin afectar otros módulos.
+
+## Prohibición de SQL Directo en Neon y Procedimiento Canónico de DB
+
+- PROHIBIDO TERMINANTEMENTE ejecutar scripts SQL directamente contra Neon DB (vía consola web, psql o archivos `.sql` sueltos).
+- Todo cambio de modelo o persistencia debe originarse en `packages/db` y seguir el ciclo documentado en `packages/db/README.md`:
+  1. Modificar `packages/db/src/prisma/schema.ts`.
+  2. Ejecutar `npm run migration:plan` en `packages/db`.
+  3. Ejecutar `npm run test:schema` y `npm run test:semantic`.
+  4. Aplicar la migración con `npm run migrate` (o `npm run db:update` en entorno local).
+  5. Ejecutar `npm run contract:emit` y `npm run build` en `packages/db`.
+  6. Recompilar los backends dependientes para verificar tipos.
+
+## Higiene Estricta de Imports y Variables No Usadas (HARNESS-RULE-02)
+
+- **Organize Imports Obligatorio:** Antes de solicitar el cierre de ticket (`act: 'done'`), cada agente debe aplicar el equivalente a "Organize Imports": eliminar cualquier importación o variable que haya quedado sin uso tras sus modificaciones. El Quality Gate fallará si detecta imports huérfanos.
+- **Parámetros y Variables:** Si un parámetro es requerido por contrato pero no se usa, debe prefijarse con guion bajo (`_req`, `_event`). Si es una variable local y no se usa, debe eliminarse.
+- **Validación Pre-Commit:** Antes de cada commit, ejecutar sobre los archivos modificados:
+  - `npx eslint --fix <archivos-modificados>`
+  - `npx eslint <archivos-modificados> --rule "unused-imports/no-unused-imports: error" --rule "@typescript-eslint/no-unused-vars: error"`
+- **Rol Quality & Hygiene Officer (Quality Gatekeeper — Kevin `kevin-mw24f2fi` / Angela `angela-mw1m45tq`):** Revisará `git diff --name-only` / `git show --name-only` y ejercerá **Veto inmediato** rechazando cualquier tarea que deje imports zombis o warnings de `@typescript-eslint/no-unused-vars`.
+
+

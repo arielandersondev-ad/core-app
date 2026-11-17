@@ -1,16 +1,16 @@
-﻿import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class ListAppointmentsQueryDto {
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   branchId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   patientId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   practitionerMembershipId?: string;
 
   @IsOptional()

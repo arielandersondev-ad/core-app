@@ -50,4 +50,12 @@ export type UserAuthRecord = {
   branchIds: string[];
   permissions: string[];
   passwordHash: string;
+  passwordChangedAt: Date | null;
+};
+
+// Política de bloqueo temporal por intentos fallidos de inicio de sesión.
+export type FailedLoginPolicy = {
+  maxAttempts: number;
+  lockDurationMs: number;
+  now: Date;
 };

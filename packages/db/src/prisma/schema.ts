@@ -265,7 +265,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         activatedFeatureTrials: rel.hasMany(OrganizationFeatureTrial, {
           by: "activatedByUserId",
         }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "User",
         checks: [
           check({
@@ -312,7 +312,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
           by: "organizationId",
         }),
         auditLogs: rel.hasMany(AuditLog, { by: "organizationId" }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Organization",
         checks: [
           check({
@@ -436,7 +436,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
       })),
       Permission: Permission.relations({
         rolePermissions: rel.hasMany(RolePermission, { by: "permissionId" }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Permission",
       })),
       RolePermission: RolePermission.relations({
@@ -488,7 +488,7 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
         featureTrials: rel.hasMany(OrganizationFeatureTrial, {
           by: "sourcePlanId",
         }),
-      }).sql(({ cols, constraints }) => ({
+      }).sql(() => ({
         table: "Plan",
         checks: [
           check({ name: "Plan_name", expression: 'length(btrim("name")) > 0' }),
@@ -629,6 +629,26 @@ function buildCoreModels({ field, model, rel }: ContractBuilderContext) {
 }
 
 function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
+  const Person = model("Person", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      firstName: field.text(),
+      lastName: field.text().optional(),
+      phone: field.text().optional(),
+      email: field.text().optional(),
+      notes: field.text().optional(),
+      convertedToPatientId: field.uuidNative().optional(),
+      convertedAt: field.temporal.timestamptz().optional(),
+      createdByMembershipId: field.uuidNative(),
+      updatedByMembershipId: field.uuidNative().optional(),
+      deletedAt: field.temporal.timestamptz().optional(),
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
   const Patient = model("Patient", {
     namespace: DENTISTRY_NAMESPACE,
     fields: {
@@ -645,6 +665,9 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       documentType: field.text().optional(),
       documentNumber: field.text().optional(),
       address: field.text().optional(),
+      maritalStatus: field.text().optional(),
+      occupation: field.text().optional(),
+      origin: field.text().optional(),
       notes: field.text().optional(),
       status: field.text().default("ACTIVE"),
       createdByMembershipId: field.uuidNative(),
@@ -725,7 +748,8 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       organizationId: field.uuidNative(),
       branchId: field.uuidNative(),
       patientId: field.uuidNative(),
-      practitionerMembershipId: field.uuidNative(),
+      personId: field.uuidNative().optional(),
+      practitionerMembershipId: field.uuidNative().optional(),
       treatmentId: field.uuidNative().optional(),
       scheduledStartAt: field.temporal.timestamptz(),
       scheduledEndAt: field.temporal.timestamptz(),
@@ -836,7 +860,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       id: field.id.uuidv7Native(),
       organizationId: field.uuidNative(),
       patientId: field.uuidNative(),
-      serviceId: field.uuidNative(),
+      serviceId: field.uuidNative().optional(),
       practitionerMembershipId: field.uuidNative().optional(),
       status: field.text().default("PROPOSED"),
       startedAt: field.temporal.timestamptz().optional(),
@@ -850,6 +874,51 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       updatedByMembershipId: field.uuidNative().optional(),
       createdAt: field.temporal.createdAt(),
       updatedAt: field.temporal.updatedAt(),
+    },
+  });
+
+  const TreatmentProcedure = model("TreatmentProcedure", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      patientId: field.uuidNative(),
+      treatmentId: field.uuidNative(),
+      targetType: field.text(),
+      toothNumber: field.text().optional(),
+      targetDescription: field.text().optional(),
+      description: field.text(),
+      position: field.int().default(0),
+      status: field.text().default("PLANNED"),
+      createdByMembershipId: field.uuidNative(),
+      updatedByMembershipId: field.uuidNative().optional(),
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+      rowVersion: field.int().default(1),
+    },
+  });
+
+  const ClinicalEncounterProcedure = model("ClinicalEncounterProcedure", {
+    namespace: DENTISTRY_NAMESPACE,
+    fields: {
+      id: field.id.uuidv7Native(),
+      organizationId: field.uuidNative(),
+      patientId: field.uuidNative(),
+      clinicalEncounterId: field.uuidNative(),
+      treatmentProcedureId: field.uuidNative().optional(),
+      targetType: field.text(),
+      toothNumber: field.text().optional(),
+      targetDescription: field.text().optional(),
+      description: field.text(),
+      status: field.text().default("RECORDED"),
+      createdByMembershipId: field.uuidNative(),
+      updatedByMembershipId: field.uuidNative().optional(),
+      createdAt: field.temporal.createdAt(),
+      updatedAt: field.temporal.updatedAt(),
+      rowVersion: field.int().default(1),
+      voidedAt: field.temporal.timestamptz().optional(),
+      voidedByMembershipId: field.uuidNative().optional(),
+      voidReason: field.text().optional(),
     },
   });
 
@@ -1219,6 +1288,9 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           clinicalFiles: rel.hasMany(ClinicalFile, {
             by: "clinicalEncounterId",
           }),
+          procedures: rel.hasMany(ClinicalEncounterProcedure, {
+            by: "clinicalEncounterId",
+          }),
         })
         .sql(({ cols, constraints }) => ({
           table: "ClinicalEncounter",
@@ -1278,7 +1350,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
             check({
               name: "encounter_completion",
               expression:
-                '"status" <> \'COMPLETED\' OR ("endedAt" IS NOT NULL AND "completedAt" IS NOT NULL AND "completedByMembershipId" IS NOT NULL AND "procedureSummary" IS NOT NULL AND length(btrim("procedureSummary")) > 0)',
+                '"status" <> \'COMPLETED\' OR ("endedAt" IS NOT NULL AND "completedAt" IS NOT NULL AND "completedByMembershipId" IS NOT NULL)',
             }),
             check({
               name: "encounter_revocation",
@@ -1413,6 +1485,132 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           }),
         ],
       })),
+      TreatmentProcedure: TreatmentProcedure.attributes(
+        ({ fields, constraints }) => ({
+          uniques: [
+            constraints.unique([fields.organizationId, fields.id]),
+            constraints.unique([fields.organizationId, fields.patientId, fields.id]),
+          ],
+        }),
+      )
+        .relations({
+          treatment: rel.belongsTo(Treatment, {
+            from: ["organizationId", "patientId", "treatmentId"],
+            to: ["organizationId", "patientId", "id"],
+          }),
+          encounterProcedures: rel.hasMany(ClinicalEncounterProcedure, {
+            by: "treatmentProcedureId",
+          }),
+        })
+        .sql(({ cols, constraints }) => ({
+          table: "TreatmentProcedure",
+          foreignKeys: [
+            constraints.foreignKey(
+              [cols.organizationId, cols.patientId, cols.treatmentId],
+              [Treatment.refs.organizationId, Treatment.refs.patientId, Treatment.refs.id],
+              { name: "treatment_procedure_treatment_fk", onDelete: "restrict" },
+            ),
+          ],
+          indexes: [
+            constraints.index(
+              [cols.organizationId, cols.patientId, cols.status],
+              { name: "treatment_procedure_status_idx" },
+            ),
+          ],
+          checks: [
+            check({
+              name: "treatment_procedure_target_type",
+              expression: '\"targetType\" IN (\'TOOTH\', \'REGION\', \'WHOLE_MOUTH\', \'OTHER\')',
+            }),
+            check({
+              name: "treatment_procedure_target",
+              expression: '(\"targetType\" = \'TOOTH\' AND \"toothNumber\" IS NOT NULL AND length(btrim(\"toothNumber\")) > 0) OR (\"targetType\" <> \'TOOTH\' AND \"toothNumber\" IS NULL)',
+            }),
+            check({
+              name: "treatment_procedure_description",
+              expression: 'length(btrim(\"description\")) > 0',
+            }),
+            check({
+              name: "treatment_procedure_status",
+              expression: '\"status\" IN (\'PLANNED\', \'IN_PROGRESS\', \'COMPLETED\', \'CANCELED\')',
+            }),
+            check({
+              name: "treatment_procedure_position",
+              expression: '\"position\" >= 0',
+            }),
+            check({ name: "TreatmentProcedure_version", expression: '\"rowVersion\" > 0' }),
+          ],
+        })),
+      ClinicalEncounterProcedure: ClinicalEncounterProcedure.attributes(
+        ({ fields, constraints }) => ({
+          uniques: [
+            constraints.unique([fields.organizationId, fields.id]),
+            constraints.unique([fields.organizationId, fields.patientId, fields.id]),
+          ],
+        }),
+      )
+        .relations({
+          encounter: rel.belongsTo(ClinicalEncounter, {
+            from: ["organizationId", "patientId", "clinicalEncounterId"],
+            to: ["organizationId", "patientId", "id"],
+          }),
+          treatmentProcedure: rel.belongsTo(TreatmentProcedure, {
+            from: ["organizationId", "patientId", "treatmentProcedureId"],
+            to: ["organizationId", "patientId", "id"],
+          }),
+        })
+        .sql(({ cols, constraints }) => ({
+          table: "ClinicalEncounterProcedure",
+          foreignKeys: [
+            constraints.foreignKey(
+              [cols.organizationId, cols.patientId, cols.clinicalEncounterId],
+              [ClinicalEncounter.refs.organizationId, ClinicalEncounter.refs.patientId, ClinicalEncounter.refs.id],
+              { name: "encounter_procedure_encounter_fk", onDelete: "restrict" },
+            ),
+            constraints.foreignKey(
+              [cols.organizationId, cols.patientId, cols.treatmentProcedureId],
+              [TreatmentProcedure.refs.organizationId, TreatmentProcedure.refs.patientId, TreatmentProcedure.refs.id],
+              { name: "encounter_procedure_plan_fk", onDelete: "restrict" },
+            ),
+          ],
+          indexes: [
+            constraints.index(
+              [cols.organizationId, cols.patientId, cols.clinicalEncounterId],
+              { name: "encounter_procedure_list_idx" },
+            ),
+            constraints.index(
+              [cols.organizationId, cols.patientId, cols.treatmentProcedureId],
+              { name: "encounter_procedure_plan_idx" },
+            ),
+            constraints.index(
+              [cols.organizationId, cols.patientId, cols.toothNumber],
+              { name: "encounter_procedure_tooth_idx" },
+            ),
+          ],
+          checks: [
+            check({
+              name: "encounter_procedure_target_type",
+              expression: '\"targetType\" IN (\'TOOTH\', \'REGION\', \'WHOLE_MOUTH\', \'OTHER\')',
+            }),
+            check({
+              name: "encounter_procedure_target",
+              expression: '(\"targetType\" = \'TOOTH\' AND \"toothNumber\" IS NOT NULL AND length(btrim(\"toothNumber\")) > 0) OR (\"targetType\" <> \'TOOTH\' AND \"toothNumber\" IS NULL)',
+            }),
+            check({
+              name: "encounter_procedure_description",
+              expression: 'length(btrim(\"description\")) > 0',
+            }),
+            check({
+              name: "encounter_procedure_status",
+              expression: '\"status\" IN (\'RECORDED\', \'VOIDED\')',
+            }),
+            check({
+              name: "encounter_procedure_void",
+              expression: '(\"status\" = \'RECORDED\' AND \"voidedAt\" IS NULL AND \"voidedByMembershipId\" IS NULL AND \"voidReason\" IS NULL) OR (\"status\" = \'VOIDED\' AND \"voidedAt\" IS NOT NULL AND \"voidedByMembershipId\" IS NOT NULL AND \"voidReason\" IS NOT NULL AND length(btrim(\"voidReason\")) > 0)',
+            }),
+            check({ name: "ClinicalEncounterProcedure_version", expression: '\"rowVersion\" > 0' }),
+          ],
+        })),
       Treatment: Treatment.attributes(({ fields, constraints }) => ({
         uniques: [
           constraints.unique([fields.organizationId, fields.id]),
@@ -1438,6 +1636,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           }),
           payments: rel.hasMany(Payment, { by: "treatmentId" }),
           clinicalFiles: rel.hasMany(ClinicalFile, { by: "treatmentId" }),
+          procedures: rel.hasMany(TreatmentProcedure, { by: "treatmentId" }),
         })
         .sql(({ cols, constraints }) => ({
           table: "Treatment",
@@ -1662,6 +1861,50 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
               name: "file_upload_ready",
               expression:
                 '"uploadStatus" <> \'READY\' OR "uploadedAt" IS NOT NULL',
+            }),
+          ],
+        })),
+
+      Person: Person.attributes(({ fields, constraints }) => ({
+        uniques: [constraints.unique([fields.organizationId, fields.id])],
+      }))
+        .relations({
+          appointments: rel.hasMany(Appointment, { by: "personId" }),
+        })
+        .sql(({ cols, constraints }) => ({
+          table: "Person",
+          foreignKeys: [
+            constraints.foreignKey(
+              [cols.organizationId, cols.convertedToPatientId],
+              [Patient.refs.organizationId, Patient.refs.id],
+              { onDelete: "restrict" },
+            ),
+          ],
+          indexes: [
+            constraints.index(
+              [cols.organizationId, cols.convertedToPatientId],
+              { name: "Person_organizationId_convertedToPatientId_idx" },
+            ),
+            constraints.index(
+              [cols.organizationId, cols.lastName, cols.firstName],
+              { name: "person_org_name_idx" },
+            ),
+            constraints.index([cols.organizationId, cols.phone], {
+              name: "person_org_phone_idx",
+            }),
+          ],
+          checks: [
+            check({
+              name: "person_first_name_not_empty",
+              expression: 'length(btrim("firstName")) > 0',
+            }),
+            check({
+              name: "person_last_name_not_empty",
+              expression: '"lastName" IS NULL OR length(btrim("lastName")) > 0',
+            }),
+            check({
+              name: "person_phone_not_empty",
+              expression: '"phone" IS NULL OR length(btrim("phone")) > 0',
             }),
           ],
         })),

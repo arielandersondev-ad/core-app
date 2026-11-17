@@ -21,8 +21,9 @@ export interface AppointmentProps {
   id?: string;
   organizationId: string;
   branchId: string;
-  patientId: string;
-  practitionerMembershipId: string;
+  patientId?: string;
+  personId?: string;
+  practitionerMembershipId?: string | null;
   serviceId?: string;
   serviceIds?: string[];
   treatmentId?: string | null;
@@ -40,19 +41,30 @@ export interface AppointmentProps {
   createdAt?: Date;
   updatedAt?: Date;
   services?: AppointmentServiceItem[];
+  patientName?: string | null;
+  patientPhone?: string | null;
+  personName?: string | null;
+  personPhone?: string | null;
+  serviceName?: string | null;
 }
 
 export class Appointment {
   readonly id: string;
   readonly organizationId: string;
   readonly branchId: string;
-  readonly patientId: string;
-  readonly practitionerMembershipId: string;
+  readonly patientId: string | null;
+  readonly personId: string | null;
+  readonly practitionerMembershipId: string | null;
   readonly serviceId: string;
   readonly serviceIds: string[];
   readonly treatmentId: string | null;
   readonly scheduledStartAt: Date;
   readonly scheduledEndAt: Date;
+  readonly patientName: string | null;
+  readonly patientPhone: string | null;
+  readonly personName: string | null;
+  readonly personPhone: string | null;
+  readonly serviceName: string | null;
   private _status: AppointmentStatus;
   private _reason: string | null;
   private _notes: string | null;
@@ -67,15 +79,23 @@ export class Appointment {
   readonly services: AppointmentServiceItem[];
 
   constructor(props: AppointmentProps) {
-    if (props.scheduledStartAt >= props.scheduledEndAt) {
+    if (
+      Number.isNaN(props.scheduledStartAt?.getTime()) ||
+      Number.isNaN(props.scheduledEndAt?.getTime()) ||
+      props.scheduledStartAt >= props.scheduledEndAt
+    ) {
       throw new Error('La hora de inicio debe ser anterior a la hora de fin.');
+    }
+    if (!props.patientId && !props.personId) {
+      throw new Error('Debe tener asociado un paciente o una persona de contacto.');
     }
 
     this.id = props.id ?? '';
     this.organizationId = props.organizationId;
     this.branchId = props.branchId;
-    this.patientId = props.patientId;
-    this.practitionerMembershipId = props.practitionerMembershipId;
+    this.patientId = props.patientId ?? null;
+    this.personId = props.personId ?? null;
+    this.practitionerMembershipId = props.practitionerMembershipId ?? null;
 
     const sIds =
       props.serviceIds && props.serviceIds.length > 0
@@ -101,6 +121,12 @@ export class Appointment {
     this._cancellationReason = props.cancellationReason ?? null;
     this.createdAt = props.createdAt ?? new Date();
     this.updatedAt = props.updatedAt ?? new Date();
+    this.patientName = props.patientName ?? null;
+    this.patientPhone = props.patientPhone ?? null;
+    this.personName = props.personName ?? null;
+    this.personPhone = props.personPhone ?? null;
+    this.serviceName =
+      props.serviceName ?? props.services?.[0]?.serviceName ?? null;
   }
 
   get status(): AppointmentStatus {
@@ -196,5 +222,38 @@ export class Appointment {
 
   updateNotes(notes: string): void {
     this._notes = notes;
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      organizationId: this.organizationId,
+      branchId: this.branchId,
+      patientId: this.patientId,
+      personId: this.personId,
+      practitionerMembershipId: this.practitionerMembershipId,
+      serviceId: this.serviceId,
+      serviceIds: this.serviceIds,
+      treatmentId: this.treatmentId,
+      scheduledStartAt: this.scheduledStartAt,
+      scheduledEndAt: this.scheduledEndAt,
+      status: this.status,
+      reason: this.reason,
+      notes: this.notes,
+      createdByMembershipId: this.createdByMembershipId,
+      updatedByMembershipId: this.updatedByMembershipId,
+      rowVersion: this.rowVersion,
+      canceledAt: this.canceledAt,
+      canceledByMembershipId: this.canceledByMembershipId,
+      cancellationReason: this.cancellationReason,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      services: this.services,
+      patientName: this.patientName,
+      patientPhone: this.patientPhone,
+      personName: this.personName,
+      personPhone: this.personPhone,
+      serviceName: this.serviceName,
+    };
   }
 }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { login, AuthenticationError } from "@/features/auth/services/auth.service";
 import type { LoginFormState } from "@/features/auth/types/auth.types";
-import { setAccessToken } from "@/infrastructure/auth/server-session";
+import { setSession } from "@/infrastructure/auth/server-session";
 import { safeReturnTo } from "@/features/auth/utils/safe-return-to";
 
 export async function loginAction(_state: LoginFormState, data: FormData): Promise<LoginFormState> {
@@ -16,8 +16,7 @@ export async function loginAction(_state: LoginFormState, data: FormData): Promi
   if (Object.keys(errors).length) return { errors };
 
   try {
-    const result = await login(email, password);
-    await setAccessToken(result.access_token, result.expires_in);
+    await setSession(await login(email, password));
   } catch (error) {
     return { message: error instanceof AuthenticationError ? error.message : "Ocurrió un error inesperado." };
   }

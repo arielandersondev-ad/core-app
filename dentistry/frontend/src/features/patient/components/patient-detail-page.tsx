@@ -1,0 +1,143 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { patientDetailOptions } from "@/features/patient/api/query-options";
+import { ApiError } from "@/infrastructure/http/api-error";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
+import { Button, buttonClassName, Icons, StatusMessage } from "@/shared/components/ui";
+import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
+import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
+import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
+import { QuickProcedureModal } from "@/features/clinical-encounter/components/modals/quick-procedure-modal";
+import { isModuleEnabled } from "@/shared/plan/plan-access";
+
+function PatientField({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="space-y-1 border-b border-border py-4 last:border-b-0">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dd className="text-sm text-foreground">{value || "No registrado"}</dd>
+    </div>
+  );
+}
+
+function formatDate(value: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(date);
+}
+
+export function PatientDetailPage({ patientId }: { patientId: string }) {
+  const query = useQuery(patientDetailOptions(patientId));
+  const router = useRouter();
+  const session = useAuthenticatedSession();
+  const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [updatedMessage, setUpdatedMessage] = useState("");
+  const [registeringProcedure, setRegisteringProcedure] = useState(false);
+  const [quickEncounterId, setQuickEncounterId] = useState<string | null>(null);
+  const canRegisterProcedure =
+    session.permissions.includes("dentistry:encounters:create") &&
+    isModuleEnabled(session.plan, "procedures");
+
+  if (query.isPending) {
+    return <PageContainer><StatusMessage variant="loading" message="Cargando paciente…" /></PageContainer>;
+  }
+
+  if (query.isError) {
+    const isMissing = query.error instanceof ApiError && query.error.status === 404;
+    const message = isMissing
+      ? "No se encontró este paciente en tu organización."
+      : query.error instanceof ApiError && query.error.status === 403
+        ? "No tienes permiso para consultar este paciente."
+        : "No se pudo cargar el paciente. Inténtalo nuevamente.";
+
+    return (
+      <PageContainer>
+        <StatusMessage
+          variant="error"
+          message={message}
+          action={<>
+            {!isMissing && <Button variant="outline" onClick={() => { void query.refetch(); }}>Reintentar</Button>}
+            <Link href="/patients" className="text-sm text-primary hover:underline">Volver a pacientes</Link>
+          </>}
+        />
+      </PageContainer>
+    );
+  }
+
+  const patient = query.data;
+  return (
+    <PageContainer>
+      <div className="mb-4 text-sm"><Link href="/patients" className="text-primary hover:underline">← Volver a pacientes</Link></div>
+      <PageHeader
+        title={patient.fullName}
+        description={`Paciente ${patient.status === "ACTIVE" ? "activo" : "inactivo"}`}
+        breadcrumbs={[{ label: "Pacientes", href: "/patients" }, { label: patient.fullName }]}
+        action={<div className="flex flex-wrap gap-2">
+          {session.permissions.includes("dentistry:encounters:create") && (
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/new`} className={buttonClassName()}>
+              <span className="flex shrink-0 items-center" aria-hidden="true">
+                {Icons.plus}
+              </span>
+              Nueva atención
+            </Link>
+          )}
+          {canRegisterProcedure && (
+            <Button variant="outline" leftIcon={Icons.tooth} onClick={() => setRegisteringProcedure(true)}>
+              Registrar procedimiento
+            </Button>
+          )}
+          {session.permissions.includes("dentistry:encounters:read") && (
+            <>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className={buttonClassName({ variant: "outline" })}>Atenciones clínicas</Link>
+              <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className={buttonClassName({ variant: "outline" })}>Perfil de salud</Link>
+            </>
+          )}
+          {session.permissions.includes("dentistry:patients:update") && <Button variant="outline" onClick={() => setEditing(true)}>Editar paciente</Button>}
+          {session.permissions.includes("dentistry:patients:delete") && <Button variant="danger" onClick={() => setConfirmingDelete(true)}>Eliminar paciente</Button>}
+        </div>}
+      />
+      {updatedMessage && <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">{updatedMessage}</p>}
+      {quickEncounterId && (
+        <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">
+          Procedimiento registrado.{" "}
+          {session.permissions.includes("dentistry:encounters:read") && (
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/${encodeURIComponent(quickEncounterId)}`} className="font-medium underline">
+              Ver atención
+            </Link>
+          )}
+        </p>
+      )}
+      {registeringProcedure && (
+        <QuickProcedureModal
+          patientId={patient.id}
+          onClose={() => setRegisteringProcedure(false)}
+          onRegistered={(encounter) => {
+            setQuickEncounterId(encounter.id);
+            setRegisteringProcedure(false);
+          }}
+        />
+      )}
+      {confirmingDelete && <DeletePatientConfirmation patientId={patient.id} patientName={patient.fullName} onCancel={() => setConfirmingDelete(false)} onDeleted={() => router.replace("/patients")} />}
+      <section aria-labelledby="patient-contact-heading" className="rounded-xl border border-border bg-surface px-5">
+        <h2 id="patient-contact-heading" className="border-b border-border py-4 font-display text-base font-semibold text-foreground">Datos personales y de contacto</h2>
+        <dl className="grid gap-x-8 sm:grid-cols-2">
+          <PatientField label="Nombres" value={patient.firstName} />
+          <PatientField label="Apellidos" value={patient.lastName} />
+          <PatientField label="Documento" value={patient.documentNumber ? `${patient.documentType ?? "Documento"} ${patient.documentNumber}` : null} />
+          <PatientField label="Fecha de nacimiento" value={formatDate(patient.birthDate)} />
+          <PatientField label="Sexo" value={patient.sex} />
+          <PatientField label="Teléfono" value={patient.phone} />
+          <PatientField label="Correo electrónico" value={patient.email} />
+          <PatientField label="Dirección" value={patient.address} />
+          <PatientField label="Notas" value={patient.notes} />
+        </dl>
+      </section>
+      <p className="mt-4 text-xs text-muted">Registrado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.createdAt))} · Actualizado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.updatedAt))}</p>
+      {editing && <UpdatePatientDialog patient={patient} onClose={() => setEditing(false)} onUpdated={(updated) => { setUpdatedMessage(`${updated.fullName} se actualizó correctamente.`); }} />}
+    </PageContainer>
+  );
+}

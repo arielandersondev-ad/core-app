@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Patient } from '../../domain/entities/patient.entity.js';
+import type { Patient } from '../../domain/entities/patient.entity.js';
 import { PatientRepository } from '../../domain/repositories/patient.repository.js';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class GetPatientByIdUseCase {
 
   async execute(id: string, organizationId: string): Promise<Patient> {
     const patient = await this.patientRepository.findById(id, organizationId);
-    if (!patient || patient.deleted) {
+    if (!patient || patient.deletedAt !== null) {
       throw new NotFoundException('Paciente no encontrado');
     }
     return patient;

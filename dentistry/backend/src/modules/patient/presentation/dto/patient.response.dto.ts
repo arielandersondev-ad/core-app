@@ -1,4 +1,4 @@
-import { Patient } from '../../domain/entities/patient.entity.js';
+import type { Patient } from '../../domain/entities/patient.entity.js';
 
 export class PatientResponseDto {
   id: string;
@@ -13,6 +13,9 @@ export class PatientResponseDto {
   documentType: string | null;
   documentNumber: string | null;
   address: string | null;
+  maritalStatus: string | null;
+  occupation: string | null;
+  origin: string | null;
   notes: string | null;
   status: string;
   createdAt: string;
@@ -24,7 +27,7 @@ export class PatientResponseDto {
     dto.organizationId = patient.organizationId;
     dto.firstName = patient.firstName;
     dto.lastName = patient.lastName;
-    dto.fullName = patient.fullName;
+    dto.fullName = `${patient.firstName} ${patient.lastName}`;
     dto.phone = patient.phone;
     dto.email = patient.email;
     dto.birthDate = patient.birthDate?.toISOString().slice(0, 10) ?? null;
@@ -32,6 +35,9 @@ export class PatientResponseDto {
     dto.documentType = patient.documentType;
     dto.documentNumber = patient.documentNumber;
     dto.address = patient.address;
+    dto.maritalStatus = patient.maritalStatus ?? null;
+    dto.occupation = patient.occupation ?? null;
+    dto.origin = patient.origin ?? null;
     dto.notes = patient.notes;
     dto.status = patient.status;
     dto.createdAt = patient.createdAt.toISOString();

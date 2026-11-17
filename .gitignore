@@ -40,6 +40,8 @@
 
 **/dist/
 **/build/
+/packages/ui/storybook-static/
+/output/
 
 
 # ============================================================

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { patients, Patient } from "@/modules/clinic/__mocks__/data";
-import { Modal, Button, Input, Select, Icons } from "@/shared/components/ui";
+import { ResponsiveModal, Button, Input, Select, Icons } from "@/shared/components/ui";
 
 interface CreatePatientModalProps {
   open: boolean;
@@ -95,7 +95,7 @@ export function CreatePatientModal({
   };
 
   return (
-    <Modal
+    <ResponsiveModal
       open={open}
       onClose={handleClose}
       title="Nuevo Paciente"
@@ -228,7 +228,7 @@ export function CreatePatientModal({
                 placeholder="Diagnóstico preliminar, observaciones o derivaciones..."
                 value={form.notes}
                 onChange={(e) => set("notes", e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--primary)] text-[var(--foreground)] placeholder:text-[var(--muted)] resize-none"
+                className="w-full px-3.5 py-2.5 rounded-md bg-[var(--surface)] border border-[var(--border)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--primary)] text-[var(--foreground)] placeholder:text-[var(--muted)] resize-none"
               />
             </div>
           </div>
@@ -254,6 +254,6 @@ export function CreatePatientModal({
           </Button>
         </div>
       </form>
-    </Modal>
+    </ResponsiveModal>
   );
 }

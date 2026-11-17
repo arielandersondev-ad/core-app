@@ -35,28 +35,24 @@ export class PrismaRoleRepository extends RoleRepository {
   }
 
   async create(role: CreateRole): Promise<Role> {
-    try {
-      const row = await this.prisma.orm.core.Role.create({
-        code: role.code,
-        description: role.description,
-        name: role.name,
-        organizationId: role.organizationId,
-      });
+    const row = await this.prisma.orm.core.Role.create({
+      code: role.code,
+      description: role.description,
+      name: role.name,
+      organizationId: role.organizationId,
+    });
 
-      return {
-        id: row.id,
-        organizationId: row.organizationId,
-        name: row.name,
-        code: row.code,
-        description: row.description,
-        deleted: row.deletedAt !== null,
-        deletedAt: row.deletedAt,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      id: row.id,
+      organizationId: row.organizationId,
+      name: row.name,
+      code: row.code,
+      description: row.description,
+      deleted: row.deletedAt !== null,
+      deletedAt: row.deletedAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
   }
 
   async replacePermissions(roleId: string, permissionIds: string[]) {

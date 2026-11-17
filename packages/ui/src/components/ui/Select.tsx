@@ -36,8 +36,8 @@ export function Select({
           disabled={disabled}
           {...props}
           className={`${heightClass} w-full px-3 pr-8 bg-[var(--surface)] border ${
-            error ? "border-[var(--danger)] ring-1 ring-[var(--danger)]/30" : "border-[var(--border)]"
-          } rounded-[var(--radius)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30 focus:border-[var(--primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${className}`}
+            error ? "border-[var(--danger)] ring-1 ring-[var(--danger)]/30" : "border-[var(--border-strong)]"
+          } rounded-md text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/30 focus:border-[var(--primary)] transition-all disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer ${className}`}
         >
           {options
             ? options.map((opt) => (

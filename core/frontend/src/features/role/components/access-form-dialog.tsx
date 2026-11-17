@@ -1,10 +1,7 @@
 'use client';
 
 import type { FormEvent } from 'react';
-import { Button } from '@/shared/components/ui/Button';
-import { Input } from '@/shared/components/ui/Input';
-import { Label } from '@/shared/components/ui/Label';
-import { Modal } from '@/shared/components/ui/Modal';
+import { Button, Input, Label, Modal } from '@/shared/components/ui';
 
 type AccessFormDialogProps = {
   open: boolean;

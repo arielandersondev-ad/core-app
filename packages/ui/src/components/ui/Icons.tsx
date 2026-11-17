@@ -46,6 +46,11 @@ export const Icons: Record<string, ReactNode> = {
       <polyline points="6 9 12 15 18 9" />
     </svg>
   ),
+  chevronUp: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  ),
   plus: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <line x1="12" y1="5" x2="12" y2="19" />
@@ -79,6 +84,41 @@ export const Icons: Record<string, ReactNode> = {
   moon: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+    </svg>
+  ),
+  snowflake: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <line x1="12" y1="2" x2="12" y2="22" />
+      <line x1="3.34" y1="7" x2="20.66" y2="17" />
+      <line x1="3.34" y1="17" x2="20.66" y2="7" />
+      <polyline points="9.5 3.5 12 6 14.5 3.5" />
+      <polyline points="9.5 20.5 12 18 14.5 20.5" />
+    </svg>
+  ),
+  tree: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15 7 13.5 7 17 12 15 12 19.5 18 4.5 18 9 12 7 12 10.5 7 9 7 12 2" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+    </svg>
+  ),
+  gift: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
+      <line x1="12" y1="8" x2="12" y2="21" />
+      <path d="M12 8C10.5 4.5 7 4 7 6.5S10 8 12 8Zm0 0c1.5-3.5 5-4 5-1.5S14 8 12 8Z" />
+    </svg>
+  ),
+  cloud: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.5 19H8a5 5 0 1 1 1.2-9.86A6 6 0 0 1 20.7 11.2 4 4 0 0 1 17.5 19Z" />
+    </svg>
+  ),
+  monitor: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
     </svg>
   ),
   mail: (

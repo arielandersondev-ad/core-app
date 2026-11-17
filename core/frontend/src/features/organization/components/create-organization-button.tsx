@@ -18,8 +18,24 @@ function PlusIcon() {
   );
 }
 
-export function CreateOrganizationButton() {
-  const [open, setOpen] = useState(false);
+type CreateOrganizationButtonProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function CreateOrganizationButton({
+  open: controlledOpen,
+  onOpenChange,
+}: CreateOrganizationButtonProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (controlledOpen === undefined) {
+      setInternalOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  };
 
   return (
     <>
@@ -32,18 +48,8 @@ export function CreateOrganizationButton() {
         Nueva organización
       </button>
 
-      <button
-        type="button"
-        aria-label="Crear nueva organización"
-        onClick={() => setOpen(true)}
-        className="fixed right-5 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 md:hidden"
-        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
-      >
-        <PlusIcon />
-      </button>
-
       <CreateOrganizationDialog
-        open={open}
+        open={isOpen}
         onClose={() => setOpen(false)}
       />
     </>

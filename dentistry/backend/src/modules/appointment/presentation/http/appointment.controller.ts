@@ -47,6 +47,7 @@ export class AppointmentController {
       branchId: dto.branchId,
       authorizedBranchIds: principal.branchIds,
       patientId: dto.patientId,
+      personId: dto.personId,
       practitionerMembershipId: dto.practitionerMembershipId,
       serviceId: dto.serviceId,
       serviceIds: dto.serviceIds,

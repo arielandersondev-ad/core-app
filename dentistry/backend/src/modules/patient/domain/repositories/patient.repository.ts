@@ -1,17 +1,39 @@
-import { Patient } from '../entities/patient.entity.js';
+import type { Patient } from '../entities/patient.entity.js';
+import type {
+  PaginatedResult,
+  PaginationInput,
+} from '../../../../common/pagination/pagination.js';
 
-export interface FindPatientsFilters {
+export type PatientCreateData = Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>;
+
+export type FindPatientsFilters = {
   organizationId: string;
   search?: string;
-  status?: string;
-}
+  status?: Patient['status'];
+  /** Fechas civiles (UTC-midnight) interpretadas en la zona de la organización. */
+  createdFrom?: Date;
+  createdTo?: Date;
+} & Partial<PaginationInput>;
 
 export abstract class PatientRepository {
-  abstract create(patient: Patient): Promise<Patient>;
-  abstract findById(
+  /**
+   * Crea el paciente respetando el cupo del plan (`null`: sin cupo). Lanza
+   * `PlanLimitReachedException` si la organización ya lo alcanzó.
+   */
+  abstract create(
+    patient: PatientCreateData,
+    patientLimit: number | null,
+  ): Promise<Patient>;
+  /** Pacientes que ocupan cupo del plan (no eliminados). */
+  abstract countSeats(organizationId: string): Promise<number>;
+  abstract findById(id: string, organizationId: string,): Promise<Patient | null>;
+  abstract findByFilters(
+    filters: FindPatientsFilters,
+  ): Promise<PaginatedResult<Patient>>;
+  abstract update(patient: Patient): Promise<Patient>;
+  abstract softDelete(
     id: string,
     organizationId: string,
-  ): Promise<Patient | null>;
-  abstract findByFilters(filters: FindPatientsFilters): Promise<Patient[]>;
-  abstract update(patient: Patient): Promise<Patient>;
+    deletedByMembershipId: string,
+  ): Promise<Patient>;
 }

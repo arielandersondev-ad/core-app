@@ -3,8 +3,4 @@ export type LoginFormState = {
   message?: string;
 };
 
-export type CurrentSession = {
-  user: { id: string };
-  context: { membershipId: string; organizationId: string; branchIds: string[] };
-  permissions: string[];
-};
+export type { CurrentSession } from "@/infrastructure/auth/session";

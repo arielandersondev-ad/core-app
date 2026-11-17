@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Patient } from '../../domain/entities/patient.entity.js';
+import type {
+  Patient,
+  PatientSex,
+} from '../../domain/entities/patient.entity.js';
 import { PatientRepository } from '../../domain/repositories/patient.repository.js';
 import { validatePatient } from '../validate-patient.js';
 
@@ -11,10 +14,13 @@ export interface UpdatePatientCommand {
   phone?: string | null;
   email?: string | null;
   birthDate?: Date | null;
-  sex?: string | null;
+  sex?: PatientSex | null;
   documentType?: string | null;
   documentNumber?: string | null;
   address?: string | null;
+  maritalStatus?: string | null;
+  occupation?: string | null;
+  origin?: string | null;
   notes?: string | null;
   updatedByMembershipId: string;
 }
@@ -29,25 +35,63 @@ export class UpdatePatientUseCase {
       command.organizationId,
     );
 
-    if (!patient || patient.deleted) {
+    if (!patient || patient.deletedAt !== null) {
       throw new NotFoundException('Paciente no encontrado');
     }
 
-    patient.updateDetails({
-      firstName: command.firstName,
-      lastName: command.lastName,
-      phone: command.phone,
-      email: command.email,
-      birthDate: command.birthDate,
-      sex: command.sex,
-      documentType: command.documentType,
-      documentNumber: command.documentNumber,
-      address: command.address,
-      notes: command.notes,
+    const updated: Patient = {
+      ...patient,
+      firstName:
+        command.firstName === undefined
+          ? patient.firstName
+          : command.firstName.trim(),
+      lastName:
+        command.lastName === undefined
+          ? patient.lastName
+          : command.lastName.trim(),
+      phone:
+        command.phone === undefined
+          ? patient.phone
+          : (command.phone?.trim() ?? null),
+      email:
+        command.email === undefined
+          ? patient.email
+          : (command.email?.trim() ?? null),
+      birthDate:
+        command.birthDate === undefined ? patient.birthDate : command.birthDate,
+      sex: command.sex === undefined ? patient.sex : command.sex,
+      documentType:
+        command.documentType === undefined
+          ? patient.documentType
+          : command.documentType?.trim() || null,
+      documentNumber:
+        command.documentNumber === undefined
+          ? patient.documentNumber
+          : command.documentNumber?.trim() || null,
+      address:
+        command.address === undefined
+          ? patient.address
+          : (command.address?.trim() ?? null),
+      maritalStatus:
+        command.maritalStatus === undefined
+          ? patient.maritalStatus
+          : command.maritalStatus?.trim() || null,
+      occupation:
+        command.occupation === undefined
+          ? patient.occupation
+          : command.occupation?.trim() || null,
+      origin:
+        command.origin === undefined
+          ? patient.origin
+          : command.origin?.trim() || null,
+      notes:
+        command.notes === undefined
+          ? patient.notes
+          : (command.notes?.trim() ?? null),
       updatedByMembershipId: command.updatedByMembershipId,
-    });
+    };
 
-    validatePatient(patient);
-    return this.patientRepository.update(patient);
+    validatePatient(updated);
+    return this.patientRepository.update(updated);
   }
 }

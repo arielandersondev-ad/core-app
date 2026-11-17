@@ -3,6 +3,7 @@ import { PrismaService } from '../../../common/infrastructure/prisma.service.js'
 import { writeAuditLog } from '../../../common/infrastructure/prisma-audit.writer.js';
 import {
   CreateUserWithAccess,
+  FailedLoginPolicy,
   MembershipSummary,
   User,
   UserAuthRecord,
@@ -16,6 +17,15 @@ import type {
 import { PasswordHasher } from '../domain/services/password-hasher.js';
 import { isPostgresUniqueViolation } from '../../../common/infrastructure/postgres-error.js';
 import { MembershipAlreadyExistsError } from '../domain/errors/membership-already-exists.error.js';
+import { assertOrganizationQuota } from '../../plan/infrastructure/organization-plan-quota.js';
+import { or } from '@prisma/orm-postgres/orm-client';
+import {
+  createPaginatedResult,
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  type PaginatedResult,
+} from '../../../common/pagination/pagination.js';
+import type { ListUsersQueryDto } from '../presentation/dto/list-users.query.dto.js';
 
 const MEMBERSHIP_ACTIVE_USER_ORG_UNIQUE_INDEX =
   'membership_org_user_uidx_97d1e537';
@@ -58,9 +68,54 @@ export class PrismaUserRepository extends UserRepository {
     super();
   }
 
-  async listUsers(): Promise<UserListItem[]> {
-    const [users, memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
-      this.prisma.orm.core.User.all(),
+  async listUsers(query?: ListUsersQueryDto): Promise<PaginatedResult<UserListItem>> {
+    let userQuery = this.prisma.orm.core.User.where({
+      deletedAt: null,
+    });
+
+    if (query?.status && query.status !== "all") {
+      userQuery = userQuery.where({ status: query.status.toUpperCase() });
+    }
+
+    const search = query?.search?.trim();
+    if (search) {
+      const pattern = '%' + search.replace(/[\\%_]/g, (m) => '\\' + m) + '%';
+      userQuery = userQuery.where((u) =>
+        or(
+          u.firstName.ilike(pattern),
+          u.lastName.ilike(pattern),
+          u.email.ilike(pattern),
+          u.phone.ilike(pattern),
+        ),
+      );
+    }
+
+    const limit = Math.max(1, query?.limit ?? query?.pageSize ?? DEFAULT_PAGE_SIZE);
+    let page = Math.max(1, query?.page ?? DEFAULT_PAGE);
+    let skip: number;
+
+    if (query?.offset !== undefined && query.offset >= 0) {
+      skip = query.offset;
+      page = Math.floor(skip / limit) + 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const { totalItems } = await userQuery.aggregate((aggregate) => ({
+      totalItems: aggregate.count(),
+    }));
+
+    const paginatedUsers = await userQuery
+      .orderBy([
+        (u) => u.lastName.asc(),
+        (u) => u.firstName.asc(),
+        (u) => u.id.asc(),
+      ])
+      .skip(skip)
+      .take(limit)
+      .all();
+
+    const [memberships, organizations, branches, membershipBranches, roles, membershipRoles] = await Promise.all([
       this.prisma.orm.core.OrganizationMembership.all(),
       this.prisma.orm.core.Organization.all(),
       this.prisma.orm.core.Branch.all(),
@@ -71,7 +126,8 @@ export class PrismaUserRepository extends UserRepository {
     const organizationsById = new Map(organizations.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
     const branchesById = new Map(branches.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
     const rolesById = new Map(roles.filter((item) => !item.deletedAt).map((item) => [String(item.id), item]));
-    return users.filter((user) => !user.deletedAt).map((user) => ({
+
+    const items: UserListItem[] = paginatedUsers.map((user) => ({
       id: String(user.id),
       email: user.email,
       firstName: user.firstName,
@@ -82,7 +138,7 @@ export class PrismaUserRepository extends UserRepository {
         .filter((membership) => !membership.deletedAt && String(membership.userId) === String(user.id))
         .map((membership) => ({
           organizationId: String(membership.organizationId),
-          organizationName: organizationsById.get(String(membership.organizationId))?.name ?? 'Organización no disponible',
+          organizationName: organizationsById.get(String(membership.organizationId))?.name ?? "Organización no disponible",
           branchNames: membershipBranches
             .filter((link) => !link.deletedAt && String(link.membershipId) === String(membership.id))
             .map((link) => branchesById.get(String(link.branchId))?.name)
@@ -93,6 +149,12 @@ export class PrismaUserRepository extends UserRepository {
             .filter((name): name is string => Boolean(name)),
         })),
     }));
+
+    return createPaginatedResult(
+      items,
+      { page, limit, pageSize: limit, offset: skip },
+      totalItems,
+    );
   }
 
   async listUsersByOrganizationScope(
@@ -183,6 +245,12 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async findAuthRecord(email: string): Promise<UserAuthRecord | null> {
+    return this.loadAuthRecord(email, true);
+  }
+
+  // enforceLock=false se usa al renovar sesiones: el bloqueo por intentos fallidos frena el
+  // login por contraseña, pero no debe permitir que un atacante cierre sesiones ajenas.
+  private async loadAuthRecord(email: string, enforceLock: boolean): Promise<UserAuthRecord | null> {
     const userRow = await this.prisma.orm.core.User.where({ email }).first();
 
     if (!userRow || userRow.deletedAt || userRow.status !== 'ACTIVE') {
@@ -197,7 +265,7 @@ export class PrismaUserRepository extends UserRepository {
       !auth ||
       auth.deletedAt ||
       auth.passwordHash.trim().length === 0 ||
-      (auth.lockedUntil !== null && auth.lockedUntil > new Date())
+      (enforceLock && auth.lockedUntil !== null && auth.lockedUntil > new Date())
     ) {
       return null;
     }
@@ -284,7 +352,43 @@ export class PrismaUserRepository extends UserRepository {
       branchIds: [...branchIds],
       permissions: [...permissions].sort(),
       passwordHash: auth.passwordHash,
+      passwordChangedAt: auth.passwordChangedAt,
     };
+  }
+
+  async findAuthRecordByUserId(userId: string): Promise<UserAuthRecord | null> {
+    const user = await this.prisma.orm.core.User.first({ id: userId });
+    if (!user) return null;
+    const record = await this.loadAuthRecord(user.email, false);
+    return record && record.user.id === userId ? record : null;
+  }
+
+  async registerFailedLogin(userId: string, policy: FailedLoginPolicy): Promise<void> {
+    const credential = await this.prisma.orm.core.UserCredential.where({ userId }).first();
+    if (!credential || credential.deletedAt) return;
+
+    const attempts = credential.failedAttempts + 1;
+    if (attempts >= policy.maxAttempts) {
+      await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+        failedAttempts: 0,
+        lockedUntil: new Date(policy.now.getTime() + policy.lockDurationMs),
+      });
+      return;
+    }
+
+    await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+      failedAttempts: attempts,
+    });
+  }
+
+  async clearFailedLogins(userId: string): Promise<void> {
+    const credential = await this.prisma.orm.core.UserCredential.where({ userId }).first();
+    if (!credential || (credential.failedAttempts === 0 && credential.lockedUntil === null)) return;
+
+    await this.prisma.orm.core.UserCredential.where({ id: credential.id }).update({
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
   }
 
   async findCurrentSession(
@@ -323,6 +427,14 @@ export class PrismaUserRepository extends UserRepository {
             `La organización ${input.organizationId} no existe`,
           );
         }
+
+        await assertOrganizationQuota(tx, input.organizationId, 'members', async () => {
+          const { totalItems } = await tx.orm.core.OrganizationMembership.where({
+            organizationId: input.organizationId,
+            deletedAt: null,
+          }).aggregate((aggregate) => ({ totalItems: aggregate.count() }));
+          return totalItems;
+        });
 
         for (const branchId of input.branchIds) {
           const branch = await tx.orm.core.Branch.first({

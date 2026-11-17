@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Input,
@@ -11,13 +11,20 @@ import {
   SectionHeader,
   Icons,
 } from '@/shared/components/ui';
-import {
-  organizations,
-  getBranchesByOrg,
-} from '@/shared/data/platform.mock';
+import { useOrganizations, useBranches } from '@/features/organization/hooks/use-organizations';
 
 export default function CreateUser() {
   const router = useRouter();
+  const { data: rawOrgs = [] } = useOrganizations();
+
+  const organizations = useMemo(() => {
+    return rawOrgs.map((o) => ({
+      id: o.id,
+      name: o.name,
+      status: o.status.toLowerCase(),
+    }));
+  }, [rawOrgs]);
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -31,7 +38,13 @@ export default function CreateUser() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
 
-  const orgBranches = form.orgId ? getBranchesByOrg(form.orgId) : [];
+  const { data: rawBranches = [] } = useBranches(form.orgId);
+  const orgBranches = useMemo(() => {
+    return rawBranches.map((b) => ({
+      id: b.id,
+      name: b.name,
+    }));
+  }, [rawBranches]);
 
   const set = (key: string, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -69,7 +82,7 @@ export default function CreateUser() {
         <div className="text-center">
           <h3 className="font-display text-xl font-bold text-foreground">Usuario creado</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Se ha enviado un correo de activación a <strong>{form.email}</strong>
+            Se ha registrado el usuario con correo <strong>{form.email}</strong>
           </p>
         </div>
         <Button onClick={() => router.push('/users')} fullWidth>
@@ -130,20 +143,28 @@ export default function CreateUser() {
             <p className="text-[11px] text-danger">{errors.password}</p>
           )}
         </div>
-        <Input
-          label="Confirmar contraseña"
-          type="password"
-          placeholder="Repite la contraseña"
-          value={form.confirmPassword}
-          onChange={(e) => set('confirmPassword', e.target.value)}
-          error={errors.confirmPassword}
-        />
+
+        <div className="flex flex-col gap-1">
+          <Label>Confirmar contraseña</Label>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={form.confirmPassword}
+            onChange={(e) => set('confirmPassword', e.target.value)}
+            placeholder="Repite la contraseña"
+            className={`h-11 w-full px-3 bg-background border ${
+              errors.confirmPassword ? 'border-danger' : 'border-border'
+            } rounded-(--radius) text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring`}
+          />
+          {errors.confirmPassword && (
+            <p className="text-[11px] text-danger">{errors.confirmPassword}</p>
+          )}
+        </div>
       </Card>
 
-      <SectionHeader>Rol y asignación</SectionHeader>
+      <SectionHeader>Asignación</SectionHeader>
       <Card className="p-4 flex flex-col gap-4">
         <Select
-          label="Rol del usuario"
+          label="Rol"
           value={form.role}
           onChange={(e) => set('role', e.target.value)}
         >
