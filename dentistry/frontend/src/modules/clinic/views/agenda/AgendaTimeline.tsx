@@ -34,6 +34,7 @@ interface AgendaTimelineProps {
   onOpenDetail: (aptId: string) => void;
   onOpenWhatsApp: (apt: Appointment) => void;
   onStatusChange: (aptId: string, newStatus: QuickStatus) => void;
+  onRegisterProcedure: (apt: Appointment) => void;
 }
 
 export function AgendaTimeline({
@@ -50,6 +51,7 @@ export function AgendaTimeline({
   onOpenDetail,
   onOpenWhatsApp,
   onStatusChange,
+  onRegisterProcedure,
 }: AgendaTimelineProps) {
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -186,6 +188,7 @@ export function AgendaTimeline({
                       onOpenDetail={() => onOpenDetail(apt.id)}
                       onOpenWhatsApp={() => onOpenWhatsApp(apt)}
                       onStatusChange={(status) => onStatusChange(apt.id, status)}
+                      onRegisterProcedure={() => onRegisterProcedure(apt)}
                       nowDateStr={nowDateStr}
                       nowMinutes={nowMinutes}
                     />

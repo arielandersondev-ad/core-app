@@ -7,8 +7,9 @@ import { MobileFloatingActionMenu, PullToRefresh } from "@/shared/components/ui"
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
 import { CreateAppointmentModal, CreatePatientModal, RegisterPaymentModal, AppointmentDetailSheet } from "@/modules/clinic/components";
+import { useAppointmentProcedureFlow } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 import { DentalWhatsAppContext, WhatsAppTemplateKey } from "@/shared/utils/whatsapp-generator";
-import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay } from "./agenda/hooks/useAgendaAppointments";
+import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay, toProcedureTarget } from "./agenda/hooks/useAgendaAppointments";
 import { AgendaHeader } from "./agenda/AgendaHeader";
 import { AgendaMetricsStrip } from "./agenda/AgendaMetricsStrip";
 import { AgendaTimeline } from "./agenda/AgendaTimeline";
@@ -20,6 +21,7 @@ export function isAppointmentOverdue(apt: Appointment, nowDateStr: string, nowMi
 export default function Agenda(props: { onNavigate?: (s: string, p?: Record<string, string>) => void }) {
   void props;
   const agenda = useAgendaAppointments();
+  const procedureFlow = useAppointmentProcedureFlow(() => void agenda.refetch());
   const [waContext, setWaContext] = useState<DentalWhatsAppContext | null>(null);
   const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");
   const [isWaOpen, setIsWaOpen] = useState(false);
@@ -60,6 +62,8 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
         totalCount={agenda.counters.totalCount} onOpenCreateModal={() => setIsCreateApptOpen(true)}
       />
 
+      {procedureFlow.banner}
+
       <AgendaMetricsStrip
         statusFilter={agenda.statusFilter} onStatusFilterChange={agenda.setStatusFilter}
         totalCount={agenda.counters.totalCount} waitingOrChair={agenda.counters.waitingOrChair}
@@ -79,6 +83,7 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
           onStatusChange={(id, status) => {
             agenda.handleQuickStatusChange(id, status, (completed) => setPaymentPromptAppointment(completed));
           }}
+          onRegisterProcedure={(apt) => { const target = toProcedureTarget(apt); if (target) procedureFlow.open(target); }}
         />
       </PullToRefresh>
 
@@ -131,7 +136,9 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
           setWaTemplate("confirmacion");
           setIsWaOpen(true);
         }}
+        onRegisterProcedure={(target) => { setIsDetailSheetOpen(false); setSelectedDetailCitaId(null); procedureFlow.open(target, { afterSheetClose: true }); }}
       />
+      {procedureFlow.modal}
     </div>
   );
 }

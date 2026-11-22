@@ -17,6 +17,8 @@ export interface QuickProcedureFormValues {
   targetDescription: string;
   description: string;
   observations: string;
+  /** Cita desde la que se registra (agenda); queda vinculada y completada. */
+  appointmentId?: string;
 }
 
 export type QuickProcedureValidationResult =
@@ -60,6 +62,7 @@ export function toQuickProcedureInput(
       input: {
         branchId,
         performedAt,
+        ...(values.appointmentId ? { appointmentId: values.appointmentId } : {}),
         procedureSummary: values.observations.trim() || null,
         procedures,
       },

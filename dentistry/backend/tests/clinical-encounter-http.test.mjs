@@ -70,6 +70,9 @@ test(
     const { parsePlanEntitlements } = await import(
       '../dist/modules/auth/application/contracts/plan-entitlements.js'
     );
+    const { nextAppointmentStatus } = await import(
+      '../dist/modules/clinical-encounter/domain/appointment-sync.js'
+    );
     ({ db } = await import('../dist/prisma/db.js'));
 
     // Plan vigente de la organización; los subtests de plan lo reemplazan.
@@ -163,6 +166,16 @@ test(
       row &&
       row.organizationId === scope.organizationId &&
       row.patientId === scope.patientId;
+    // Imita la sincronización transaccional del repositorio real.
+    const appointmentSyncs = [];
+    function applyAppointmentSync(scope, sync, actor) {
+      if (!sync) return;
+      appointmentSyncs.push(sync);
+      const appointment = appointments.get(sync.appointmentId);
+      if (!inScope(appointment, scope)) return;
+      const status = nextAppointmentStatus(sync, appointment.status);
+      if (status) Object.assign(appointment, { status, updatedByMembershipId: actor });
+    }
     const encounterRepository = {
       async findPage(filters) {
         encounterRepositoryCalls++;
@@ -171,7 +184,8 @@ test(
             (row) =>
               inScope(row, filters) &&
               filters.authorizedBranchIds.includes(row.branchId) &&
-              (!filters.status || row.status === filters.status),
+              (!filters.status || row.status === filters.status) &&
+              (!filters.appointmentId || row.appointmentId === filters.appointmentId),
           )
           .sort((a, b) => b.startedAt - a.startedAt);
         const { page, pageSize } = filters;
@@ -186,7 +200,7 @@ test(
         const row = encounters.get(id);
         return inScope(row, scope) ? structuredClone(row) : null;
       },
-      async create(data) {
+      async create(data, appointmentSync) {
         encounterRepositoryCalls++;
         if (
           data.appointmentId &&
@@ -216,9 +230,10 @@ test(
           procedures: [],
         };
         encounters.set(row.id, row);
+        applyAppointmentSync(data, appointmentSync, data.createdByMembershipId);
         return structuredClone(row);
       },
-      async createCompletedWithProcedures(data, drafts) {
+      async createCompletedWithProcedures(data, drafts, appointmentSync) {
         const created = await this.create(data);
         const row = encounters.get(created.id);
         Object.assign(row, {
@@ -236,15 +251,17 @@ test(
             voidReason: null,
           })),
         });
+        applyAppointmentSync(data, appointmentSync, data.createdByMembershipId);
         return structuredClone(row);
       },
-      async transition(scope, id, expectedRowVersion, change) {
+      async transition(scope, id, expectedRowVersion, change, appointmentSync) {
         encounterRepositoryCalls++;
         const row = encounters.get(id);
         if (!inScope(row, scope) || row.rowVersion !== expectedRowVersion) {
           return null;
         }
         Object.assign(row, change, { rowVersion: expectedRowVersion + 1 });
+        applyAppointmentSync(scope, appointmentSync, change.updatedByMembershipId);
         return structuredClone(row);
       },
       async addProcedures(scope, id, expectedRowVersion, drafts, actor) {
@@ -679,7 +696,7 @@ test(
         if (code) assert.equal(rejected.body.code, code);
       }
 
-      // Desde una cita: solo queda vinculada y una cita admite una sola atención.
+      // Desde una cita: queda vinculada y completada; una cita admite una sola atención.
       const canceled = { id: randomUUID(), organizationId: principal.organizationId, patientId: patient.id, branchId, status: 'CANCELED' };
       const confirmed = { ...canceled, id: randomUUID(), status: 'CONFIRMED' };
       appointments.set(canceled.id, canceled);
@@ -690,13 +707,79 @@ test(
       const linked = await request(quick, 'POST', accessToken, { branchId, appointmentId: confirmed.id, procedures: [procedure] });
       assert.equal(linked.status, 201);
       assert.equal(linked.body.appointmentId, confirmed.id);
-      assert.equal(appointments.get(confirmed.id).status, 'CONFIRMED');
+      assert.equal(appointments.get(confirmed.id).status, 'COMPLETED');
       const taken = await request(quick, 'POST', accessToken, { branchId, appointmentId: confirmed.id, procedures: [procedure] });
       assert.equal(taken.status, 409);
       assert.equal(taken.body.code, 'ENCOUNTER_APPOINTMENT_TAKEN');
 
       const foreign = await request(`/patients/${foreignPatient.id}/clinical-encounters/quick`, 'POST', accessToken, { branchId, procedures: [procedure] });
       assert.equal(foreign.status, 404);
+    });
+
+    await t.test('la atención sincroniza el estado de la cita sin retrocederlo', async () => {
+      const accessToken = await token();
+      const makeAppointment = (status) => {
+        const row = { id: randomUUID(), organizationId: principal.organizationId, patientId: patient.id, branchId, status, rowVersion: 1 };
+        appointments.set(row.id, row);
+        return row;
+      };
+
+      // Alta desde una cita pendiente: en curso; completar: completada.
+      for (const pending of ['SCHEDULED', 'CONFIRMED', 'WAITING_ROOM']) {
+        const appointment = makeAppointment(pending);
+        const created = await request(base, 'POST', accessToken, createBody({ appointmentId: appointment.id }));
+        assert.equal(created.status, 201);
+        assert.equal(appointment.status, 'IN_PROGRESS', pending);
+        assert.equal(appointment.updatedByMembershipId, principal.membershipId);
+        const completed = await request(`${base}/${created.body.id}/complete`, 'POST', accessToken, { endedAt: '2026-11-11T15:00:00Z' });
+        assert.equal(completed.status, 200);
+        assert.equal(appointment.status, 'COMPLETED', pending);
+      }
+
+      // Una cita ya completada se puede atender, pero no retrocede.
+      const done = makeAppointment('COMPLETED');
+      const late = await request(base, 'POST', accessToken, createBody({ appointmentId: done.id }));
+      assert.equal(late.status, 201);
+      assert.equal(done.status, 'COMPLETED');
+
+      // Anular no toca la cita.
+      const voidedAppointment = makeAppointment('SCHEDULED');
+      const toVoid = await request(base, 'POST', accessToken, createBody({ appointmentId: voidedAppointment.id }));
+      const voided = await request(`${base}/${toVoid.body.id}/void`, 'POST', accessToken, { reason: 'Error de carga' });
+      assert.equal(voided.status, 200);
+      assert.equal(voidedAppointment.status, 'IN_PROGRESS');
+
+      // Sin cita no hay sincronización.
+      const before = appointmentSyncs.length;
+      const free = await request(base, 'POST', accessToken, createBody());
+      await request(`${base}/${free.body.id}/complete`, 'POST', accessToken, { endedAt: '2026-11-11T15:00:00Z' });
+      assert.equal(appointmentSyncs.length, before);
+
+      // Atención rápida desde una cita en curso: completada.
+      const inChair = makeAppointment('IN_PROGRESS');
+      const quick = await request(`${base}/quick`, 'POST', accessToken, {
+        branchId,
+        appointmentId: inChair.id,
+        procedures: [{ targetType: 'TOOTH', toothNumber: '36', description: 'Exodoncia' }],
+      });
+      assert.equal(quick.status, 201);
+      assert.equal(inChair.status, 'COMPLETED');
+    });
+
+    await t.test('el listado filtra por cita para saber si ya fue atendida', async () => {
+      const accessToken = await token();
+      const appointment = { id: randomUUID(), organizationId: principal.organizationId, patientId: patient.id, branchId, status: 'CONFIRMED', rowVersion: 1 };
+      appointments.set(appointment.id, appointment);
+      const empty = await request(`${base}?appointmentId=${appointment.id}`, 'GET', accessToken);
+      assert.equal(empty.status, 200);
+      assert.equal(empty.body.items.length, 0);
+      const created = await request(base, 'POST', accessToken, createBody({ appointmentId: appointment.id }));
+      const found = await request(`${base}?appointmentId=${appointment.id}`, 'GET', accessToken);
+      assert.equal(found.body.items.length, 1);
+      assert.equal(found.body.items[0].id, created.body.id);
+      assert.equal(found.body.items[0].appointmentId, appointment.id);
+      const invalid = await request(`${base}?appointmentId=no-es-uuid`, 'GET', accessToken);
+      assert.equal(invalid.status, 400);
     });
 
     await t.test('el historial y la atención rápida dependen de las funciones del plan', async (t) => {

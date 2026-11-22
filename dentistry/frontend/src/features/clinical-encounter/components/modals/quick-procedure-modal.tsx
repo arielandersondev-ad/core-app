@@ -17,8 +17,17 @@ import {
 } from "@/features/clinical-encounter/utils/quick-procedure";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 
+/** Cita de la agenda: fija la sucursal y queda vinculada a la atención. */
+export interface QuickProcedureAppointment {
+  id: string;
+  branchId: string;
+  /** Resumen visible, p. ej. "Ana Pérez · 09:30". */
+  label?: string;
+}
+
 export interface QuickProcedureModalProps {
   patientId: string;
+  appointment?: QuickProcedureAppointment;
   onClose: () => void;
   onRegistered: (encounter: ClinicalEncounter) => void;
 }
@@ -27,17 +36,19 @@ export interface QuickProcedureModalProps {
  * "Atención rápida": registra un procedimiento suelto del paciente en un paso.
  * Se monta al abrirse, así cada apertura parte de la fecha y hora actuales.
  */
-export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickProcedureModalProps) {
+export function QuickProcedureModal({ patientId, appointment, onClose, onRegistered }: QuickProcedureModalProps) {
   const session = useAuthenticatedSession();
   const branchIds = session.context.branchIds;
   const register = useRegisterQuickProcedure(patientId);
-  // Los nombres de sucursal solo hacen falta si hay más de una para elegir.
+  // Con una cita, la sucursal es la suya; sin ella se elige solo si hay más de una.
+  const choosesBranch = !appointment && branchIds.length > 1;
   const reference = useQuery({
     ...encounterReferenceDataOptions(patientId),
-    enabled: branchIds.length > 1,
+    enabled: choosesBranch,
   });
   const [values, setValues] = useState<QuickProcedureFormValues>(() => ({
-    branchId: branchIds.length === 1 ? branchIds[0] : "",
+    branchId: appointment?.branchId ?? (branchIds.length === 1 ? branchIds[0] : ""),
+    appointmentId: appointment?.id,
     date: nowDateValue(),
     time: nowTimeValue(),
     targetType: "TOOTH",
@@ -93,7 +104,7 @@ export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickP
             variant="primary"
             leftIcon={Icons.tooth}
             onClick={handleSubmit}
-            disabled={register.isPending || branchIds.length === 0}
+            disabled={register.isPending || (!appointment && branchIds.length === 0)}
             loading={register.isPending}
           >
             Registrar
@@ -102,12 +113,21 @@ export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickP
       }
     >
       <div className="space-y-4">
-        {branchIds.length === 0 && (
+        {appointment?.label && (
+          <div className="flex items-start gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground">
+            <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center text-muted" aria-hidden="true">{Icons.calendar}</span>
+            <div className="min-w-0">
+              <p className="truncate">Cita: {appointment.label}</p>
+              <p className="text-xs text-muted">Al registrar, la cita queda completada.</p>
+            </div>
+          </div>
+        )}
+        {!appointment && branchIds.length === 0 && (
           <p role="alert" className="text-sm text-danger">
             Tu usuario no tiene una sucursal asignada. Pide a un administrador que te asigne una.
           </p>
         )}
-        {branchIds.length > 1 && (
+        {choosesBranch && (
           <Select
             id="quick-proc-branch"
             label="Sucursal"

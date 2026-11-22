@@ -507,16 +507,17 @@ function ClinicalEncounterCreateForm({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                className="flex-1 sm:flex-none"
+                className="shrink-0"
                 onClick={() => router.push(listHref)}
                 disabled={create.isPending}
               >
                 Cancelar
               </Button>
+              {/* En móvil ocupa el resto de la fila sin partir el texto en dos líneas. */}
               <Button
                 type="submit"
                 variant="primary"
-                className="flex-1 sm:flex-none"
+                className="flex-1 whitespace-nowrap sm:flex-none"
                 leftIcon={Icons.check}
                 loading={create.isPending}
                 disabled={create.isPending || Boolean(partialEncounterId)}

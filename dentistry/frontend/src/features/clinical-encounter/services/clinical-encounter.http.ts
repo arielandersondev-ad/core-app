@@ -77,7 +77,7 @@ export function createClinicalEncounterHttpDataSource(): ClinicalEncounterDataSo
   return {
     async list(patientId, filters = {}) {
       const query = new URLSearchParams();
-      for (const key of ["status", "practitionerMembershipId", "search", "page", "pageSize"] as const) {
+      for (const key of ["status", "practitionerMembershipId", "appointmentId", "search", "page", "pageSize"] as const) {
         const value = filters[key];
         if (value !== undefined && value !== "") query.set(key, String(value));
       }

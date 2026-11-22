@@ -166,6 +166,8 @@ export interface AddClinicalFileInput {
 export interface ClinicalEncounterListFilters {
   status?: ClinicalEncounterStatus;
   practitionerMembershipId?: string;
+  /** Atención de una cita: a lo sumo una, incluida la anulada. */
+  appointmentId?: string;
   search?: string;
   page?: number;
   pageSize?: number;

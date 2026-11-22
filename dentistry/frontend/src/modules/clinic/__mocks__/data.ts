@@ -71,6 +71,8 @@ export interface Appointment {
   notes: string;
   reason?: string;
   patientType?: "patient" | "person";
+  /** Sucursal real de la cita (API); la necesita la atención rápida. */
+  branchId?: string;
 }
 
 export interface ClinicalEntry {

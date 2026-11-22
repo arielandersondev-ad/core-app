@@ -1,5 +1,6 @@
 import { keepPreviousData, mutationOptions, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { patientQueryKeys } from "@/features/patient/api/query-options";
+import { appointmentQueryKeys } from "@/modules/clinic/hooks/use-appointments";
 import { ClinicalEncounterPartialCreateError } from "@/features/clinical-encounter/services/clinical-encounter.error";
 import { getClinicalEncounterDataSource } from "@/features/clinical-encounter/services/clinical-encounter.service";
 import { fetchCurrentSession } from "@/infrastructure/auth/client-session";
@@ -40,11 +41,31 @@ function invalidatePatientDetail(client: QueryClient, patientId: string) {
   return client.invalidateQueries({ queryKey: patientQueryKeys.detail(patientId) });
 }
 
+/** El backend avanza el estado de la cita vinculada junto con la atención. */
+function invalidateAppointments(client: QueryClient) {
+  return client.invalidateQueries({ queryKey: appointmentQueryKeys.all });
+}
+
 export function clinicalEncounterListOptions(patientId: string, filters?: ClinicalEncounterListFilters) {
   return queryOptions({
     queryKey: clinicalEncounterQueryKeys.list(patientId, filters),
     queryFn: () => getClinicalEncounterDataSource().list(patientId, filters),
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Atención vinculada a una cita, o null si todavía no tiene. Vive bajo las
+ * listas del paciente, así que se refresca con cada alta, cierre o anulación.
+ */
+export function appointmentEncounterOptions(patientId: string, appointmentId: string) {
+  const filters: ClinicalEncounterListFilters = { appointmentId, pageSize: 1 };
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.list(patientId, filters),
+    queryFn: async () => {
+      const page = await getClinicalEncounterDataSource().list(patientId, filters);
+      return page.items[0] ?? null;
+    },
   });
 }
 
@@ -126,6 +147,7 @@ export function clinicalEncounterCreateOptions(client: QueryClient, session: Cur
           queryKey: clinicalEncounterQueryKeys.lists(encounter.patientId),
         }),
         invalidatePatientDetail(client, encounter.patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });
@@ -149,6 +171,7 @@ export function clinicalEncounterQuickProcedureOptions(
         // Una cita vinculada deja de estar disponible para otra atención.
         client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.referenceData(patientId) }),
         invalidatePatientDetail(client, patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });
@@ -165,7 +188,7 @@ export function clinicalEncounterCompleteOptions(
       return getClinicalEncounterDataSource().complete(patientId, encounterId, input);
     },
     retry: false,
-    onSuccess: async (_encounter, { encounterId }) => {
+    onSuccess: async (encounter, { encounterId }) => {
       await Promise.all([
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.detail(patientId, encounterId),
@@ -174,6 +197,7 @@ export function clinicalEncounterCompleteOptions(
           queryKey: clinicalEncounterQueryKeys.lists(patientId),
         }),
         invalidatePatientDetail(client, patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });

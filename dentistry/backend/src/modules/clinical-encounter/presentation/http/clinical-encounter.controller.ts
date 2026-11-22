@@ -74,6 +74,7 @@ export class ClinicalEncounterController {
       authorizedBranchIds: principal.branchIds,
       status: query.status,
       practitionerMembershipId: query.practitionerMembershipId,
+      appointmentId: query.appointmentId,
       search: query.search,
       page: query.page,
       pageSize: query.pageSize,

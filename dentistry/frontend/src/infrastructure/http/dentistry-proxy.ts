@@ -52,7 +52,7 @@ const ROUTES: readonly ProxyRule[] = [
     method: "GET",
     pattern: new RegExp(`^patients/${UUID}/clinical-encounters$`),
     query: {
-      parameters: ["status", "practitionerMembershipId", "search", "page", "pageSize"],
+      parameters: ["status", "practitionerMembershipId", "appointmentId", "search", "page", "pageSize"],
       maxValueLength: 100,
       errorMessage: "Filtro de atenciones inválido.",
     },

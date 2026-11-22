@@ -16,6 +16,7 @@ import {
   useCancelAppointment,
 } from "@/modules/clinic/hooks";
 import { DEV_PERSONAS } from "@/features/dev-auth/types/personas";
+import type { AppointmentProcedureTarget } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 
 export const formatLocalPhone = (phone?: string | null): string => {
   if (!phone || phone === "-") return "";
@@ -135,6 +136,19 @@ export function isAppointmentOverdue(
   return threshold <= nowMinutes;
 }
 
+/** Cita de la agenda → atención rápida; sin sucursal conocida no se puede registrar. */
+export function toProcedureTarget(apt: Appointment): AppointmentProcedureTarget | null {
+  if (!apt.branchId || !apt.patientId) return null;
+  const patientName = apt.patientName || apt.personName;
+  return {
+    patientId: apt.patientId,
+    appointmentId: apt.id,
+    branchId: apt.branchId,
+    patientName,
+    label: [patientName, `${apt.startTime} – ${apt.endTime}`].filter(Boolean).join(" · "),
+  };
+}
+
 export function mapDtoToAppointment(dto: AppointmentDto): Appointment {
   const startDate = new Date(dto.scheduledStartAt);
   const endDate = new Date(dto.scheduledEndAt);
@@ -165,6 +179,7 @@ export function mapDtoToAppointment(dto: AppointmentDto): Appointment {
 
   return {
     id: dto.id,
+    branchId: dto.branchId,
     patientId: dto.patientId,
     patientName: dto.patientName,
     personName: dto.personName,
