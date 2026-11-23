@@ -8,10 +8,8 @@ import {
   StoredObjectNotFoundError,
   StoredObjectTooLargeError,
 } from '../dist/modules/clinical-file/domain/errors/file-storage.errors.js';
-import {
-  buildContentDisposition,
-  sanitizeFilename,
-} from '../dist/modules/clinical-file/infrastructure/storage/content-disposition.js';
+import { buildContentDisposition } from '../dist/modules/clinical-file/infrastructure/storage/content-disposition.js';
+import { sanitizeFilename } from '../dist/modules/clinical-file/domain/value-objects/filename.js';
 import { S3CompatibleFileStorage } from '../dist/modules/clinical-file/infrastructure/storage/s3-compatible-file-storage.js';
 import { UnavailableFileStorage } from '../dist/modules/clinical-file/infrastructure/storage/unavailable-file-storage.js';
 
@@ -102,15 +100,15 @@ test('AWS S3 no requiere endpoint', () => {
 
 test('la clave del objeto solo contiene identificadores opacos', () => {
   assert.equal(
-    buildClinicalFileObjectKey({ organizationId: ORG, patientId: PATIENT, clinicalFileId: FILE, extension: 'pdf' }),
+    buildClinicalFileObjectKey({ organizationId: ORG, patientId: PATIENT, objectId: FILE, extension: 'pdf' }),
     `dentistry/${ORG}/${PATIENT}/${FILE}.pdf`,
   );
   assert.throws(
-    () => buildClinicalFileObjectKey({ organizationId: 'juan-perez', patientId: PATIENT, clinicalFileId: FILE, extension: 'pdf' }),
+    () => buildClinicalFileObjectKey({ organizationId: 'juan-perez', patientId: PATIENT, objectId: FILE, extension: 'pdf' }),
     RangeError,
   );
   assert.throws(
-    () => buildClinicalFileObjectKey({ organizationId: ORG, patientId: PATIENT, clinicalFileId: FILE, extension: '../x' }),
+    () => buildClinicalFileObjectKey({ organizationId: ORG, patientId: PATIENT, objectId: FILE, extension: '../x' }),
     RangeError,
   );
 });

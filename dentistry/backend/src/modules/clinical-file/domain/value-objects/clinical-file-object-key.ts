@@ -5,7 +5,7 @@ const EXTENSION = /^[a-z0-9]{1,5}$/;
 export type ClinicalFileObjectKeyInput = {
   organizationId: string;
   patientId: string;
-  clinicalFileId: string;
+  objectId: string;
   /** Extensión derivada del tipo verificado, nunca del nombre aportado. */
   extension: string;
 };
@@ -17,13 +17,13 @@ export type ClinicalFileObjectKeyInput = {
 export function buildClinicalFileObjectKey(input: ClinicalFileObjectKeyInput): string {
   const organizationId = input.organizationId.toLowerCase();
   const patientId = input.patientId.toLowerCase();
-  const clinicalFileId = input.clinicalFileId.toLowerCase();
+  const objectId = input.objectId.toLowerCase();
 
-  if (![organizationId, patientId, clinicalFileId].every((id) => UUID.test(id))) {
+  if (![organizationId, patientId, objectId].every((id) => UUID.test(id))) {
     throw new RangeError('La clave del objeto requiere identificadores UUID');
   }
   if (!EXTENSION.test(input.extension)) {
     throw new RangeError('Extensión de archivo inválida');
   }
-  return `dentistry/${organizationId}/${patientId}/${clinicalFileId}.${input.extension}`;
+  return `dentistry/${organizationId}/${patientId}/${objectId}.${input.extension}`;
 }

@@ -5,22 +5,54 @@ solo los metadatos en `dentistry."ClinicalFile"` (ver
 `packages/db/docs/target-schema-dictionary.md` §5.6); el binario vive en un bucket
 privado compatible con S3.
 
-## Estado
+## API
 
-Fase 1 (infraestructura): puerto `FileStorage`, adaptador S3 compatible,
-configuración y prueba de humo. Todavía no hay endpoints ni pantallas.
+Todas las rutas exigen token de `dentistry-api` y el módulo Paciente del plan.
+Subir, confirmar y retirar exigen además la función `files`: un plan vencido o
+reducido conserva la consulta y descarga de lo existente (§7.4).
 
-## Flujo previsto
+| Operación | Permiso | Función del plan |
+| --- | --- | --- |
+| `GET /clinical-files/quota` | `dentistry:files:read` | — |
+| `GET /patients/:patientId/clinical-files` | `dentistry:files:read` | — |
+| `POST /patients/:patientId/clinical-files/uploads` | `dentistry:files:create` | `files` |
+| `POST /patients/:patientId/clinical-files/:fileId/complete` | `dentistry:files:create` | `files` |
+| `GET /patients/:patientId/clinical-files/:fileId/access-url?disposition=inline\|attachment` | `dentistry:files:read` | — |
+| `DELETE /patients/:patientId/clinical-files/:fileId` | `dentistry:files:delete` | `files` |
+
+Estos permisos no están en ningún seed: hay que darlos de alta en Core y
+asignarlos a los roles, igual que los de atenciones.
+
+- **Tipos:** `image/jpeg`, `image/png`, `application/pdf`; máximo 10 MB por archivo.
+  Al confirmar se comprueba la firma de bytes del tipo declarado.
+- **Cupos del plan:** `limits.fileStorageBytes` (bytes totales de la organización) y
+  `limits.filesPerPatient`. Cuentan los READY y las reservas PENDING vigentes no
+  eliminadas, bajo bloqueo por organización. Un cupo ausente no es ilimitado: sin
+  ambos, la subida responde 403 `CLINICAL_FILE_QUOTA_UNDEFINED`; al llegar al tope,
+  403 `PLAN_LIMIT_REACHED` con `resource`.
+- **Atención:** `clinicalEncounterId` es opcional; debe ser del paciente, de una
+  sucursal autorizada y no estar anulada.
+- **Vigencias:** URL de subida 5 min, reserva 15 min, enlace de lectura 2 min.
+- **Respuestas:** nunca incluyen proveedor, bucket ni clave del objeto.
+- **Auditoría:** `CLINICAL_FILE_UPLOADED` y `CLINICAL_FILE_DELETED` en `core.AuditLog`.
+- **Retirada:** lógica (`deletedAt`, `deletedByMembershipId`). El objeto se conserva
+  hasta definir la política de retención; los rechazados al confirmar sí se borran.
+- **Sin `STORAGE_*`:** subir, confirmar y pedir enlaces responden 503
+  `CLINICAL_FILE_STORAGE_UNAVAILABLE`.
+
+## Flujo
 
 El binario nunca pasa por el BFF ni por NestJS:
 
-1. El backend valida acceso, plan, tipo y tamaño, reserva cupo, crea el registro
-   `PENDING` y emite una subida firmada (`PUT`, minutos) con `Content-Type` y
-   `Content-Length` firmados. El proveedor rechaza un cuerpo de otro tamaño o tipo.
-2. El navegador sube directamente al bucket.
-3. El backend confirma: consulta el objeto, verifica tamaño, firma de bytes y
-   SHA-256, y lo pasa a `READY` (o `FAILED` y elimina el objeto).
-4. Las lecturas usan descargas firmadas de corta duración con `Content-Type` y
+1. `POST …/uploads` valida acceso, plan, tipo y tamaño, reserva cupo, crea el
+   registro `PENDING` y devuelve `{ file, upload }`, con `upload` como `PUT` firmado
+   con `Content-Type` y `Content-Length`. El proveedor rechaza un cuerpo de otro
+   tamaño o tipo.
+2. El navegador sube directamente al bucket con `upload.url` y `upload.headers`.
+3. `POST …/:fileId/complete` consulta el objeto, verifica tamaño, firma de bytes y
+   SHA-256, y lo pasa a `READY` (o `FAILED` y elimina el objeto). Si el objeto aún
+   no llegó responde 409 `CLINICAL_FILE_UPLOAD_MISSING` y la reserva sigue vigente.
+4. `GET …/access-url` firma una lectura corta con `Content-Type` y
    `Content-Disposition` forzados y `Cache-Control: private, no-store`.
 
 ## Piezas
@@ -28,11 +60,14 @@ El binario nunca pasa por el BFF ni por NestJS:
 | Capa | Archivo | Responsabilidad |
 | --- | --- | --- |
 | application | `ports/file-storage.ts` | Contrato abstracto del almacenamiento |
-| domain | `value-objects/clinical-file-object-key.ts` | Clave `dentistry/{organizationId}/{patientId}/{clinicalFileId}.{ext}`, solo UUID |
+| domain | `value-objects/clinical-file-object-key.ts` | Clave `dentistry/{organizationId}/{patientId}/{objectId}.{ext}`, solo UUID aleatorios |
 | domain | `errors/file-storage.errors.ts` | No configurado, no encontrado, demasiado grande, fallo del proveedor |
 | infrastructure | `storage/s3-compatible-file-storage.ts` | AWS SDK v3 contra B2, S3, R2 o MinIO |
 | infrastructure | `storage/unavailable-file-storage.ts` | Implementación cuando faltan las variables |
-| infrastructure | `storage/content-disposition.ts` | Saneado del nombre aportado y cabecera RFC 6266 |
+| domain | `value-objects/clinical-file-type.ts` | Tipos admitidos, firma de bytes y tamaño máximo |
+| domain | `value-objects/filename.ts` | Saneado del nombre aportado |
+| infrastructure | `storage/content-disposition.ts` | Cabecera RFC 6266 |
+| infrastructure | `prisma-clinical-file.repository.ts` | Reserva con cupos, estados, retirada y auditoría |
 | config | `src/config/storage-env.ts` | Validación de `STORAGE_*` |
 
 `FileStorageError` no expone la causa del proveedor en su mensaje (puede incluir
