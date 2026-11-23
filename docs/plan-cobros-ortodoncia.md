@@ -34,7 +34,7 @@ Se usa el plan estándar existente. Ya tiene `payments: true`; se activa `treatm
 |---|---|---|---|
 | 1 | Contrato `packages/db` | Precio en `ClinicalEncounterProcedure`; índice único parcial `payment_encounter_uidx`; migración `20261123T1811_encounter_procedure_price_and_payment_uniqueness` | Preparada en local; sin aplicar |
 | 2 | Core: plan y permisos | `treatments: true`, reasignación y permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` | Pendiente |
-| 3 | Backend de tratamientos | Crear y editar con presupuesto y moneda; detalle con presupuesto, pagado y saldo; `@RequireModule('treatments')` | Pendiente |
+| 3 | Backend de tratamientos | Crear y editar con presupuesto y moneda; detalle con presupuesto, pagado y saldo; `@RequireModule('treatments')` | Implementada en `dentistry/backend/src/modules/treatment`; 104/104 pruebas |
 | 4 | Backend de pagos | Pago al tratamiento, pago del encuentro (1:1), anulación con motivo, estado de cuenta; saldo comprobado dentro de la transacción con bloqueo | Pendiente |
 | 5 | Integración con encuentros | Precio en el procedimiento; propuesta de pago al finalizar; no anular un encuentro con pago activo | Pendiente |
 | 6 | Frontend | Reemplazar mocks de `Treatments`, `Payments` y `RegisterPayment`; estado de cuenta en el paciente; paso de cobro; campo de precio | Pendiente |
