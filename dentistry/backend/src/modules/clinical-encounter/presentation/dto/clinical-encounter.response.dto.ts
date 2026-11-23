@@ -1,6 +1,7 @@
-import type {
-  ClinicalEncounter,
-  ClinicalEncounterProcedure,
+import {
+  sumProcedurePrices,
+  type ClinicalEncounter,
+  type ClinicalEncounterProcedure,
 } from '../../domain/entities/clinical-encounter.entity.js';
 
 export class ClinicalEncounterProcedureResponseDto {
@@ -11,6 +12,8 @@ export class ClinicalEncounterProcedureResponseDto {
   targetDescription: string | null;
   description: string;
   treatmentProcedureId: string | null;
+  priceMinor: number | null;
+  currency: string | null;
   status: string;
   voidedAt: string | null;
   voidedByMembershipId: string | null;
@@ -27,6 +30,8 @@ export class ClinicalEncounterProcedureResponseDto {
     dto.targetDescription = procedure.targetDescription;
     dto.description = procedure.description;
     dto.treatmentProcedureId = procedure.treatmentProcedureId;
+    dto.priceMinor = procedure.priceMinor;
+    dto.currency = procedure.currency;
     dto.status = procedure.status;
     dto.voidedAt = procedure.voidedAt?.toISOString() ?? null;
     dto.voidedByMembershipId = procedure.voidedByMembershipId;
@@ -63,6 +68,8 @@ export class ClinicalEncounterResponseDto {
   voidReason: string | null;
   rowVersion: number;
   procedures: ClinicalEncounterProcedureResponseDto[];
+  /** Suma de los precios de los procedimientos vigentes; `null` si ninguno tiene precio. */
+  proceduresTotal: { amountMinor: number; currency: string } | null;
 
   static fromEntity(encounter: ClinicalEncounter): ClinicalEncounterResponseDto {
     const dto = new ClinicalEncounterResponseDto();
@@ -94,6 +101,7 @@ export class ClinicalEncounterResponseDto {
     dto.procedures = encounter.procedures.map(
       ClinicalEncounterProcedureResponseDto.fromEntity,
     );
+    dto.proceduresTotal = sumProcedurePrices(encounter.procedures);
     return dto;
   }
 }

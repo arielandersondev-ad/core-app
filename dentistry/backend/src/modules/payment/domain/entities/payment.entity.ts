@@ -62,3 +62,45 @@ export interface TreatmentAccount {
   movements: AccountMovement[];
   balanceMinor: number | null;
 }
+
+/** Lo realizado en una atención, para proponer su cobro. */
+export interface EncounterBilling {
+  encounter: EncounterSnapshot;
+  /** Precios de los procedimientos no anulados (solo los que tienen precio). */
+  procedurePrices: { priceMinor: number; currency: string }[];
+  /** Procedimientos no anulados, con o sin precio. */
+  procedureCount: number;
+  /** Tratamientos de la atención: el propio y los de sus procedimientos planificados. */
+  treatments: TreatmentSnapshot[];
+}
+
+export interface ProposalTreatment {
+  id: string;
+  title: string | null;
+  status: string;
+  currency: string | null;
+  /** `null` sin presupuesto. */
+  balanceMinor: number | null;
+  /** Admite cobros: con presupuesto y no rechazado ni cancelado. */
+  payable: boolean;
+  /** Monto propuesto si se cobra a este tratamiento; `null` si no aplica. */
+  suggestedAmountMinor: number | null;
+}
+
+/**
+ * Propuesta de cobro de una atención. Solo es una sugerencia: recepción la
+ * confirma, la edita al monto realmente recibido o la omite (prórroga).
+ */
+export interface PaymentProposal {
+  encounterId: string;
+  /** Falta cobrar: no está anulada y no tiene un pago vigente. */
+  collectable: boolean;
+  activePaymentId: string | null;
+  procedureCount: number;
+  pricedProcedureCount: number;
+  proceduresTotalMinor: number | null;
+  currency: string | null;
+  treatments: ProposalTreatment[];
+  suggestedTreatmentId: string | null;
+  suggestedAmountMinor: number | null;
+}

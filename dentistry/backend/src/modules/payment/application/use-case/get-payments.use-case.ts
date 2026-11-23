@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { PaginatedResult } from '../../../../common/pagination/pagination.js';
 import type {
   Payment,
+  PaymentProposal,
   TreatmentAccount,
 } from '../../domain/entities/payment.entity.js';
 import {
@@ -10,7 +11,7 @@ import {
   type PaymentScope,
 } from '../../domain/repositories/payment.repository.js';
 import { PaymentAccess } from '../payment-access.js';
-import { buildAccount } from '../payment-rules.js';
+import { buildAccount, buildPaymentProposal } from '../payment-rules.js';
 import { PaymentErrors } from '../payment.errors.js';
 
 @Injectable()
@@ -86,5 +87,28 @@ export class GetTreatmentAccountUseCase {
     const account = await this.payments.findAccount(scope, treatmentId);
     if (!account) throw PaymentErrors.treatmentNotFound();
     return buildAccount(account.treatment, account.payments);
+  }
+}
+
+/** Propuesta de cobro de una atención: lo realizado, acotado al saldo del tratamiento. */
+@Injectable()
+export class GetEncounterPaymentProposalUseCase {
+  constructor(
+    private readonly access: PaymentAccess,
+    private readonly payments: PaymentRepository,
+  ) {}
+
+  async execute(
+    scope: PaymentScope,
+    encounterId: string,
+    authorizedBranchIds: string[],
+  ): Promise<PaymentProposal> {
+    await this.access.assertPatient(scope);
+    const billing = await this.payments.findEncounterBilling(scope, encounterId);
+    if (!billing) throw PaymentErrors.encounterNotFound();
+    if (!authorizedBranchIds.includes(billing.encounter.branchId)) {
+      throw PaymentErrors.branchForbidden();
+    }
+    return buildPaymentProposal(billing);
   }
 }

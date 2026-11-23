@@ -34,6 +34,16 @@ para viajar en el token. Este módulo no crea permisos.
   409 `ENCOUNTER_CHANGED`.
 - Procedimientos solo en `IN_PROGRESS`; el lote es atómico. `toothNumber` FDI es
   obligatorio para `TOOTH` y prohibido para el resto.
+- Cada procedimiento puede llevar un precio nominal (`priceMinor`, entero ≥ 0 en
+  unidades menores, con `currency` de tres letras; ambos o ninguno →
+  400 `INVALID_PROCEDURE_PRICE`). Los precios de una atención se suman, así que
+  comparten moneda (422 `PROCEDURE_CURRENCY_MISMATCH`). La respuesta incluye
+  `proceduresTotal` (`{ amountMinor, currency }`, o `null` sin precios) con lo
+  realizado; **no es lo cobrado**: el cobro es un pago aparte (ver
+  [pagos](../payment/README.md)).
+- Una atención con pago vigente no se anula (409 `ENCOUNTER_HAS_PAYMENT`):
+  primero se anula el pago, que libera la atención. La anulación toma el mismo
+  bloqueo que el cobro, así que ambas operaciones no se cruzan.
 - `appointmentId` es único en BD incluso para atenciones anuladas: una cita
   admite una sola atención (409 `ENCOUNTER_APPOINTMENT_TAKEN`).
 - Perfil inexistente → 200 con campos `null`, `rowVersion: 0`. `PATCH` conserva
@@ -50,6 +60,6 @@ búsqueda por nombre de profesional o sucursal en el listado.
 ## Plan de la organización y atención rápida
 
 - Ambos controladores exigen la función `clinicalHistory` del plan (`@RequireModule('patients')`).
-- `POST .../quick` exige además `procedureNotes` (`@RequireModule('procedures')`). Body: `{ branchId, performedAt?, appointmentId?, procedureSummary?, procedures: [{ targetType, toothNumber?, targetDescription?, description }] }` (1–50 procedimientos).
+- `POST .../quick` exige además `procedureNotes` (`@RequireModule('procedures')`). Body: `{ branchId, performedAt?, appointmentId?, procedureSummary?, procedures: [{ targetType, toothNumber?, targetDescription?, description, priceMinor?, currency? }] }` (1–50 procedimientos).
 - Crea en una transacción una atención ya `COMPLETED` (inicio = fin = `performedAt`, por defecto ahora) a nombre de la membresía de la sesión, con sus procedimientos. Responde 201 con la atención.
 - La cita, si se envía, solo queda vinculada: su estado no cambia. Aplican las mismas reglas que en el alta (404, 422 `APPOINTMENT_NOT_ELIGIBLE`, 409 `ENCOUNTER_APPOINTMENT_TAKEN`).

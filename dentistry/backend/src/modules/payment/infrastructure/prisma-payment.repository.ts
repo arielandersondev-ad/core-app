@@ -11,6 +11,7 @@ import {
 import { lockTreatmentBalance } from '../../treatment/infrastructure/treatment-lock.js';
 import { PaymentErrors } from '../application/payment.errors.js';
 import type {
+  EncounterBilling,
   EncounterSnapshot,
   Payment,
   TreatmentSnapshot,
@@ -92,6 +93,62 @@ export class PrismaPaymentRepository extends PaymentRepository {
       status: 'COMPLETED',
     });
     return row ? toPaymentEntity(row) : null;
+  }
+
+  async findEncounterBilling(
+    scope: PaymentScope,
+    encounterId: string,
+  ): Promise<EncounterBilling | null> {
+    const encounter = await this.loadEncounter(this.prisma, scope, encounterId);
+    if (!encounter) return null;
+    const procedures = await this.prisma.orm.dentistry.ClinicalEncounterProcedure.where(
+      {
+        organizationId: scope.organizationId,
+        patientId: scope.patientId,
+        clinicalEncounterId: encounterId,
+        status: 'RECORDED',
+      },
+    ).all();
+
+    // Tratamientos de la atención: el propio y los de sus procedimientos planificados.
+    const plannedIds = [
+      ...new Set(
+        procedures
+          .map((procedure) => procedure.treatmentProcedureId)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const planned =
+      plannedIds.length === 0
+        ? []
+        : await this.prisma.orm.dentistry.TreatmentProcedure.where({
+            organizationId: scope.organizationId,
+            patientId: scope.patientId,
+          })
+            .where((procedure) => procedure.id.in(plannedIds))
+            .all();
+    const treatmentIds = [
+      ...new Set([
+        ...(encounter.treatmentId ? [encounter.treatmentId] : []),
+        ...planned.map((procedure) => procedure.treatmentId),
+      ]),
+    ];
+    const treatments: TreatmentSnapshot[] = [];
+    for (const treatmentId of treatmentIds) {
+      const treatment = await this.loadTreatment(this.prisma, scope, treatmentId);
+      if (treatment) treatments.push(treatment);
+    }
+
+    return {
+      encounter,
+      procedureCount: procedures.length,
+      procedurePrices: procedures.flatMap((procedure) =>
+        procedure.priceMinor !== null && procedure.currency !== null
+          ? [{ priceMinor: procedure.priceMinor, currency: procedure.currency }]
+          : [],
+      ),
+      treatments,
+    };
   }
 
   async findAccount(

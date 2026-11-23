@@ -192,8 +192,30 @@ test(
           payments: payments.filter((p) => p.treatmentId === treatmentId).map((p) => ({ ...p })),
         };
       },
+      async findEncounterBilling(scope, encounterId) {
+        const row = encounters.get(encounterId);
+        if (!inScope(row, scope)) return null;
+        const active = payments.find(
+          (p) => p.clinicalEncounterId === row.id && p.status === 'COMPLETED',
+        );
+        const procedures = (row.procedures ?? []).filter((p) => p.status === 'RECORDED');
+        const ids = new Set(
+          [row.treatmentId, ...procedures.map((p) => p.treatmentId)].filter(Boolean),
+        );
+        return {
+          encounter: { ...row, activePaymentId: active?.id ?? null },
+          procedureCount: procedures.length,
+          procedurePrices: procedures
+            .filter((p) => p.priceMinor != null)
+            .map((p) => ({ priceMinor: p.priceMinor, currency: p.currency })),
+          treatments: [...ids]
+            .map((id) => treatments.get(id))
+            .filter((treatment) => inScope(treatment, scope))
+            .map(snapshot),
+        };
+      },
       async register(request, decide) {
-        const scope = { organizationId: request.organizationId, patientId: request.patientId };
+        const scope ={ organizationId: request.organizationId, patientId: request.patientId };
         let encounter = null;
         if (request.encounterId) {
           const row = encounters.get(request.encounterId);
@@ -290,6 +312,7 @@ test(
         // Cuerpos inválidos a propósito: con el permiso correcto responden 400 y no crean nada.
         [`${base}/treatments/${someId}/payments`, 'POST', CREATE, { amountMinor: 0 }],
         [`${base}/clinical-encounters/${someId}/payment`, 'GET', READ],
+        [`${base}/clinical-encounters/${someId}/payment-proposal`, 'GET', READ],
         [`${base}/clinical-encounters/${someId}/payment`, 'POST', CREATE, { amountMinor: 0 }],
       ];
       for (const [path, method, permission, body] of routes) {
@@ -589,6 +612,68 @@ test(
       assert.equal(response.body.receivedByMembershipId, principal.membershipId);
       assert.equal(response.body.voidReason, null);
       assert.equal(payments.at(-1).organizationId, principal.organizationId);
+    });
+
+    await t.test('la propuesta de cobro suma lo realizado y desaparece al cobrar', async () => {
+      const treatment = seedTreatment({ title: 'Propuesta' });
+      const priced = (priceMinor) => ({
+        status: 'RECORDED', priceMinor, currency: 'BOB', treatmentId: treatment.id,
+      });
+      const visit = seedEncounter({
+        treatmentId: treatment.id,
+        procedures: [
+          priced(15_000),
+          priced(5_000),
+          { ...priced(99_000), status: 'VOIDED' },
+          { status: 'RECORDED', priceMinor: null, currency: null, treatmentId: null },
+        ],
+      });
+      const url = `${base}/clinical-encounters/${visit.id}/payment-proposal`;
+
+      const before = await request(url, 'GET', owner);
+      assert.equal(before.status, 200);
+      assert.equal(before.body.collectable, true);
+      assert.equal(before.body.proceduresTotalMinor, 20_000, 'los anulados y sin precio no suman');
+      assert.equal(before.body.procedureCount, 3);
+      assert.equal(before.body.pricedProcedureCount, 2);
+      assert.equal(before.body.suggestedTreatmentId, treatment.id);
+      assert.equal(before.body.suggestedAmountMinor, 20_000);
+      assert.equal(before.body.treatments[0].balanceMinor, 1_000_000);
+      const writes = payments.length;
+      assert.equal((await request(url, 'GET', owner)).status, 200);
+      assert.equal(payments.length, writes, 'la propuesta no crea pagos');
+
+      // Recepción edita el monto al realmente recibido: solo eso mueve el saldo.
+      const paid = await request(`${base}/clinical-encounters/${visit.id}/payment`, 'POST', owner, cash(12_000));
+      assert.equal(paid.status, 201);
+      const after = await request(url, 'GET', owner);
+      assert.equal(after.body.collectable, false);
+      assert.equal(after.body.activePaymentId, paid.body.id);
+      assert.equal(after.body.suggestedAmountMinor, null);
+      assert.equal(after.body.treatments[0].balanceMinor, 988_000);
+
+      // Anular el pago devuelve la atención a cobrable.
+      const voided = await request(`${base}/payments/${paid.body.id}/void`, 'POST', owner, { reason: 'Error' });
+      assert.equal(voided.status, 200);
+      const reopened = await request(url, 'GET', owner);
+      assert.equal(reopened.body.collectable, true);
+      assert.equal(reopened.body.suggestedAmountMinor, 20_000);
+    });
+
+    await t.test('la propuesta respeta alcance de paciente, atención y sucursal', async () => {
+      const proposal = (patientId, encounterId) =>
+        request(`/patients/${patientId}/clinical-encounters/${encounterId}/payment-proposal`, 'GET', owner);
+      const missing = await proposal(patient.id, randomUUID());
+      assert.equal(missing.status, 404);
+      assert.equal(missing.body.code, 'ENCOUNTER_NOT_FOUND');
+      assert.equal((await proposal(otherPatient.id, loose.id)).status, 404, 'es de otro paciente');
+      assert.equal((await proposal(foreignPatient.id, loose.id)).status, 404, 'es de otra organización');
+      const faraway403 = await proposal(patient.id, faraway.id);
+      assert.equal(faraway403.status, 403);
+      assert.equal(faraway403.body.code, 'BRANCH_FORBIDDEN');
+      const unpriced = await proposal(patient.id, loose.id);
+      assert.equal(unpriced.status, 200);
+      assert.equal(unpriced.body.suggestedAmountMinor, null);
     });
   },
 );

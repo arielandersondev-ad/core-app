@@ -10,6 +10,7 @@ import {
 } from '../clinical-encounter-access.js';
 import { ClinicalErrors } from '../clinical-encounter.errors.js';
 import {
+  assertSingleCurrency,
   toCreateData,
   type ProcedureDraft,
 } from './add-clinical-encounter-procedures.use-case.js';
@@ -45,6 +46,7 @@ export class RegisterQuickProcedureUseCase {
       patientId: command.patientId,
     };
     const procedures = command.procedures.map(toCreateData);
+    assertSingleCurrency(procedures);
     await this.access.assertPatient(scope);
     if (!command.authorizedBranchIds.includes(command.branchId)) {
       throw ClinicalErrors.branchForbidden();

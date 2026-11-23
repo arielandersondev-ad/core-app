@@ -4,12 +4,16 @@ import {
   ArrayMinSize,
   IsArray,
   IsIn,
+  IsInt,
   IsISO8601,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { PaginationQueryDto } from '../../../../common/presentation/dto/pagination.query.dto.js';
@@ -101,6 +105,17 @@ export class ProcedureDraftDto {
   @IsOptional()
   @IsUUID('all')
   treatmentProcedureId?: string | null;
+
+  /** Precio nominal en unidades menores; con precio, la moneda es obligatoria. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2_147_483_647)
+  priceMinor?: number | null;
+
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/)
+  currency?: string | null;
 }
 
 export class AddClinicalEncounterProceduresDto {
@@ -127,6 +142,17 @@ export class QuickProcedureDraftDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  /** Precio nominal en unidades menores; con precio, la moneda es obligatoria. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2_147_483_647)
+  priceMinor?: number | null;
+
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/)
+  currency?: string | null;
 }
 
 export class RegisterQuickProcedureDto {

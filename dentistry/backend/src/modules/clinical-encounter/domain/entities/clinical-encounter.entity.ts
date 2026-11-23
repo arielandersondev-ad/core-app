@@ -24,11 +24,43 @@ export type ClinicalEncounterProcedure = {
   targetDescription: string | null;
   description: string;
   treatmentProcedureId: string | null;
+  /** Precio nominal opcional, en unidades menores. Va siempre con `currency`. */
+  priceMinor: number | null;
+  currency: string | null;
   status: ClinicalEncounterProcedureStatus;
   voidedAt: Date | null;
   voidedByMembershipId: string | null;
   voidReason: string | null;
 };
+
+/** Suma de los precios nominales de los procedimientos no anulados. */
+export type ProceduresTotal = { amountMinor: number; currency: string };
+
+/**
+ * `null` si ningún procedimiento vigente tiene precio. Lo realizado no es lo
+ * cobrado: este total solo sirve para proponer el pago de la atención.
+ */
+export function sumProcedurePrices(
+  procedures: Pick<
+    ClinicalEncounterProcedure,
+    'priceMinor' | 'currency' | 'status'
+  >[],
+): ProceduresTotal | null {
+  let amountMinor = 0;
+  let currency: string | null = null;
+  for (const procedure of procedures) {
+    if (
+      procedure.status === 'VOIDED' ||
+      procedure.priceMinor === null ||
+      procedure.currency === null
+    ) {
+      continue;
+    }
+    amountMinor += procedure.priceMinor;
+    currency ??= procedure.currency;
+  }
+  return currency === null ? null : { amountMinor, currency };
+}
 
 export type ClinicalEncounter = {
   id: string;

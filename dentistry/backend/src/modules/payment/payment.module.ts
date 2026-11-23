@@ -4,6 +4,7 @@ import { DentistryAuthModule } from '../auth/dentistry-auth.module.js';
 import { PatientModule } from '../patient/patient.module.js';
 import { PaymentAccess } from './application/payment-access.js';
 import {
+  GetEncounterPaymentProposalUseCase,
   GetEncounterPaymentUseCase,
   GetPaymentUseCase,
   GetTreatmentAccountUseCase,
@@ -25,6 +26,7 @@ import { PaymentController } from './presentation/http/payment.controller.js';
     ListPaymentsUseCase,
     GetPaymentUseCase,
     GetEncounterPaymentUseCase,
+    GetEncounterPaymentProposalUseCase,
     GetTreatmentAccountUseCase,
     RegisterTreatmentPaymentUseCase,
     RegisterEncounterPaymentUseCase,

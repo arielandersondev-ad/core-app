@@ -19,6 +19,7 @@ import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentis
 import { DentistryModuleGuard } from '../../../auth/presentation/http/guards/dentistry-module.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
 import {
+  GetEncounterPaymentProposalUseCase,
   GetEncounterPaymentUseCase,
   GetPaymentUseCase,
   GetTreatmentAccountUseCase,
@@ -27,6 +28,7 @@ import {
 import { RegisterEncounterPaymentUseCase } from '../../application/use-case/register-encounter-payment.use-case.js';
 import { RegisterTreatmentPaymentUseCase } from '../../application/use-case/register-treatment-payment.use-case.js';
 import { VoidPaymentUseCase } from '../../application/use-case/void-payment.use-case.js';
+import type { PaymentProposal } from '../../domain/entities/payment.entity.js';
 import type { PaymentInput } from '../../application/payment-rules.js';
 import {
   ListPaymentsQueryDto,
@@ -66,6 +68,7 @@ export class PaymentController {
     private readonly listUseCase: ListPaymentsUseCase,
     private readonly getUseCase: GetPaymentUseCase,
     private readonly getEncounterPaymentUseCase: GetEncounterPaymentUseCase,
+    private readonly proposalUseCase: GetEncounterPaymentProposalUseCase,
     private readonly accountUseCase: GetTreatmentAccountUseCase,
     private readonly registerTreatmentUseCase: RegisterTreatmentPaymentUseCase,
     private readonly registerEncounterUseCase: RegisterEncounterPaymentUseCase,
@@ -179,6 +182,21 @@ export class PaymentController {
       principal.branchIds,
     );
     return PaymentResponseDto.fromEntity(payment);
+  }
+
+  /** Monto sugerido al finalizar la atención; solo una propuesta, no crea nada. */
+  @Get('clinical-encounters/:encounterId/payment-proposal')
+  @RequirePermission('dentistry:payments:read')
+  proposal(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Param('encounterId', ParseUUIDPipe) encounterId: string,
+  ): Promise<PaymentProposal> {
+    return this.proposalUseCase.execute(
+      { organizationId: principal.organizationId, patientId },
+      encounterId,
+      principal.branchIds,
+    );
   }
 
   /** Abono de una atención (1:1). Una atención sin pago es una prórroga. */

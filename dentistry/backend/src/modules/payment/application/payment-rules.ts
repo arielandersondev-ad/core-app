@@ -1,8 +1,11 @@
 import type {
   AccountMovement,
+  EncounterBilling,
   EncounterSnapshot,
   Payment,
   PaymentMethod,
+  PaymentProposal,
+  ProposalTreatment,
   TreatmentAccount,
   TreatmentSnapshot,
 } from '../domain/entities/payment.entity.js';
@@ -246,4 +249,85 @@ export function requireVoidReason(reason: string | null | undefined): string {
   const normalized = normalizeText(reason);
   if (normalized === null) throw PaymentErrors.voidReasonRequired();
   return normalized;
+}
+
+/**
+ * Propone el cobro de una atención: la suma de los precios de sus
+ * procedimientos no anulados, acotada al saldo del tratamiento. Lo realizado
+ * no es lo cobrado; solo el dinero recibido mueve el saldo.
+ */
+export function buildPaymentProposal(billing: EncounterBilling): PaymentProposal {
+  const { encounter } = billing;
+  const collectable =
+    encounter.status !== 'VOIDED' && encounter.activePaymentId === null;
+  const total = billing.procedurePrices.reduce(
+    (sum, price) => sum + price.priceMinor,
+    0,
+  );
+  const currency = billing.procedurePrices[0]?.currency ?? null;
+  const priced = billing.procedurePrices.length > 0;
+
+  const treatments: ProposalTreatment[] = [...billing.treatments]
+    .sort(
+      (a, b) =>
+        Number(b.id === encounter.treatmentId) -
+          Number(a.id === encounter.treatmentId) || a.id.localeCompare(b.id),
+    )
+    .map((treatment) => {
+      const hasBudget =
+        treatment.agreedPriceMinor !== null && treatment.currency !== null;
+      const payable =
+        hasBudget && !NOT_PAYABLE_TREATMENT_STATUSES.includes(treatment.status);
+      const balanceMinor =
+        treatment.agreedPriceMinor === null
+          ? null
+          : Math.max(treatment.agreedPriceMinor - treatment.paidMinor, 0);
+      const amount =
+        collectable &&
+        payable &&
+        priced &&
+        treatment.currency === currency &&
+        balanceMinor !== null
+          ? Math.min(total, balanceMinor)
+          : 0;
+      return {
+        id: treatment.id,
+        title: treatment.title,
+        status: treatment.status,
+        currency: treatment.currency,
+        balanceMinor,
+        payable,
+        suggestedAmountMinor: amount > 0 ? amount : null,
+      };
+    });
+
+  const payableTreatments = treatments.filter((treatment) => treatment.payable);
+  const own = treatments.find(
+    (treatment) => treatment.id === encounter.treatmentId && treatment.payable,
+  );
+  const suggested =
+    own ?? (payableTreatments.length === 1 ? payableTreatments[0] : undefined);
+
+  let suggestedAmountMinor: number | null;
+  if (suggested) {
+    suggestedAmountMinor = suggested.suggestedAmountMinor;
+  } else if (treatments.length === 0) {
+    // Cobro suelto: sin tratamiento, el monto sugerido es el total realizado.
+    suggestedAmountMinor = collectable && total > 0 ? total : null;
+  } else {
+    suggestedAmountMinor = null; // hay que elegir tratamiento al cobrar
+  }
+
+  return {
+    encounterId: encounter.id,
+    collectable,
+    activePaymentId: encounter.activePaymentId,
+    procedureCount: billing.procedureCount,
+    pricedProcedureCount: billing.procedurePrices.length,
+    proceduresTotalMinor: priced ? total : null,
+    currency,
+    treatments,
+    suggestedTreatmentId: suggested?.id ?? null,
+    suggestedAmountMinor,
+  };
 }

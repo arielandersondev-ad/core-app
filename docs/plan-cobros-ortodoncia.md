@@ -36,7 +36,7 @@ Se usa el plan estándar existente. Ya tiene `payments: true`; se activa `treatm
 | 2 | Core: plan y permisos | `treatments: true`, reasignación y permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` | Pendiente |
 | 3 | Backend de tratamientos | Crear y editar con presupuesto y moneda; detalle con presupuesto, pagado y saldo; `@RequireModule('treatments')` | Implementada en `dentistry/backend/src/modules/treatment`; 104/104 pruebas |
 | 4 | Backend de pagos | Pago al tratamiento, pago del encuentro (1:1), anulación con motivo, estado de cuenta; saldo comprobado dentro de la transacción con bloqueo | Implementada en `dentistry/backend/src/modules/payment` (HAG-14); falta probarla contra una base real |
-| 5 | Integración con encuentros | Precio en el procedimiento; propuesta de pago al finalizar; no anular un encuentro con pago activo | Pendiente |
+| 5 | Integración con encuentros | Precio en el procedimiento; propuesta de pago al finalizar; no anular un encuentro con pago activo | Implementada (HAG-15): precio en procedimientos y `proceduresTotal` en la atención (`clinical-encounter`), `GET .../payment-proposal` (`payment`) y 409 `ENCOUNTER_HAS_PAYMENT` al anular; falta probarla contra una base real |
 | 6 | Frontend | Reemplazar mocks de `Treatments`, `Payments` y `RegisterPayment`; estado de cuenta en el paciente; paso de cobro; campo de precio | Pendiente |
 | 7 | Cierre | Diccionario, `docs/plan-starter/README.md` (desactualizado) y prueba de punta a punta | Pendiente |
 

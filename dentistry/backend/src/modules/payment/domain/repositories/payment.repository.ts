@@ -1,5 +1,6 @@
 import type { PaginatedResult } from '../../../../common/pagination/pagination.js';
 import type {
+  EncounterBilling,
   EncounterSnapshot,
   Payment,
   PaymentStatus,
@@ -64,6 +65,12 @@ export abstract class PaymentRepository {
     scope: PaymentScope,
     encounterId: string,
   ): Promise<Payment | null>;
+
+  /** Lo realizado en la atención y sus tratamientos, para proponer el cobro. */
+  abstract findEncounterBilling(
+    scope: PaymentScope,
+    encounterId: string,
+  ): Promise<EncounterBilling | null>;
 
   /** El tratamiento y todos sus pagos (también los anulados), por fecha. */
   abstract findAccount(

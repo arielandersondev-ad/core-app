@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 process.env.DATABASE_URL ??= 'postgresql://isolated:isolated@127.0.0.1:1/never_connect';
 const {
   buildAccount,
+  buildPaymentProposal,
   decideEncounterPayment,
   decideTreatmentPayment,
   requireVoidReason,
@@ -306,4 +307,130 @@ test('anular exige un motivo', () => {
   for (const reason of ['', '   ', null, undefined]) {
     assert.equal(codeOf(() => requireVoidReason(reason)), 'VOID_REASON_REQUIRED', String(reason));
   }
+});
+
+// ---- Propuesta de cobro de una atención --------------------------------
+const billing = (overrides = {}) => ({
+  encounter: encounter(),
+  procedureCount: 2,
+  procedurePrices: [
+    { priceMinor: 15_000, currency: 'BOB' },
+    { priceMinor: 5_000, currency: 'BOB' },
+  ],
+  treatments: [treatment()],
+  ...overrides,
+});
+
+test('la propuesta suma los precios de los procedimientos y los acota al saldo', () => {
+  const proposal = buildPaymentProposal(billing());
+  assert.equal(proposal.collectable, true);
+  assert.equal(proposal.proceduresTotalMinor, 20_000);
+  assert.equal(proposal.currency, 'BOB');
+  assert.equal(proposal.pricedProcedureCount, 2);
+  assert.equal(proposal.suggestedTreatmentId, 'treatment-1');
+  assert.equal(proposal.suggestedAmountMinor, 20_000);
+
+  // Con poco saldo pendiente, la propuesta no supera lo que aún se debe.
+  const nearlyPaid = buildPaymentProposal(
+    billing({ treatments: [treatment({ paidMinor: 990_000 })] }),
+  );
+  assert.equal(nearlyPaid.proceduresTotalMinor, 20_000);
+  assert.equal(nearlyPaid.suggestedAmountMinor, 10_000);
+  assert.equal(nearlyPaid.treatments[0].balanceMinor, 10_000);
+});
+
+test('sin precios no hay monto propuesto, pero se sabe qué se hizo', () => {
+  const proposal = buildPaymentProposal(billing({ procedurePrices: [], procedureCount: 3 }));
+  assert.equal(proposal.proceduresTotalMinor, null);
+  assert.equal(proposal.currency, null);
+  assert.equal(proposal.procedureCount, 3);
+  assert.equal(proposal.suggestedAmountMinor, null);
+
+  const zero = buildPaymentProposal(
+    billing({ procedurePrices: [{ priceMinor: 0, currency: 'BOB' }] }),
+  );
+  assert.equal(zero.proceduresTotalMinor, 0);
+  assert.equal(zero.suggestedAmountMinor, null, 'un monto de cero no es cobrable');
+});
+
+test('una atención pagada o anulada no tiene cobro pendiente', () => {
+  const paid = buildPaymentProposal(
+    billing({ encounter: encounter({ activePaymentId: 'payment-1' }) }),
+  );
+  assert.equal(paid.collectable, false);
+  assert.equal(paid.activePaymentId, 'payment-1');
+  assert.equal(paid.suggestedAmountMinor, null);
+  const voided = buildPaymentProposal(
+    billing({ encounter: encounter({ status: 'VOIDED' }) }),
+  );
+  assert.equal(voided.collectable, false);
+  assert.equal(voided.suggestedAmountMinor, null);
+});
+
+test('un tratamiento saldado, sin presupuesto o cancelado no se propone', () => {
+  const settled = buildPaymentProposal(
+    billing({ treatments: [treatment({ paidMinor: 1_000_000 })] }),
+  );
+  assert.equal(settled.treatments[0].balanceMinor, 0);
+  assert.equal(settled.suggestedAmountMinor, null);
+
+  for (const overrides of [
+    { agreedPriceMinor: null, currency: null },
+    { status: 'CANCELED' },
+    { status: 'DECLINED' },
+  ]) {
+    const proposal = buildPaymentProposal(billing({ treatments: [treatment(overrides)] }));
+    assert.equal(proposal.treatments[0].payable, false, JSON.stringify(overrides));
+    assert.equal(proposal.suggestedTreatmentId, null);
+    assert.equal(proposal.suggestedAmountMinor, null);
+  }
+});
+
+test('una moneda distinta a la del tratamiento no se propone', () => {
+  const proposal = buildPaymentProposal(
+    billing({ treatments: [treatment({ currency: 'USD' })] }),
+  );
+  assert.equal(proposal.treatments[0].suggestedAmountMinor, null);
+  assert.equal(proposal.suggestedAmountMinor, null);
+});
+
+test('con procedimientos de varios tratamientos el tratamiento se elige al cobrar', () => {
+  const a = treatment({ id: 'a', title: 'Ortodoncia' });
+  const b = treatment({ id: 'b', title: 'Endodoncia', agreedPriceMinor: 12_000, paidMinor: 4_000 });
+  const proposal = buildPaymentProposal(
+    billing({ encounter: encounter({ treatmentId: null }), treatments: [b, a] }),
+  );
+  assert.deepEqual(proposal.treatments.map((x) => x.id), ['a', 'b']);
+  assert.equal(proposal.suggestedTreatmentId, null);
+  assert.equal(proposal.suggestedAmountMinor, null, 'hay que elegir tratamiento');
+  assert.equal(proposal.treatments[0].suggestedAmountMinor, 20_000);
+  assert.equal(proposal.treatments[1].suggestedAmountMinor, 8_000, 'acotado a su saldo');
+
+  // Si la atención ya apunta a un tratamiento, ese es el sugerido y va primero.
+  const own = buildPaymentProposal(
+    billing({ encounter: encounter({ treatmentId: 'b' }), treatments: [a, b] }),
+  );
+  assert.deepEqual(own.treatments.map((x) => x.id), ['b', 'a']);
+  assert.equal(own.suggestedTreatmentId, 'b');
+  assert.equal(own.suggestedAmountMinor, 8_000);
+});
+
+test('un único tratamiento cobrable entre los de los procedimientos se sugiere solo', () => {
+  const proposal = buildPaymentProposal(
+    billing({
+      encounter: encounter({ treatmentId: null }),
+      treatments: [treatment({ id: 'a' }), treatment({ id: 'b', status: 'CANCELED' })],
+    }),
+  );
+  assert.equal(proposal.suggestedTreatmentId, 'a');
+  assert.equal(proposal.suggestedAmountMinor, 20_000);
+});
+
+test('sin tratamiento es un cobro suelto por el total realizado', () => {
+  const proposal = buildPaymentProposal(
+    billing({ encounter: encounter({ treatmentId: null }), treatments: [] }),
+  );
+  assert.equal(proposal.suggestedTreatmentId, null);
+  assert.equal(proposal.suggestedAmountMinor, 20_000);
+  assert.equal(proposal.currency, 'BOB');
 });
