@@ -3431,6 +3431,13 @@
                   "kind": "scalar"
                 }
               },
+              "currency": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "description": {
                 "nullable": false,
                 "type": {
@@ -3456,6 +3463,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "priceMinor": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -3588,6 +3602,9 @@
                 "createdByMembershipId": {
                   "column": "createdByMembershipId"
                 },
+                "currency": {
+                  "column": "currency"
+                },
                 "description": {
                   "column": "description"
                 },
@@ -3599,6 +3616,9 @@
                 },
                 "patientId": {
                   "column": "patientId"
+                },
+                "priceMinor": {
+                  "column": "priceMinor"
                 },
                 "rowVersion": {
                   "column": "rowVersion"
@@ -8764,9 +8784,19 @@
                   "prefix": "ClinicalEncounterProcedure_version"
                 },
                 {
+                  "expression": "(\"priceMinor\" IS NULL AND \"currency\" IS NULL) OR (\"priceMinor\" IS NOT NULL AND \"currency\" IS NOT NULL AND \"currency\" ~ '^[A-Z]{3}$')",
+                  "name": "encounter_procedure_currency_8daa14c4",
+                  "prefix": "encounter_procedure_currency"
+                },
+                {
                   "expression": "length(btrim(\"description\")) > 0",
                   "name": "encounter_procedure_description_89a34e41",
                   "prefix": "encounter_procedure_description"
+                },
+                {
+                  "expression": "\"priceMinor\" IS NULL OR \"priceMinor\" >= 0",
+                  "name": "encounter_procedure_price_11edf7e3",
+                  "prefix": "encounter_procedure_price"
                 },
                 {
                   "expression": "\"status\" IN ('RECORDED', 'VOIDED')",
@@ -8809,6 +8839,11 @@
                   "nativeType": "uuid",
                   "nullable": false
                 },
+                "currency": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "description": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -8828,6 +8863,11 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "priceMinor": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
                 },
                 "rowVersion": {
                   "codecId": "pg/int4@1",
@@ -10407,6 +10447,16 @@
                 {
                   "columns": [
                     "organizationId",
+                    "clinicalEncounterId"
+                  ],
+                  "name": "payment_encounter_uidx_9d5b8137",
+                  "prefix": "payment_encounter_uidx",
+                  "unique": true,
+                  "where": "\"clinicalEncounterId\" IS NOT NULL AND \"status\" = 'COMPLETED'"
+                },
+                {
+                  "columns": [
+                    "organizationId",
                     "paidAt"
                   ],
                   "name": "payment_org_paid_idx_b952dcb9",
@@ -11123,7 +11173,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216"
+    "storageHash": "d9c33e240f0d2f5beccb00d890466bbf7be0851aafeb5b7fc2c9c4da565b2634"
   },
   "execution": {
     "executionHash": "b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31",

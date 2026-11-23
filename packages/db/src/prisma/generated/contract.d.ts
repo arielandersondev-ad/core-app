@@ -30,7 +30,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'60caa8643e70224c6142a506aaabf149485d3e2f295b0d885866c0d2856a4216'>;
+  StorageHashBase<'d9c33e240f0d2f5beccb00d890466bbf7be0851aafeb5b7fc2c9c4da565b2634'>;
 export type ExecutionHash =
   ExecutionHashBase<'b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31'>;
 export type ProfileHash =
@@ -462,6 +462,8 @@ export type FieldOutputTypes = {
       readonly toothNumber: CodecTypes['pg/text@1']['output'] | null;
       readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'];
+      readonly priceMinor: CodecTypes['pg/int4@1']['output'] | null;
+      readonly currency: CodecTypes['pg/text@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
@@ -945,6 +947,8 @@ export type FieldInputTypes = {
       readonly toothNumber: CodecTypes['pg/text@1']['input'] | null;
       readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'];
+      readonly priceMinor: CodecTypes['pg/int4@1']['input'] | null;
+      readonly currency: CodecTypes['pg/text@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
@@ -1422,10 +1426,12 @@ export type StorageColumnTypes = {
       readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['output'];
+      readonly currency: CodecTypes['pg/text@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
       readonly patientId: CodecTypes['pg/uuid@1']['output'];
+      readonly priceMinor: CodecTypes['pg/int4@1']['output'] | null;
       readonly rowVersion: CodecTypes['pg/int4@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly targetDescription: CodecTypes['pg/text@1']['output'] | null;
@@ -1906,10 +1912,12 @@ export type StorageColumnInputTypes = {
       readonly clinicalEncounterId: CodecTypes['pg/uuid@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdByMembershipId: CodecTypes['pg/uuid@1']['input'];
+      readonly currency: CodecTypes['pg/text@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
       readonly patientId: CodecTypes['pg/uuid@1']['input'];
+      readonly priceMinor: CodecTypes['pg/int4@1']['input'] | null;
       readonly rowVersion: CodecTypes['pg/int4@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly targetDescription: CodecTypes['pg/text@1']['input'] | null;
@@ -4169,6 +4177,16 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly priceMinor: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly currency: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
                 readonly status: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -5241,6 +5259,13 @@ type ContractBase = Omit<
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [];
               indexes: readonly [
+                {
+                  readonly name: 'payment_encounter_uidx_9d5b8137';
+                  readonly prefix: 'payment_encounter_uidx';
+                  readonly columns: readonly ['organizationId', 'clinicalEncounterId'];
+                  readonly where: '"clinicalEncounterId" IS NOT NULL AND "status" = \'COMPLETED\'';
+                  readonly unique: true;
+                },
                 {
                   readonly name: 'payment_org_paid_idx_b952dcb9';
                   readonly prefix: 'payment_org_paid_idx';
@@ -7860,6 +7885,14 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly priceMinor: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly currency: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly status: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -7942,6 +7975,8 @@ type ContractBase = Omit<
                 readonly toothNumber: { readonly column: 'toothNumber' };
                 readonly targetDescription: { readonly column: 'targetDescription' };
                 readonly description: { readonly column: 'description' };
+                readonly priceMinor: { readonly column: 'priceMinor' };
+                readonly currency: { readonly column: 'currency' };
                 readonly status: { readonly column: 'status' };
                 readonly createdByMembershipId: { readonly column: 'createdByMembershipId' };
                 readonly updatedByMembershipId: { readonly column: 'updatedByMembershipId' };
