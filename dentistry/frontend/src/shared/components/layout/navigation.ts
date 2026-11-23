@@ -77,6 +77,11 @@ export const NAV_ITEMS: readonly {
   },
 ] as const;
 
+/** El dashboard solo se marca en su propia ruta; el resto también en sus subrutas. */
+export function isNavItemActive(pathname: string, href: string): boolean {
+  return href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+}
+
 /** Ítems de navegación incluidos en el plan de la organización. */
 export function navItemsForPlan(plan: SessionPlan | null) {
   return NAV_ITEMS.filter((item) => isModuleEnabled(plan, item.module));

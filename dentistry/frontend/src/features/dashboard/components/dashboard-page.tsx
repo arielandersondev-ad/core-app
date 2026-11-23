@@ -13,13 +13,8 @@ import { isModuleEnabled } from "@/shared/plan/plan-access";
 import { userFirstName } from "@/shared/session/display-names";
 import { useTimeZone, useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import { formatInZone, todayIn } from "@/shared/time/zoned-time";
-import {
-  APPOINTMENT_STATUS_LABELS,
-  APPOINTMENT_STATUS_STYLES,
-  greetingAt,
-  summarizeToday,
-  toTodayAgenda,
-} from "@/features/dashboard/utils/today-agenda";
+import { greetingAt, summarizeToday, toTodayAgenda } from "@/features/dashboard/utils/today-agenda";
+import { TodayAgendaList } from "./today-agenda-list";
 
 type QuickAction = {
   label: string;
@@ -133,47 +128,10 @@ export function DashboardPage() {
               className="py-10"
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--background)]/50">
-                    {["Hora", "Paciente", "Servicio", "Estado"].map((heading) => (
-                      <th
-                        key={heading}
-                        scope="col"
-                        className="px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-[var(--muted)]"
-                      >
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      onClick={() => router.push(`/agenda?citaId=${encodeURIComponent(row.id)}`)}
-                      className="hover:bg-[var(--background)]/60 cursor-pointer transition-colors"
-                    >
-                      <td className="px-4 py-3.5 text-xs font-mono font-medium text-[var(--foreground)] whitespace-nowrap">
-                        {row.startTime} – {row.endTime}
-                      </td>
-                      <td className="px-4 py-3.5 text-sm font-display font-semibold text-[var(--foreground)]">
-                        {row.patientName}
-                      </td>
-                      <td className="px-4 py-3.5 text-sm text-[var(--muted)]">{row.serviceLabel ?? "—"}</td>
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-medium rounded-md whitespace-nowrap ${APPOINTMENT_STATUS_STYLES[row.status]}`}
-                        >
-                          {APPOINTMENT_STATUS_LABELS[row.status]}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TodayAgendaList
+              rows={rows}
+              onOpen={(id) => router.push(`/agenda?citaId=${encodeURIComponent(id)}`)}
+            />
           )}
         </div>
       </section>

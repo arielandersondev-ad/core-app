@@ -47,7 +47,7 @@ export function ThemeToggle({ variant = "pill" }: ThemeToggleProps) {
         onClick={cyclePreference}
         aria-label={accessibleLabel}
         title={accessibleLabel}
-        className={`rounded-lg p-2 text-muted transition-colors hover:text-foreground ${FOCUS_RING}`}
+        className={`grid size-10 place-items-center rounded-lg text-muted transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] hover:text-foreground ${FOCUS_RING}`}
       >
         {icon}
       </button>
@@ -61,7 +61,7 @@ export function ThemeToggle({ variant = "pill" }: ThemeToggleProps) {
           type="button"
           onClick={cyclePreference}
           aria-label={accessibleLabel}
-          className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-background hover:text-foreground ${FOCUS_RING}`}
+          className={`flex h-10 min-w-0 flex-1 items-center gap-3 pointer-coarse:h-12 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] hover:text-foreground ${FOCUS_RING}`}
         >
           {icon}
           <span className="truncate">Tema {current}</span>

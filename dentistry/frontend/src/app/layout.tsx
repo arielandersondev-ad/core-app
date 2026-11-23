@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Work_Sans, DM_Mono } from "next/font/google";
 import { DevPersonaSwitcherServer } from "@/features/dev-auth/components/DevPersonaSwitcherServer";
 import { THEME_INIT_SCRIPT } from "@app/ui/theme";
@@ -21,6 +21,13 @@ const dmMono = DM_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
 });
+
+/* viewport-fit=cover: las barras del shell respetan las áreas seguras (env(safe-area-inset-*)). */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Dentistry",

@@ -495,7 +495,7 @@ function ClinicalEncounterCreateForm({
           )}
         </Panel>
 
-        <div className="sticky bottom-3 z-20">
+        <div className="sticky bottom-[calc(var(--shell-bottom,0px)+0.75rem)] z-20">
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface/95 px-4 py-3 shadow-lg backdrop-blur sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge variant="neutral" size="sm">
