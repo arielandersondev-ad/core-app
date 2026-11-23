@@ -861,6 +861,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       organizationId: field.uuidNative(),
       patientId: field.uuidNative(),
       serviceId: field.uuidNative().optional(),
+      title: field.text().optional(),
       practitionerMembershipId: field.uuidNative().optional(),
       status: field.text().default("PROPOSED"),
       startedAt: field.temporal.timestamptz().optional(),
@@ -1675,6 +1676,11 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
               name: "treatment_status",
               expression:
                 "\"status\" IN ('PROPOSED', 'ACCEPTED', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'DECLINED', 'CANCELED')",
+            }),
+            check({
+              name: "treatment_title",
+              expression:
+                '"title" IS NULL OR (length(btrim("title")) > 0 AND length("title") <= 120)',
             }),
             check({
               name: "treatment_period",

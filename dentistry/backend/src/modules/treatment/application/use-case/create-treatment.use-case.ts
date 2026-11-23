@@ -5,10 +5,15 @@ import {
   type TreatmentScope,
 } from '../../domain/repositories/treatment.repository.js';
 import { TreatmentAccess } from '../treatment-access.js';
-import { assertValidBudget, normalizeText } from '../treatment-rules.js';
+import {
+  assertValidBudget,
+  normalizeText,
+  normalizeTitle,
+} from '../treatment-rules.js';
 import { TreatmentErrors } from '../treatment.errors.js';
 
 export type CreateTreatmentCommand = TreatmentScope & {
+  title: string;
   serviceId?: string | null;
   estimatedSessions?: number | null;
   agreedPriceMinor?: number | null;
@@ -31,6 +36,7 @@ export class CreateTreatmentUseCase {
       patientId: command.patientId,
     };
     await this.access.assertPatient(scope);
+    const title = normalizeTitle(command.title);
 
     const agreedPriceMinor = command.agreedPriceMinor ?? null;
     const currency = agreedPriceMinor === null ? null : (command.currency ?? null);
@@ -50,6 +56,7 @@ export class CreateTreatmentUseCase {
 
     return this.treatments.create({
       ...scope,
+      title,
       serviceId,
       // El profesional responsable es siempre la membresía de la sesión.
       practitionerMembershipId: command.actorMembershipId,

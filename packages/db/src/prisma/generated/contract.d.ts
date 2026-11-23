@@ -30,7 +30,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'d9c33e240f0d2f5beccb00d890466bbf7be0851aafeb5b7fc2c9c4da565b2634'>;
+  StorageHashBase<'f31890d6c39515af4baf14fbf3ded29f19e7aa218e7fb98e0893678994174c6a'>;
 export type ExecutionHash =
   ExecutionHashBase<'b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31'>;
 export type ProfileHash =
@@ -644,6 +644,7 @@ export type FieldOutputTypes = {
       readonly organizationId: CodecTypes['pg/uuid@1']['output'];
       readonly patientId: CodecTypes['pg/uuid@1']['output'];
       readonly serviceId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly title: CodecTypes['pg/text@1']['output'] | null;
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
@@ -1129,6 +1130,7 @@ export type FieldInputTypes = {
       readonly organizationId: CodecTypes['pg/uuid@1']['input'];
       readonly patientId: CodecTypes['pg/uuid@1']['input'];
       readonly serviceId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly title: CodecTypes['pg/text@1']['input'] | null;
       readonly practitionerMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
@@ -1625,6 +1627,7 @@ export type StorageColumnTypes = {
       readonly serviceId: CodecTypes['pg/uuid@1']['output'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
+      readonly title: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['output'] | null;
     };
@@ -2111,6 +2114,7 @@ export type StorageColumnInputTypes = {
       readonly serviceId: CodecTypes['pg/uuid@1']['input'] | null;
       readonly startedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
+      readonly title: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedByMembershipId: CodecTypes['pg/uuid@1']['input'] | null;
     };
@@ -5574,6 +5578,11 @@ type ContractBase = Omit<
                 readonly serviceId: {
                   readonly nativeType: 'uuid';
                   readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly title: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
                 readonly practitionerMembershipId: {
@@ -9146,6 +9155,10 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
               };
+              readonly title: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly practitionerMembershipId: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
@@ -9286,6 +9299,7 @@ type ContractBase = Omit<
                 readonly organizationId: { readonly column: 'organizationId' };
                 readonly patientId: { readonly column: 'patientId' };
                 readonly serviceId: { readonly column: 'serviceId' };
+                readonly title: { readonly column: 'title' };
                 readonly practitionerMembershipId: { readonly column: 'practitionerMembershipId' };
                 readonly status: { readonly column: 'status' };
                 readonly startedAt: { readonly column: 'startedAt' };

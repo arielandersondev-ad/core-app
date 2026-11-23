@@ -5763,6 +5763,13 @@
                   "kind": "scalar"
                 }
               },
+              "title": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "updatedAt": {
                 "nullable": false,
                 "type": {
@@ -5935,6 +5942,9 @@
                 },
                 "status": {
                   "column": "status"
+                },
+                "title": {
+                  "column": "title"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -10780,6 +10790,11 @@
                   "expression": "\"status\" IN ('PROPOSED', 'ACCEPTED', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'DECLINED', 'CANCELED')",
                   "name": "treatment_status_94785b0f",
                   "prefix": "treatment_status"
+                },
+                {
+                  "expression": "\"title\" IS NULL OR (length(btrim(\"title\")) > 0 AND length(\"title\") <= 120)",
+                  "name": "treatment_title_814f6407",
+                  "prefix": "treatment_title"
                 }
               ],
               "columns": {
@@ -10865,6 +10880,11 @@
                   },
                   "nativeType": "text",
                   "nullable": false
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz@1",
@@ -11173,7 +11193,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d9c33e240f0d2f5beccb00d890466bbf7be0851aafeb5b7fc2c9c4da565b2634"
+    "storageHash": "f31890d6c39515af4baf14fbf3ded29f19e7aa218e7fb98e0893678994174c6a"
   },
   "execution": {
     "executionHash": "b99603d68aa300b2f3c0f4ceea586d891c28b32bf4b170faafd1054108a65c31",

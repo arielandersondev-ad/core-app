@@ -153,7 +153,7 @@ test(
         const row = {
           ...data,
           id: randomUUID(),
-          serviceName: data.serviceId ? 'Ortodoncia' : null,
+          serviceName: data.serviceId ? 'Ortodoncia (catálogo)' : null,
           status: 'PROPOSED',
           startedAt: null,
           endedAt: null,
@@ -225,6 +225,7 @@ test(
     }
     const base = `/patients/${patient.id}/treatments`;
     const orthodontics = (overrides = {}) => ({
+      title: '  Ortodoncia  ',
       serviceId,
       estimatedSessions: 24,
       agreedPriceMinor: 1_000_000, // 10 000 Bs
@@ -273,7 +274,8 @@ test(
       assert.equal(response.status, 201);
       created = response.body;
       assert.equal(created.status, 'PROPOSED');
-      assert.equal(created.serviceName, 'Ortodoncia');
+      assert.equal(created.title, 'Ortodoncia', 'el título se guarda recortado');
+      assert.equal(created.serviceName, 'Ortodoncia (catálogo)');
       assert.equal(created.agreedPriceMinor, 1_000_000);
       assert.equal(created.currency, 'BOB');
       assert.equal(created.paidMinor, 0);
@@ -289,8 +291,12 @@ test(
       const lower = await request(base, 'POST', owner, orthodontics({ currency: 'bob' }));
       assert.equal(lower.status, 201);
       assert.equal(lower.body.currency, 'BOB');
-      const free = await request(base, 'POST', owner, { notes: '  Evaluación inicial  ' });
+      const free = await request(base, 'POST', owner, {
+        title: 'Evaluación inicial',
+        notes: '  Evaluación inicial  ',
+      });
       assert.equal(free.status, 201);
+      assert.equal(free.body.title, 'Evaluación inicial');
       assert.equal(free.body.agreedPriceMinor, null);
       assert.equal(free.body.currency, null);
       assert.equal(free.body.balanceMinor, null);
@@ -307,6 +313,10 @@ test(
         [{ currency: 'BOLIVIANOS' }, 400],
         [{ estimatedSessions: 0 }, 400],
         [{ serviceId: 'no-es-uuid' }, 400],
+        // El título es obligatorio, sin espacios sobrantes y de hasta 120 caracteres.
+        [{ title: undefined }, 400],
+        [{ title: '   ' }, 400],
+        [{ title: 'x'.repeat(121) }, 400],
       ];
       const before = treatments.size;
       for (const [overrides, status, code] of cases) {
@@ -412,6 +422,20 @@ test(
       const closed = await request(path, 'PATCH', owner, { notes: 'tarde' });
       assert.equal(closed.status, 409);
       assert.equal(closed.body.code, 'TREATMENT_CLOSED');
+    });
+
+    await t.test('el título se puede corregir pero nunca vaciar', async () => {
+      const fresh = await request(base, 'POST', owner, orthodontics());
+      const path = `${base}/${fresh.body.id}`;
+      const renamed = await request(path, 'PATCH', owner, { title: '  Ortodoncia fija  ' });
+      assert.equal(renamed.status, 200);
+      assert.equal(renamed.body.title, 'Ortodoncia fija');
+      for (const title of ['', '   ', 'x'.repeat(121)]) {
+        const rejected = await request(path, 'PATCH', owner, { title });
+        assert.equal(rejected.status, 400, JSON.stringify(title.slice(0, 5)));
+      }
+      const same = await request(path, 'GET', owner);
+      assert.equal(same.body.title, 'Ortodoncia fija', 'los rechazos no cambian nada');
     });
 
     await t.test('los campos que el cliente no puede fijar se descartan', async () => {

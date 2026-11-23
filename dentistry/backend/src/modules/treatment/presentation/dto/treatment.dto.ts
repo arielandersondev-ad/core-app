@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import {
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -15,10 +16,15 @@ import {
   TREATMENT_STATUSES,
   type TreatmentStatus,
 } from '../../domain/entities/treatment.entity.js';
-import { MAX_AGREED_PRICE_MINOR } from '../../application/treatment-rules.js';
+import {
+  MAX_AGREED_PRICE_MINOR,
+  MAX_TITLE_LENGTH,
+} from '../../application/treatment-rules.js';
 
 const upperCase = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' ? value.trim().toUpperCase() : value;
+const trimmed = ({ value }: { value: unknown }): unknown =>
+  typeof value === 'string' ? value.trim() : value;
 
 export class ListTreatmentsQueryDto extends PaginationQueryDto {
   @IsOptional()
@@ -27,6 +33,13 @@ export class ListTreatmentsQueryDto extends PaginationQueryDto {
 }
 
 export class CreateTreatmentDto {
+  /** Nombre para mostrar, ej. "Ortodoncia". */
+  @Transform(trimmed)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(MAX_TITLE_LENGTH)
+  title: string;
+
   @IsOptional()
   @IsUUID('all')
   serviceId?: string;
@@ -61,6 +74,13 @@ export class CreateTreatmentDto {
 }
 
 export class UpdateTreatmentDto {
+  @IsOptional()
+  @Transform(trimmed)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(MAX_TITLE_LENGTH)
+  title?: string;
+
   @IsOptional()
   @IsIn(TREATMENT_STATUSES)
   status?: TreatmentStatus;

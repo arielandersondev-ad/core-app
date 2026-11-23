@@ -88,6 +88,7 @@ export class TreatmentController {
     const treatment = await this.createUseCase.execute({
       organizationId: principal.organizationId,
       patientId,
+      title: dto.title,
       serviceId: dto.serviceId,
       estimatedSessions: dto.estimatedSessions,
       agreedPriceMinor: dto.agreedPriceMinor,
@@ -111,6 +112,7 @@ export class TreatmentController {
       organizationId: principal.organizationId,
       patientId,
       treatmentId,
+      title: dto.title,
       status: dto.status,
       estimatedSessions: dto.estimatedSessions,
       agreedPriceMinor: dto.agreedPriceMinor,

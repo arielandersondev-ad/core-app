@@ -37,8 +37,13 @@ La respuesta incluye `paidMinor` y `balanceMinor` (`null` si no hay presupuesto)
   el registro de pagos, para que un pago y un cambio de presupuesto simultáneos
   no dejen el saldo en negativo.
 
+## Título
+
+`title` es el nombre para mostrar (ej. "Ortodoncia"): obligatorio al crear,
+recortado y de 1 a 120 caracteres; se puede corregir pero no vaciar
+(`INVALID_TREATMENT_TITLE`). La columna admite nulo solo por los tratamientos
+anteriores a este campo. `serviceName` es el servicio del catálogo, si lo hay.
+
 ## Pendiente
 
 - Los pagos y el estado de cuenta (fase 4) viven en un módulo aparte.
-- El esquema no tiene un título propio del tratamiento: se identifica por el
-  servicio (`serviceName`) o por `diagnosisSummary`/`notes`.

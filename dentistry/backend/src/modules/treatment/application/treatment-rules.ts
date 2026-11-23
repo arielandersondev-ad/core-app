@@ -18,6 +18,17 @@ export function normalizeText(
   return trimmed ? trimmed : null;
 }
 
+export const MAX_TITLE_LENGTH = 120;
+
+/** El título es obligatorio al crear: recortado, de 1 a 120 caracteres. */
+export function normalizeTitle(value: string | null | undefined): string {
+  const title = normalizeText(value);
+  if (title === null || title.length > MAX_TITLE_LENGTH) {
+    throw TreatmentErrors.invalidTitle();
+  }
+  return title;
+}
+
 export type Budget = { agreedPriceMinor: number | null; currency: string | null };
 
 /**
@@ -51,6 +62,7 @@ export function assertValidBudget(budget: Budget): void {
 }
 
 export type TreatmentPatch = {
+  title?: string;
   status?: TreatmentStatus;
   estimatedSessions?: number | null;
   agreedPriceMinor?: number | null;
@@ -75,6 +87,8 @@ export function decideTreatmentChange(
 
   const change: TreatmentChange = { updatedByMembershipId: actorMembershipId };
 
+  // Un título enviado nunca se vacía: los tratamientos nuevos siempre lo tienen.
+  if (patch.title !== undefined) change.title = normalizeTitle(patch.title);
   if (patch.estimatedSessions !== undefined) {
     change.estimatedSessions = patch.estimatedSessions;
   }

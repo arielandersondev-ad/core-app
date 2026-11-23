@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 // Reglas de dominio puras: no abren servidor ni conexión.
 process.env.DATABASE_URL ??= 'postgresql://isolated:isolated@127.0.0.1:1/never_connect';
-const { assertValidBudget, decideTreatmentChange, normalizeText } = await import(
+const { assertValidBudget, decideTreatmentChange, normalizeText, normalizeTitle } = await import(
   '../dist/modules/treatment/application/treatment-rules.js'
 );
 
@@ -55,6 +55,22 @@ test('normalizeText recorta y convierte vacío en null', () => {
   assert.equal(normalizeText('   '), null);
   assert.equal(normalizeText(undefined), null);
   assert.equal(normalizeText(null), null);
+});
+
+test('el título es obligatorio, se recorta y admite hasta 120 caracteres', () => {
+  assert.equal(normalizeTitle('  Ortodoncia  '), 'Ortodoncia');
+  assert.equal(normalizeTitle('x'.repeat(120)).length, 120);
+  for (const value of ['', '   ', null, undefined, 'x'.repeat(121)]) {
+    assert.equal(codeOf(() => normalizeTitle(value)), 'INVALID_TREATMENT_TITLE', String(value));
+  }
+  const renamed = decideTreatmentChange(treatment(), { title: '  Ortodoncia fija ' }, actor, now);
+  assert.equal(renamed.title, 'Ortodoncia fija');
+  assert.equal(
+    codeOf(() => decideTreatmentChange(treatment(), { title: '  ' }, actor, now)),
+    'INVALID_TREATMENT_TITLE',
+  );
+  // Sin título en el cambio, no se toca.
+  assert.equal(decideTreatmentChange(treatment(), { notes: 'x' }, actor, now).title, undefined);
 });
 
 test('el presupuesto nunca baja de lo ya cobrado', () => {

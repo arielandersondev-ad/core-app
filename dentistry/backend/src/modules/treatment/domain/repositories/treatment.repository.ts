@@ -13,6 +13,7 @@ export type FindTreatmentsFilters = TreatmentScope & {
 };
 
 export type TreatmentCreateData = TreatmentScope & {
+  title: string;
   serviceId: string | null;
   practitionerMembershipId: string;
   estimatedSessions: number | null;
@@ -25,6 +26,7 @@ export type TreatmentCreateData = TreatmentScope & {
 
 /** Cambio ya validado por las reglas de dominio; `undefined` = sin cambio. */
 export type TreatmentChange = {
+  title?: string;
   status?: TreatmentStatus;
   startedAt?: Date | null;
   endedAt?: Date | null;

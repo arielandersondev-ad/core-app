@@ -29,6 +29,7 @@ export class UpdateTreatmentUseCase {
     await this.access.assertPatient(scope);
 
     const patch: TreatmentPatch = {
+      title: command.title,
       status: command.status,
       estimatedSessions: command.estimatedSessions,
       agreedPriceMinor: command.agreedPriceMinor,

@@ -9,6 +9,7 @@ export interface TreatmentRow {
   organizationId: string;
   patientId: string;
   serviceId: string | null;
+  title: string | null;
   practitionerMembershipId: string | null;
   status: string;
   startedAt: Date | null;
@@ -39,6 +40,7 @@ export function toTreatmentEntity(
     patientId: row.patientId,
     serviceId: row.serviceId,
     serviceName: row.serviceId ? (serviceNames.get(row.serviceId) ?? null) : null,
+    title: row.title,
     practitionerMembershipId: row.practitionerMembershipId,
     status: row.status as TreatmentStatus,
     startedAt: row.startedAt,

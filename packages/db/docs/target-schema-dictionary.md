@@ -679,6 +679,7 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembe
 |---|---|---|---|
 | `patientId` | UUID | C | Paciente de la organización. |
 | `serviceId` | UUID | C | Servicio de referencia actual; definir antes de activar tratamientos sin catálogo. |
+| `title` | text? | A | Nombre del tratamiento para mostrarlo (ej. "Ortodoncia"). 1 a 120 caracteres sin espacios sobrantes. Nulo solo en tratamientos anteriores a este campo; las altas nuevas lo exigen en la aplicación. |
 | `responsibleMembershipId → practitionerMembershipId` | UUID? | R | Responsable clínico asignado, igual vocabulario que citas/atenciones. |
 | `status` | text | M | Propuesta: PROPOSED, ACCEPTED, IN_PROGRESS, ON_HOLD, COMPLETED, DECLINED, CANCELED. Sustituye ACTIVE ambiguo. |
 | `startedAt` | TIMESTAMPTZ? | M | Hacer opcional hasta inicio real. |

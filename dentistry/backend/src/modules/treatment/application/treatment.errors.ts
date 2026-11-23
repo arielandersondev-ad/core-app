@@ -21,6 +21,12 @@ export const TreatmentErrors = {
       'SERVICE_NOT_FOUND',
       'No se encontró el servicio en tu organización.',
     ),
+  invalidTitle: () =>
+    new CodedHttpException(
+      HttpStatus.BAD_REQUEST,
+      'INVALID_TREATMENT_TITLE',
+      'El título del tratamiento es obligatorio y admite hasta 120 caracteres.',
+    ),
   invalidBudget: (message: string) =>
     new CodedHttpException(
       HttpStatus.BAD_REQUEST,

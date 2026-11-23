@@ -8,6 +8,7 @@ export class TreatmentResponseDto {
   patientId: string;
   serviceId: string | null;
   serviceName: string | null;
+  title: string | null;
   practitionerMembershipId: string | null;
   status: TreatmentStatus;
   startedAt: string | null;
@@ -30,6 +31,7 @@ export class TreatmentResponseDto {
       patientId: treatment.patientId,
       serviceId: treatment.serviceId,
       serviceName: treatment.serviceName,
+      title: treatment.title,
       practitionerMembershipId: treatment.practitionerMembershipId,
       status: treatment.status,
       startedAt: treatment.startedAt?.toISOString() ?? null,

@@ -94,6 +94,7 @@ export class PrismaTreatmentRepository extends TreatmentRepository {
       organizationId: data.organizationId,
       patientId: data.patientId,
       serviceId: data.serviceId,
+      title: data.title,
       practitionerMembershipId: data.practitionerMembershipId,
       status: 'PROPOSED',
       estimatedSessions: data.estimatedSessions,

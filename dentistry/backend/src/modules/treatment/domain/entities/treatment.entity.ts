@@ -22,6 +22,8 @@ export interface Treatment {
   patientId: string;
   serviceId: string | null;
   serviceName: string | null;
+  /** Nombre para mostrar. Nulo solo en tratamientos anteriores a este campo. */
+  title: string | null;
   practitionerMembershipId: string | null;
   status: TreatmentStatus;
   startedAt: Date | null;
