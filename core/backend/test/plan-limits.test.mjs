@@ -25,6 +25,24 @@ function assignment(overrides = {}) {
   };
 }
 
+test('los cupos de archivos se validan y son obligatorios solo con la función files', () => {
+  const base = { features: { clinicalHistory: true }, limits: { patients: 300, members: 2, branches: 1 } };
+  assert.equal(normalizeCatalogEntitlements(base).limits.patients, 300);
+  assert.throws(
+    () => normalizeCatalogEntitlements({ ...base, features: { files: true } }),
+    /limits\.fileStorageBytes es obligatorio/,
+  );
+  const withFiles = normalizeCatalogEntitlements({
+    features: { files: true },
+    limits: { ...base.limits, fileStorageBytes: 2147483648, filesPerPatient: 50 },
+  });
+  assert.equal(withFiles.limits.fileStorageBytes, 2147483648);
+  assert.throws(
+    () => normalizeEntitlements({ limits: { filesPerPatient: 0 } }),
+    /limits\.filesPerPatient debe ser un entero positivo/,
+  );
+});
+
 test('acepta funciones y límites válidos y conserva claves existentes', () => {
   const result = normalizeEntitlements({
     features: { clinicalHistory: true, payments: false },
