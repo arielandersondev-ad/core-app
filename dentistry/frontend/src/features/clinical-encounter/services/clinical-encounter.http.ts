@@ -177,6 +177,12 @@ export function createClinicalEncounterHttpDataSource(): ClinicalEncounterDataSo
       );
     },
 
+    async updateFile(patientId, fileId, input) {
+      return toClinicalFile(
+        await postJson<ClinicalFileDto>(CLINICAL_ENCOUNTER_ENDPOINTS.fileById(patientId, fileId), input, "PATCH"),
+      );
+    },
+
     async removeFile(patientId, fileId) {
       await requestJson<ClinicalFileDto>(CLINICAL_ENCOUNTER_ENDPOINTS.fileById(patientId, fileId), {
         method: "DELETE",

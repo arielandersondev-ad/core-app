@@ -165,6 +165,7 @@ test("BFF: permite solo las rutas clínicas acordadas", async (t) => {
     ["POST", `patients/${PATIENT}/clinical-files/uploads`],
     ["POST", `patients/${PATIENT}/clinical-files/${ENCOUNTER}/complete`],
     ["GET", `patients/${PATIENT}/clinical-files/${ENCOUNTER}/access-url?disposition=attachment`],
+    ["PATCH", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`],
     ["DELETE", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`],
   ];
   for (const [method, path] of allowed) {
@@ -178,7 +179,6 @@ test("BFF: permite solo las rutas clínicas acordadas", async (t) => {
     ["PATCH", `${base}/${ENCOUNTER}`, 404],
     ["GET", `${base}/not-a-uuid`, 404],
     ["POST", `${base}/${ENCOUNTER}/procedures/${ENCOUNTER}/void`, 404],
-    ["PATCH", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`, 404],
     ["GET", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`, 404],
     ["PUT", `patients/${PATIENT}/clinical-files/uploads`, 404],
     ["GET", `patients/${PATIENT}/clinical-files?organizationId=${ENCOUNTER}`, 400],

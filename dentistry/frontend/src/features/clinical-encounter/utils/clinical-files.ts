@@ -60,6 +60,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   CLINICAL_FILE_UPLOAD_REJECTED: "El archivo no coincide con el tipo o el tamaño declarados.",
   CLINICAL_FILE_UPLOAD_EXPIRED: "El plazo para subir el archivo venció. Vuelve a intentarlo.",
   CLINICAL_FILE_UPLOAD_MISSING: "El archivo no llegó al almacenamiento. Vuelve a intentarlo.",
+  CLINICAL_FILE_CONFLICT: "Otra persona modificó este archivo. Revisa los datos actualizados y vuelve a guardar.",
 };
 
 /** Mensaje para el usuario a partir del código estable del backend. */

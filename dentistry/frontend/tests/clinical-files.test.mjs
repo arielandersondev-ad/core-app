@@ -21,6 +21,7 @@ const fileDto = (overrides = {}) => ({
   uploadedAt: null,
   uploadedByMembershipId: "membership-1",
   createdAt: "2026-11-23T12:00:00.000Z",
+  updatedAt: "2026-11-23T12:00:00.000Z",
   ...overrides,
 });
 
@@ -53,6 +54,7 @@ test("utilidades: traduce los códigos estables del backend", () => {
   assert.equal(clinicalFileErrorMessage(new ApiError(403, limit, [limit], "PLAN_LIMIT_REACHED")), limit);
   assert.match(clinicalFileErrorMessage(new ApiError(403, "x", ["x"], "MODULE_NOT_IN_PLAN")), /no incluye/);
   assert.match(clinicalFileErrorMessage(new ApiError(422, "x", ["x"], "CLINICAL_FILE_UPLOAD_REJECTED")), /no coincide/);
+  assert.match(clinicalFileErrorMessage(new ApiError(409, "x", ["x"], "CLINICAL_FILE_CONFLICT")), /Otra persona/);
   assert.match(clinicalFileErrorMessage(new ApiError(502, "Error del servicio clínico.")), /no está disponible/);
   assert.match(clinicalFileErrorMessage(new ApiError(403, "Forbidden")), /permiso/);
 });
@@ -132,6 +134,9 @@ test("HTTP adapter: lista, retira y pide enlaces firmados y el cupo", async (t) 
       });
     }
     if (init.method === "DELETE") return Response.json(fileDto({ uploadStatus: "READY" }));
+    if (init.method === "PATCH") {
+      return Response.json(fileDto({ uploadStatus: "READY", category: "RADIOGRAPH", updatedAt: "2026-11-23T12:05:00.000Z" }));
+    }
     return Response.json({
       items: [fileDto({ uploadStatus: "READY" })],
       pagination: { page: 1, pageSize: 100, totalItems: 1, totalPages: 1 },
@@ -140,15 +145,24 @@ test("HTTP adapter: lista, retira y pide enlaces firmados y el cupo", async (t) 
   const files = await source.listFiles(PATIENT, ENCOUNTER);
   assert.equal(files.length, 1);
   assert.equal("clinicalEncounterId" in files[0], false);
+  const edited = await source.updateFile(PATIENT, FILE_ID, {
+    expectedUpdatedAt: "2026-11-23T12:00:00.000Z", category: "RADIOGRAPH", description: null,
+  });
+  assert.equal(edited.category, "RADIOGRAPH");
+  assert.equal(edited.updatedAt, "2026-11-23T12:05:00.000Z");
   await source.removeFile(PATIENT, FILE_ID);
   const signed = await source.getFileAccessUrl(PATIENT, FILE_ID, "attachment");
   assert.equal(signed.url, "https://bucket.test/obj?sig=2");
   const quota = await source.getFileQuota();
   assert.equal(quota.filesPerPatient, 5);
+  assert.deepEqual(calls.find(({ method }) => method === "PATCH").body, {
+    expectedUpdatedAt: "2026-11-23T12:00:00.000Z", category: "RADIOGRAPH", description: null,
+  });
 
   const base = `/api/dentistry/patients/${PATIENT}/clinical-files`;
   assert.deepEqual(calls.map(({ method, url }) => [method, url]), [
     ["GET", `${base}?pageSize=100&clinicalEncounterId=${ENCOUNTER}`],
+    ["PATCH", `${base}/${FILE_ID}`],
     ["DELETE", `${base}/${FILE_ID}`],
     ["GET", `${base}/${FILE_ID}/access-url?disposition=attachment`],
     ["GET", "/api/dentistry/clinical-files/quota"],

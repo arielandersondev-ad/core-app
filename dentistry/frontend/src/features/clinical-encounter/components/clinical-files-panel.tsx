@@ -16,6 +16,7 @@ import {
 import {
   useAddClinicalFile,
   useRemoveClinicalFile,
+  useUpdateClinicalFile,
 } from "@/features/clinical-encounter/hooks/use-clinical-encounter-mutations";
 import type {
   ClinicalFile,
@@ -37,6 +38,14 @@ import {
 const READ_PERMISSION = "dentistry:files:read";
 const CREATE_PERMISSION = "dentistry:files:create";
 const DELETE_PERMISSION = "dentistry:files:delete";
+const UPDATE_PERMISSION = "dentistry:files:update";
+
+type FileEdit = {
+  id: string;
+  category: ClinicalFileCategory;
+  description: string;
+  error?: string;
+};
 
 export interface ClinicalFilesPanelProps {
   patientId: string;
@@ -86,6 +95,7 @@ function ClinicalFilesPanelContent({
   const quotaQuery = useClinicalFileQuota();
   const addMutation = useAddClinicalFile(patientId);
   const removeMutation = useRemoveClinicalFile(patientId);
+  const updateMutation = useUpdateClinicalFile(patientId);
   // Sin sucursal (galería del paciente): zona de la organización.
   const organizationTimeZone = useTimeZone();
   const displayTimeZone = timeZone ?? organizationTimeZone;
@@ -97,6 +107,7 @@ function ClinicalFilesPanelContent({
   const [previewFile, setPreviewFile] = useState<ClinicalFile | null>(null);
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<FileEdit | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const quota = quotaQuery.data;
@@ -105,6 +116,7 @@ function ClinicalFilesPanelContent({
   const canUpload =
     session.permissions.includes(CREATE_PERMISSION) && filesEnabled && storageAvailable && !uploadLockedReason;
   const canDelete = session.permissions.includes(DELETE_PERMISSION) && filesEnabled;
+  const canEdit = session.permissions.includes(UPDATE_PERMISSION) && filesEnabled;
   const uploading = addMutation.isPending;
   const usage = quota ? describeUsage(quota) : null;
   const accept = (quota?.allowedMimeTypes ?? DEFAULT_ALLOWED_MIME_TYPES).join(",");
@@ -148,6 +160,29 @@ function ClinicalFilesPanelContent({
       notify(clinicalFileErrorMessage(failure), "danger");
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const startEditing = (file: ClinicalFile) => {
+    setPendingRemovalId(null);
+    setEditing({ id: file.id, category: file.category, description: file.description ?? "" });
+  };
+
+  /** Solo cambia datos guardados en la base; el archivo almacenado no se toca. */
+  const handleSaveEdit = async (file: ClinicalFile, draft: FileEdit) => {
+    try {
+      await updateMutation.mutateAsync({
+        fileId: file.id,
+        input: {
+          expectedUpdatedAt: file.updatedAt,
+          category: draft.category,
+          description: draft.description.trim() || null,
+        },
+      });
+      setEditing(null);
+      notify("Datos del archivo actualizados.", "success");
+    } catch (failure) {
+      setEditing((current) => (current?.id === file.id ? { ...current, error: clinicalFileErrorMessage(failure) } : current));
     }
   };
 
@@ -260,6 +295,42 @@ function ClinicalFilesPanelContent({
         <ul className="space-y-3">
           {filesQuery.data.map((file) => {
             const confirmingRemoval = pendingRemovalId === file.id;
+            if (editing?.id === file.id) {
+              const saving = updateMutation.isPending;
+              return (
+                <li key={file.id} className="space-y-3 rounded-lg border border-primary/40 bg-surface-subtle/60 p-3">
+                  <p className="truncate text-sm font-medium text-foreground">{file.originalFilename}</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Select
+                      label="Tipo"
+                      selectSize="sm"
+                      value={editing.category}
+                      disabled={saving}
+                      onChange={(event) =>
+                        setEditing({ ...editing, category: event.target.value as ClinicalFileCategory, error: undefined })}
+                      options={[...CLINICAL_FILE_CATEGORY_OPTIONS]}
+                    />
+                    <Input
+                      label="Descripción"
+                      inputSize="sm"
+                      value={editing.description}
+                      maxLength={1000}
+                      disabled={saving}
+                      onChange={(event) => setEditing({ ...editing, description: event.target.value, error: undefined })}
+                    />
+                  </div>
+                  {editing.error && <p role="alert" className="text-xs text-danger">{editing.error}</p>}
+                  <div className="flex justify-end gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => setEditing(null)} disabled={saving}>
+                      Cancelar
+                    </Button>
+                    <Button size="sm" onClick={() => { void handleSaveEdit(file, editing); }} disabled={saving} loading={saving}>
+                      Guardar
+                    </Button>
+                  </div>
+                </li>
+              );
+            }
             return (
               <li key={file.id} className="flex flex-wrap items-start gap-3 rounded-lg border border-border bg-surface-subtle/60 p-3">
                 <div className="min-w-0 flex-1">
@@ -304,8 +375,13 @@ function ClinicalFilesPanelContent({
                       >
                         Descargar
                       </Button>
+                      {canEdit && (
+                        <Button size="sm" variant="ghost" onClick={() => startEditing(file)}>
+                          Editar
+                        </Button>
+                      )}
                       {canDelete && (
-                        <Button size="sm" variant="ghost" onClick={() => setPendingRemovalId(file.id)}>
+                        <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setPendingRemovalId(file.id); }}>
                           Quitar
                         </Button>
                       )}

@@ -88,6 +88,7 @@ const ROUTES: readonly ProxyRule[] = [
       errorMessage: "Parámetros de archivo inválidos.",
     },
   },
+  { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}$`) },
   { method: "DELETE", pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}$`) },
   {
     method: "GET",

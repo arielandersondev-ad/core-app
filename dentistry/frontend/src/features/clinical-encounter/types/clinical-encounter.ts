@@ -83,6 +83,8 @@ export interface ClinicalFile {
   uploadedAt?: string;
   uploadedByMembershipId: string;
   createdAt: string;
+  /** Versión leída; se envía como `expectedUpdatedAt` al editar. */
+  updatedAt: string;
 }
 
 /** Uso y límites de archivos de la organización (`GET /clinical-files/quota`). */
@@ -170,6 +172,14 @@ export interface AddClinicalFileInput {
   capturedAt?: string;
   /** Progreso de la transferencia al almacenamiento, entre 0 y 1. */
   onProgress?: (fraction: number) => void;
+}
+
+/** Solo datos descriptivos; `null` borra, omitir conserva. */
+export interface UpdateClinicalFileInput {
+  expectedUpdatedAt: string;
+  category?: ClinicalFileCategory;
+  description?: string | null;
+  capturedAt?: string | null;
 }
 
 export interface ClinicalEncounterListFilters {

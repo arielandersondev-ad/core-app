@@ -12,6 +12,7 @@ import type {
   EncounterReferenceData,
   PatientHealthProfile,
   PatientHealthProfileInput,
+  UpdateClinicalFileInput,
   RegisterQuickProcedureInput,
   SignedRequest,
   VoidClinicalEncounterInput,
@@ -43,6 +44,7 @@ export interface ClinicalEncounterDataSource {
   saveHealthProfile(patientId: string, input: PatientHealthProfileInput): Promise<PatientHealthProfile>;
   listFiles(patientId: string, encounterId?: string): Promise<ClinicalFile[]>;
   addFile(patientId: string, input: AddClinicalFileInput): Promise<ClinicalFile>;
+  updateFile(patientId: string, fileId: string, input: UpdateClinicalFileInput): Promise<ClinicalFile>;
   removeFile(patientId: string, fileId: string): Promise<void>;
   getFileAccessUrl(
     patientId: string,

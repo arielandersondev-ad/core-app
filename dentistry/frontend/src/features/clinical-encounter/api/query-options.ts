@@ -13,6 +13,7 @@ import type {
   CompleteClinicalEncounterVariables,
   CreateClinicalEncounterWithProceduresInput,
   PatientHealthProfileInput,
+  UpdateClinicalFileInput,
   RegisterQuickProcedureInput,
   VoidClinicalEncounterVariables,
 } from "@/features/clinical-encounter/types/clinical-encounter";
@@ -319,6 +320,26 @@ export function clinicalFileAddOptions(
         }),
         client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.fileQuota() }),
       ]);
+    },
+  });
+}
+
+export function clinicalFileUpdateOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
+  return mutationOptions({
+    mutationFn: async ({ fileId, input }: { fileId: string; input: UpdateClinicalFileInput }) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().updateFile(patientId, fileId, input);
+    },
+    retry: false,
+    // También tras un conflicto: así se edita sobre la versión vigente.
+    onSettled: async () => {
+      await client.invalidateQueries({
+        queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
+      });
     },
   });
 }
