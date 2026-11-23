@@ -173,11 +173,18 @@ test('citas: startDate/endDate sin zona usan la sucursal filtrada', async () => 
   assert.equal(filters.startDate, undefined);
 });
 
-test('/auth/me informa la zona de la organización y la de cada sucursal', async () => {
+test('/auth/me informa zonas y los nombres visibles de usuario y organización', async () => {
   const branchId = randomUUID();
+  const profileCalls = [];
   const controller = new DentistryAuthController(
     { read: async () => null },
     new TimeZoneResolver(fakePrisma({ branches: { [branchId]: LIMA } })),
+    {
+      read: async (userId, organizationId) => {
+        profileCalls.push([userId, organizationId]);
+        return { user: { firstName: 'Ana', lastName: 'Rojas' }, organizationName: 'Clínica Sonrisa' };
+      },
+    },
   );
   const me = await controller.me({
     sub: 'user',
@@ -188,4 +195,16 @@ test('/auth/me informa la zona de la organización y la de cada sucursal', async
   });
   assert.equal(me.context.timeZone, LA_PAZ);
   assert.deepEqual(me.context.branchTimeZones, { [branchId]: LIMA });
+  assert.deepEqual(me.user, { id: 'user', firstName: 'Ana', lastName: 'Rojas' });
+  assert.equal(me.context.organizationName, 'Clínica Sonrisa');
+  assert.deepEqual(profileCalls, [['user', 'org']]);
+
+  const unknown = new DentistryAuthController(
+    { read: async () => null },
+    new TimeZoneResolver(fakePrisma()),
+    { read: async () => ({ user: null, organizationName: null }) },
+  );
+  const fallback = await unknown.me({ sub: 'user', membershipId: 'm', organizationId: 'org', branchIds: [], permissions: [] });
+  assert.deepEqual(fallback.user, { id: 'user', firstName: null, lastName: null });
+  assert.equal(fallback.context.organizationName, null);
 });
