@@ -7,7 +7,10 @@ import {
 } from '../../domain/repositories/clinical-file.repository.js';
 import { ClinicalFileAccess } from '../clinical-file-access.js';
 
-/** Galería del paciente: solo archivos READY no eliminados. */
+/**
+ * Galería del paciente: solo archivos READY no eliminados. Filtrar por una
+ * atención exige acceso a su sucursal, como el detalle de la atención.
+ */
 @Injectable()
 export class ListClinicalFilesUseCase {
   constructor(
@@ -15,8 +18,18 @@ export class ListClinicalFilesUseCase {
     private readonly fileRepository: ClinicalFileRepository,
   ) {}
 
-  async execute(filters: FindClinicalFilesFilters): Promise<PaginatedResult<ClinicalFile>> {
+  async execute(
+    filters: FindClinicalFilesFilters,
+    authorizedBranchIds: readonly string[],
+  ): Promise<PaginatedResult<ClinicalFile>> {
     await this.access.assertPatient(filters);
+    if (filters.clinicalEncounterId) {
+      await this.access.assertEncounterBranch(
+        filters,
+        filters.clinicalEncounterId,
+        authorizedBranchIds,
+      );
+    }
     return this.fileRepository.findPage(filters);
   }
 }

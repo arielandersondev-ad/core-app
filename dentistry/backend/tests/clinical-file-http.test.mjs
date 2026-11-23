@@ -11,6 +11,7 @@ import { SignJWT } from 'jose';
 const READ = 'dentistry:files:read';
 const CREATE = 'dentistry:files:create';
 const DELETE = 'dentistry:files:delete';
+const UPDATE = 'dentistry:files:update';
 const PDF = new TextEncoder().encode('%PDF-1.4\n% prueba\n');
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
 
@@ -82,7 +83,7 @@ test(
       organizationId: randomUUID(),
       membershipId: randomUUID(),
       branchIds: [branchId],
-      permissions: [READ, CREATE, DELETE],
+      permissions: [READ, CREATE, DELETE, UPDATE],
     };
 
     // ---- Pacientes y atenciones en memoria --------------------------------
@@ -140,6 +141,14 @@ test(
         Object.assign(row, { uploadStatus: 'READY', uploadedAt: change.uploadedAt, uploadExpiresAt: null,
           checksumSha256: change.checksumSha256 });
         audit.push({ action: 'CLINICAL_FILE_UPLOADED', id });
+        return { ...row };
+      },
+      async updateDetails(scope, id, change, expectedUpdatedAt, actor) {
+        const row = files.get(id);
+        if (!inScope(scope, row) || row.deletedAt || row.uploadStatus !== 'READY') return null;
+        if (row.updatedAt.getTime() !== expectedUpdatedAt.getTime()) return null;
+        Object.assign(row, change, { updatedAt: new Date(row.updatedAt.getTime() + 1) });
+        audit.push({ action: 'CLINICAL_FILE_UPDATED', id, actor, fields: Object.keys(change) });
         return { ...row };
       },
       async markFailed(scope, id) {
@@ -270,6 +279,7 @@ test(
       assert.equal((await request(base, 'GET', undefined, readOnly)).status, 200);
       assert.equal((await request(`${base}/uploads`, 'POST', uploadBody(), readOnly)).status, 403);
       assert.equal((await request(`${base}/${randomUUID()}`, 'DELETE', undefined, readOnly)).status, 403);
+      assert.equal((await request(`${base}/${randomUUID()}`, 'PATCH', { expectedUpdatedAt: new Date().toISOString() }, readOnly)).status, 403);
       const noRead = await token({ permissions: [CREATE] });
       assert.equal((await request(base, 'GET', undefined, noRead)).status, 403);
       assert.equal((await request('/clinical-files/quota', 'GET', undefined, noRead)).status, 403);
@@ -421,6 +431,87 @@ test(
       assert.ok(audit.some((entry) => entry.action === 'CLINICAL_FILE_DELETED'));
       assert.equal((await request(`${base}/${ticket.file.id}`, 'DELETE')).status, 404);
       assert.equal((await request(`${base}/${ticket.file.id}/access-url`)).status, 404);
+    });
+
+    await t.test('editar cambia solo los datos descriptivos, con control de concurrencia', async () => {
+      const ticket = await reserveAndPut(PNG, { mimeType: 'image/png', category: 'PHOTO', description: 'Antes' });
+      const ready = (await request(`${base}/${ticket.file.id}/complete`, 'POST')).body;
+      const stored = { ...files.get(ticket.file.id) };
+      const path = `${base}/${ticket.file.id}`;
+
+      const edited = await request(path, 'PATCH', {
+        expectedUpdatedAt: ready.updatedAt, category: 'RADIOGRAPH', description: '  Panorámica  ',
+        capturedAt: '2026-11-20T10:00:00-04:00',
+      });
+      assert.equal(edited.status, 200, JSON.stringify(edited.body));
+      assert.equal(edited.body.category, 'RADIOGRAPH');
+      assert.equal(edited.body.description, 'Panorámica');
+      assert.equal(edited.body.capturedAt, '2026-11-20T14:00:00.000Z');
+      assert.notEqual(edited.body.updatedAt, ready.updatedAt);
+      const after = files.get(ticket.file.id);
+      for (const fixed of ['objectKey', 'originalFilename', 'mimeType', 'sizeBytes', 'checksumSha256', 'patientId', 'clinicalEncounterId']) {
+        assert.equal(after[fixed], stored[fixed], fixed);
+      }
+      assert.deepEqual(audit.at(-1).fields, ['category', 'description', 'capturedAt']);
+      assert.equal(audit.at(-1).actor, principal.membershipId);
+
+      // Una versión leída antes de la edición ya no sirve.
+      const stale = await request(path, 'PATCH', { expectedUpdatedAt: ready.updatedAt, description: 'Pisada' });
+      assert.equal(stale.status, 409);
+      assert.equal(stale.body.code, 'CLINICAL_FILE_CONFLICT');
+      assert.equal(files.get(ticket.file.id).description, 'Panorámica');
+
+      // null borra; omitir conserva; sin cambios no se audita.
+      const cleared = await request(path, 'PATCH', { expectedUpdatedAt: edited.body.updatedAt, description: null, capturedAt: null });
+      assert.equal(cleared.status, 200);
+      assert.equal(cleared.body.description, null);
+      assert.equal(cleared.body.capturedAt, null);
+      assert.equal(cleared.body.category, 'RADIOGRAPH');
+      const audited = audit.length;
+      const same = await request(path, 'PATCH', { expectedUpdatedAt: cleared.body.updatedAt, category: 'RADIOGRAPH' });
+      assert.equal(same.status, 200);
+      assert.equal(same.body.updatedAt, cleared.body.updatedAt);
+      assert.equal(audit.length, audited);
+
+      // Validación, plan y alcance.
+      const version = cleared.body.updatedAt;
+      assert.equal((await request(path, 'PATCH', { description: 'x' })).status, 400);
+      assert.equal((await request(path, 'PATCH', { expectedUpdatedAt: version, category: null })).status, 400);
+      assert.equal((await request(path, 'PATCH', { expectedUpdatedAt: version, category: 'XRAY' })).status, 400);
+      assert.equal((await request(path, 'PATCH', { expectedUpdatedAt: version, description: 'x'.repeat(1001) })).status, 400);
+      const foreign = await request(`/patients/${foreignPatient.id}/clinical-files/${ticket.file.id}`, 'PATCH', { expectedUpdatedAt: version });
+      assert.equal(foreign.status, 404);
+      currentPlan = planWith({ clinicalHistory: true, files: false });
+      try {
+        const noPlan = await request(path, 'PATCH', { expectedUpdatedAt: version, description: 'x' });
+        assert.equal(noPlan.status, 403);
+        assert.equal(noPlan.body.code, 'MODULE_NOT_IN_PLAN');
+      } finally {
+        currentPlan = planWith(WITH_FILES);
+      }
+      const pending = await request(`${base}/uploads`, 'POST', uploadBody());
+      const notReady = await request(`${base}/${pending.body.file.id}`, 'PATCH', { expectedUpdatedAt: pending.body.file.updatedAt, description: 'x' });
+      assert.equal(notReady.status, 409);
+      assert.equal(notReady.body.code, 'CLINICAL_FILE_NOT_READY');
+    });
+
+    await t.test('los archivos de una atención respetan la sucursal de esa atención', async () => {
+      const foreignBranch = seedEncounter({ branchId: randomUUID() });
+      const ticket = await reserveAndPut(PDF, { clinicalEncounterId: seedEncounter().id });
+      const ready = (await request(`${base}/${ticket.file.id}/complete`, 'POST')).body;
+      // Se coloca en una atención de otra sucursal sin pasar por la API.
+      files.get(ticket.file.id).clinicalEncounterId = foreignBranch.id;
+
+      const list = await request(`${base}?clinicalEncounterId=${foreignBranch.id}`);
+      assert.equal(list.status, 403);
+      assert.equal(list.body.code, 'BRANCH_FORBIDDEN');
+      assert.equal((await request(`${base}?clinicalEncounterId=${randomUUID()}`)).status, 404);
+      const edit = await request(`${base}/${ticket.file.id}`, 'PATCH', { expectedUpdatedAt: ready.updatedAt, description: 'x' });
+      assert.equal(edit.status, 403);
+      assert.equal((await request(`${base}/${ticket.file.id}`, 'DELETE')).status, 403);
+      assert.equal(files.get(ticket.file.id).deletedAt, null);
+      // La galería del paciente sigue siendo de toda la organización.
+      assert.ok((await request(base)).body.items.some((item) => item.id === ticket.file.id));
     });
 
     await t.test('el cupo informa uso, límites y tipos admitidos', async () => {

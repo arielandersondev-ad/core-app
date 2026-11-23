@@ -8,7 +8,7 @@ privado compatible con S3.
 ## API
 
 Todas las rutas exigen token de `dentistry-api` y el módulo Paciente del plan.
-Subir, confirmar y retirar exigen además la función `files`: un plan vencido o
+Subir, confirmar, editar y retirar exigen además la función `files`: un plan vencido o
 reducido conserva la consulta y descarga de lo existente (§7.4).
 
 | Operación | Permiso | Función del plan |
@@ -18,6 +18,7 @@ reducido conserva la consulta y descarga de lo existente (§7.4).
 | `POST /patients/:patientId/clinical-files/uploads` | `dentistry:files:create` | `files` |
 | `POST /patients/:patientId/clinical-files/:fileId/complete` | `dentistry:files:create` | `files` |
 | `GET /patients/:patientId/clinical-files/:fileId/access-url?disposition=inline\|attachment` | `dentistry:files:read` | — |
+| `PATCH /patients/:patientId/clinical-files/:fileId` | `dentistry:files:update` | `files` |
 | `DELETE /patients/:patientId/clinical-files/:fileId` | `dentistry:files:delete` | `files` |
 
 Estos permisos no están en ningún seed: hay que darlos de alta en Core y
@@ -32,9 +33,17 @@ asignarlos a los roles, igual que los de atenciones.
   403 `PLAN_LIMIT_REACHED` con `resource`.
 - **Atención:** `clinicalEncounterId` es opcional; debe ser del paciente, de una
   sucursal autorizada y no estar anulada.
+- **Sucursal:** la galería del paciente es de toda la organización. Filtrar por una
+  atención, editar o retirar un archivo de una atención exige acceso a la sucursal de
+  esa atención (403 `BRANCH_FORBIDDEN`), como su detalle.
+- **Edición:** `PATCH` cambia solo `category`, `description` y `capturedAt` de un
+  archivo READY (`null` borra, omitir conserva). Exige `expectedUpdatedAt` con el
+  `updatedAt` leído; si otra edición ganó, 409 `CLINICAL_FILE_CONFLICT`. El objeto
+  almacenado, el paciente y la atención no cambian.
 - **Vigencias:** URL de subida 5 min, reserva 15 min, enlace de lectura 2 min.
 - **Respuestas:** nunca incluyen proveedor, bucket ni clave del objeto.
-- **Auditoría:** `CLINICAL_FILE_UPLOADED` y `CLINICAL_FILE_DELETED` en `core.AuditLog`.
+- **Auditoría:** `CLINICAL_FILE_UPLOADED`, `CLINICAL_FILE_UPDATED` (con los campos
+  cambiados) y `CLINICAL_FILE_DELETED` en `core.AuditLog`.
 - **Retirada:** lógica (`deletedAt`, `deletedByMembershipId`). El objeto se conserva
   hasta definir la política de retención; los rechazados al confirmar sí se borran.
 - **Sin `STORAGE_*`:** subir, confirmar y pedir enlaces responden 503

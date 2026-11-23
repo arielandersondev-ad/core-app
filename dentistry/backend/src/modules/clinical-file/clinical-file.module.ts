@@ -11,6 +11,7 @@ import { GetClinicalFileAccessUrlUseCase } from './application/use-case/get-clin
 import { GetClinicalFileQuotaUseCase } from './application/use-case/get-clinical-file-quota.use-case.js';
 import { ListClinicalFilesUseCase } from './application/use-case/list-clinical-files.use-case.js';
 import { RequestClinicalFileUploadUseCase } from './application/use-case/request-clinical-file-upload.use-case.js';
+import { UpdateClinicalFileUseCase } from './application/use-case/update-clinical-file.use-case.js';
 import { ClinicalFileRepository } from './domain/repositories/clinical-file.repository.js';
 import { PrismaClinicalFileRepository } from './infrastructure/prisma-clinical-file.repository.js';
 import { S3CompatibleFileStorage } from './infrastructure/storage/s3-compatible-file-storage.js';
@@ -40,6 +41,7 @@ function createFileStorage(): FileStorage {
     CompleteClinicalFileUploadUseCase,
     GetClinicalFileAccessUrlUseCase,
     DeleteClinicalFileUseCase,
+    UpdateClinicalFileUseCase,
     GetClinicalFileQuotaUseCase,
   ],
   exports: [FileStorage],

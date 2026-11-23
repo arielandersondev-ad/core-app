@@ -39,6 +39,13 @@ export type FindClinicalFilesFilters = ClinicalFileScope & {
   pageSize?: number;
 };
 
+/** Datos descriptivos editables; el objeto almacenado no cambia. */
+export type ClinicalFileDetailsChange = {
+  category?: ClinicalFile['category'];
+  description?: string | null;
+  capturedAt?: Date | null;
+};
+
 /** Atención a la que se vincula un archivo; null si no es del paciente. */
 export type EncounterReference = {
   branchId: string;
@@ -67,6 +74,19 @@ export abstract class ClinicalFileRepository {
     scope: ClinicalFileScope,
     id: string,
     change: { checksumSha256: string; uploadedAt: Date; actorMembershipId: string },
+  ): Promise<ClinicalFile | null>;
+
+  /**
+   * Cambia los datos descriptivos de un archivo READY y audita el cambio.
+   * Devuelve null si el archivo cambió desde `expectedUpdatedAt` (otra
+   * edición o una retirada) o ya no está disponible.
+   */
+  abstract updateDetails(
+    scope: ClinicalFileScope,
+    id: string,
+    change: ClinicalFileDetailsChange,
+    expectedUpdatedAt: Date,
+    actorMembershipId: string,
   ): Promise<ClinicalFile | null>;
 
   /** PENDING → FAILED; libera la reserva. */

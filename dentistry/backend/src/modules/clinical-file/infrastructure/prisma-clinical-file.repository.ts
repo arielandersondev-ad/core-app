@@ -16,6 +16,7 @@ import {
   ClinicalFileRepository,
   type ClinicalFileQuota,
   type ClinicalFileReservation,
+  type ClinicalFileDetailsChange,
   type ClinicalFileScope,
   type ClinicalFileUsage,
   type EncounterReference,
@@ -162,6 +163,38 @@ export class PrismaClinicalFileRepository extends ClinicalFileRepository {
           mimeType: updated.mimeType,
           sizeBytes: updated.sizeBytes,
         },
+      });
+      return updated;
+    });
+    return row ? toClinicalFileEntity(row) : null;
+  }
+
+  async updateDetails(
+    scope: ClinicalFileScope,
+    id: string,
+    change: ClinicalFileDetailsChange,
+    expectedUpdatedAt: Date,
+    actorMembershipId: string,
+  ): Promise<ClinicalFile | null> {
+    const row = await this.prisma.transaction(async (tx) => {
+      // updatedAt lo genera el ORM (new Date(), milisegundos), así que sirve
+      // de control optimista sin añadir una columna de versión.
+      const updated = await tx.orm.dentistry.ClinicalFile.where({
+        id,
+        organizationId: scope.organizationId,
+        patientId: scope.patientId,
+        uploadStatus: 'READY',
+        deletedAt: null,
+        updatedAt: expectedUpdatedAt,
+      }).update(change);
+      if (!updated) return null;
+      await writeAuditLog(tx, {
+        organizationId: scope.organizationId,
+        actorMembershipId,
+        action: 'CLINICAL_FILE_UPDATED',
+        resource: 'ClinicalFile',
+        resourceId: id,
+        metadata: { patientId: scope.patientId, fields: Object.keys(change) },
       });
       return updated;
     });

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -25,10 +26,12 @@ import { DeleteClinicalFileUseCase } from '../../application/use-case/delete-cli
 import { GetClinicalFileAccessUrlUseCase } from '../../application/use-case/get-clinical-file-access-url.use-case.js';
 import { ListClinicalFilesUseCase } from '../../application/use-case/list-clinical-files.use-case.js';
 import { RequestClinicalFileUploadUseCase } from '../../application/use-case/request-clinical-file-upload.use-case.js';
+import { UpdateClinicalFileUseCase } from '../../application/use-case/update-clinical-file.use-case.js';
 import {
   ClinicalFileAccessUrlQueryDto,
   ListClinicalFilesQueryDto,
   RequestClinicalFileUploadDto,
+  UpdateClinicalFileDto,
 } from '../dto/clinical-file.dto.js';
 import {
   ClinicalFileResponseDto,
@@ -42,8 +45,8 @@ type ClinicalFilePage = {
 };
 
 /**
- * Archivos del historial clínico. Leer exige el módulo Paciente; subir y
- * retirar exigen además la función `files` del plan, de modo que un plan
+ * Archivos del historial clínico. Leer exige el módulo Paciente; subir, editar
+ * y retirar exigen además la función `files` del plan, de modo que un plan
  * vencido o reducido conserva la consulta de lo existente (§7.4).
  */
 @Controller('patients/:patientId/clinical-files')
@@ -56,6 +59,7 @@ export class ClinicalFileController {
     private readonly completeUploadUseCase: CompleteClinicalFileUploadUseCase,
     private readonly accessUrlUseCase: GetClinicalFileAccessUrlUseCase,
     private readonly deleteUseCase: DeleteClinicalFileUseCase,
+    private readonly updateUseCase: UpdateClinicalFileUseCase,
   ) {}
 
   @Get()
@@ -65,14 +69,17 @@ export class ClinicalFileController {
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Query() query: ListClinicalFilesQueryDto,
   ): Promise<ClinicalFilePage> {
-    const result = await this.listUseCase.execute({
-      organizationId: principal.organizationId,
-      patientId,
-      clinicalEncounterId: query.clinicalEncounterId,
-      category: query.category,
-      page: query.page,
-      pageSize: query.pageSize,
-    });
+    const result = await this.listUseCase.execute(
+      {
+        organizationId: principal.organizationId,
+        patientId,
+        clinicalEncounterId: query.clinicalEncounterId,
+        category: query.category,
+        page: query.page,
+        pageSize: query.pageSize,
+      },
+      principal.branchIds,
+    );
     return {
       items: result.items.map(ClinicalFileResponseDto.fromEntity),
       pagination: result.pagination,
@@ -143,6 +150,30 @@ export class ClinicalFileController {
     return PresignedRequestResponseDto.fromRequest(request);
   }
 
+  /** Edita los datos descriptivos; el objeto almacenado no se toca. */
+  @Patch(':fileId')
+  @RequirePermission('dentistry:files:update')
+  @RequireModule('files')
+  async update(
+    @CurrentPrincipal() principal: DentistryPrincipal,
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Param('fileId', ParseUUIDPipe) fileId: string,
+    @Body() dto: UpdateClinicalFileDto,
+  ): Promise<ClinicalFileResponseDto> {
+    const file = await this.updateUseCase.execute({
+      organizationId: principal.organizationId,
+      patientId,
+      fileId,
+      authorizedBranchIds: principal.branchIds,
+      actorMembershipId: principal.membershipId,
+      expectedUpdatedAt: new Date(dto.expectedUpdatedAt),
+      category: dto.category,
+      description: dto.description,
+      capturedAt: toOptionalDate(dto.capturedAt),
+    });
+    return ClinicalFileResponseDto.fromEntity(file);
+  }
+
   /** Devuelve el archivo retirado, como el resto de borrados lógicos de la API. */
   @Delete(':fileId')
   @RequirePermission('dentistry:files:delete')
@@ -156,8 +187,15 @@ export class ClinicalFileController {
       organizationId: principal.organizationId,
       patientId,
       fileId,
+      authorizedBranchIds: principal.branchIds,
       actorMembershipId: principal.membershipId,
     });
     return ClinicalFileResponseDto.fromEntity(file);
   }
+}
+
+/** undefined conserva el valor; null lo borra. */
+function toOptionalDate(value: string | null | undefined): Date | null | undefined {
+  if (value === undefined || value === null) return value;
+  return new Date(value);
 }

@@ -76,6 +76,12 @@ export const ClinicalFileErrors = {
       'CLINICAL_FILE_UPLOAD_REJECTED',
       'El archivo subido no coincide con el tipo o el tamaño declarados.',
     ),
+  conflict: () =>
+    new CodedHttpException(
+      HttpStatus.CONFLICT,
+      'CLINICAL_FILE_CONFLICT',
+      'Otra persona modificó este archivo. Recarga y vuelve a intentarlo.',
+    ),
   notReady: () =>
     new CodedHttpException(
       HttpStatus.CONFLICT,

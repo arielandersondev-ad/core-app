@@ -8,6 +8,7 @@ import {
 import {
   ClinicalFileRepository,
   type ClinicalFileScope,
+  type EncounterReference,
 } from '../domain/repositories/clinical-file.repository.js';
 import { FileStorage } from './ports/file-storage.js';
 import { ClinicalFileErrors } from './clinical-file.errors.js';
@@ -44,6 +45,23 @@ export class ClinicalFileAccess {
     const file = await this.fileRepository.findById(scope, fileId);
     if (!file) throw ClinicalFileErrors.fileNotFound();
     return file;
+  }
+
+  /**
+   * La atención debe ser del paciente y de una sucursal autorizada, igual que
+   * su detalle: el alcance de sucursal también protege sus archivos.
+   */
+  async assertEncounterBranch(
+    scope: ClinicalFileScope,
+    encounterId: string,
+    authorizedBranchIds: readonly string[],
+  ): Promise<EncounterReference> {
+    const encounter = await this.fileRepository.findEncounter(scope, encounterId);
+    if (!encounter) throw ClinicalFileErrors.encounterNotFound();
+    if (!authorizedBranchIds.includes(encounter.branchId)) {
+      throw ClinicalFileErrors.branchForbidden();
+    }
+    return encounter;
   }
 
   /** Traduce fallos del proveedor a 503 sin exponer su causa al cliente. */

@@ -64,14 +64,11 @@ export class RequestClinicalFileUploadUseCase {
     await this.access.assertPatient(scope);
 
     if (command.clinicalEncounterId) {
-      const encounter = await this.fileRepository.findEncounter(
+      const encounter = await this.access.assertEncounterBranch(
         scope,
         command.clinicalEncounterId,
+        command.authorizedBranchIds,
       );
-      if (!encounter) throw ClinicalFileErrors.encounterNotFound();
-      if (!command.authorizedBranchIds.includes(encounter.branchId)) {
-        throw ClinicalFileErrors.branchForbidden();
-      }
       if (encounter.status === 'VOIDED') throw ClinicalFileErrors.encounterVoided();
     }
 

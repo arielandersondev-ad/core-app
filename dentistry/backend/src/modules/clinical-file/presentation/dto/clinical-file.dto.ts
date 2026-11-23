@@ -10,6 +10,7 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { PaginationQueryDto } from '../../../../common/presentation/dto/pagination.query.dto.js';
 import {
@@ -64,6 +65,29 @@ export class RequestClinicalFileUploadDto {
   @IsString()
   @MaxLength(1000)
   description?: string;
+}
+
+/**
+ * Solo datos descriptivos: el archivo, su paciente y su atención no cambian.
+ * `null` borra la descripción o la fecha de captura; omitir un campo lo conserva.
+ */
+export class UpdateClinicalFileDto {
+  /** `updatedAt` que el cliente leyó; evita pisar una edición concurrente. */
+  @Matches(ZONED_INSTANT, { message: 'expectedUpdatedAt debe ser un instante ISO 8601 con zona' })
+  expectedUpdatedAt: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsIn(CLINICAL_FILE_CATEGORIES)
+  category?: ClinicalFileCategory;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string | null;
+
+  @IsOptional()
+  @Matches(ZONED_INSTANT, { message: 'capturedAt debe ser un instante ISO 8601 con zona' })
+  capturedAt?: string | null;
 }
 
 export class ClinicalFileAccessUrlQueryDto {

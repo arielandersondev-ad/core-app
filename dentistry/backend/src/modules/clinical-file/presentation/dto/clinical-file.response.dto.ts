@@ -16,6 +16,8 @@ export class ClinicalFileResponseDto {
   uploadedAt: string | null;
   uploadedByMembershipId: string;
   createdAt: string;
+  /** Se reenvía como `expectedUpdatedAt` al editar. */
+  updatedAt: string;
 
   static fromEntity(file: ClinicalFile): ClinicalFileResponseDto {
     const dto = new ClinicalFileResponseDto();
@@ -32,6 +34,7 @@ export class ClinicalFileResponseDto {
     dto.uploadedAt = file.uploadedAt?.toISOString() ?? null;
     dto.uploadedByMembershipId = file.uploadedByMembershipId;
     dto.createdAt = file.createdAt.toISOString();
+    dto.updatedAt = file.updatedAt.toISOString();
     return dto;
   }
 }
