@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { createPrivateKey, createPublicKey } from 'node:crypto';
+import { parseStorageConfig } from './storage-env.js';
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -133,6 +134,7 @@ function validateEnvironment(service: 'core' | 'dentistry') {
     frontendOrigins: [...new Set(
       frontendOrigins.map((origin) => new URL(origin).origin),
     )],
+    storage: parseStorageConfig(process.env),
   };
 }
 export const env = validateEnvironment('dentistry');
