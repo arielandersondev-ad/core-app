@@ -7,10 +7,13 @@ import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-ses
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
 import { Icons } from "../icons/icons";
 import { logoutAction } from "@/features/auth/actions/logout-action";
+import { organizationDisplayName } from "@/shared/session/display-names";
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { plan } = useAuthenticatedSession();
+  const session = useAuthenticatedSession();
+  const { plan } = session;
+  const organizationName = organizationDisplayName(session);
 
   return (
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-surface">
@@ -19,8 +22,8 @@ export function AppSidebar() {
         <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
           {Icons.tooth}
         </div>
-        <span className="font-display text-sm font-bold tracking-wide text-foreground">
-          Dental<span className="text-primary">tery</span>
+        <span className="min-w-0 truncate font-display text-sm font-bold tracking-wide text-foreground" title={organizationName}>
+          {organizationName}
         </span>
       </div>
 

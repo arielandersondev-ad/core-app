@@ -10,6 +10,7 @@ import { useAppointments } from "@/modules/clinic/hooks";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Button, EmptyState, Icons, StatCard } from "@/shared/components/ui";
 import { isModuleEnabled } from "@/shared/plan/plan-access";
+import { userFirstName } from "@/shared/session/display-names";
 import { useTimeZone, useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import { formatInZone, todayIn } from "@/shared/time/zoned-time";
 import {
@@ -37,6 +38,8 @@ export function DashboardPage() {
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
 
   const now = new Date();
+  const firstName = userFirstName(session);
+  const greeting = greetingAt(now, timeZone);
   const today = todayIn(timeZone, now);
   const can = (permission: string) => session.permissions.includes(permission);
   const hasModule = (module: Parameters<typeof isModuleEnabled>[1]) => isModuleEnabled(session.plan, module);
@@ -76,7 +79,7 @@ export function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        title={greetingAt(now, timeZone)}
+        title={firstName ? `${greeting}, ${firstName}` : greeting}
         description="Agenda del día y resumen de la clínica"
         badge={
           <span className="px-2.5 py-1 rounded-md bg-[var(--surface-subtle)] text-[var(--muted)] border border-[var(--border)] text-xs font-mono capitalize">

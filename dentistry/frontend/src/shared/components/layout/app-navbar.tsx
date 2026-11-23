@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS, SECTION_TITLES } from "./navigation";
 import { ThemeToggle } from "../theme-toggle/theme-toggle";
 import { logoutAction } from "@/features/auth/actions/logout-action";
+import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
+import { organizationDisplayName } from "@/shared/session/display-names";
 
 function getSectionTitle(pathname: string): string {
   const item = [...NAV_ITEMS]
@@ -20,19 +22,20 @@ function getSectionTitle(pathname: string): string {
 export function AppNavbar() {
   const pathname = usePathname();
   const title = getSectionTitle(pathname);
+  const organizationName = organizationDisplayName(useAuthenticatedSession());
 
   return (
     <header className="h-14 flex items-center px-4 lg:px-6 border-b border-border bg-surface gap-3 flex-shrink-0">
       {/* Mobile: logo */}
       <div className="lg:hidden flex items-center gap-2 flex-1">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2">
           <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <span className="font-display text-[13px] font-bold tracking-wide text-foreground">
-            Dental<span className="text-primary">tery</span>
+          <span className="min-w-0 truncate font-display text-[13px] font-bold tracking-wide text-foreground" title={organizationName}>
+            {organizationName}
           </span>
         </Link>
       </div>

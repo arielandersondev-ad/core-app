@@ -4,10 +4,15 @@ import { serverEnv } from "@/infrastructure/config/server-env";
 import type { CurrentSession } from "@/infrastructure/auth/session";
 import { isSessionPlan } from "@/shared/plan/plan-access";
 
+const isOptionalText = (value: unknown) => value === undefined || value === null || typeof value === "string";
+
 function isCurrentSession(value: unknown): value is CurrentSession {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<CurrentSession>;
   return typeof candidate.user?.id === "string" &&
+    isOptionalText(candidate.user.firstName) &&
+    isOptionalText(candidate.user.lastName) &&
+    isOptionalText(candidate.context?.organizationName) &&
     typeof candidate.context?.membershipId === "string" &&
     typeof candidate.context?.organizationId === "string" &&
     Array.isArray(candidate.context?.branchIds) &&
