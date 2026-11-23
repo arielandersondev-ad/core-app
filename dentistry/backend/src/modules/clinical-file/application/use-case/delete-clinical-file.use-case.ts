@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { ClinicalFile } from '../../domain/entities/clinical-file.entity.js';
 import {
   ClinicalFileRepository,
   type ClinicalFileScope,
@@ -22,7 +23,10 @@ export class DeleteClinicalFileUseCase {
     private readonly fileRepository: ClinicalFileRepository,
   ) {}
 
-  async execute(command: DeleteClinicalFileCommand, now: Date = new Date()): Promise<void> {
+  async execute(
+    command: DeleteClinicalFileCommand,
+    now: Date = new Date(),
+  ): Promise<ClinicalFile> {
     await this.access.loadFile(command, command.fileId);
     const deleted = await this.fileRepository.softDelete(
       command,
@@ -31,5 +35,6 @@ export class DeleteClinicalFileUseCase {
       now,
     );
     if (!deleted) throw ClinicalFileErrors.fileNotFound();
+    return deleted;
   }
 }

@@ -143,20 +143,21 @@ export class ClinicalFileController {
     return PresignedRequestResponseDto.fromRequest(request);
   }
 
+  /** Devuelve el archivo retirado, como el resto de borrados lógicos de la API. */
   @Delete(':fileId')
-  @HttpCode(HttpStatus.NO_CONTENT)
   @RequirePermission('dentistry:files:delete')
   @RequireModule('files')
   async remove(
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Param('fileId', ParseUUIDPipe) fileId: string,
-  ): Promise<void> {
-    await this.deleteUseCase.execute({
+  ): Promise<ClinicalFileResponseDto> {
+    const file = await this.deleteUseCase.execute({
       organizationId: principal.organizationId,
       patientId,
       fileId,
       actorMembershipId: principal.membershipId,
     });
+    return ClinicalFileResponseDto.fromEntity(file);
   }
 }

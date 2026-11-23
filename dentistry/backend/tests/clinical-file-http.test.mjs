@@ -34,8 +34,9 @@ test(
       }
     });
     // Nunca usar una conexión desplegada ni un bucket real al importar providers.
-    for (const key of Object.keys(process.env)) {
-      if (key.startsWith('STORAGE_')) delete process.env[key];
+    // Vacías (no borradas) para que dotenv no las rellene desde .env.
+    for (const key of ['PROVIDER', 'ENDPOINT', 'REGION', 'BUCKET', 'ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'FORCE_PATH_STYLE']) {
+      process.env[`STORAGE_${key}`] = '';
     }
     Object.assign(process.env, {
       NODE_ENV: 'test',
@@ -411,7 +412,9 @@ test(
     await t.test('eliminar es lógico, auditado y oculta el archivo', async () => {
       const ticket = await reserveAndPut();
       await request(`${base}/${ticket.file.id}/complete`, 'POST');
-      assert.equal((await request(`${base}/${ticket.file.id}`, 'DELETE')).status, 204);
+      const removed = await request(`${base}/${ticket.file.id}`, 'DELETE');
+      assert.equal(removed.status, 200);
+      assert.equal(removed.body.id, ticket.file.id);
       assert.ok(files.get(ticket.file.id).deletedAt);
       assert.equal(files.get(ticket.file.id).deletedByMembershipId, principal.membershipId);
       assert.ok(objects.has(ticket.key), 'el objeto se conserva hasta definir retención');
