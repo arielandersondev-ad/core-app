@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { timeZoneOffsetMs } from '../time/zoned-time.js';
 
 /** The PostgreSQL date codec uses UTC-midnight Date objects for civil dates. */
 export function parseCivilDate(
@@ -29,28 +30,4 @@ export function startOfCivilDateIn(civilDate: Date, timeZone: string): Date {
   let instant = wallClock - timeZoneOffsetMs(wallClock, timeZone);
   instant = wallClock - timeZoneOffsetMs(instant, timeZone);
   return new Date(instant);
-}
-
-function timeZoneOffsetMs(instant: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hourCycle: 'h23',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(new Date(instant));
-  const value = (type: string) =>
-    Number(parts.find((part) => part.type === type)?.value);
-  const asUtc = Date.UTC(
-    value('year'),
-    value('month') - 1,
-    value('day'),
-    value('hour'),
-    value('minute'),
-    value('second'),
-  );
-  return asUtc - Math.floor(instant / 1000) * 1000;
 }

@@ -1,3 +1,5 @@
+import { civilDateIn, timeIn, wallTimeToInstant } from "@/shared/time/zoned-time";
+
 const CIVIL_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -28,10 +30,12 @@ export function parseDate(value?: string): Date | null {
 
 /**
  * Combina una fecha civil (`YYYY-MM-DD`) y una hora (`HH:mm`) en un instante
- * ISO. Devuelve `null` si la fecha o la hora son inválidas; nunca inventa la
- * hora actual de forma silenciosa.
+ * ISO. Con `timeZone` la hora es la de pared de esa zona (la de la sucursal);
+ * sin ella, la del navegador. Devuelve `null` si la fecha o la hora son
+ * inválidas; nunca inventa la hora actual de forma silenciosa.
  */
-export function buildInstant(date: string, time: string): string | null {
+export function buildInstant(date: string, time: string, timeZone?: string): string | null {
+  if (timeZone) return wallTimeToInstant(date, time, timeZone);
   const dateMatch = CIVIL_DATE_PATTERN.exec(date.trim());
   const timeMatch = TIME_PATTERN.exec(time.trim());
   if (!dateMatch || !timeMatch) return null;
@@ -58,22 +62,30 @@ export function buildInstant(date: string, time: string): string | null {
   return parsed.toISOString();
 }
 
-export function formatDateOnly(iso?: string): string {
+// `timeZone` opcional: sin ella se usa la zona del navegador.
+export function formatDateOnly(iso?: string, timeZone?: string): string {
   const date = parseDate(iso);
   if (!date) return "—";
-  return new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(date);
+  return new Intl.DateTimeFormat("es", { dateStyle: "long", timeZone }).format(date);
 }
 
-export function formatDateTimeShort(iso?: string): string {
+export function formatDateTimeShort(iso?: string, timeZone?: string): string {
   const date = parseDate(iso);
   if (!date) return "—";
-  return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short", timeZone }).format(date);
 }
 
-export function formatTimeOnly(iso?: string): string {
+export function formatTimeOnly(iso?: string, timeZone?: string): string {
   const date = parseDate(iso);
   if (!date) return "—";
-  return new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat("es", { hour: "2-digit", minute: "2-digit", timeZone }).format(date);
+}
+
+/** Día del mes del instante en la zona. */
+export function dayOfMonth(iso: string, timeZone?: string): number {
+  const date = parseDate(iso);
+  if (!date) return 0;
+  return Number(new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone }).format(date));
 }
 
 export function durationLabel(startIso: string, endIso?: string): string {
@@ -91,25 +103,27 @@ export function durationLabel(startIso: string, endIso?: string): string {
   return rest ? `${hours} h ${rest} min` : `${hours} h`;
 }
 
-export function toDateInputValue(iso?: string): string {
+export function toDateInputValue(iso?: string, timeZone?: string): string {
   const date = parseDate(iso);
   if (!date) return "";
+  if (timeZone) return civilDateIn(date, timeZone);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
-export function toTimeInputValue(iso?: string): string {
+export function toTimeInputValue(iso?: string, timeZone?: string): string {
   const date = parseDate(iso);
   if (!date) return "";
+  if (timeZone) return timeIn(date, timeZone);
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-export function nowDateValue(): string {
-  return toDateInputValue(new Date().toISOString());
+export function nowDateValue(timeZone?: string): string {
+  return toDateInputValue(new Date().toISOString(), timeZone);
 }
 
-export function nowTimeValue(): string {
-  return toTimeInputValue(new Date().toISOString());
+export function nowTimeValue(timeZone?: string): string {
+  return toTimeInputValue(new Date().toISOString(), timeZone);
 }

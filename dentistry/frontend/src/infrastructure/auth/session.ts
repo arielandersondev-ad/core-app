@@ -9,7 +9,15 @@ export const REFRESH_LEEWAY_SECONDS = 60;
 
 export type CurrentSession = {
   user: { id: string };
-  context: { membershipId: string; organizationId: string; branchIds: string[] };
+  context: {
+    membershipId: string;
+    organizationId: string;
+    branchIds: string[];
+    /** Zona IANA de la organización; respaldo cuando la sucursal no tiene una. */
+    timeZone?: string;
+    /** Zona IANA de cada sucursal autorizada. */
+    branchTimeZones?: Record<string, string>;
+  };
   permissions: string[];
   /** Plan vigente de la organización; null cuando no hay ninguno. */
   plan: SessionPlan | null;

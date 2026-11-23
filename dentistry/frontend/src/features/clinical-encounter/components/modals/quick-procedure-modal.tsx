@@ -16,6 +16,7 @@ import {
   type QuickProcedureFormValues,
 } from "@/features/clinical-encounter/utils/quick-procedure";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
+import { resolveTimeZone } from "@/shared/time/use-time-zone";
 
 /** Cita de la agenda: fija la sucursal y queda vinculada a la atención. */
 export interface QuickProcedureAppointment {
@@ -46,17 +47,22 @@ export function QuickProcedureModal({ patientId, appointment, onClose, onRegiste
     ...encounterReferenceDataOptions(patientId),
     enabled: choosesBranch,
   });
-  const [values, setValues] = useState<QuickProcedureFormValues>(() => ({
-    branchId: appointment?.branchId ?? (branchIds.length === 1 ? branchIds[0] : ""),
-    appointmentId: appointment?.id,
-    date: nowDateValue(),
-    time: nowTimeValue(),
-    targetType: "TOOTH",
-    toothNumber: "",
-    targetDescription: "",
-    description: "",
-    observations: "",
-  }));
+  const [values, setValues] = useState<QuickProcedureFormValues>(() => {
+    const branchId = appointment?.branchId ?? (branchIds.length === 1 ? branchIds[0] : "");
+    // "Ahora" en la zona de la sucursal (o de la organización si aún no se eligió).
+    const timeZone = resolveTimeZone(session, branchId);
+    return {
+      branchId,
+      appointmentId: appointment?.id,
+      date: nowDateValue(timeZone),
+      time: nowTimeValue(timeZone),
+      targetType: "TOOTH",
+      toothNumber: "",
+      targetDescription: "",
+      description: "",
+      observations: "",
+    };
+  });
   const [error, setError] = useState<string | null>(null);
 
   function update<K extends keyof QuickProcedureFormValues>(key: K, value: QuickProcedureFormValues[K]) {
@@ -69,7 +75,7 @@ export function QuickProcedureModal({ patientId, appointment, onClose, onRegiste
   }
 
   function handleSubmit() {
-    const result = toQuickProcedureInput(values);
+    const result = toQuickProcedureInput(values, new Date(), resolveTimeZone(session, values.branchId));
     if ("error" in result) {
       setError(result.error);
       return;

@@ -40,6 +40,7 @@ import type {
   CompleteClinicalEncounterInput,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import { durationLabel, formatDateOnly, formatDateTimeShort } from "@/features/clinical-encounter/utils/dates";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import {
   canAddProcedures,
   canComplete,
@@ -148,6 +149,7 @@ function EncounterDetailContent({
   const patientId = patient.id;
   const router = useRouter();
   const session = useAuthenticatedSession();
+  const timeZoneOf = useTimeZoneResolver();
   const { toasts, pushToast, dismissToast } = useToasts();
 
   const encounterQuery = useClinicalEncounter(patientId, encounterId);
@@ -207,6 +209,8 @@ function EncounterDetailContent({
   }
 
   const encounter = encounterQuery.data;
+  // Fechas en la zona de la sucursal donde se atendió.
+  const timeZone = timeZoneOf(encounter.branchId);
   const canUpdate = session.permissions.includes(UPDATE_PERMISSION);
   const canVoidEncounter = session.permissions.includes(VOID_PERMISSION);
   // Decisión (A): completar cierra el registro clínico, pero los metadatos de
@@ -320,14 +324,14 @@ function EncounterDetailContent({
   return (
     <PageContainer>
       <PageHeader
-        title={`Atención del ${formatDateOnly(encounter.startedAt)}`}
+        title={`Atención del ${formatDateOnly(encounter.startedAt, timeZone)}`}
         description={`${encounter.practitionerName ?? "Profesional sin asignar"} · ${encounter.branchName ?? "Sucursal sin asignar"}`}
         badge={<StatusBadge status={encounter.status} />}
         breadcrumbs={[
           { label: "Pacientes", href: "/patients" },
           { label: patient.fullName, href: `/patients/${encodeURIComponent(patient.id)}` },
           { label: "Atenciones clínicas", href: listHref },
-          { label: `Atención ${formatDateOnly(encounter.startedAt)}` },
+          { label: `Atención ${formatDateOnly(encounter.startedAt, timeZone)}` },
         ]}
         action={
           <div className="flex flex-wrap gap-2">
@@ -375,7 +379,7 @@ function EncounterDetailContent({
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-success/30 bg-success-subtle px-4 py-3 text-success">
           <span className="mt-0.5 shrink-0">{Icons.check}</span>
           <p className="text-sm">
-            Completada el {formatDateTimeShort(encounter.completedAt)} por{" "}
+            Completada el {formatDateTimeShort(encounter.completedAt, timeZone)} por{" "}
             {encounter.completedByName ?? "—"}. El registro clínico está cerrado; los metadatos de
             archivos siguen siendo gestionables.
           </p>
@@ -385,7 +389,7 @@ function EncounterDetailContent({
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-subtle px-4 py-3 text-warning">
           <span className="mt-0.5 shrink-0">{Icons.alertTriangle}</span>
           <p className="text-sm">
-            Anulada el {formatDateTimeShort(encounter.voidedAt)} ·{" "}
+            Anulada el {formatDateTimeShort(encounter.voidedAt, timeZone)} ·{" "}
             {encounter.voidReason ?? "Sin motivo registrado"}. La evidencia permanece en el historial.
           </p>
         </div>
@@ -395,10 +399,10 @@ function EncounterDetailContent({
         <Panel id="ce-detail-summary" title="Resumen" icon={Icons.clock}>
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
             <InfoRow label="Estado" value={<StatusBadge status={encounter.status} />} />
-            <InfoRow label="Inicio" value={formatDateTimeShort(encounter.startedAt)} />
+            <InfoRow label="Inicio" value={formatDateTimeShort(encounter.startedAt, timeZone)} />
             <InfoRow
               label="Fin"
-              value={encounter.endedAt ? formatDateTimeShort(encounter.endedAt) : "—"}
+              value={encounter.endedAt ? formatDateTimeShort(encounter.endedAt, timeZone) : "—"}
             />
             <InfoRow
               label="Duración"
@@ -414,7 +418,7 @@ function EncounterDetailContent({
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border pt-4 sm:grid-cols-3">
               <InfoRow
                 label="Completada el"
-                value={encounter.completedAt ? formatDateTimeShort(encounter.completedAt) : "—"}
+                value={encounter.completedAt ? formatDateTimeShort(encounter.completedAt, timeZone) : "—"}
               />
               <InfoRow label="Completada por" value={encounter.completedByName ?? "—"} />
             </div>
@@ -424,7 +428,7 @@ function EncounterDetailContent({
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border pt-4 sm:grid-cols-3">
               <InfoRow
                 label="Anulada el"
-                value={encounter.voidedAt ? formatDateTimeShort(encounter.voidedAt) : "—"}
+                value={encounter.voidedAt ? formatDateTimeShort(encounter.voidedAt, timeZone) : "—"}
               />
               <InfoRow label="Motivo de anulación" value={encounter.voidReason ?? "—"} />
             </div>
@@ -599,7 +603,7 @@ function EncounterDetailContent({
                         </p>
                         <p className="font-mono text-[10px] text-muted">
                           {fileCategoryLabels[file.category]} · {formatBytes(file.sizeBytes)} ·{" "}
-                          {formatDateTimeShort(file.createdAt)}
+                          {formatDateTimeShort(file.createdAt, timeZone)}
                         </p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <Badge variant={uploadStatusVariants[file.uploadStatus]}>

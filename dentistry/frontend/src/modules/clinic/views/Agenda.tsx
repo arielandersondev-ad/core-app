@@ -58,7 +58,7 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4 pb-24 h-full">
       <AgendaHeader
-        date={agenda.date} onDateChange={agenda.changeDate} viewMode={agenda.viewMode} onViewModeChange={agenda.setViewMode}
+        date={agenda.date} today={agenda.today} onDateChange={agenda.changeDate} viewMode={agenda.viewMode} onViewModeChange={agenda.setViewMode}
         totalCount={agenda.counters.totalCount} onOpenCreateModal={() => setIsCreateApptOpen(true)}
       />
 
@@ -74,7 +74,7 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
         <AgendaTimeline
           viewMode={agenda.viewMode} isLoading={agenda.isLoading} isError={agenda.isError} onRetry={() => void agenda.refetch()}
           dayAppts={agenda.dayAppts} expandedId={agenda.expandedId} onToggleExpand={agenda.handleToggleExpand}
-          nowDateStr={agenda.nowDateStr} nowMinutes={agenda.nowMinutes} onOpenCreateModal={() => setIsCreateApptOpen(true)}
+          nowDateStr={agenda.nowDateStr} nowMinutes={agenda.nowMinutes} now={agenda.now} onOpenCreateModal={() => setIsCreateApptOpen(true)}
           onOpenDetail={(aptId) => {
             const apt = { id: aptId };
             setSelectedDetailCitaId(apt.id); setIsDetailSheetOpen(true);

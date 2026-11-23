@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { TODAY_DATE } from "@/modules/clinic/__mocks__/data";
 import { addDays } from "./hooks/useAgendaAppointments";
 
 interface AgendaHeaderProps {
   date: string;
+  /** "Hoy" (`YYYY-MM-DD`) en la zona horaria de la organización. */
+  today: string;
   onDateChange: (date: string) => void;
   viewMode: "feed" | "grid";
   onViewModeChange: (mode: "feed" | "grid") => void;
@@ -15,6 +16,7 @@ interface AgendaHeaderProps {
 
 export function AgendaHeader({
   date,
+  today,
   onDateChange,
   viewMode,
   onViewModeChange,
@@ -50,11 +52,11 @@ export function AgendaHeader({
         dayName: cur.toLocaleDateString("es-BO", { weekday: "narrow" }),
         dayNum: cur.getDate(),
         isCurrentDay: iso === date,
-        isToday: iso === TODAY_DATE,
+        isToday: iso === today,
       });
     }
     return days;
-  }, [date]);
+  }, [date, today]);
 
   return (
     <div className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
@@ -135,9 +137,9 @@ export function AgendaHeader({
 
           <button
             type="button"
-            onClick={() => onDateChange(TODAY_DATE)}
+            onClick={() => onDateChange(today)}
             className={`px-3.5 h-8 text-xs font-semibold rounded-full border transition-all active:scale-95 shadow-2xs ${
-              date === TODAY_DATE
+              date === today
                 ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]"
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--background)]"
             }`}

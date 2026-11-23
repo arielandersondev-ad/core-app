@@ -19,7 +19,8 @@ import {
   truncateText,
   type EncounterStatusFilter,
 } from "@/features/clinical-encounter/utils/encounter-filters";
-import { formatDateOnly, formatTimeOnly } from "@/features/clinical-encounter/utils/dates";
+import { dayOfMonth, formatDateOnly, formatTimeOnly } from "@/features/clinical-encounter/utils/dates";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import type { PatientDto } from "@/features/patient/types/patient";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
@@ -172,6 +173,8 @@ function EncounterListResults({
   canCreate: boolean;
 }) {
   const query = useClinicalEncounters(patientId, filters);
+  // Cada atención se muestra en la zona de su sucursal.
+  const timeZoneOf = useTimeZoneResolver();
 
   if (query.isPending) {
     return (
@@ -232,8 +235,8 @@ function EncounterListResults({
       header: "Inicio",
       accessor: (encounter) => (
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">{formatDateOnly(encounter.startedAt)}</p>
-          <p className="font-mono text-[11px] text-muted">{formatTimeOnly(encounter.startedAt)}</p>
+          <p className="text-sm font-medium text-foreground">{formatDateOnly(encounter.startedAt, timeZoneOf(encounter.branchId))}</p>
+          <p className="font-mono text-[11px] text-muted">{formatTimeOnly(encounter.startedAt, timeZoneOf(encounter.branchId))}</p>
         </div>
       ),
     },
@@ -305,14 +308,14 @@ function EncounterListResults({
         <MobileCardItem
           avatar={
             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle font-mono text-[11px] font-semibold text-primary">
-              {new Date(encounter.startedAt).getDate()}
+              {dayOfMonth(encounter.startedAt, timeZoneOf(encounter.branchId))}
             </span>
           }
-          title={formatDateOnly(encounter.startedAt)}
+          title={formatDateOnly(encounter.startedAt, timeZoneOf(encounter.branchId))}
           subtitle={truncateText(describeEncounterSubtitle(encounter), 90) || "Sin motivo registrado"}
           badge={<ClinicalEncounterStatusBadge status={encounter.status} />}
           fields={[
-            { label: "Inicio", value: formatTimeOnly(encounter.startedAt), mono: true },
+            { label: "Inicio", value: formatTimeOnly(encounter.startedAt, timeZoneOf(encounter.branchId)), mono: true },
             {
               label: "Procedimientos",
               value: formatProcedureCount(countRecordedProcedures(encounter.procedures)),

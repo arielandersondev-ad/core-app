@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Badge, Button, EmptyState, Icons, Select } from "@/shared/components/ui";
 import { PatientContextBoundary } from "@/features/clinical-encounter/components/patient-context-boundary";
@@ -188,13 +189,13 @@ function ClinicalEncounterCreateForm({
   const create = useCreateClinicalEncounter();
   const { toasts, pushToast, dismissToast } = useToasts();
 
-  const [values, setValues] = useState<CreateEncounterFormValues>(() =>
-    applyCreateDefaults(
-      { ...emptyCreateForm(), startDate: nowDateValue(), startTime: nowTimeValue() },
-      data,
-      requestedAppointmentId,
-    ),
-  );
+  const timeZoneOf = useTimeZoneResolver();
+  const [values, setValues] = useState<CreateEncounterFormValues>(() => {
+    const defaults = applyCreateDefaults(emptyCreateForm(), data, requestedAppointmentId);
+    // "Ahora" en la zona de la sucursal preseleccionada (o de la organización).
+    const timeZone = timeZoneOf(defaults.branchId);
+    return { ...defaults, startDate: nowDateValue(timeZone), startTime: nowTimeValue(timeZone) };
+  });
   const [procedureModalOpen, setProcedureModalOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [partialEncounterId, setPartialEncounterId] = useState<string | null>(null);
@@ -254,7 +255,7 @@ function ClinicalEncounterCreateForm({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const result = toCreateInput(values, patientId);
+    const result = toCreateInput(values, patientId, timeZoneOf(values.branchId));
     if ("error" in result) {
       setFormError(result.error);
       setPartialEncounterId(null);

@@ -56,8 +56,10 @@ export function buildCompleteInput(
   date: string,
   time: string,
   procedureSummary?: string | null,
+  /** Zona de la sucursal de la atención. */
+  timeZone?: string,
 ): CompleteClinicalEncounterInput | null {
-  const endedAt = buildInstant(date, time);
+  const endedAt = buildInstant(date, time, timeZone);
   if (!endedAt) return null;
 
   const summary = procedureSummary?.trim();

@@ -14,6 +14,7 @@ import { useAppointmentDetail } from "@/modules/clinic/hooks";
 import { fetchPatientById } from "@/features/patient/services/patient.service";
 import { fetchDentalServices, DentalServiceDto } from "@/modules/clinic/api/services";
 import { normalizePhoneNumber } from "@/shared/utils/whatsapp-generator";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import { AppointmentEncounterActions } from "@/features/clinical-encounter/components/appointment-encounter-actions";
 import type { AppointmentProcedureTarget } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 
@@ -225,9 +226,12 @@ export function AppointmentDetailSheet({
     };
   }, [open, citaId, initialAppointment]);
 
+  const timeZoneOf = useTimeZoneResolver();
+
   if (!open) return null;
 
-  // Formatting helpers
+  // Fechas en la zona de la sucursal de la cita.
+  const timeZone = timeZoneOf(appointment?.branchId);
   const startDate = appointment ? new Date(appointment.scheduledStartAt) : null;
   const endDate = appointment ? new Date(appointment.scheduledEndAt) : null;
 
@@ -237,15 +241,16 @@ export function AppointmentDetailSheet({
         day: "numeric",
         month: "long",
         year: "numeric",
+        timeZone,
       })
     : "Fecha no disponible";
 
   const startTimeStr = startDate && !Number.isNaN(startDate.getTime())
-    ? startDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })
+    ? startDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone })
     : "--:--";
 
   const endTimeStr = endDate && !Number.isNaN(endDate.getTime())
-    ? endDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })
+    ? endDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone })
     : "--:--";
 
   const durationMinutes = startDate && endDate

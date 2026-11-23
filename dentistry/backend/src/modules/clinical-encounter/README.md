@@ -43,6 +43,9 @@ para viajar en el token. Este módulo no crea permisos.
   (`application/clinical-encounter.errors.ts`).
 - `branchName`, `practitionerName` y `completedByName` se leen de Core por id;
   si no se resuelven quedan en `null`.
+- `startedAt`, `endedAt` y `performedAt` aceptan un instante con zona (`Z` o
+  `±hh:mm`) o una hora de pared sin zona (`2026-11-22T09:00`), que se interpreta
+  en la zona de la sucursal (o de la organización si la sucursal no tiene una).
 
 Pendiente: archivos y radiografías (E6), anular/corregir procedimientos (P8) y
 búsqueda por nombre de profesional o sucursal en el listado.

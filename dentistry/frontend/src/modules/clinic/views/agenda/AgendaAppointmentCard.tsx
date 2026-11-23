@@ -27,6 +27,7 @@ interface AgendaAppointmentCardProps {
   onRegisterProcedure: () => void;
   nowDateStr: string;
   nowMinutes: number;
+  now?: Date;
 }
 
 export function AgendaAppointmentCard({
@@ -39,8 +40,9 @@ export function AgendaAppointmentCard({
   onRegisterProcedure,
   nowDateStr,
   nowMinutes,
+  now,
 }: AgendaAppointmentCardProps) {
-  const isOverdue = isAppointmentOverdue(apt, nowDateStr, nowMinutes);
+  const isOverdue = isAppointmentOverdue(apt, nowDateStr, nowMinutes, now);
   const svc = getServiceById(apt.serviceId);
   const doctor = getDoctorDisplay(apt.professionalId);
   const isPerson = isPersonaAppointment(apt);

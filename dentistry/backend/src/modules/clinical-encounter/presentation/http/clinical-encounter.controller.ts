@@ -10,7 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { TimeZoneResolver } from '../../../../common/infrastructure/time-zone.resolver.js';
 import type { PaginatedResult } from '../../../../common/pagination/pagination.js';
+import { needsTimeZone, parseZonedInstant } from '../../../../common/validation/zoned-instant.js';
 import type { DentistryPrincipal } from '../../../auth/application/contracts/dentistry-principal.js';
 import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/current-principal.decorator.js';
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
@@ -59,6 +61,7 @@ export class ClinicalEncounterController {
     private readonly voidUseCase: VoidClinicalEncounterUseCase,
     private readonly referenceDataUseCase: GetEncounterReferenceDataUseCase,
     private readonly quickProcedureUseCase: RegisterQuickProcedureUseCase,
+    private readonly timeZones: TimeZoneResolver,
   ) {}
 
   @Get()
@@ -122,6 +125,10 @@ export class ClinicalEncounterController {
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Body() dto: CreateClinicalEncounterDto,
   ): Promise<ClinicalEncounterResponseDto> {
+    // Sin zona explícita, la hora es la de pared de la sucursal de la atención.
+    const timeZone = needsTimeZone(dto.startedAt)
+      ? await this.timeZones.forBranch(principal.organizationId, dto.branchId)
+      : 'UTC';
     const encounter = await this.createUseCase.execute({
       organizationId: principal.organizationId,
       patientId,
@@ -130,7 +137,7 @@ export class ClinicalEncounterController {
       branchId: dto.branchId,
       appointmentId: dto.appointmentId,
       treatmentId: dto.treatmentId,
-      startedAt: new Date(dto.startedAt),
+      startedAt: parseZonedInstant(dto.startedAt, timeZone, 'startedAt'),
       chiefComplaint: dto.chiefComplaint,
       examinationSummary: dto.examinationSummary,
       diagnosisSummary: dto.diagnosisSummary,
@@ -152,13 +159,18 @@ export class ClinicalEncounterController {
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Body() dto: RegisterQuickProcedureDto,
   ): Promise<ClinicalEncounterResponseDto> {
+    const timeZone = needsTimeZone(dto.performedAt)
+      ? await this.timeZones.forBranch(principal.organizationId, dto.branchId)
+      : 'UTC';
     const encounter = await this.quickProcedureUseCase.execute({
       organizationId: principal.organizationId,
       patientId,
       authorizedBranchIds: principal.branchIds,
       branchId: dto.branchId,
       appointmentId: dto.appointmentId,
-      performedAt: dto.performedAt ? new Date(dto.performedAt) : undefined,
+      performedAt: dto.performedAt
+        ? parseZonedInstant(dto.performedAt, timeZone, 'performedAt')
+        : undefined,
       procedureSummary: dto.procedureSummary,
       procedures: dto.procedures,
       actorMembershipId: principal.membershipId,
@@ -194,12 +206,15 @@ export class ClinicalEncounterController {
     @Param('encounterId', ParseUUIDPipe) encounterId: string,
     @Body() dto: CompleteClinicalEncounterDto,
   ): Promise<ClinicalEncounterResponseDto> {
+    const timeZone = needsTimeZone(dto.endedAt)
+      ? await this.timeZones.forEncounter(principal.organizationId, encounterId)
+      : 'UTC';
     const encounter = await this.completeUseCase.execute({
       organizationId: principal.organizationId,
       patientId,
       encounterId,
       authorizedBranchIds: principal.branchIds,
-      endedAt: new Date(dto.endedAt),
+      endedAt: parseZonedInstant(dto.endedAt, timeZone, 'endedAt'),
       procedureSummary: dto.procedureSummary,
       actorMembershipId: principal.membershipId,
     });
