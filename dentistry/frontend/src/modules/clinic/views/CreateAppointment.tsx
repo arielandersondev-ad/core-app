@@ -5,12 +5,15 @@ import {
   patients,
   services,
   professionals,
-  TODAY_DATE,
   formatCurrency,
 } from "@/modules/clinic/__mocks__/data";
 import { Select, Button } from "@/shared/components/ui";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { createAppointment } from "@/modules/clinic/api/appointments";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
+import { todayIn, wallTimeToInstant } from "@/shared/time/zoned-time";
+
+const LEGACY_BRANCH_ID = "018f0000-0000-7000-0000-000000000002";
 import { Icons } from "@/shared/components/ui/Icons";
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { DentalWhatsAppContext } from "@/shared/utils/whatsapp-generator";
@@ -22,14 +25,15 @@ export default function CreateAppointment({
   patientId?: string;
   onBack: () => void;
 }) {
-  const [form, setForm] = useState({
+  const timeZoneOf = useTimeZoneResolver();
+  const [form, setForm] = useState(() => ({
     patientId: patientId ?? "",
     professionalId: professionals[0]?.id ?? "",
     serviceIds: [] as string[],
-    date: TODAY_DATE,
+    date: todayIn(timeZoneOf(LEGACY_BRANCH_ID)),
     startTime: "09:00",
     notes: "",
-  });
+  }));
   const [serviceToAdd, setServiceToAdd] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,14 +106,21 @@ export default function CreateAppointment({
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const startIso = `${form.date}T${form.startTime}:00.000Z`;
+    // Hora de pared de la sucursal, convertida a instante.
+    const timeZone = timeZoneOf(LEGACY_BRANCH_ID);
     const endTime = calcEnd() || "10:00";
-    const endIso = `${form.date}T${endTime}:00.000Z`;
+    const startIso = wallTimeToInstant(form.date, form.startTime, timeZone);
+    const endIso = wallTimeToInstant(form.date, endTime, timeZone);
+    if (!startIso || !endIso) {
+      setErrors({ startTime: "Indica una fecha y una hora válidas." });
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       await createAppointment({
         organizationId: "018f0000-0000-7000-0000-000000000001",
-        branchId: "018f0000-0000-7000-0000-000000000002",
+        branchId: LEGACY_BRANCH_ID,
         patientId: form.patientId,
         practitionerMembershipId: form.professionalId,
         serviceId: form.serviceIds[0],

@@ -9,6 +9,7 @@
   "scripts": {
     "build": "nest build",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "storage:smoke": "node scripts/storage-smoke.mjs",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -18,6 +19,8 @@
   },
   "dependencies": {
     "@app/db": "file:../../packages/db",
+    "@aws-sdk/client-s3": "3.1175.0",
+    "@aws-sdk/s3-request-presigner": "3.1175.0",
     "@nestjs/common": "11.0.1",
     "@nestjs/core": "11.0.1",
     "@nestjs/platform-express": "11.0.1",

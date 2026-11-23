@@ -26,7 +26,9 @@ const BASIC = {
 test('deriva los módulos de las funciones del plan y lee sus límites', () => {
   const result = parsePlanEntitlements(BASIC);
   assert.deepEqual(result.modules, ['patients', 'agenda', 'appointments', 'procedures']);
-  assert.deepEqual(result.limits, { patients: 300, members: 2, branches: 1 });
+  assert.deepEqual(result.limits, {
+    patients: 300, members: 2, branches: 1, fileStorageBytes: null, filesPerPatient: null,
+  });
   assert.equal(isModuleEnabled(result, 'agenda'), true);
   assert.equal(isModuleEnabled(result, 'payments'), false);
   assert.equal(isModuleEnabled(result, 'inventory'), false);
@@ -39,11 +41,25 @@ test('solo una función en true habilita su módulo', () => {
   assert.deepEqual(result.modules, ['inventory']);
 });
 
+test('la función files habilita archivos y sus cupos se leen del plan', () => {
+  const result = parsePlanEntitlements({
+    ...BASIC,
+    limits: { ...BASIC.limits, fileStorageBytes: 2147483648, filesPerPatient: 50 },
+    features: { ...BASIC.features, files: true },
+  });
+  assert.equal(isModuleEnabled(result, 'files'), true);
+  assert.equal(result.limits.fileStorageBytes, 2147483648);
+  assert.equal(result.limits.filesPerPatient, 50);
+  assert.equal(isModuleEnabled(parsePlanEntitlements(BASIC), 'files'), false);
+});
+
 test('un snapshot antiguo sin funciones no restringe y sin límites no aplica cupo', () => {
   const result = parsePlanEntitlements({ schemaVersion: 1, limits: { patients: 0, users: 2 } });
   assert.equal(result.modules, null);
   assert.equal(isModuleEnabled(result, 'payments'), true);
-  assert.deepEqual(result.limits, { patients: null, members: null, branches: null });
+  assert.deepEqual(result.limits, {
+    patients: null, members: null, branches: null, fileStorageBytes: null, filesPerPatient: null,
+  });
   assert.deepEqual(parsePlanEntitlements(null).limits.patients, null);
 });
 

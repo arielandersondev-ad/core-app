@@ -16,5 +16,6 @@ export const PLAN_FEATURES: Readonly<Record<PlanVertical, readonly PlanFeatureOp
     { code: 'services', label: 'Servicios' },
     { code: 'treatments', label: 'Tratamientos' },
     { code: 'payments', label: 'Pagos' },
+    { code: 'files', label: 'Archivos clínicos' },
   ],
 };

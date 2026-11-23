@@ -24,6 +24,11 @@ import { CurrentPrincipal } from '../../../auth/presentation/http/decorators/cur
 import { RequirePermission } from '../../../auth/presentation/http/decorators/require-permission.decorator.js';
 import { DentistryJwtGuard } from '../../../auth/presentation/http/guards/dentistry-jwt.guard.js';
 import { DentistryPermissionGuard } from '../../../auth/presentation/http/guards/dentistry-permission.guard.js';
+import { TimeZoneResolver } from '../../../../common/infrastructure/time-zone.resolver.js';
+import { endOfDayIn, startOfDayIn } from '../../../../common/time/zoned-time.js';
+import { needsTimeZone, parseZonedInstant } from '../../../../common/validation/zoned-instant.js';
+
+const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 @Controller('appointments')
 @UseGuards(DentistryJwtGuard, DentistryPermissionGuard)
@@ -34,6 +39,7 @@ export class AppointmentController {
     private readonly getAppointmentByIdUseCase: GetAppointmentByIdUseCase,
     private readonly updateAppointmentStatusUseCase: UpdateAppointmentStatusUseCase,
     private readonly cancelAppointmentUseCase: CancelAppointmentUseCase,
+    private readonly timeZones: TimeZoneResolver,
   ) {}
 
   @Post()
@@ -42,6 +48,10 @@ export class AppointmentController {
     @CurrentPrincipal() principal: DentistryPrincipal,
     @Body() dto: CreateAppointmentDto,
   ) {
+    // Sin zona explícita, la hora es la de pared de la sucursal de la cita.
+    const timeZone = needsTimeZone(dto.scheduledStartAt, dto.scheduledEndAt)
+      ? await this.timeZones.forBranch(principal.organizationId, dto.branchId)
+      : 'UTC';
     return this.createAppointmentUseCase.execute({
       organizationId: principal.organizationId,
       branchId: dto.branchId,
@@ -52,8 +62,8 @@ export class AppointmentController {
       serviceId: dto.serviceId,
       serviceIds: dto.serviceIds,
       treatmentId: dto.treatmentId,
-      scheduledStartAt: new Date(dto.scheduledStartAt),
-      scheduledEndAt: new Date(dto.scheduledEndAt),
+      scheduledStartAt: parseZonedInstant(dto.scheduledStartAt, timeZone, 'scheduledStartAt'),
+      scheduledEndAt: parseZonedInstant(dto.scheduledEndAt, timeZone, 'scheduledEndAt'),
       reason: dto.reason,
       notes: dto.notes,
       createdByMembershipId: principal.membershipId,
@@ -69,14 +79,24 @@ export class AppointmentController {
     if (query.branchId && !principal.branchIds.includes(query.branchId)) {
       throw new ForbiddenException('No tiene acceso a la sucursal indicada.');
     }
-    let startDate = query.startDate ? new Date(query.startDate) : undefined;
-    let endDate = query.endDate ? new Date(query.endDate) : undefined;
-
-    // Si se pasa un parámetro de fecha específica ej. '2026-09-01', abarca todo ese día
-    if (query.date && !startDate && !endDate) {
-      startDate = new Date(`${query.date}T00:00:00.000Z`);
-      endDate = new Date(`${query.date}T23:59:59.999Z`);
-    }
+    // Fechas sin zona: hora de pared de la sucursal filtrada o de la organización.
+    const timeZone = needsTimeZone(query.startDate, query.endDate)
+      ? query.branchId
+        ? await this.timeZones.forBranch(principal.organizationId, query.branchId)
+        : await this.timeZones.forOrganization(principal.organizationId)
+      : 'UTC';
+    const startDate = query.startDate
+      ? CIVIL_DATE.test(query.startDate)
+        ? (startOfDayIn(query.startDate, timeZone) ?? undefined)
+        : parseZonedInstant(query.startDate, timeZone, 'startDate')
+      : undefined;
+    const endDate = query.endDate
+      ? CIVIL_DATE.test(query.endDate)
+        ? (endOfDayIn(query.endDate, timeZone) ?? undefined)
+        : parseZonedInstant(query.endDate, timeZone, 'endDate')
+      : undefined;
+    // `date=YYYY-MM-DD`: el día completo en la zona de la sucursal de cada cita.
+    const civilDate = query.date && !startDate && !endDate ? query.date : undefined;
 
     return this.listAppointmentsUseCase.execute({
       organizationId: principal.organizationId,
@@ -86,6 +106,7 @@ export class AppointmentController {
       practitionerMembershipId: query.practitionerMembershipId,
       startDate,
       endDate,
+      civilDate,
       status: query.status,
     });
   }

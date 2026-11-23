@@ -8,7 +8,7 @@ listado `{ items, pagination }`, permisos `dentistry:encounters:*`, profesional
 
 | Operación | Permiso |
 | --- | --- |
-| `GET /patients/:patientId/clinical-encounters` | `dentistry:encounters:read` |
+| `GET /patients/:patientId/clinical-encounters` (filtros `status`, `practitionerMembershipId`, `appointmentId`, `search`) | `dentistry:encounters:read` |
 | `GET /patients/:patientId/clinical-encounters/reference-data` | `dentistry:encounters:read` |
 | `GET /patients/:patientId/clinical-encounters/:encounterId` | `dentistry:encounters:read` |
 | `POST /patients/:patientId/clinical-encounters` | `dentistry:encounters:create` |
@@ -43,6 +43,9 @@ para viajar en el token. Este módulo no crea permisos.
   (`application/clinical-encounter.errors.ts`).
 - `branchName`, `practitionerName` y `completedByName` se leen de Core por id;
   si no se resuelven quedan en `null`.
+- `startedAt`, `endedAt` y `performedAt` aceptan un instante con zona (`Z` o
+  `±hh:mm`) o una hora de pared sin zona (`2026-11-22T09:00`), que se interpreta
+  en la zona de la sucursal (o de la organización si la sucursal no tiene una).
 
 Pendiente: archivos y radiografías (E6), anular/corregir procedimientos (P8) y
 búsqueda por nombre de profesional o sucursal en el listado.
@@ -52,4 +55,22 @@ búsqueda por nombre de profesional o sucursal en el listado.
 - Ambos controladores exigen la función `clinicalHistory` del plan (`@RequireModule('patients')`).
 - `POST .../quick` exige además `procedureNotes` (`@RequireModule('procedures')`). Body: `{ branchId, performedAt?, appointmentId?, procedureSummary?, procedures: [{ targetType, toothNumber?, targetDescription?, description }] }` (1–50 procedimientos).
 - Crea en una transacción una atención ya `COMPLETED` (inicio = fin = `performedAt`, por defecto ahora) a nombre de la membresía de la sesión, con sus procedimientos. Responde 201 con la atención.
-- La cita, si se envía, solo queda vinculada: su estado no cambia. Aplican las mismas reglas que en el alta (404, 422 `APPOINTMENT_NOT_ELIGIBLE`, 409 `ENCOUNTER_APPOINTMENT_TAKEN`).
+- La cita, si se envía, queda vinculada y pasa a `COMPLETED` (ver abajo). Aplican las mismas reglas que en el alta (404, 422 `APPOINTMENT_NOT_ELIGIBLE`, 409 `ENCOUNTER_APPOINTMENT_TAKEN`).
+
+## Sincronización con la cita
+
+La regla vive en `domain/appointment-sync.ts` y el repositorio la aplica en la
+misma transacción que la atención (concurrencia optimista con la `rowVersion`
+de la cita; si cambió entretanto, 409 `APPOINTMENT_CHANGED` y no se guarda nada).
+
+| Acción | Cita |
+| --- | --- |
+| Crear la atención con `appointmentId` | `SCHEDULED`/`CONFIRMED`/`WAITING_ROOM` → `IN_PROGRESS` |
+| Completar la atención | `SCHEDULED`/`CONFIRMED`/`WAITING_ROOM`/`IN_PROGRESS` → `COMPLETED` |
+| Atención rápida con `appointmentId` | igual que completar |
+| Anular la atención | no cambia |
+
+Nunca se retrocede: una cita ya `COMPLETED` admite una atención (para registrar
+después lo hecho) pero conserva su estado. `GET ...?appointmentId=` devuelve la
+atención de una cita (a lo sumo una, incluida la anulada); la agenda la usa para
+decidir entre "Atender"/"Registrar procedimiento" y "Ver atención".

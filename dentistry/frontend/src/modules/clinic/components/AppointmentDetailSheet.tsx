@@ -14,6 +14,9 @@ import { useAppointmentDetail } from "@/modules/clinic/hooks";
 import { fetchPatientById } from "@/features/patient/services/patient.service";
 import { fetchDentalServices, DentalServiceDto } from "@/modules/clinic/api/services";
 import { normalizePhoneNumber } from "@/shared/utils/whatsapp-generator";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
+import { AppointmentEncounterActions } from "@/features/clinical-encounter/components/appointment-encounter-actions";
+import type { AppointmentProcedureTarget } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 
 interface AppointmentDetailSheetProps {
   open: boolean;
@@ -23,6 +26,7 @@ interface AppointmentDetailSheetProps {
   onStatusUpdated?: (citaId: string, newStatus: string) => void;
   onOpenPayment?: (citaId: string, patientId?: string, amount?: number) => void;
   onOpenWhatsApp?: (patientName: string, patientPhone: string, serviceName: string, dateStr: string, timeStr: string) => void;
+  onRegisterProcedure?: (target: AppointmentProcedureTarget) => void;
 }
 
 const statusLabels: Record<string, string> = {
@@ -53,6 +57,7 @@ export function AppointmentDetailSheet({
   onStatusUpdated,
   onOpenPayment,
   onOpenWhatsApp,
+  onRegisterProcedure,
 }: AppointmentDetailSheetProps) {
   const [appointment, setAppointment] = useState<AppointmentDto | null>(
     initialAppointment || null,
@@ -221,9 +226,12 @@ export function AppointmentDetailSheet({
     };
   }, [open, citaId, initialAppointment]);
 
+  const timeZoneOf = useTimeZoneResolver();
+
   if (!open) return null;
 
-  // Formatting helpers
+  // Fechas en la zona de la sucursal de la cita.
+  const timeZone = timeZoneOf(appointment?.branchId);
   const startDate = appointment ? new Date(appointment.scheduledStartAt) : null;
   const endDate = appointment ? new Date(appointment.scheduledEndAt) : null;
 
@@ -233,15 +241,16 @@ export function AppointmentDetailSheet({
         day: "numeric",
         month: "long",
         year: "numeric",
+        timeZone,
       })
     : "Fecha no disponible";
 
   const startTimeStr = startDate && !Number.isNaN(startDate.getTime())
-    ? startDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })
+    ? startDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone })
     : "--:--";
 
   const endTimeStr = endDate && !Number.isNaN(endDate.getTime())
-    ? endDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" })
+    ? endDate.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone })
     : "--:--";
 
   const durationMinutes = startDate && endDate
@@ -413,7 +422,7 @@ export function AppointmentDetailSheet({
                   className="w-full text-left px-3 py-2 hover:bg-[var(--surface-subtle)] flex items-center gap-2 text-[var(--foreground)] transition-colors"
                 >
                   <span className="text-amber-600 font-bold">🦷</span>
-                  <span>Iniciar atención (Pasar a sillón)</span>
+                  <span>Pasar a sillón</span>
                 </button>
               )}
 
@@ -424,7 +433,7 @@ export function AppointmentDetailSheet({
                   className="w-full text-left px-3 py-2 hover:bg-[var(--surface-subtle)] flex items-center gap-2 text-[var(--foreground)] transition-colors"
                 >
                   <span className="text-zinc-600 font-bold">🏁</span>
-                  <span>Completar atención</span>
+                  <span>Marcar cita como completada</span>
                 </button>
               )}
 
@@ -595,6 +604,25 @@ export function AppointmentDetailSheet({
                 )}
               </div>
             </div>
+
+            {/* Atención clínica: solo con la cita ya leída del backend (estado y sucursal reales) */}
+            {appointment?.organizationId && appointment.patientId && appointment.branchId && (
+              <AppointmentEncounterActions
+                layout="panel"
+                patientId={appointment.patientId}
+                appointmentId={appointment.id}
+                appointmentStatus={appointment.status}
+                onRegisterProcedure={() =>
+                  onRegisterProcedure?.({
+                    patientId: appointment.patientId,
+                    appointmentId: appointment.id,
+                    branchId: appointment.branchId,
+                    label: [patientDetails?.name, `${startTimeStr} – ${endTimeStr}`].filter(Boolean).join(" · "),
+                    patientName: patientDetails?.name,
+                  })
+                }
+              />
+            )}
 
             {/* SECCIÓN 2: Programación & Horario (Read-only) */}
             <div className="grid grid-cols-2 gap-3">

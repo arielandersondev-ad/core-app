@@ -29,6 +29,11 @@ export class ListClinicalEncountersQueryDto extends PaginationQueryDto {
   @IsUUID('all')
   practitionerMembershipId?: string;
 
+  /** Atención de una cita (a lo sumo una, incluida la anulada). */
+  @IsOptional()
+  @IsUUID('all')
+  appointmentId?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(100)

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { appointmentSyncFor } from '../../domain/appointment-sync.js';
 import {
   ENCOUNTER_TEXT_FIELDS,
   type ClinicalEncounter,
@@ -71,16 +72,20 @@ export class CreateClinicalEncounterUseCase {
       ]),
     ) as EncounterTexts;
 
-    return this.encounterRepository.create({
-      ...scope,
-      ...texts,
-      branchId: command.branchId,
-      // P6: el profesional responsable es siempre la membresía de la sesión.
-      practitionerMembershipId: command.actorMembershipId,
-      appointmentId: command.appointmentId ?? null,
-      treatmentId: command.treatmentId ?? null,
-      startedAt: command.startedAt,
-      createdByMembershipId: command.actorMembershipId,
-    });
+    // La cita pasa a "en curso" junto con el alta de la atención.
+    return this.encounterRepository.create(
+      {
+        ...scope,
+        ...texts,
+        branchId: command.branchId,
+        // P6: el profesional responsable es siempre la membresía de la sesión.
+        practitionerMembershipId: command.actorMembershipId,
+        appointmentId: command.appointmentId ?? null,
+        treatmentId: command.treatmentId ?? null,
+        startedAt: command.startedAt,
+        createdByMembershipId: command.actorMembershipId,
+      },
+      appointmentSyncFor('STARTED', command.appointmentId),
+    );
   }
 }

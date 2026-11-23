@@ -9,6 +9,7 @@ import type {
   EncounterTexts,
   ProcedureTargetType,
 } from '../entities/clinical-encounter.entity.js';
+import type { AppointmentStatusSync } from '../appointment-sync.js';
 
 export type EncounterScope = {
   organizationId: string;
@@ -19,6 +20,7 @@ export type FindEncountersFilters = EncounterScope & {
   authorizedBranchIds: string[];
   status?: ClinicalEncounterStatus;
   practitionerMembershipId?: string;
+  appointmentId?: string;
   search?: string;
 } & PaginationInput;
 
@@ -86,25 +88,36 @@ export abstract class ClinicalEncounterRepository {
     id: string,
   ): Promise<ClinicalEncounter | null>;
 
-  /** Lanza 409 si la cita ya tiene una atención (unique de `appointmentId`). */
-  abstract create(data: ClinicalEncounterCreateData): Promise<ClinicalEncounter>;
+  /**
+   * Lanza 409 si la cita ya tiene una atención (unique de `appointmentId`).
+   * Con `appointmentSync`, avanza el estado de la cita en la misma transacción.
+   */
+  abstract create(
+    data: ClinicalEncounterCreateData,
+    appointmentSync?: AppointmentStatusSync | null,
+  ): Promise<ClinicalEncounter>;
 
   /**
    * Atención rápida: crea la atención ya `COMPLETED` (inicio = fin = `startedAt`)
    * con sus procedimientos en una sola transacción. Lanza 409 si la cita ya
-   * tiene una atención.
+   * tiene una atención. Con `appointmentSync`, avanza la cita en esa transacción.
    */
   abstract createCompletedWithProcedures(
     data: ClinicalEncounterCreateData,
     procedures: ProcedureCreateData[],
+    appointmentSync?: AppointmentStatusSync | null,
   ): Promise<ClinicalEncounter>;
 
-  /** Devuelve null si la atención cambió de versión o de estado entretanto. */
+  /**
+   * Devuelve null si la atención cambió de versión o de estado entretanto.
+   * Con `appointmentSync`, avanza la cita en la misma transacción.
+   */
   abstract transition(
     scope: EncounterScope,
     id: string,
     expectedRowVersion: number,
     change: EncounterTransition,
+    appointmentSync?: AppointmentStatusSync | null,
   ): Promise<ClinicalEncounter | null>;
 
   /**

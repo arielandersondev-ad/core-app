@@ -30,10 +30,13 @@ interface AgendaTimelineProps {
   onToggleExpand: (aptId: string) => void;
   nowDateStr: string;
   nowMinutes: number;
+  /** Instante actual; con él, cada cita se evalúa en la zona de su sucursal. */
+  now?: Date;
   onOpenCreateModal: () => void;
   onOpenDetail: (aptId: string) => void;
   onOpenWhatsApp: (apt: Appointment) => void;
   onStatusChange: (aptId: string, newStatus: QuickStatus) => void;
+  onRegisterProcedure: (apt: Appointment) => void;
 }
 
 export function AgendaTimeline({
@@ -46,10 +49,12 @@ export function AgendaTimeline({
   onToggleExpand,
   nowDateStr,
   nowMinutes,
+  now,
   onOpenCreateModal,
   onOpenDetail,
   onOpenWhatsApp,
   onStatusChange,
+  onRegisterProcedure,
 }: AgendaTimelineProps) {
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -125,6 +130,7 @@ export function AgendaTimeline({
                 apt,
                 nowDateStr,
                 nowMinutes,
+                now,
               );
               const showOverdueDivider =
                 isOverdue &&
@@ -133,6 +139,7 @@ export function AgendaTimeline({
                   dayAppts[index - 1],
                   nowDateStr,
                   nowMinutes,
+                  now,
                 );
 
               return (
@@ -186,8 +193,10 @@ export function AgendaTimeline({
                       onOpenDetail={() => onOpenDetail(apt.id)}
                       onOpenWhatsApp={() => onOpenWhatsApp(apt)}
                       onStatusChange={(status) => onStatusChange(apt.id, status)}
+                      onRegisterProcedure={() => onRegisterProcedure(apt)}
                       nowDateStr={nowDateStr}
                       nowMinutes={nowMinutes}
+                      now={now}
                     />
                   </div>
                 </Fragment>

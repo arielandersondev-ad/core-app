@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
 
 export class ListAppointmentsQueryDto {
   @IsOptional()
@@ -13,8 +13,10 @@ export class ListAppointmentsQueryDto {
   @IsUUID('all')
   practitionerMembershipId?: string;
 
+  /** Día de calendario en la zona horaria de la sucursal de cada cita. */
   @IsOptional()
-  @IsDateString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date debe tener el formato YYYY-MM-DD' })
+  @IsDateString({ strict: true })
   date?: string;
 
   @IsOptional()

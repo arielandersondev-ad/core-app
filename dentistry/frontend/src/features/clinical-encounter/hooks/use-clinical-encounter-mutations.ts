@@ -9,6 +9,7 @@ import {
   clinicalEncounterVoidOptions,
   clinicalFileAddOptions,
   clinicalFileRemoveOptions,
+  clinicalFileUpdateOptions,
   patientHealthProfileSaveOptions,
 } from "@/features/clinical-encounter/api/query-options";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
@@ -53,6 +54,12 @@ export function useAddClinicalFile(patientId: string) {
   const client = useQueryClient();
   const session = useAuthenticatedSession();
   return useMutation(clinicalFileAddOptions(client, session, patientId));
+}
+
+export function useUpdateClinicalFile(patientId: string) {
+  const client = useQueryClient();
+  const session = useAuthenticatedSession();
+  return useMutation(clinicalFileUpdateOptions(client, session, patientId));
 }
 
 export function useRemoveClinicalFile(patientId: string) {

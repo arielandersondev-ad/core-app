@@ -87,6 +87,8 @@ function normalizeOptionalId(value: string): string | undefined {
 export function toCreateInput(
   values: CreateEncounterFormValues,
   patientId: string,
+  /** Zona de la sucursal; la fecha y la hora son las de pared de esa zona. */
+  timeZone?: string,
 ): CreateEncounterValidationResult {
   const branchId = values.branchId.trim();
   if (!branchId) {
@@ -96,7 +98,7 @@ export function toCreateInput(
     };
   }
 
-  const startedAt = buildInstant(values.startDate, values.startTime);
+  const startedAt = buildInstant(values.startDate, values.startTime, timeZone);
   if (!startedAt) {
     return {
       error: "Indica una fecha y una hora de inicio válidas.",

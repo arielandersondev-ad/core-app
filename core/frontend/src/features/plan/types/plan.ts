@@ -45,6 +45,10 @@ export type PlanEntitlementLimits = {
   patients?: number | null;
   members?: number | null;
   branches?: number | null;
+  /** Bytes totales de archivos clínicos; obligatorio con la función `files`. */
+  fileStorageBytes?: number | null;
+  /** Archivos clínicos por paciente; obligatorio con la función `files`. */
+  filesPerPatient?: number | null;
 };
 
 /** Claves conocidas del snapshot; el resto se conserva sin cambios. */

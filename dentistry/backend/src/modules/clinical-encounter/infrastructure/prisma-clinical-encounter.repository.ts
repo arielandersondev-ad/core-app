@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { or } from '@prisma/orm-postgres/orm-client';
 import { hasPostgresCode } from '../../../common/infrastructure/postgres-error.js';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
+import type { TransactionContext } from '../../../common/infrastructure/prisma-tx.js';
 import {
   createPaginatedResult,
   DEFAULT_PAGE,
@@ -13,6 +14,10 @@ import type {
   ClinicalEncounter,
   ClinicalEncounterProcedure,
 } from '../domain/entities/clinical-encounter.entity.js';
+import {
+  nextAppointmentStatus,
+  type AppointmentStatusSync,
+} from '../domain/appointment-sync.js';
 import {
   ClinicalEncounterRepository,
   type AppointmentReference,
@@ -64,6 +69,9 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
         practitionerMembershipId: filters.practitionerMembershipId,
       });
     }
+    if (filters.appointmentId) {
+      query = query.where({ appointmentId: filters.appointmentId });
+    }
     if (filters.search) {
       // Escapa comodines SQL para que la búsqueda sea una subcadena literal.
       const pattern = '%' + filters.search.replace(/[\\%_]/g, '\\$&') + '%';
@@ -114,11 +122,25 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
     return encounter;
   }
 
-  async create(data: ClinicalEncounterCreateData): Promise<ClinicalEncounter> {
-    const row = await this.prisma.orm.dentistry.ClinicalEncounter.create({
-      ...encounterInsert(data),
-      status: 'IN_PROGRESS',
-    }).catch(rethrowAppointmentTaken);
+  async create(
+    data: ClinicalEncounterCreateData,
+    appointmentSync?: AppointmentStatusSync | null,
+  ): Promise<ClinicalEncounter> {
+    const row = await this.prisma
+      .transaction(async (tx) => {
+        const encounter = await tx.orm.dentistry.ClinicalEncounter.create({
+          ...encounterInsert(data),
+          status: 'IN_PROGRESS',
+        });
+        await syncAppointmentStatus(
+          tx,
+          data,
+          appointmentSync,
+          data.createdByMembershipId,
+        );
+        return encounter;
+      })
+      .catch(rethrowAppointmentTaken);
     const [encounter] = await this.hydrate(data.organizationId, [row]);
     return encounter;
   }
@@ -126,6 +148,7 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
   async createCompletedWithProcedures(
     data: ClinicalEncounterCreateData,
     procedures: ProcedureCreateData[],
+    appointmentSync?: AppointmentStatusSync | null,
   ): Promise<ClinicalEncounter> {
     const row = await this.prisma
       .transaction(async (tx) => {
@@ -141,6 +164,12 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
             procedureInsert(data, encounter.id, procedure, data.createdByMembershipId),
           );
         }
+        await syncAppointmentStatus(
+          tx,
+          data,
+          appointmentSync,
+          data.createdByMembershipId,
+        );
         return encounter;
       })
       .catch(rethrowAppointmentTaken);
@@ -153,13 +182,24 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
     id: string,
     expectedRowVersion: number,
     change: EncounterTransition,
+    appointmentSync?: AppointmentStatusSync | null,
   ): Promise<ClinicalEncounter | null> {
-    const row = await this.prisma.orm.dentistry.ClinicalEncounter.where({
-      id,
-      organizationId: scope.organizationId,
-      patientId: scope.patientId,
-      rowVersion: expectedRowVersion,
-    }).update({ ...change, rowVersion: expectedRowVersion + 1 });
+    const row = await this.prisma.transaction(async (tx) => {
+      const updated = await tx.orm.dentistry.ClinicalEncounter.where({
+        id,
+        organizationId: scope.organizationId,
+        patientId: scope.patientId,
+        rowVersion: expectedRowVersion,
+      }).update({ ...change, rowVersion: expectedRowVersion + 1 });
+      if (!updated) return null;
+      await syncAppointmentStatus(
+        tx,
+        scope,
+        appointmentSync,
+        change.updatedByMembershipId,
+      );
+      return updated;
+    });
     if (!row) return null;
     const [encounter] = await this.hydrate(scope.organizationId, [row]);
     return encounter;
@@ -483,6 +523,38 @@ function procedureInsert(
     status: 'RECORDED' as const,
     createdByMembershipId: actorMembershipId,
   };
+}
+
+/**
+ * Avanza el estado de la cita dentro de la transacción de la atención. Si la
+ * cita ya no está en un estado desde el que se avanza, queda como está; si
+ * cambió de versión entretanto, se revierte todo con 409.
+ */
+async function syncAppointmentStatus(
+  tx: TransactionContext,
+  scope: EncounterScope,
+  sync: AppointmentStatusSync | null | undefined,
+  actorMembershipId: string,
+): Promise<void> {
+  if (!sync) return;
+  const where = {
+    id: sync.appointmentId,
+    organizationId: scope.organizationId,
+    patientId: scope.patientId,
+  };
+  const appointment = await tx.orm.dentistry.Appointment.first(where);
+  if (!appointment) return;
+  const status = nextAppointmentStatus(sync, appointment.status);
+  if (!status) return;
+  const updated = await tx.orm.dentistry.Appointment.where({
+    ...where,
+    rowVersion: appointment.rowVersion,
+  }).update({
+    status,
+    updatedByMembershipId: actorMembershipId,
+    rowVersion: appointment.rowVersion + 1,
+  });
+  if (!updated) throw ClinicalErrors.appointmentChanged();
 }
 
 /** `appointmentId` es único: una cita admite una sola atención. */

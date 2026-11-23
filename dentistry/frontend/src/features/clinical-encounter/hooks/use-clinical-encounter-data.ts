@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   clinicalEncounterDetailOptions,
   clinicalEncounterListOptions,
+  clinicalFileAccessUrlOptions,
+  clinicalFileQuotaOptions,
   clinicalFilesOptions,
   encounterReferenceDataOptions,
   patientHealthProfileOptions,
@@ -24,6 +26,21 @@ export function usePatientHealthProfile(patientId: string) {
 
 export function useClinicalFiles(patientId: string, encounterId?: string) {
   return useQuery(clinicalFilesOptions(patientId, encounterId));
+}
+
+export function useClinicalFileQuota(enabled = true) {
+  return useQuery({ ...clinicalFileQuotaOptions(), enabled });
+}
+
+export function useClinicalFileAccessUrl(
+  patientId: string,
+  fileId: string | null,
+  disposition: "inline" | "attachment" = "inline",
+) {
+  return useQuery({
+    ...clinicalFileAccessUrlOptions(patientId, fileId ?? "", disposition),
+    enabled: fileId !== null,
+  });
 }
 
 export function useEncounterReferenceData(patientId: string) {

@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  TODAY_DATE,
   Appointment,
   AppointmentStatus,
   getProfessionalById,
@@ -16,6 +15,9 @@ import {
   useCancelAppointment,
 } from "@/modules/clinic/hooks";
 import { DEV_PERSONAS } from "@/features/dev-auth/types/personas";
+import type { AppointmentProcedureTarget } from "@/features/clinical-encounter/components/appointment-procedure-flow";
+import { useTimeZone, useTimeZoneResolver } from "@/shared/time/use-time-zone";
+import { civilDateIn, minutesOfDayIn, timeIn, todayIn } from "@/shared/time/zoned-time";
 
 export const formatLocalPhone = (phone?: string | null): string => {
   if (!phone || phone === "-") return "";
@@ -123,7 +125,13 @@ export function isAppointmentOverdue(
   apt: Appointment,
   nowDateStr: string,
   nowMinutes: number,
+  /** Con la zona de la cita, "ahora" se mide en la hora de su sucursal. */
+  now?: Date,
 ): boolean {
+  if (now && apt.timeZone) {
+    nowDateStr = todayIn(apt.timeZone, now);
+    nowMinutes = minutesOfDayIn(now, apt.timeZone);
+  }
   if (apt.status === "no_asistio") return true;
   if (apt.status !== "programada" && apt.status !== "confirmada") return false;
   if (apt.date < nowDateStr) return true;
@@ -135,19 +143,23 @@ export function isAppointmentOverdue(
   return threshold <= nowMinutes;
 }
 
-export function mapDtoToAppointment(dto: AppointmentDto): Appointment {
-  const startDate = new Date(dto.scheduledStartAt);
-  const endDate = new Date(dto.scheduledEndAt);
-  const startTime = startDate.toLocaleTimeString("es-BO", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  const endTime = endDate.toLocaleTimeString("es-BO", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+/** Cita de la agenda → atención rápida; sin sucursal conocida no se puede registrar. */
+export function toProcedureTarget(apt: Appointment): AppointmentProcedureTarget | null {
+  if (!apt.branchId || !apt.patientId) return null;
+  const patientName = apt.patientName || apt.personName;
+  return {
+    patientId: apt.patientId,
+    appointmentId: apt.id,
+    branchId: apt.branchId,
+    patientName,
+    label: [patientName, `${apt.startTime} – ${apt.endTime}`].filter(Boolean).join(" · "),
+  };
+}
+
+/** DTO → modelo de la agenda; fecha y horas en la zona de la sucursal de la cita. */
+export function mapDtoToAppointment(dto: AppointmentDto, timeZone: string): Appointment {
+  const startTime = timeIn(dto.scheduledStartAt, timeZone);
+  const endTime = timeIn(dto.scheduledEndAt, timeZone);
 
   const serviceIds =
     dto.services && dto.services.length > 0
@@ -165,6 +177,8 @@ export function mapDtoToAppointment(dto: AppointmentDto): Appointment {
 
   return {
     id: dto.id,
+    branchId: dto.branchId,
+    timeZone,
     patientId: dto.patientId,
     patientName: dto.patientName,
     personName: dto.personName,
@@ -174,7 +188,7 @@ export function mapDtoToAppointment(dto: AppointmentDto): Appointment {
     professionalId: dto.practitionerMembershipId || "",
     serviceId: dto.serviceId || serviceIds[0] || "",
     serviceIds,
-    date: dto.scheduledStartAt.slice(0, 10),
+    date: civilDateIn(dto.scheduledStartAt, timeZone),
     startTime,
     endTime,
     status: statusMap[dto.status] ?? "programada",
@@ -188,7 +202,17 @@ export interface UseAgendaAppointmentsOptions {
 }
 
 export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}) {
-  const [date, setDate] = useState(options.initialDate || TODAY_DATE);
+  // "Hoy" y la hora actual se leen en la zona de la organización.
+  const timeZone = useTimeZone();
+  const timeZoneOf = useTimeZoneResolver();
+  // Reloj de la agenda: se actualiza cada minuto para recalcular las vencidas.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  const today = todayIn(timeZone, now);
+  const [date, setDate] = useState(() => options.initialDate || todayIn(timeZone));
   const [proFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"feed" | "grid">("feed");
@@ -209,16 +233,15 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
   // Mapeo declarativo de DTOs del servidor a modelos locales de vista
   const appointmentsList = useMemo(() => {
     if (!appointmentsData) return [];
-    return appointmentsData.map(mapDtoToAppointment);
-  }, [appointmentsData]);
+    return appointmentsData.map((dto) => mapDtoToAppointment(dto, timeZoneOf(dto.branchId)));
+  }, [appointmentsData, timeZoneOf]);
 
   const changeDate = (nextDate: string) => {
     setDate(nextDate);
   };
 
-  const now = new Date();
-  const nowDateStr = now.toISOString().slice(0, 10);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const nowDateStr = today;
+  const nowMinutes = minutesOfDayIn(now, timeZone);
 
   const dayAppts = useMemo(() => {
     const filtered = appointmentsList.filter((a) => {
@@ -236,7 +259,7 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
     const overdue: Appointment[] = [];
 
     for (const apt of filtered) {
-      if (isAppointmentOverdue(apt, nowDateStr, nowMinutes)) {
+      if (isAppointmentOverdue(apt, nowDateStr, nowMinutes, now)) {
         overdue.push(apt);
       } else {
         upcoming.push(apt);
@@ -250,7 +273,7 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
     overdue.sort(sortByTime);
 
     return [...upcoming, ...overdue];
-  }, [appointmentsList, proFilter, statusFilter, nowDateStr, nowMinutes]);
+  }, [appointmentsList, proFilter, statusFilter, nowDateStr, nowMinutes, now]);
 
   // Estado de expansión de tarjeta en Feed (por defecto la primera cita de dayAppts)
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -335,6 +358,8 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
     cancelAppointmentMutation,
     nowDateStr,
     nowMinutes,
+    now,
+    today,
     counters: {
       totalCount,
       waitingOrChair,

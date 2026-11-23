@@ -3,7 +3,6 @@ export type ClinicalEncounterTargetType = "TOOTH" | "REGION" | "WHOLE_MOUTH" | "
 export type ClinicalEncounterProcedureStatus = "RECORDED" | "VOIDED";
 export type ClinicalFileCategory = "RADIOGRAPH" | "PHOTO" | "DOCUMENT" | "OTHER";
 export type ClinicalFileUploadStatus = "PENDING" | "READY" | "FAILED";
-export type ClinicalFileLaterality = "LEFT" | "RIGHT" | "BILATERAL";
 
 export interface ClinicalEncounterProcedure {
   id: string;
@@ -69,24 +68,41 @@ export interface PatientHealthProfile {
   rowVersion?: number;
 }
 
+/** Archivo del historial clínico; la API no expone su ubicación en el almacenamiento. */
 export interface ClinicalFile {
   id: string;
   patientId: string;
   clinicalEncounterId?: string;
-  treatmentId?: string;
-  appointmentId?: string;
   originalFilename: string;
   category: ClinicalFileCategory;
   mimeType: string;
   sizeBytes: number;
-  createdAt: string;
-  uploadStatus: ClinicalFileUploadStatus;
-  radiographType?: string;
-  toothNumber?: string;
-  region?: string;
-  laterality?: ClinicalFileLaterality;
   capturedAt?: string;
-  notes?: string;
+  description?: string;
+  uploadStatus: ClinicalFileUploadStatus;
+  uploadedAt?: string;
+  uploadedByMembershipId: string;
+  createdAt: string;
+  /** Versión leída; se envía como `expectedUpdatedAt` al editar. */
+  updatedAt: string;
+}
+
+/** Uso y límites de archivos de la organización (`GET /clinical-files/quota`). */
+export interface ClinicalFileQuota {
+  usedBytes: number;
+  limitBytes: number | null;
+  filesPerPatient: number | null;
+  maxFileBytes: number;
+  allowedMimeTypes: string[];
+  storageAvailable: boolean;
+}
+
+/** Solicitud firmada de corta duración emitida por el backend. */
+export interface SignedRequest {
+  url: string;
+  method: "PUT" | "GET";
+  headers: Record<string, string>;
+  expiresAt: string;
 }
 
 export interface EncounterReferenceOption {
@@ -148,24 +164,29 @@ export interface VoidClinicalEncounterInput {
 export type PatientHealthProfileInput = Omit<PatientHealthProfile, "patientId" | "updatedAt" | "rowVersion">;
 
 export interface AddClinicalFileInput {
-  clinicalEncounterId?: string;
-  treatmentId?: string;
-  appointmentId?: string;
-  originalFilename: string;
+  file: File;
   category: ClinicalFileCategory;
-  mimeType: string;
-  sizeBytes: number;
-  radiographType?: string;
-  toothNumber?: string;
-  region?: string;
-  laterality?: ClinicalFileLaterality;
+  clinicalEncounterId?: string;
+  description?: string;
+  /** Instante ISO con zona de la captura clínica, si se conoce. */
   capturedAt?: string;
-  notes?: string;
+  /** Progreso de la transferencia al almacenamiento, entre 0 y 1. */
+  onProgress?: (fraction: number) => void;
+}
+
+/** Solo datos descriptivos; `null` borra, omitir conserva. */
+export interface UpdateClinicalFileInput {
+  expectedUpdatedAt: string;
+  category?: ClinicalFileCategory;
+  description?: string | null;
+  capturedAt?: string | null;
 }
 
 export interface ClinicalEncounterListFilters {
   status?: ClinicalEncounterStatus;
   practitionerMembershipId?: string;
+  /** Atención de una cita: a lo sumo una, incluida la anulada. */
+  appointmentId?: string;
   search?: string;
   page?: number;
   pageSize?: number;

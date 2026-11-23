@@ -71,6 +71,10 @@ export interface Appointment {
   notes: string;
   reason?: string;
   patientType?: "patient" | "person";
+  /** Sucursal real de la cita (API); la necesita la atención rápida. */
+  branchId?: string;
+  /** Zona IANA de la sucursal: `date`, `startTime` y `endTime` están en esta zona. */
+  timeZone?: string;
 }
 
 export interface ClinicalEntry {

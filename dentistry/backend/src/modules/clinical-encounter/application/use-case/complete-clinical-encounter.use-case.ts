@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { appointmentSyncFor } from '../../domain/appointment-sync.js';
 import type { ClinicalEncounter } from '../../domain/entities/clinical-encounter.entity.js';
 import {
   ClinicalEncounterRepository,
@@ -59,6 +60,8 @@ export class CompleteClinicalEncounterUseCase {
           ? { procedureSummary: normalizeText(command.procedureSummary) }
           : {}),
       },
+      // La cita vinculada queda completada junto con la atención.
+      appointmentSyncFor('COMPLETED', encounter.appointmentId),
     );
     if (!updated) throw ClinicalErrors.encounterChanged();
     return updated;
