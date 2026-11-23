@@ -119,21 +119,17 @@ test("HTTP adapter: mutaciones usan las rutas y payloads del contrato", async (t
   assert.equal("updatedAt" in profile, false);
 });
 
-test("HTTP adapter: los errores conservan estado y mensaje; archivos siguen no disponibles", async (t) => {
+test("HTTP adapter: los errores conservan estado y mensaje", async (t) => {
   const { source, load } = loadSource(t, () =>
     Response.json({ statusCode: 409, message: "Solo se puede completar una atención en curso.", code: "ENCOUNTER_NOT_IN_PROGRESS" }, { status: 409 }),
   );
   const { ApiError } = load("src/infrastructure/http/api-error.ts");
-  const { ClinicalEncounterApiUnavailableError } = load("src/features/clinical-encounter/services/clinical-encounter.error.ts");
   await assert.rejects(source.complete(PATIENT, ENCOUNTER, { endedAt: "2026-11-11T15:00:00.000Z" }), (error) => {
     assert.ok(error instanceof ApiError);
     assert.equal(error.status, 409);
     assert.equal(error.message, "Solo se puede completar una atención en curso.");
     return true;
   });
-  await assert.rejects(source.listFiles(PATIENT), ClinicalEncounterApiUnavailableError);
-  await assert.rejects(source.addFile(PATIENT, {}), ClinicalEncounterApiUnavailableError);
-  await assert.rejects(source.removeFile(PATIENT, "file"), ClinicalEncounterApiUnavailableError);
 });
 
 function bffRequest(path, method = "GET", body) {
@@ -164,6 +160,12 @@ test("BFF: permite solo las rutas clínicas acordadas", async (t) => {
     ["GET", `patients/${PATIENT}/health-profile`],
     ["PATCH", `patients/${PATIENT}/health-profile`],
     ["GET", "patients?createdFrom=2026-11-01&createdTo=2026-11-30"],
+    ["GET", "clinical-files/quota"],
+    ["GET", `patients/${PATIENT}/clinical-files?clinicalEncounterId=${ENCOUNTER}&category=PHOTO&page=1&pageSize=20`],
+    ["POST", `patients/${PATIENT}/clinical-files/uploads`],
+    ["POST", `patients/${PATIENT}/clinical-files/${ENCOUNTER}/complete`],
+    ["GET", `patients/${PATIENT}/clinical-files/${ENCOUNTER}/access-url?disposition=attachment`],
+    ["DELETE", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`],
   ];
   for (const [method, path] of allowed) {
     const response = await proxyToDentistry(bffRequest(path, method), path.split("?")[0].split("/"));
@@ -176,7 +178,11 @@ test("BFF: permite solo las rutas clínicas acordadas", async (t) => {
     ["PATCH", `${base}/${ENCOUNTER}`, 404],
     ["GET", `${base}/not-a-uuid`, 404],
     ["POST", `${base}/${ENCOUNTER}/procedures/${ENCOUNTER}/void`, 404],
-    ["GET", `patients/${PATIENT}/clinical-files`, 404],
+    ["PATCH", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`, 404],
+    ["GET", `patients/${PATIENT}/clinical-files/${ENCOUNTER}`, 404],
+    ["PUT", `patients/${PATIENT}/clinical-files/uploads`, 404],
+    ["GET", `patients/${PATIENT}/clinical-files?organizationId=${ENCOUNTER}`, 400],
+    ["GET", `patients/${PATIENT}/clinical-files/${ENCOUNTER}/access-url?disposition=${"x".repeat(21)}`, 400],
     ["GET", `${base}?organizationId=${ENCOUNTER}`, 400],
     ["GET", `${base}?search=${"x".repeat(101)}`, 400],
     ["GET", `${base}/reference-data?patientId=${PATIENT}`, 400],

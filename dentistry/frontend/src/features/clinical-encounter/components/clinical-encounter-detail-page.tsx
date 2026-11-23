@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import type { PatientDto } from "@/features/patient/types/patient";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { ApiError } from "@/infrastructure/http/api-error";
@@ -10,6 +10,7 @@ import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { Badge, Button, EmptyState, Icons } from "@/shared/components/ui";
 import { InfoRow } from "@/features/clinical-encounter/components/clinical-encounter-info-row";
 import { Panel } from "@/features/clinical-encounter/components/clinical-encounter-panel";
+import { ClinicalFilesPanel } from "@/features/clinical-encounter/components/clinical-files-panel";
 import { PatientContextBoundary } from "@/features/clinical-encounter/components/patient-context-boundary";
 import { StatusBadge } from "@/features/clinical-encounter/components/clinical-encounter-status-badge";
 import { TargetBadge } from "@/features/clinical-encounter/components/clinical-encounter-target-badge";
@@ -20,23 +21,16 @@ import { ProcedureModal } from "@/features/clinical-encounter/components/modals/
 import { VoidEncounterModal } from "@/features/clinical-encounter/components/modals/void-encounter-modal";
 import {
   useClinicalEncounter,
-  useClinicalFiles,
   useEncounterReferenceData,
 } from "@/features/clinical-encounter/hooks/use-clinical-encounter-data";
 import {
   useAddClinicalEncounterProcedures,
-  useAddClinicalFile,
   useCompleteClinicalEncounter,
-  useRemoveClinicalFile,
   useVoidClinicalEncounter,
 } from "@/features/clinical-encounter/hooks/use-clinical-encounter-mutations";
 import { useToasts } from "@/features/clinical-encounter/hooks/use-toasts";
-import { ClinicalEncounterApiUnavailableError } from "@/features/clinical-encounter/services/clinical-encounter.service";
 import type {
   ClinicalEncounterProcedureDraft,
-  ClinicalFile,
-  ClinicalFileCategory,
-  ClinicalFileUploadStatus,
   CompleteClinicalEncounterInput,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import { durationLabel, formatDateOnly, formatDateTimeShort } from "@/features/clinical-encounter/utils/dates";
@@ -47,31 +41,11 @@ import {
   canVoid,
   summarizeProcedures,
 } from "@/features/clinical-encounter/utils/encounter-detail";
-import { formatBytes } from "@/features/clinical-encounter/utils/format";
 import { ProcedureValidationError } from "@/features/clinical-encounter/utils/procedures";
 
 const READ_PERMISSION = "dentistry:encounters:read";
 const UPDATE_PERMISSION = "dentistry:encounters:update";
 const VOID_PERMISSION = "dentistry:encounters:void";
-
-const fileCategoryLabels: Record<ClinicalFileCategory, string> = {
-  RADIOGRAPH: "Radiografía",
-  PHOTO: "Fotografía",
-  DOCUMENT: "Documento",
-  OTHER: "Otro",
-};
-
-const uploadStatusLabels: Record<ClinicalFileUploadStatus, string> = {
-  PENDING: "Pendiente",
-  READY: "Listo",
-  FAILED: "Fallido",
-};
-
-const uploadStatusVariants: Record<ClinicalFileUploadStatus, "warning" | "success" | "danger"> = {
-  PENDING: "warning",
-  READY: "success",
-  FAILED: "danger",
-};
 
 function encountersListHref(patientId: string): string {
   return `/patients/${encodeURIComponent(patientId)}/clinical-encounters`;
@@ -86,14 +60,6 @@ function mutationErrorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   if (error instanceof Error && error.message.trim()) return error.message;
   return "No se pudo completar la acción.";
-}
-
-function inferFileCategory(file: File): ClinicalFileCategory {
-  const name = file.name.toLowerCase();
-  if (/(rx|radio|pano|periap|bitewing|oclusal|cefalometric)/.test(name)) return "RADIOGRAPH";
-  if (file.type.startsWith("image/")) return "PHOTO";
-  if (file.type.startsWith("application/") || file.type.startsWith("text/")) return "DOCUMENT";
-  return "OTHER";
 }
 
 export interface ClinicalEncounterDetailPageProps {
@@ -153,22 +119,17 @@ function EncounterDetailContent({
   const { toasts, pushToast, dismissToast } = useToasts();
 
   const encounterQuery = useClinicalEncounter(patientId, encounterId);
-  const filesQuery = useClinicalFiles(patientId, encounterId);
   const referenceQuery = useEncounterReferenceData(patientId);
 
   const completeMutation = useCompleteClinicalEncounter(patientId);
   const voidMutation = useVoidClinicalEncounter(patientId);
   const addProceduresMutation = useAddClinicalEncounterProcedures(patientId);
-  const addFileMutation = useAddClinicalFile(patientId);
-  const removeFileMutation = useRemoveClinicalFile(patientId);
 
   const [completeOpen, setCompleteOpen] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
   const [voidOpen, setVoidOpen] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
   const [procedureOpen, setProcedureOpen] = useState(false);
-  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const listHref = encountersListHref(patientId);
 
@@ -213,10 +174,6 @@ function EncounterDetailContent({
   const timeZone = timeZoneOf(encounter.branchId);
   const canUpdate = session.permissions.includes(UPDATE_PERMISSION);
   const canVoidEncounter = session.permissions.includes(VOID_PERMISSION);
-  // Decisión (A): completar cierra el registro clínico, pero los metadatos de
-  // archivos (adjuntar/quitar) siguen siendo gestionables con permiso de update.
-  const filesUnavailable = filesQuery.error instanceof ClinicalEncounterApiUnavailableError;
-  const canEditFiles = canUpdate && encounter.status !== "VOIDED" && !filesUnavailable;
   const canAddProcedureNow = canAddProcedures(encounter.status) && canUpdate;
   const canCompleteNow = canComplete(encounter.status) && canUpdate;
   const canVoidNow = canVoid(encounter.status) && canVoidEncounter;
@@ -287,35 +244,6 @@ function EncounterDetailContent({
         `${procedures.length} procedimiento(s) registrado(s).`,
         "success",
       );
-    } catch (error) {
-      pushToast(mutationErrorMessage(error), "danger");
-    }
-  };
-
-  const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
-    try {
-      await addFileMutation.mutateAsync({
-        clinicalEncounterId: encounter.id,
-        originalFilename: file.name,
-        category: inferFileCategory(file),
-        mimeType: file.type || "application/octet-stream",
-        sizeBytes: file.size,
-      });
-      pushToast("Archivo adjuntado (solo metadatos).", "success");
-    } catch (error) {
-      pushToast(mutationErrorMessage(error), "danger");
-    }
-  };
-
-  const handleRemoveFile = async (file: ClinicalFile) => {
-    try {
-      await removeFileMutation.mutateAsync(file.id);
-      setPendingRemovalId(null);
-      pushToast("Archivo quitado.", "success");
     } catch (error) {
       pushToast(mutationErrorMessage(error), "danger");
     }
@@ -533,127 +461,15 @@ function EncounterDetailContent({
             </Panel>
           </div>
 
-          <Panel
-            id="ce-detail-files"
-            title="Archivos"
-            description="Solo se registran metadatos; los binarios no se suben desde aquí."
-            icon={Icons.inventory}
-            action={
-              canEditFiles ? (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="sr-only"
-                    aria-label="Seleccionar archivo para adjuntar"
-                    onChange={(event) => { void handleFileSelected(event); }}
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={Icons.plus}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={addFileMutation.isPending}
-                    loading={addFileMutation.isPending}
-                  >
-                    Adjuntar archivo
-                  </Button>
-                </>
-              ) : undefined
+          <ClinicalFilesPanel
+            patientId={patientId}
+            encounterId={encounter.id}
+            uploadLockedReason={
+              encounter.status === "VOIDED" ? "La atención está anulada: no se pueden adjuntar archivos." : undefined
             }
-          >
-            {filesQuery.isPending ? (
-              <p role="status" className="text-sm text-muted">
-                Cargando archivos…
-              </p>
-            ) : filesUnavailable ? (
-              <EmptyState
-                className="py-6"
-                message="Adjuntos aún no disponibles"
-                description="El registro de radiografías y documentos se habilitará en una próxima entrega."
-                icon={Icons.inventory}
-              />
-            ) : filesQuery.isError ? (
-              <div role="alert" className="space-y-3 text-sm">
-                <p className="text-foreground">No se pudieron cargar los archivos.</p>
-                <Button variant="outline" size="sm" onClick={() => { void filesQuery.refetch(); }}>
-                  Reintentar
-                </Button>
-              </div>
-            ) : filesQuery.data.length === 0 ? (
-              <EmptyState
-                className="py-6"
-                message="Sin archivos"
-                description="Adjunta radiografías, fotografías o documentos de esta atención."
-                icon={Icons.inventory}
-              />
-            ) : (
-              <ul className="space-y-3">
-                {filesQuery.data.map((file) => {
-                  const confirmingRemoval = pendingRemovalId === file.id;
-
-                  return (
-                    <li
-                      key={file.id}
-                      className="flex items-start gap-3 rounded-lg border border-border bg-surface-subtle/60 p-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {file.originalFilename}
-                        </p>
-                        <p className="font-mono text-[10px] text-muted">
-                          {fileCategoryLabels[file.category]} · {formatBytes(file.sizeBytes)} ·{" "}
-                          {formatDateTimeShort(file.createdAt, timeZone)}
-                        </p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <Badge variant={uploadStatusVariants[file.uploadStatus]}>
-                            {uploadStatusLabels[file.uploadStatus]}
-                          </Badge>
-                          {file.category === "RADIOGRAPH" && (
-                            <Badge variant="primary">Radiografía</Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {canEditFiles && (
-                        <div className="flex shrink-0 flex-wrap items-center gap-1">
-                          {confirmingRemoval ? (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="danger"
-                                onClick={() => { void handleRemoveFile(file); }}
-                                disabled={removeFileMutation.isPending}
-                                loading={removeFileMutation.isPending}
-                              >
-                                Quitar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setPendingRemovalId(null)}
-                                disabled={removeFileMutation.isPending}
-                              >
-                                Cancelar
-                              </Button>
-                            </>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setPendingRemovalId(file.id)}
-                            >
-                              Quitar
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Panel>
+            timeZone={timeZone}
+            onNotify={pushToast}
+          />
         </div>
       </div>
 

@@ -1,13 +1,16 @@
 import { CLINICAL_ENCOUNTER_ENDPOINTS } from "@/features/clinical-encounter/api/endpoints";
-import { ClinicalEncounterApiUnavailableError } from "@/features/clinical-encounter/services/clinical-encounter.error";
 import type { ClinicalEncounterDataSource } from "@/features/clinical-encounter/services/clinical-encounter.service";
 import type {
   ClinicalEncounter,
   ClinicalEncounterProcedure,
+  ClinicalFile,
+  ClinicalFileQuota,
   EncounterReferenceData,
   PatientHealthProfile,
+  SignedRequest,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import { requestJson } from "@/infrastructure/http/request-json";
+import { uploadToSignedUrl } from "@/infrastructure/http/signed-upload";
 import type { PaginatedResult } from "@/shared/types/pagination";
 
 /** Forma JSON del backend: los opcionales llegan como `null`. */
@@ -17,6 +20,11 @@ type ClinicalEncounterDto = Nullable<Omit<ClinicalEncounter, "procedures">> & {
   procedures: ClinicalEncounterProcedureDto[];
 };
 type PatientHealthProfileDto = Nullable<PatientHealthProfile>;
+type ClinicalFileDto = Nullable<ClinicalFile>;
+type ClinicalFileUploadDto = { file: ClinicalFileDto; upload: SignedRequest };
+
+/** Galería completa de un paciente o atención en una sola página. */
+const FILES_PAGE_SIZE = 100;
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -64,13 +72,8 @@ function postJson<T>(url: string, body: unknown, method = "POST"): Promise<T> {
   return requestJson<T>(url, { method, headers: JSON_HEADERS, body: JSON.stringify(body) });
 }
 
-/** Archivos y radiografías siguen sin endpoint (entrega E6 del contrato). */
-function filesUnavailable<T>(): Promise<T> {
-  return Promise.reject(
-    new ClinicalEncounterApiUnavailableError(
-      "Los archivos clínicos todavía no están disponibles.",
-    ),
-  );
+function toClinicalFile(dto: ClinicalFileDto): ClinicalFile {
+  return withoutNulls<ClinicalFile>(dto);
 }
 
 export function createClinicalEncounterHttpDataSource(): ClinicalEncounterDataSource {
@@ -142,8 +145,53 @@ export function createClinicalEncounterHttpDataSource(): ClinicalEncounterDataSo
       return requestJson<EncounterReferenceData>(CLINICAL_ENCOUNTER_ENDPOINTS.referenceData(patientId));
     },
 
-    listFiles: () => filesUnavailable(),
-    addFile: () => filesUnavailable(),
-    removeFile: () => filesUnavailable(),
+    async listFiles(patientId, encounterId) {
+      const query = new URLSearchParams({ pageSize: String(FILES_PAGE_SIZE) });
+      if (encounterId) query.set("clinicalEncounterId", encounterId);
+      const result = await requestJson<PaginatedResult<ClinicalFileDto>>(
+        `${CLINICAL_ENCOUNTER_ENDPOINTS.files(patientId)}?${query.toString()}`,
+      );
+      return result.items.map(toClinicalFile);
+    },
+
+    async addFile(patientId, { file, category, clinicalEncounterId, description, capturedAt, onProgress }) {
+      // 1) Reserva y URL firmada; 2) el binario va directo al bucket; 3) el backend lo verifica.
+      const { file: reserved, upload } = await postJson<ClinicalFileUploadDto>(
+        CLINICAL_ENCOUNTER_ENDPOINTS.fileUploads(patientId),
+        {
+          category,
+          originalFilename: file.name,
+          mimeType: file.type,
+          sizeBytes: file.size,
+          ...(clinicalEncounterId ? { clinicalEncounterId } : {}),
+          ...(description?.trim() ? { description: description.trim() } : {}),
+          ...(capturedAt ? { capturedAt } : {}),
+        },
+      );
+      await uploadToSignedUrl(upload, file, { onProgress });
+      return toClinicalFile(
+        await postJson<ClinicalFileDto>(
+          CLINICAL_ENCOUNTER_ENDPOINTS.fileComplete(patientId, reserved.id ?? ""),
+          {},
+        ),
+      );
+    },
+
+    async removeFile(patientId, fileId) {
+      await requestJson<ClinicalFileDto>(CLINICAL_ENCOUNTER_ENDPOINTS.fileById(patientId, fileId), {
+        method: "DELETE",
+      });
+    },
+
+    async getFileAccessUrl(patientId, fileId, disposition) {
+      const query = new URLSearchParams({ disposition });
+      return requestJson<SignedRequest>(
+        `${CLINICAL_ENCOUNTER_ENDPOINTS.fileAccessUrl(patientId, fileId)}?${query.toString()}`,
+      );
+    },
+
+    getFileQuota() {
+      return requestJson<ClinicalFileQuota>(CLINICAL_ENCOUNTER_ENDPOINTS.fileQuota);
+    },
   };
 }

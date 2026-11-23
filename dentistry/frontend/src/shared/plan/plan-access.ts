@@ -8,7 +8,8 @@ export type DentistryModule =
   | "dashboard"
   | "services"
   | "treatments"
-  | "payments";
+  | "payments"
+  | "files";
 
 export type SessionPlan = {
   /** null: plan anterior a las funciones por plan; no restringe módulos. */

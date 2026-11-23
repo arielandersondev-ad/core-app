@@ -29,6 +29,9 @@ export const clinicalEncounterQueryKeys = {
   files: (patientId: string, encounterId?: string) =>
     [ROOT, patientId, "files", encounterId ?? "all"] as const,
   filesRoot: (patientId: string) => [ROOT, patientId, "files"] as const,
+  fileAccessUrl: (patientId: string, fileId: string, disposition: "inline" | "attachment") =>
+    [ROOT, patientId, "files", "access-url", fileId, disposition] as const,
+  fileQuota: () => [ROOT, "files-quota"] as const,
   referenceData: (patientId: string) => [ROOT, patientId, "reference-data"] as const,
 };
 
@@ -91,6 +94,32 @@ export function clinicalFilesOptions(patientId: string, encounterId?: string) {
     queryFn: () => getClinicalEncounterDataSource().listFiles(patientId, encounterId),
     // Los archivos de una atención inexistente no deben reintentarse en vano.
     retry: false,
+  });
+}
+
+/**
+ * Enlace firmado de lectura (vigencia 2 min). Se renueva antes de vencer y no se
+ * conserva en caché al cerrar la vista previa.
+ */
+export function clinicalFileAccessUrlOptions(
+  patientId: string,
+  fileId: string,
+  disposition: "inline" | "attachment" = "inline",
+) {
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.fileAccessUrl(patientId, fileId, disposition),
+    queryFn: () => getClinicalEncounterDataSource().getFileAccessUrl(patientId, fileId, disposition),
+    staleTime: 60_000,
+    gcTime: 0,
+    retry: false,
+  });
+}
+
+export function clinicalFileQuotaOptions() {
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.fileQuota(),
+    queryFn: () => getClinicalEncounterDataSource().getFileQuota(),
+    staleTime: 30_000,
   });
 }
 
@@ -288,7 +317,7 @@ export function clinicalFileAddOptions(
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
         }),
-        invalidatePatientDetail(client, patientId),
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.fileQuota() }),
       ]);
     },
   });
@@ -310,7 +339,7 @@ export function clinicalFileRemoveOptions(
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
         }),
-        invalidatePatientDetail(client, patientId),
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.fileQuota() }),
       ]);
     },
   });
