@@ -18,6 +18,7 @@ import { DEV_PERSONAS } from "@/features/dev-auth/types/personas";
 import type { AppointmentProcedureTarget } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 import { useTimeZone, useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import { civilDateIn, minutesOfDayIn, timeIn, todayIn } from "@/shared/time/zoned-time";
+import { addDaysIso, countActiveByDate, weekStartOf } from "../week";
 
 export const formatLocalPhone = (phone?: string | null): string => {
   if (!phone || phone === "-") return "";
@@ -236,6 +237,18 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
     return appointmentsData.map((dto) => mapDtoToAppointment(dto, timeZoneOf(dto.branchId)));
   }, [appointmentsData, timeZoneOf]);
 
+  // Citas de la semana visible, solo para marcar en la tira qué días tienen agenda.
+  // La consulta depende de la semana (no del día): moverse dentro de ella no vuelve a pedirla.
+  const weekStart = weekStartOf(date);
+  const { data: weekData } = useAppointments({ startDate: weekStart, endDate: addDaysIso(weekStart, 6) });
+  const weekCounts = useMemo(
+    () =>
+      countActiveByDate(
+        (weekData ?? []).map((dto) => mapDtoToAppointment(dto, timeZoneOf(dto.branchId))),
+      ),
+    [weekData, timeZoneOf],
+  );
+
   const changeDate = (nextDate: string) => {
     setDate(nextDate);
   };
@@ -344,6 +357,7 @@ export function useAgendaAppointments(options: UseAgendaAppointmentsOptions = {}
     statusFilter,
     setStatusFilter,
     appointmentsList,
+    weekCounts,
     dayAppts,
     expandedId,
     setExpandedId,
