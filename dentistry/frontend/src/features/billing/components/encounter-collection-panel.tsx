@@ -127,6 +127,7 @@ export function EncounterCollectionPanel({
   encounterId,
   status,
   autoPrompt,
+  onPromptHandled,
   onNotice,
 }: {
   patientId: string;
@@ -134,6 +135,8 @@ export function EncounterCollectionPanel({
   status: "IN_PROGRESS" | "COMPLETED" | "VOIDED";
   /** Abre el cobro propuesto en cuanto carga (tras completar la atención). */
   autoPrompt: boolean;
+  /** El cobro propuesto se ofrece una sola vez: quien llama apaga `autoPrompt` al cerrarlo. */
+  onPromptHandled: () => void;
   onNotice: (message: string) => void;
 }) {
   const session = useAuthenticatedSession();
@@ -212,10 +215,12 @@ export function EncounterCollectionPanel({
           onClose={() => {
             setManualOpen(false);
             setDismissed(true);
+            onPromptHandled();
           }}
           onRegistered={(registered) => {
             setManualOpen(false);
             setDismissed(true);
+            onPromptHandled();
             onNotice(`Cobro de ${formatMinorCurrency(registered.amountMinor, registered.currency)} registrado.`);
           }}
         />

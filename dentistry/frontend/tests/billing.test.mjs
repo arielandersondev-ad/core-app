@@ -233,3 +233,26 @@ test("las rutas globales retiradas llevan a la cuenta del paciente o a la lista"
     assert.equal(legacyBillingDestination(invalid), "/patients", String(invalid));
   }
 });
+
+test("agregar procedimientos, completar y anular invalidan la propuesta de cobro", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile("src/features/clinical-encounter/api/query-options.ts", "utf8");
+  for (const name of [
+    "clinicalEncounterAddProceduresOptions",
+    "clinicalEncounterCompleteOptions",
+    "clinicalEncounterVoidOptions",
+  ]) {
+    const start = source.indexOf(`export function ${name}`);
+    const end = source.indexOf("\nexport function", start + 1);
+    const body = source.slice(start, end === -1 ? undefined : end);
+    assert.match(body, /invalidateBilling\(client, patientId\)/, `${name} debe refrescar los datos de cobro`);
+  }
+});
+
+test("el cobro propuesto se ofrece una sola vez tras completar la atención", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const panel = await readFile("src/features/billing/components/encounter-collection-panel.tsx", "utf8");
+  const page = await readFile("src/features/clinical-encounter/components/clinical-encounter-detail-page.tsx", "utf8");
+  assert.equal((panel.match(/onPromptHandled\(\)/g) ?? []).length, 2, "al cerrar y al registrar");
+  assert.match(page, /onPromptHandled=\{\(\) => setPromptCollection\(false\)\}/);
+});

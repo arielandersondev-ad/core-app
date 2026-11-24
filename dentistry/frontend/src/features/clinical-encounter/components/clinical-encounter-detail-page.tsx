@@ -482,6 +482,7 @@ function EncounterDetailContent({
               encounterId={encounter.id}
               status={encounter.status}
               autoPrompt={promptCollection}
+              onPromptHandled={() => setPromptCollection(false)}
               onNotice={(message) => pushToast(message, "success")}
             />
           </div>
