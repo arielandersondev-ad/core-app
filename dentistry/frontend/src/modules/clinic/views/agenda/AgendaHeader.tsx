@@ -196,10 +196,8 @@ export function AgendaHeader({
                 <span
                   aria-hidden="true"
                   data-testid="agenda-day-badge"
-                  className="absolute -top-1 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] text-[9px] font-bold leading-none ring-2 ring-[var(--surface-elevated)]"
-                >
-                  {wd.count > 9 ? "9+" : wd.count}
-                </span>
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--secondary)] ring-2 ring-[var(--surface-elevated)]"
+                />
               )}
             </span>
           </button>

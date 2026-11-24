@@ -65,3 +65,13 @@ test("la cabecera avanza de a un día, no de a una semana, y marca los días con
   const view = fs.readFileSync("src/modules/clinic/views/Agenda.tsx", "utf8");
   assert.match(view, /dayCounts=\{agenda\.weekCounts\}/);
 });
+
+test("el badge del día es solo un indicador, sin número", () => {
+  const header = fs.readFileSync("src/modules/clinic/views/agenda/AgendaHeader.tsx", "utf8");
+  const start = header.indexOf('data-testid="agenda-day-badge"');
+  const badge = header.slice(start, header.indexOf("/>", start));
+  assert.ok(start > 0, "existe el badge");
+  assert.doesNotMatch(badge, /wd\.count/, "el badge no muestra la cantidad");
+  assert.doesNotMatch(header, /9\+/);
+  assert.match(header, /aria-label=\{`\$\{wd\.longLabel\}.*wd\.count/s, "la cantidad queda en la etiqueta accesible");
+});
