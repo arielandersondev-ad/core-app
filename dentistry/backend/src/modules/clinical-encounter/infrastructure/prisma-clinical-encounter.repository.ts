@@ -401,6 +401,7 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
       treatments: treatments.map((treatment) => ({
         id: treatment.id,
         label:
+          treatment.title?.trim() ||
           (treatment.serviceId && serviceNames.get(treatment.serviceId)) ||
           treatment.diagnosisSummary?.trim() ||
           treatment.notes?.trim() ||
