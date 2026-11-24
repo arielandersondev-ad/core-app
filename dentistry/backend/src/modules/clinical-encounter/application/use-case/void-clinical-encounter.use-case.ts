@@ -41,7 +41,8 @@ export class VoidClinicalEncounterUseCase {
     if (encounter.status === 'VOIDED') throw ClinicalErrors.alreadyVoided();
 
     // Se anula desde IN_PROGRESS o COMPLETED; los procedimientos se conservan.
-    const updated = await this.encounterRepository.transition(
+    // Con un pago vigente no se anula: primero se anula el pago (409).
+    const updated = await this.encounterRepository.voidUnpaid(
       scope,
       encounter.id,
       encounter.rowVersion,

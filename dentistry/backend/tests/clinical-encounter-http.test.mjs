@@ -161,6 +161,8 @@ test(
     const appointments = new Map();
     const treatments = new Map();
     const treatmentProcedures = new Map();
+    // Atenciones con un pago vigente (lo conoce el módulo de pagos).
+    const paidEncounterIds = new Set();
     let encounterRepositoryCalls = 0;
     const inScope = (row, scope) =>
       row &&
@@ -263,6 +265,15 @@ test(
         Object.assign(row, change, { rowVersion: expectedRowVersion + 1 });
         applyAppointmentSync(scope, appointmentSync, change.updatedByMembershipId);
         return structuredClone(row);
+      },
+      async voidUnpaid(scope, id, expectedRowVersion, change) {
+        if (paidEncounterIds.has(id)) {
+          const { ClinicalErrors } = await import(
+            '../dist/modules/clinical-encounter/application/clinical-encounter.errors.js'
+          );
+          throw ClinicalErrors.hasPayment();
+        }
+        return this.transition(scope, id, expectedRowVersion, change);
       },
       async addProcedures(scope, id, expectedRowVersion, drafts, actor) {
         encounterRepositoryCalls++;
@@ -780,6 +791,96 @@ test(
       assert.equal(found.body.items[0].appointmentId, appointment.id);
       const invalid = await request(`${base}?appointmentId=no-es-uuid`, 'GET', accessToken);
       assert.equal(invalid.status, 400);
+    });
+
+    await t.test('precios: opcionales, en una sola moneda y sumados en la atención', async () => {
+      const accessToken = await token();
+      const opened = await request(base, 'POST', accessToken, createBody({ startedAt: '2026-11-20T14:00:00.000Z' }));
+      assert.equal(opened.status, 201);
+      const path = `${base}/${opened.body.id}/procedures`;
+      const item = (extra) => ({ targetType: 'WHOLE_MOUTH', description: 'Control de ortodoncia', ...extra });
+
+      assert.equal(opened.body.proceduresTotal, null, 'sin procedimientos no hay total');
+      const invalid = [
+        [[item({ priceMinor: 15_000 })], 'INVALID_PROCEDURE_PRICE'],
+        [[item({ currency: 'BOB' })], 'INVALID_PROCEDURE_PRICE'],
+        [[item({ priceMinor: -1, currency: 'BOB' })], undefined],
+        [[item({ priceMinor: 10.5, currency: 'BOB' })], undefined],
+        [[item({ priceMinor: 100, currency: 'bob' })], undefined],
+        [[item({ priceMinor: 100, currency: 'BOLIVIANOS' })], undefined],
+        [[item({ priceMinor: 100, currency: 'BOB' }), item({ priceMinor: 100, currency: 'USD' })], 'PROCEDURE_CURRENCY_MISMATCH'],
+      ];
+      for (const [procedures, code] of invalid) {
+        const rejected = await request(path, 'POST', accessToken, { procedures });
+        assert.ok([400, 422].includes(rejected.status), JSON.stringify(procedures));
+        if (code) assert.equal(rejected.body.code, code, JSON.stringify(procedures));
+      }
+      assert.equal(encounters.get(opened.body.id).procedures.length, 0, 'nada se guardó');
+
+      const created = await request(path, 'POST', accessToken, {
+        procedures: [
+          item({ priceMinor: 15_000, currency: 'BOB' }),
+          item({ priceMinor: 5_000, currency: 'BOB' }),
+          item({ priceMinor: 0, currency: 'BOB' }),
+          item({}),
+        ],
+      });
+      assert.equal(created.status, 201);
+      assert.deepEqual(
+        created.body.map((row) => [row.priceMinor, row.currency]),
+        [[15_000, 'BOB'], [5_000, 'BOB'], [0, 'BOB'], [null, null]],
+      );
+
+      // Una moneda distinta a la ya registrada en la atención no se mezcla.
+      const mixed = await request(path, 'POST', accessToken, { procedures: [item({ priceMinor: 100, currency: 'USD' })] });
+      assert.equal(mixed.status, 422);
+      assert.equal(mixed.body.code, 'PROCEDURE_CURRENCY_MISMATCH');
+      assert.equal(encounters.get(opened.body.id).procedures.length, 4);
+
+      const detail = await request(`${base}/${opened.body.id}`, 'GET', accessToken);
+      assert.deepEqual(detail.body.proceduresTotal, { amountMinor: 20_000, currency: 'BOB' });
+
+      // Los procedimientos anulados no suman.
+      encounters.get(opened.body.id).procedures[0].status = 'VOIDED';
+      const afterVoid = await request(`${base}/${opened.body.id}`, 'GET', accessToken);
+      assert.deepEqual(afterVoid.body.proceduresTotal, { amountMinor: 5_000, currency: 'BOB' });
+
+      // Atención rápida: mismas reglas.
+      const quickPath = `${base}/quick`;
+      const quick = await request(quickPath, 'POST', accessToken, {
+        branchId,
+        procedures: [item({ priceMinor: 8_000, currency: 'BOB' }), item({ priceMinor: 2_000, currency: 'BOB' })],
+      });
+      assert.equal(quick.status, 201);
+      assert.deepEqual(quick.body.proceduresTotal, { amountMinor: 10_000, currency: 'BOB' });
+      const quickMixed = await request(quickPath, 'POST', accessToken, {
+        branchId,
+        procedures: [item({ priceMinor: 1, currency: 'BOB' }), item({ priceMinor: 1, currency: 'USD' })],
+      });
+      assert.equal(quickMixed.status, 422);
+      assert.equal(quickMixed.body.code, 'PROCEDURE_CURRENCY_MISMATCH');
+    });
+
+    await t.test('una atención con pago vigente no se anula hasta anular el pago', async () => {
+      const accessToken = await token();
+      const opened = await request(base, 'POST', accessToken, createBody({ startedAt: '2026-11-21T14:00:00.000Z' }));
+      assert.equal(opened.status, 201);
+      const id = opened.body.id;
+      const completed = await request(`${base}/${id}/complete`, 'POST', accessToken, { endedAt: '2026-11-21T15:00:00Z' });
+      assert.equal(completed.status, 200);
+
+      paidEncounterIds.add(id);
+      const blocked = await request(`${base}/${id}/void`, 'POST', accessToken, { reason: 'Registro duplicado' });
+      assert.equal(blocked.status, 409);
+      assert.equal(blocked.body.code, 'ENCOUNTER_HAS_PAYMENT');
+      assert.equal(encounters.get(id).status, 'COMPLETED', 'la atención sigue vigente');
+      assert.equal(encounters.get(id).voidReason ?? null, null);
+
+      // Anulado el pago (libera la atención), ya se puede anular.
+      paidEncounterIds.delete(id);
+      const voided = await request(`${base}/${id}/void`, 'POST', accessToken, { reason: 'Registro duplicado' });
+      assert.equal(voided.status, 200);
+      assert.equal(voided.body.status, 'VOIDED');
     });
 
     await t.test('el historial y la atención rápida dependen de las funciones del plan', async (t) => {

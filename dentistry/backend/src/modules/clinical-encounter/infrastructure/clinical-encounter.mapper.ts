@@ -41,6 +41,8 @@ export interface ClinicalEncounterProcedureRow {
   targetDescription: string | null;
   description: string;
   treatmentProcedureId: string | null;
+  priceMinor: number | null;
+  currency: string | null;
   status: string;
   voidedAt: Date | null;
   voidedByMembershipId: string | null;
@@ -76,6 +78,8 @@ export function toProcedureEntity(
     targetDescription: row.targetDescription,
     description: row.description,
     treatmentProcedureId: row.treatmentProcedureId,
+    priceMinor: row.priceMinor,
+    currency: row.currency,
     status: row.status as ClinicalEncounterProcedureStatus,
     voidedAt: row.voidedAt,
     voidedByMembershipId: row.voidedByMembershipId,

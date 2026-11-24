@@ -2,6 +2,7 @@ import type {
   ClinicalEncounterProcedureDraft,
   ClinicalEncounterTargetType,
 } from "@/features/clinical-encounter/types/clinical-encounter";
+import { DEFAULT_CURRENCY, normalizeCurrency, parseAmountToMinor } from "@/features/billing/utils/money";
 
 export interface ProcedureFormValues {
   targetType: ClinicalEncounterTargetType;
@@ -9,6 +10,9 @@ export interface ProcedureFormValues {
   targetDescription: string;
   description: string;
   treatmentProcedureId: string;
+  /** Precio nominal opcional (importe escrito por la persona, ej. "150"). */
+  price?: string;
+  currency?: string;
 }
 
 export class ProcedureValidationError extends Error {
@@ -46,6 +50,7 @@ export function toProcedureDrafts(values: ProcedureFormValues): ClinicalEncounte
   }
 
   const treatmentProcedureId = values.treatmentProcedureId.trim() || undefined;
+  const price = toPriceFields(values);
   const targetDescription = values.targetDescription.trim() || undefined;
 
   if (values.targetType === "TOOTH") {
@@ -71,6 +76,7 @@ export function toProcedureDrafts(values: ProcedureFormValues): ClinicalEncounte
       ...(targetDescription ? { targetDescription } : {}),
       description,
       treatmentProcedureId,
+      ...price,
     }));
   }
 
@@ -80,6 +86,20 @@ export function toProcedureDrafts(values: ProcedureFormValues): ClinicalEncounte
       ...(targetDescription ? { targetDescription } : {}),
       description,
       treatmentProcedureId,
+      ...price,
     },
   ];
+}
+
+/** Precio y moneda juntos, o ninguno: el backend los exige a la vez. */
+function toPriceFields(values: Pick<ProcedureFormValues, "price" | "currency">) {
+  const text = values.price?.trim();
+  if (!text) return {};
+  const priceMinor = parseAmountToMinor(text);
+  if (priceMinor === null) {
+    throw new ProcedureValidationError("El precio debe ser un importe válido, con hasta dos decimales.");
+  }
+  const currency = normalizeCurrency(values.currency || DEFAULT_CURRENCY);
+  if (!currency) throw new ProcedureValidationError("La moneda debe tener tres letras (ej. BOB).");
+  return { priceMinor, currency };
 }

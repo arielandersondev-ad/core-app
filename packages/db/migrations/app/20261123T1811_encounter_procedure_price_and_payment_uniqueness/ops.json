@@ -1,0 +1,209 @@
+[
+  {
+    "id": "column.dentistry.ClinicalEncounterProcedure.currency",
+    "label": "Add column \"currency\" to \"ClinicalEncounterProcedure\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "column",
+        "name": "currency",
+        "table": "ClinicalEncounterProcedure"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"currency\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "ClinicalEncounterProcedure",
+          "currency"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"currency\"",
+        "sql": "ALTER TABLE \"dentistry\".\"ClinicalEncounterProcedure\" ADD COLUMN \"currency\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"currency\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "ClinicalEncounterProcedure",
+          "currency"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.dentistry.ClinicalEncounterProcedure.priceMinor",
+    "label": "Add column \"priceMinor\" to \"ClinicalEncounterProcedure\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "column",
+        "name": "priceMinor",
+        "table": "ClinicalEncounterProcedure"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"priceMinor\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "ClinicalEncounterProcedure",
+          "priceMinor"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"priceMinor\"",
+        "sql": "ALTER TABLE \"dentistry\".\"ClinicalEncounterProcedure\" ADD COLUMN \"priceMinor\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"priceMinor\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "ClinicalEncounterProcedure",
+          "priceMinor"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.ClinicalEncounterProcedure.encounter_procedure_currency_8daa14c4",
+    "label": "Add check constraint \"encounter_procedure_currency_8daa14c4\" on \"ClinicalEncounterProcedure\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "checkConstraint",
+        "name": "encounter_procedure_currency_8daa14c4",
+        "table": "ClinicalEncounterProcedure"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"encounter_procedure_currency_8daa14c4\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "encounter_procedure_currency_8daa14c4",
+          "dentistry",
+          "\"dentistry\".\"ClinicalEncounterProcedure\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"encounter_procedure_currency_8daa14c4\"",
+        "sql": "ALTER TABLE \"dentistry\".\"ClinicalEncounterProcedure\" ADD CONSTRAINT \"encounter_procedure_currency_8daa14c4\" CHECK ((\"priceMinor\" IS NULL AND \"currency\" IS NULL) OR (\"priceMinor\" IS NOT NULL AND \"currency\" IS NOT NULL AND \"currency\" ~ '^[A-Z]{3}$'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"encounter_procedure_currency_8daa14c4\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "encounter_procedure_currency_8daa14c4",
+          "dentistry",
+          "\"dentistry\".\"ClinicalEncounterProcedure\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.ClinicalEncounterProcedure.encounter_procedure_price_11edf7e3",
+    "label": "Add check constraint \"encounter_procedure_price_11edf7e3\" on \"ClinicalEncounterProcedure\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "checkConstraint",
+        "name": "encounter_procedure_price_11edf7e3",
+        "table": "ClinicalEncounterProcedure"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"encounter_procedure_price_11edf7e3\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "encounter_procedure_price_11edf7e3",
+          "dentistry",
+          "\"dentistry\".\"ClinicalEncounterProcedure\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"encounter_procedure_price_11edf7e3\"",
+        "sql": "ALTER TABLE \"dentistry\".\"ClinicalEncounterProcedure\" ADD CONSTRAINT \"encounter_procedure_price_11edf7e3\" CHECK (\"priceMinor\" IS NULL OR \"priceMinor\" >= 0)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"encounter_procedure_price_11edf7e3\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "encounter_procedure_price_11edf7e3",
+          "dentistry",
+          "\"dentistry\".\"ClinicalEncounterProcedure\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Payment.payment_encounter_uidx_9d5b8137",
+    "label": "Create index \"payment_encounter_uidx_9d5b8137\" on \"Payment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "index",
+        "name": "payment_encounter_uidx_9d5b8137",
+        "table": "Payment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"payment_encounter_uidx_9d5b8137\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payment_encounter_uidx_9d5b8137\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"payment_encounter_uidx_9d5b8137\"",
+        "sql": "CREATE UNIQUE INDEX \"payment_encounter_uidx_9d5b8137\" ON \"dentistry\".\"Payment\" (\"organizationId\", \"clinicalEncounterId\") WHERE (\"clinicalEncounterId\" IS NOT NULL AND \"status\" = 'COMPLETED')",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"payment_encounter_uidx_9d5b8137\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"dentistry\".\"payment_encounter_uidx_9d5b8137\""
+        ]
+      }
+    ]
+  }
+]

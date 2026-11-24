@@ -4,12 +4,17 @@ import { useState, useTransition, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { DEV_PERSONAS, type DevPersona } from "../types/personas";
 import { switchPersonaAction } from "../actions/switch-persona.action";
+import { DevRealUsersSection } from "./DevRealUsersSection";
 
 interface DevPersonaSwitcherProps {
   currentPersonaId?: string | null;
+  /** Id del usuario de la sesión activa (persona o usuario real canjeado). */
+  currentUserId?: string | null;
+  /** Hay una sesión que no es una persona fija: un usuario real canjeado o un login normal. */
+  realSession?: boolean;
 }
 
-export function DevPersonaSwitcher({ currentPersonaId }: DevPersonaSwitcherProps) {
+export function DevPersonaSwitcher({ currentPersonaId, currentUserId = null, realSession = false }: DevPersonaSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [activePersonaId, setActivePersonaId] = useState<string | null>(currentPersonaId ?? null);
@@ -203,6 +208,8 @@ export function DevPersonaSwitcher({ currentPersonaId }: DevPersonaSwitcherProps
             })}
           </div>
 
+          <DevRealUsersSection currentUserId={currentUserId} />
+
           {/* Acciones inferiores */}
           <div className="flex items-center justify-between border-t border-[var(--border,#e4e4e7)] dark:border-[#27272a] pt-2.5 text-[11px]">
             {currentPersona ? (
@@ -251,7 +258,7 @@ export function DevPersonaSwitcher({ currentPersonaId }: DevPersonaSwitcherProps
         className={`flex items-center gap-2 px-3 py-2 rounded-full border-2 shadow-lg backdrop-blur-md transition-shadow duration-150 ${
           isDragging ? "cursor-grabbing shadow-2xl scale-105" : "cursor-grab hover:scale-105 hover:shadow-xl active:scale-95"
         } ${
-          currentPersona
+          currentPersona || realSession
             ? "bg-[var(--surface,#ffffff)] dark:bg-[#18181b] border-emerald-500/50 text-[var(--foreground,#09090b)] dark:text-[#fafafa] hover:border-emerald-500"
             : "bg-[var(--surface,#ffffff)] dark:bg-[#18181b] border-amber-500/50 text-[var(--foreground,#09090b)] dark:text-[#fafafa] hover:border-amber-500"
         }`}
@@ -270,6 +277,8 @@ export function DevPersonaSwitcher({ currentPersonaId }: DevPersonaSwitcherProps
               <span>{currentPersona.avatarIcon}</span>
               <span className="truncate">{currentPersona.name}</span>
             </>
+          ) : realSession ? (
+            <span className="truncate">Sesión real</span>
           ) : (
             <span className="text-amber-600 dark:text-amber-400">Sin autenticar</span>
           )}

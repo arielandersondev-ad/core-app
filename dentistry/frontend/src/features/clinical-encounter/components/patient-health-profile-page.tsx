@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PatientContextBoundary } from "@/features/clinical-encounter/components/patient-context-boundary";
+import { PatientTabs } from "@/features/patient/components/patient-tabs";
 import { Panel } from "@/features/clinical-encounter/components/clinical-encounter-panel";
 import { TextAreaField } from "@/features/clinical-encounter/components/clinical-encounter-textarea-field";
 import { TextBlock } from "@/features/clinical-encounter/components/clinical-encounter-text-block";
@@ -166,6 +167,7 @@ function PatientHealthProfileView({
           </>
         }
       />
+      <PatientTabs patientId={patient.id} active="health" />
 
       {query.isPending ? (
         <p

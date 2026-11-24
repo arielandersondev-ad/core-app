@@ -75,6 +75,24 @@ export const ClinicalErrors = {
       'INVALID_PROCEDURE_TARGET',
       message,
     ),
+  invalidProcedurePrice: (message: string) =>
+    new CodedHttpException(
+      HttpStatus.BAD_REQUEST,
+      'INVALID_PROCEDURE_PRICE',
+      message,
+    ),
+  procedureCurrencyMismatch: (currency: string) =>
+    new CodedHttpException(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      'PROCEDURE_CURRENCY_MISMATCH',
+      `Los procedimientos de una atención deben usar una sola moneda (${currency}).`,
+    ),
+  hasPayment: () =>
+    new CodedHttpException(
+      HttpStatus.CONFLICT,
+      'ENCOUNTER_HAS_PAYMENT',
+      'La atención tiene un pago vigente; anula el pago antes de anular la atención.',
+    ),
   notInProgress: (action: 'completar' | 'registrar procedimientos') =>
     new CodedHttpException(
       HttpStatus.CONFLICT,

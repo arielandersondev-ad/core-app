@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { addDays } from "./hooks/useAgendaAppointments";
+import { addDaysIso, weekDaysOf } from "./week";
 
 interface AgendaHeaderProps {
   date: string;
   /** "Hoy" (`YYYY-MM-DD`) en la zona horaria de la organización. */
   today: string;
+  /** Citas por día (`YYYY-MM-DD`) de la semana visible; los días sin citas no aparecen. */
+  dayCounts: Record<string, number>;
   onDateChange: (date: string) => void;
   viewMode: "feed" | "grid";
   onViewModeChange: (mode: "feed" | "grid") => void;
@@ -17,6 +19,7 @@ interface AgendaHeaderProps {
 export function AgendaHeader({
   date,
   today,
+  dayCounts,
   onDateChange,
   viewMode,
   onViewModeChange,
@@ -39,24 +42,23 @@ export function AgendaHeader({
     return `${m.charAt(0).toUpperCase() + m.slice(1)} ${y}`;
   };
 
-  // Carrusel semanal táctil
-  const weekDays = useMemo(() => {
-    const center = new Date(date + "T12:00:00");
-    const days = [];
-    for (let i = -3; i <= 3; i++) {
-      const cur = new Date(center);
-      cur.setDate(center.getDate() + i);
-      const iso = cur.toISOString().slice(0, 10);
-      days.push({
-        iso,
-        dayName: cur.toLocaleDateString("es-BO", { weekday: "narrow" }),
-        dayNum: cur.getDate(),
-        isCurrentDay: iso === date,
-        isToday: iso === today,
-      });
-    }
-    return days;
-  }, [date, today]);
+  // Semana fija (lunes a domingo): el día elegido se mueve dentro de ella, la tira no se desplaza.
+  const weekDays = useMemo(
+    () =>
+      weekDaysOf(date).map((iso) => {
+        const cur = new Date(iso + "T12:00:00");
+        return {
+          iso,
+          dayName: cur.toLocaleDateString("es-BO", { weekday: "narrow" }),
+          longLabel: cur.toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long" }),
+          dayNum: cur.getDate(),
+          isCurrentDay: iso === date,
+          isToday: iso === today,
+          count: dayCounts[iso] ?? 0,
+        };
+      }),
+    [date, today, dayCounts],
+  );
 
   return (
     <div className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
@@ -66,10 +68,10 @@ export function AgendaHeader({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => onDateChange(addDays(date, -7))}
+            onClick={() => onDateChange(addDaysIso(date, -1))}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
-            aria-label="Semana anterior"
-            title="Semana anterior"
+            aria-label="Día anterior"
+            title="Día anterior"
           >
             <svg
               width="14"
@@ -89,10 +91,10 @@ export function AgendaHeader({
 
           <button
             type="button"
-            onClick={() => onDateChange(addDays(date, 7))}
+            onClick={() => onDateChange(addDaysIso(date, 1))}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--background)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors active:scale-95"
-            aria-label="Semana siguiente"
-            title="Semana siguiente"
+            aria-label="Día siguiente"
+            title="Día siguiente"
           >
             <svg
               width="14"
@@ -165,6 +167,8 @@ export function AgendaHeader({
             key={wd.iso}
             type="button"
             onClick={() => onDateChange(wd.iso)}
+            aria-pressed={wd.isCurrentDay}
+            aria-label={`${wd.longLabel}${wd.count > 0 ? `, ${wd.count} cita${wd.count === 1 ? "" : "s"}` : ", sin citas"}`}
             className="flex flex-col items-center gap-1.5 py-1.5 rounded-xl group transition-all"
           >
             <span
@@ -176,16 +180,25 @@ export function AgendaHeader({
             >
               {wd.dayName}
             </span>
-            <span
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-xs transition-all ${
-                wd.isCurrentDay
-                  ? "bg-[var(--primary)] text-[var(--primary-foreground)] font-bold shadow-xs scale-105"
-                  : wd.isToday
-                    ? "border border-[var(--primary)] text-[var(--primary)] font-semibold"
-                    : "text-[var(--foreground)] group-hover:bg-[var(--background)]"
-              }`}
-            >
-              {wd.dayNum}
+            <span className="relative">
+              <span
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs transition-all ${
+                  wd.isCurrentDay
+                    ? "bg-[var(--primary)] text-[var(--primary-foreground)] font-bold shadow-xs scale-105"
+                    : wd.isToday
+                      ? "border border-[var(--primary)] text-[var(--primary)] font-semibold"
+                      : "text-[var(--foreground)] group-hover:bg-[var(--background)]"
+                }`}
+              >
+                {wd.dayNum}
+              </span>
+              {wd.count > 0 && (
+                <span
+                  aria-hidden="true"
+                  data-testid="agenda-day-badge"
+                  className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--secondary)] ring-2 ring-[var(--surface-elevated)]"
+                />
+              )}
             </span>
           </button>
         ))}

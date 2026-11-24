@@ -1,4 +1,5 @@
 import { keepPreviousData, mutationOptions, queryOptions, type QueryClient } from "@tanstack/react-query";
+import { billingQueryKeys } from "@/features/billing/api/query-options";
 import { patientQueryKeys } from "@/features/patient/api/query-options";
 import { appointmentQueryKeys } from "@/modules/clinic/hooks/use-appointments";
 import { ClinicalEncounterPartialCreateError } from "@/features/clinical-encounter/services/clinical-encounter.error";
@@ -43,6 +44,14 @@ async function assertSessionUnchanged(session: CurrentSession): Promise<void> {
 
 function invalidatePatientDetail(client: QueryClient, patientId: string) {
   return client.invalidateQueries({ queryKey: patientQueryKeys.detail(patientId) });
+}
+
+/**
+ * La propuesta de cobro depende de los procedimientos y del estado de la atención: sin esto el
+ * cobro abre con la propuesta vieja (sin total) tras agregar procedimientos o completar.
+ */
+function invalidateBilling(client: QueryClient, patientId: string) {
+  return client.invalidateQueries({ queryKey: billingQueryKeys.all(patientId) });
 }
 
 /** El backend avanza el estado de la cita vinculada junto con la atención. */
@@ -227,6 +236,7 @@ export function clinicalEncounterCompleteOptions(
           queryKey: clinicalEncounterQueryKeys.lists(patientId),
         }),
         invalidatePatientDetail(client, patientId),
+        invalidateBilling(client, patientId),
         ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
@@ -253,6 +263,7 @@ export function clinicalEncounterVoidOptions(
           queryKey: clinicalEncounterQueryKeys.lists(patientId),
         }),
         invalidatePatientDetail(client, patientId),
+        invalidateBilling(client, patientId),
       ]);
     },
   });
@@ -278,6 +289,7 @@ export function clinicalEncounterAddProceduresOptions(
           queryKey: clinicalEncounterQueryKeys.lists(patientId),
         }),
         invalidatePatientDetail(client, patientId),
+        invalidateBilling(client, patientId),
       ]);
     },
   });

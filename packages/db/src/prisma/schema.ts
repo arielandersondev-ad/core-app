@@ -861,6 +861,7 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       organizationId: field.uuidNative(),
       patientId: field.uuidNative(),
       serviceId: field.uuidNative().optional(),
+      title: field.text().optional(),
       practitionerMembershipId: field.uuidNative().optional(),
       status: field.text().default("PROPOSED"),
       startedAt: field.temporal.timestamptz().optional(),
@@ -910,6 +911,8 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
       toothNumber: field.text().optional(),
       targetDescription: field.text().optional(),
       description: field.text(),
+      priceMinor: field.int().optional(),
+      currency: field.text().optional(),
       status: field.text().default("RECORDED"),
       createdByMembershipId: field.uuidNative(),
       updatedByMembershipId: field.uuidNative().optional(),
@@ -1608,6 +1611,14 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
               name: "encounter_procedure_void",
               expression: '(\"status\" = \'RECORDED\' AND \"voidedAt\" IS NULL AND \"voidedByMembershipId\" IS NULL AND \"voidReason\" IS NULL) OR (\"status\" = \'VOIDED\' AND \"voidedAt\" IS NOT NULL AND \"voidedByMembershipId\" IS NOT NULL AND \"voidReason\" IS NOT NULL AND length(btrim(\"voidReason\")) > 0)',
             }),
+            check({
+              name: "encounter_procedure_price",
+              expression: '\"priceMinor\" IS NULL OR \"priceMinor\" >= 0',
+            }),
+            check({
+              name: "encounter_procedure_currency",
+              expression: '(\"priceMinor\" IS NULL AND \"currency\" IS NULL) OR (\"priceMinor\" IS NOT NULL AND \"currency\" IS NOT NULL AND \"currency\" ~ \'^[A-Z]{3}$\')',
+            }),
             check({ name: "ClinicalEncounterProcedure_version", expression: '\"rowVersion\" > 0' }),
           ],
         })),
@@ -1665,6 +1676,11 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
               name: "treatment_status",
               expression:
                 "\"status\" IN ('PROPOSED', 'ACCEPTED', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'DECLINED', 'CANCELED')",
+            }),
+            check({
+              name: "treatment_title",
+              expression:
+                '"title" IS NULL OR (length(btrim("title")) > 0 AND length("title") <= 120)',
             }),
             check({
               name: "treatment_period",
@@ -1742,6 +1758,11 @@ function buildDentistryModels({ field, model, rel }: ContractBuilderContext) {
           ),
         ],
         indexes: [
+          constraints.index([cols.organizationId, cols.clinicalEncounterId], {
+            name: "payment_encounter_uidx",
+            unique: true,
+            where: "\"clinicalEncounterId\" IS NOT NULL AND \"status\" = 'COMPLETED'",
+          }),
           constraints.index([cols.organizationId, cols.paidAt], {
             name: "payment_org_paid_idx",
           }),

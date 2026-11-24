@@ -21,6 +21,9 @@ export type ProcedureDraft = {
   targetDescription?: string | null;
   description: string;
   treatmentProcedureId?: string | null;
+  /** Precio nominal opcional; con precio, la moneda es obligatoria. */
+  priceMinor?: number | null;
+  currency?: string | null;
 };
 
 export type AddClinicalEncounterProceduresCommand = EncounterScope & {
@@ -45,6 +48,7 @@ export class AddClinicalEncounterProceduresUseCase {
       patientId: command.patientId,
     };
     const procedures = command.procedures.map(toCreateData);
+    assertSingleCurrency(procedures);
     const encounter = await this.access.loadEncounter(
       scope,
       command.encounterId,
@@ -53,6 +57,13 @@ export class AddClinicalEncounterProceduresUseCase {
     if (encounter.status !== 'IN_PROGRESS') {
       throw ClinicalErrors.notInProgress('registrar procedimientos');
     }
+    // El total de la atención se propone como cobro: una sola moneda.
+    assertSingleCurrency([
+      ...encounter.procedures.filter(
+        (procedure) => procedure.status !== 'VOIDED',
+      ),
+      ...procedures,
+    ]);
 
     const plannedIds = [
       ...new Set(
@@ -116,5 +127,53 @@ export function toCreateData(draft: ProcedureDraft): ProcedureCreateData {
     targetDescription: normalizeText(draft.targetDescription),
     description,
     treatmentProcedureId: draft.treatmentProcedureId ?? null,
+    ...resolvePrice(draft),
   };
+}
+
+/** Importe en unidades menores (`int4`). */
+const MAX_PRICE_MINOR = 2_147_483_647;
+
+/** Sin precio, ambos nulos; con precio, entero >= 0 y moneda de tres letras. */
+function resolvePrice(
+  draft: Pick<ProcedureDraft, 'priceMinor' | 'currency'>,
+): Pick<ProcedureCreateData, 'priceMinor' | 'currency'> {
+  const currency = normalizeText(draft.currency);
+  if (draft.priceMinor === undefined || draft.priceMinor === null) {
+    if (currency) {
+      throw ClinicalErrors.invalidProcedurePrice(
+        'La moneda solo se indica junto con el precio.',
+      );
+    }
+    return { priceMinor: null, currency: null };
+  }
+  if (
+    !Number.isInteger(draft.priceMinor) ||
+    draft.priceMinor < 0 ||
+    draft.priceMinor > MAX_PRICE_MINOR
+  ) {
+    throw ClinicalErrors.invalidProcedurePrice(
+      'El precio debe ser un entero en unidades menores, mayor o igual a cero.',
+    );
+  }
+  if (!currency || !/^[A-Z]{3}$/.test(currency)) {
+    throw ClinicalErrors.invalidProcedurePrice(
+      'La moneda es obligatoria con el precio: tres letras mayúsculas (ej. BOB).',
+    );
+  }
+  return { priceMinor: draft.priceMinor, currency };
+}
+
+/** Los precios de una atención se suman, así que comparten moneda. */
+export function assertSingleCurrency(
+  procedures: { currency: string | null }[],
+): void {
+  let first: string | null = null;
+  for (const procedure of procedures) {
+    if (procedure.currency === null) continue;
+    first ??= procedure.currency;
+    if (procedure.currency !== first) {
+      throw ClinicalErrors.procedureCurrencyMismatch(first);
+    }
+  }
 }

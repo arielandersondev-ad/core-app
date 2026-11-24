@@ -1,0 +1,60 @@
+# Plan de implementación — presupuesto, abonos y saldo (ortodoncia)
+
+> Fecha: 2026-11-23 · Estado: implementado y commiteado (HAG-11 a HAG-19). Migraciones `20261123T1811` y `20261123T1857` aplicadas a la base `dev` el 2026-11-24 (`db:verify` coincide con el contrato; la referencia `db` está en `f31890d6`). Recorrido real hecho el 2026-11-24 con la sesión de la propietaria de UnoDent (canje de desarrollo, HAG-21 y HAG-22): presupuesto de 10 000 Bs, anticipo de 200 Bs, atención con procedimientos con precio, cobro menor al realizado, anulación del pago, nuevo cobro de la misma atención y prórroga; el saldo y el libro de movimientos cuadran, y el backend rechaza sobrepago, moneda distinta, segundo pago de una atención y anular una atención con pago. Encontró y corrigió dos fallos: la propuesta de cobro no se refrescaba (HAG-23) y el selector de tratamientos ignoraba el título (HAG-25).
+
+> Requisito del plan comercial: la copia del plan (`entitlementsSnapshot`) de cada organización se actualiza solo al **reasignar** el plan; activar `treatments` en el plan no basta y sin la copia nueva el backend responde 403 `MODULE_NOT_IN_PLAN`.
+
+## 1. Requerimiento del cliente
+
+Registrar un paciente de ortodoncia con un monto a pagar (ej. 10 000 Bs). Si no puede pagar el total, deja un adelanto (ej. 200 Bs) y en cada encuentro/cita se registran los abonos y el saldo de su cartera.
+
+## 2. Modelo acordado
+
+| Concepto | Dónde vive |
+|---|---|
+| Presupuesto | `Treatment.agreedPriceMinor` + `currency` |
+| Anticipo, pago al contado, abono entre visitas | `Payment` con `treatmentId`, sin encuentro |
+| Abono de un encuentro | `Payment` con `clinicalEncounterId` (relación 1:1) |
+| Prórroga (encuentro sin pago) | No existe fila de `Payment` |
+| Precio nominal del procedimiento | `ClinicalEncounterProcedure.priceMinor` + `currency` (opcionales) |
+| Saldo | Derivado: `agreedPriceMinor` − suma de `Payment` `COMPLETED` del tratamiento |
+
+Reglas:
+
+- Al finalizar un encuentro se **propone** el monto como la suma de los precios de sus procedimientos no anulados. Recepción lo confirma, lo edita al monto realmente recibido o lo omite (prórroga). Lo realizado frente a lo cobrado se muestra en el encuentro, pero solo el dinero recibido mueve el saldo.
+- Un `Payment` reduce el saldo de **un solo** tratamiento. En un encuentro con procedimientos de varios tratamientos, el tratamiento se elige al cobrar.
+- El 1:1 se garantiza con un índice único parcial sobre los pagos `COMPLETED`; anular un pago libera el encuentro.
+- Importes en unidades menores enteras (10 000 Bs = 1 000 000), moneda de tres letras.
+
+## 3. Plan comercial
+
+Se usa el plan estándar existente. Ya tiene `payments: true`; se activa `treatments: true` desde Core y se **reasigna** a la organización, porque cada asignación conserva una copia (`entitlementsSnapshot`). Los límites `filesPerPatient` y `fileStorageBytes` no se tocan.
+
+## 4. Fases
+
+| # | Fase | Contenido | Estado |
+|---|---|---|---|
+| 1 | Contrato `packages/db` | Precio en `ClinicalEncounterProcedure`; índice único parcial `payment_encounter_uidx`; migración `20261123T1811_encounter_procedure_price_and_payment_uniqueness` (HAG-11) y `Treatment.title` con la migración `20261123T1857_treatment_title`, planificada con `--from` porque el planificador parte de la referencia `db` (HAG-13) | Commiteada y aplicada a la base `dev` (2026-11-24) |
+| 2 | Core: plan y permisos | `treatments: true`, reasignación y permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` para el propietario | Pendiente: lo hace el responsable de datos desde Core, nunca con SQL directo |
+| 3 | Backend de tratamientos | Crear y editar con presupuesto y moneda; detalle con presupuesto, pagado y saldo; `@RequireModule('treatments')` | Implementada en `dentistry/backend/src/modules/treatment`; 104/104 pruebas |
+| 4 | Backend de pagos | Pago al tratamiento, pago del encuentro (1:1), anulación con motivo, estado de cuenta; saldo comprobado dentro de la transacción con bloqueo | Implementada en `dentistry/backend/src/modules/payment` (HAG-14); migraciones aplicadas a `dev`; probada con el backend en marcha (2026-11-24) |
+| 5 | Integración con encuentros | Precio en el procedimiento; propuesta de pago al finalizar; no anular un encuentro con pago activo | Implementada (HAG-15): precio en procedimientos y `proceduresTotal` en la atención (`clinical-encounter`), `GET .../payment-proposal` (`payment`) y 409 `ENCOUNTER_HAS_PAYMENT` al anular; migraciones aplicadas a `dev`; probada con el backend en marcha (2026-11-24) |
+| 6 | Frontend | Estado de cuenta en el paciente; paso de cobro; campo de precio; retirar los mocks globales | Implementada. HAG-16: BFF, `features/billing` y `/patients/:id/account` (presupuestos, abonos, saldo, anulación). HAG-17: precio en procedimientos (alta y atención rápida), total realizado y panel de cobro en la atención (propuesta al completar, prórroga, anulación del pago). HAG-18: se retiran del menú las pantallas globales `/treatments`, `/payments` y `/register-payment` (prototipo con datos de ejemplo; el backend es por paciente) y redirigen a la cuenta del paciente. Los componentes mock de `modules/clinic` siguen en el repositorio sin ruta propia |
+| 7 | Cierre | Diccionario, `docs/plan-starter/README.md` y prueba de punta a punta | Implementada (HAG-19): diccionario y plan Starter al día, y `billing-flow.test.mjs` recorre el caso del cliente a través de los tres módulos con persistencia en memoria. Recorrido real contra `dev` hecho el 2026-11-24 (HAG-23 y HAG-25 corrigen lo que encontró) |
+
+## 5. Decisiones abiertas (valor por defecto)
+
+1. Sobrepago: se bloquea un pago mayor al saldo.
+2. El presupuesto es editable, nunca por debajo de lo ya pagado; un descuento es editar el presupuesto.
+3. Una sola moneda por tratamiento; pagos y precios deben coincidir.
+4. Se permite el cobro sin tratamiento (no afecta ningún saldo).
+5. Medios de pago: efectivo, transferencia, QR y tarjeta.
+6. Quién registra o anula pagos: **el propietario** (el cliente no tiene recepción). Los permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` van solo a su rol.
+7. Recibo imprimible: fuera de la v1.
+8. Tickets: HAG-11 (contrato y este plan), HAG-12 (tratamientos), HAG-13 (título), HAG-14 (pagos), HAG-15 (integración con atenciones), HAG-16 y HAG-17 (frontend), HAG-18 (retiro de pantallas globales) y HAG-19 (cierre).
+
+## 6. Restricciones del repositorio
+
+- Todo cambio de modelo sigue el ciclo de `packages/db/README.md`; nada de SQL directo contra Neon ni `db:update` contra la base compartida.
+- Un commit atómico por ticket con `tsc` sin errores y tests en verde.
+- La migración nueva se apoya en `20261105T1833_dentistry_clinical_procedures`, que ya estaba aplicada en `dev`. Las dos de este plan se aplicaron en orden con `migrate --advance-ref db` (2026-11-24).

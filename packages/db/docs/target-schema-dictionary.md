@@ -679,13 +679,14 @@ Campos comunes: `id`, `organizationId`, `createdByMembershipId`, `updatedByMembe
 |---|---|---|---|
 | `patientId` | UUID | C | Paciente de la organización. |
 | `serviceId` | UUID | C | Servicio de referencia actual; definir antes de activar tratamientos sin catálogo. |
+| `title` | text? | A | Nombre del tratamiento para mostrarlo (ej. "Ortodoncia"). 1 a 120 caracteres sin espacios sobrantes. Nulo solo en tratamientos anteriores a este campo; las altas nuevas lo exigen en la aplicación. |
 | `responsibleMembershipId → practitionerMembershipId` | UUID? | R | Responsable clínico asignado, igual vocabulario que citas/atenciones. |
 | `status` | text | M | Propuesta: PROPOSED, ACCEPTED, IN_PROGRESS, ON_HOLD, COMPLETED, DECLINED, CANCELED. Sustituye ACTIVE ambiguo. |
 | `startedAt` | TIMESTAMPTZ? | M | Hacer opcional hasta inicio real. |
 | `endedAt` | TIMESTAMPTZ? | M | Fin real cuando corresponda; no anterior al inicio. |
 | `estimatedSessions` | integer? | M | Estimación > 0, no sesiones completadas. |
-| `agreedPriceMinor` | integer? | M | Importe acordado >= 0, no deuda ni pago. |
-| `currency` | text? | M | Obligatorio si existe precio acordado. |
+| `agreedPriceMinor` | integer? | M | Presupuesto acordado >= 0. El saldo no se guarda: se deriva como `agreedPriceMinor` menos la suma de los `Payment` `COMPLETED` del tratamiento. Nunca puede quedar por debajo de lo ya cobrado. |
+| `currency` | text? | M | Obligatorio si existe precio acordado. Una sola moneda por tratamiento: sus pagos usan la misma y no puede cambiar con pagos registrados. |
 | `diagnosis → diagnosisSummary` | text? | R | Justificación diagnóstica narrativa. |
 | `notes` | text? | C | Aclaraciones del tratamiento individual. |
 
@@ -704,7 +705,7 @@ Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
 | `treatmentId`, `appointmentId`, `clinicalEncounterId` | UUID? | M | Contextos opcionales coherentes con paciente/organización. No tres pagos distintos. |
 | `amountMinor` | integer | M | Importe recibido > 0. No usar negativos como devolución sin modelarla. |
 | `currency` | text | M | Código de moneda obligatorio. |
-| `paymentMethod` | text | M | Medio de pago; catálogo pendiente del módulo financiero. |
+| `paymentMethod` | text | M | Medio de pago: `CASH`, `TRANSFER`, `QR` o `CARD`. |
 | `status` | text | M | Propuesta COMPLETED, VOIDED. Pendiente/parcial corresponde a deuda/cargo, no a dinero ya recibido. |
 | `reference` | text? | C | Referencia externa opcional. |
 | `notes` | text? | C | Aclaraciones del recibo. |
@@ -713,7 +714,14 @@ Campos comunes: `id`, `organizationId`, `createdAt`, `updatedAt`.
 | `voidedAt`, `voidedByMembershipId` | TIMESTAMPTZ? / UUID? | C | Anulación administrativa. |
 | `voidReason` | text? | A | Obligatorio si status VOIDED. |
 
-No activar contabilidad ni reportar saldos restando pagos de precios de catálogo. Antes del módulo de pagos se define cuenta de cargos, imputaciones y devoluciones según necesidades reales.
+No activar contabilidad ni reportar saldos restando pagos de precios de catálogo. El presupuesto vive en `Treatment` y el saldo se deriva de los pagos `COMPLETED` del tratamiento; no existe una entidad de cargo. Reglas vigentes (`docs/plan-cobros-ortodoncia.md`):
+
+- Un `Payment` reduce el saldo de **un solo** tratamiento. Sin `treatmentId` es un cobro suelto que no afecta ningún saldo y exige moneda.
+- Pagos al tratamiento (anticipo, contado, abono entre visitas) no llevan `clinicalEncounterId`.
+- Relación 1:1 con la atención: el índice único parcial `payment_encounter_uidx` sobre `(organizationId, clinicalEncounterId)` donde `clinicalEncounterId` no es nulo y `status = 'COMPLETED'` permite un solo pago vigente por atención. Anular el pago libera la atención. Una atención sin pago es una prórroga: no existe fila.
+- Se bloquea el sobrepago (importe mayor al saldo). La moneda sale del tratamiento. `paidAt` no puede ser futuro.
+- Una atención con pago vigente no se anula: primero se anula el pago.
+- Devoluciones, cargos e imputaciones siguen fuera de alcance.
 
 ### 5.6 ClinicalFile
 <!-- source: ClinicalFile -->
@@ -1001,6 +1009,6 @@ Relación: `Treatment` 1:N `TreatmentProcedure`. La FK compuesta asegura que el 
 
 ### `ClinicalEncounterProcedure`
 
-Representa una acción realizada durante una atención. Campos: `organizationId`, `patientId`, `clinicalEncounterId`, `treatmentProcedureId` opcional, `targetType`, `toothNumber`, `targetDescription`, `description`, `status`, autoría, fechas, `rowVersion` y datos de anulación. `description` es texto libre. Los estados son `RECORDED` y `VOIDED`; anular requiere fecha, autor y motivo.
+Representa una acción realizada durante una atención. Campos: `organizationId`, `patientId`, `clinicalEncounterId`, `treatmentProcedureId` opcional, `targetType`, `toothNumber`, `targetDescription`, `description`, `status`, autoría, fechas, `rowVersion` y datos de anulación. `description` es texto libre. Los estados son `RECORDED` y `VOIDED`; anular requiere fecha, autor y motivo. `priceMinor` y `currency` son el precio nominal opcional de la acción (entero >= 0 y moneda de tres letras mayúsculas, ambos o ninguno; restricciones `encounter_procedure_price` y `encounter_procedure_currency`). Los precios de una atención comparten moneda. La suma de los no anulados se propone como cobro al finalizar la atención; lo realizado no es lo cobrado y solo el `Payment` recibido mueve el saldo.
 
 Relaciones: `ClinicalEncounter` 1:N `ClinicalEncounterProcedure`; cada acción puede vincularse a un `TreatmentProcedure` del mismo paciente. Una atención puede contener acciones de varios tratamientos y acciones independientes. Se guarda una fila por pieza o ámbito; una selección común de varias piezas en la UI crea varias filas con la misma descripción. Las acciones de región o boca completa no requieren `toothNumber`.

@@ -28,6 +28,10 @@ export interface ProcedureModalProps {
   treatmentProcedures: TreatmentProcedureOption[];
   defaultTreatmentId?: string;
   submitting?: boolean;
+  /** Muestra el precio nominal (el plan incluye pagos). */
+  showPrice?: boolean;
+  /** Moneda de los precios ya registrados en la atención; una atención usa una sola. */
+  defaultCurrency?: string;
 }
 
 interface ProcedurePreview {
@@ -42,12 +46,16 @@ export function ProcedureModal({
   treatmentProcedures,
   defaultTreatmentId,
   submitting = false,
+  showPrice = false,
+  defaultCurrency,
 }: ProcedureModalProps) {
   const [targetType, setTargetType] = useState<ClinicalEncounterTargetType>("TOOTH");
   const [toothNumber, setToothNumber] = useState("");
   const [targetDescription, setTargetDescription] = useState("");
   const [description, setDescription] = useState("");
   const [treatmentProcedureId, setTreatmentProcedureId] = useState("");
+  const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState(defaultCurrency ?? "BOB");
 
   const resetForm = useCallback(() => {
     setTargetType("TOOTH");
@@ -55,6 +63,7 @@ export function ProcedureModal({
     setTargetDescription("");
     setDescription("");
     setTreatmentProcedureId("");
+    setPrice("");
   }, []);
 
   const handleClose = () => {
@@ -80,6 +89,7 @@ export function ProcedureModal({
           targetDescription,
           description,
           treatmentProcedureId,
+          ...(showPrice ? { price, currency } : {}),
         }),
         error: null,
       };
@@ -92,7 +102,7 @@ export function ProcedureModal({
             : "Revisa los datos del procedimiento.",
       };
     }
-  }, [targetType, toothNumber, targetDescription, description, treatmentProcedureId]);
+  }, [targetType, toothNumber, targetDescription, description, treatmentProcedureId, showPrice, price, currency]);
 
   const handleConfirm = () => {
     if (preview.error) return;
@@ -169,6 +179,27 @@ export function ProcedureModal({
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
+        {showPrice && (
+          <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
+            <Input
+              id="ce-proc-price"
+              label="Precio (opcional)"
+              placeholder="Ej. 150"
+              inputMode="decimal"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              hint="Por fila. Solo propone el cobro al finalizar; no mueve el saldo."
+            />
+            <Input
+              id="ce-proc-currency"
+              label="Moneda"
+              maxLength={3}
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value.toUpperCase())}
+              disabled={Boolean(defaultCurrency)}
+            />
+          </div>
+        )}
         <Combobox
           id="ce-proc-link"
           label="Vínculo al plan (opcional)"

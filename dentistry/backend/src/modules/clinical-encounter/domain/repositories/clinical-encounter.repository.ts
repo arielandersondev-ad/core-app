@@ -40,6 +40,8 @@ export type ProcedureCreateData = {
   targetDescription: string | null;
   description: string;
   treatmentProcedureId: string | null;
+  priceMinor: number | null;
+  currency: string | null;
 };
 
 /** Cambio de estado/cierre aplicado solo si `rowVersion` no cambió. */
@@ -118,6 +120,19 @@ export abstract class ClinicalEncounterRepository {
     expectedRowVersion: number,
     change: EncounterTransition,
     appointmentSync?: AppointmentStatusSync | null,
+  ): Promise<ClinicalEncounter | null>;
+
+  /**
+   * Anula la atención solo si no tiene un pago vigente. Toma el mismo bloqueo
+   * que el cobro (`lockEncounterPayment`), así que anular y cobrar no se cruzan.
+   * Lanza 409 `ENCOUNTER_HAS_PAYMENT` si hay pago; devuelve null si la atención
+   * cambió de versión entretanto.
+   */
+  abstract voidUnpaid(
+    scope: EncounterScope,
+    id: string,
+    expectedRowVersion: number,
+    change: EncounterTransition,
   ): Promise<ClinicalEncounter | null>;
 
   /**

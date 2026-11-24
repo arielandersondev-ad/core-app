@@ -64,6 +64,35 @@ const ROUTES: readonly ProxyRule[] = [
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/procedures$`) },
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/complete$`) },
   { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/void$`) },
+  // Presupuesto, abonos y saldo (docs/plan-cobros-ortodoncia.md).
+  {
+    method: "GET",
+    pattern: new RegExp(`^patients/${UUID}/treatments$`),
+    query: {
+      parameters: ["status", "page", "pageSize"],
+      maxValueLength: 100,
+      errorMessage: "Filtro de tratamientos inválido.",
+    },
+  },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/treatments$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/treatments/${UUID}$`) },
+  { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/treatments/${UUID}$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/treatments/${UUID}/account$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/treatments/${UUID}/payments$`) },
+  {
+    method: "GET",
+    pattern: new RegExp(`^patients/${UUID}/payments$`),
+    query: {
+      parameters: ["treatmentId", "status", "page", "pageSize"],
+      maxValueLength: 100,
+      errorMessage: "Filtro de pagos inválido.",
+    },
+  },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/payments/${UUID}$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/payments/${UUID}/void$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/payment$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/payment$`) },
+  { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/payment-proposal$`) },
   { method: "GET", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
   { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
   // Archivos clínicos: solo metadatos y enlaces firmados; el binario va directo al bucket.

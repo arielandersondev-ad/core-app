@@ -9,6 +9,7 @@ import {
   DEFAULT_PAGE_SIZE,
   type PaginatedResult,
 } from '../../../common/pagination/pagination.js';
+import { lockEncounterPayment } from '../../payment/infrastructure/payment-lock.js';
 import { ClinicalErrors } from '../application/clinical-encounter.errors.js';
 import type {
   ClinicalEncounter,
@@ -205,6 +206,35 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
     return encounter;
   }
 
+  async voidUnpaid(
+    scope: EncounterScope,
+    id: string,
+    expectedRowVersion: number,
+    change: EncounterTransition,
+  ): Promise<ClinicalEncounter | null> {
+    const row = await this.prisma.transaction(async (tx) => {
+      // Mismo bloqueo que el cobro: o el pago entra antes y esta anulación lo
+      // ve, o la anulación entra antes y el cobro verá la atención anulada.
+      await lockEncounterPayment(tx, id);
+      const payment = await tx.orm.dentistry.Payment.first({
+        organizationId: scope.organizationId,
+        patientId: scope.patientId,
+        clinicalEncounterId: id,
+        status: 'COMPLETED',
+      });
+      if (payment) throw ClinicalErrors.hasPayment();
+      return tx.orm.dentistry.ClinicalEncounter.where({
+        id,
+        organizationId: scope.organizationId,
+        patientId: scope.patientId,
+        rowVersion: expectedRowVersion,
+      }).update({ ...change, rowVersion: expectedRowVersion + 1 });
+    });
+    if (!row) return null;
+    const [encounter] = await this.hydrate(scope.organizationId, [row]);
+    return encounter;
+  }
+
   async addProcedures(
     scope: EncounterScope,
     encounterId: string,
@@ -371,6 +401,7 @@ export class PrismaClinicalEncounterRepository extends ClinicalEncounterReposito
       treatments: treatments.map((treatment) => ({
         id: treatment.id,
         label:
+          treatment.title?.trim() ||
           (treatment.serviceId && serviceNames.get(treatment.serviceId)) ||
           treatment.diagnosisSummary?.trim() ||
           treatment.notes?.trim() ||
@@ -520,6 +551,8 @@ function procedureInsert(
     toothNumber: procedure.toothNumber,
     targetDescription: procedure.targetDescription,
     description: procedure.description,
+    priceMinor: procedure.priceMinor,
+    currency: procedure.currency,
     status: 'RECORDED' as const,
     createdByMembershipId: actorMembershipId,
   };

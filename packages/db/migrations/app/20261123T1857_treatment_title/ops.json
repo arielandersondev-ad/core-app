@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.dentistry.Treatment.title",
+    "label": "Add column \"title\" to \"Treatment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "column",
+        "name": "title",
+        "table": "Treatment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"title\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "Treatment",
+          "title"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"title\"",
+        "sql": "ALTER TABLE \"dentistry\".\"Treatment\" ADD COLUMN \"title\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"title\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "dentistry",
+          "Treatment",
+          "title"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Treatment.treatment_title_814f6407",
+    "label": "Add check constraint \"treatment_title_814f6407\" on \"Treatment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "dentistry",
+        "objectType": "checkConstraint",
+        "name": "treatment_title_814f6407",
+        "table": "Treatment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"treatment_title_814f6407\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatment_title_814f6407",
+          "dentistry",
+          "\"dentistry\".\"Treatment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"treatment_title_814f6407\"",
+        "sql": "ALTER TABLE \"dentistry\".\"Treatment\" ADD CONSTRAINT \"treatment_title_814f6407\" CHECK (\"title\" IS NULL OR (length(btrim(\"title\")) > 0 AND length(\"title\") <= 120))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"treatment_title_814f6407\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "treatment_title_814f6407",
+          "dentistry",
+          "\"dentistry\".\"Treatment\""
+        ]
+      }
+    ]
+  }
+]

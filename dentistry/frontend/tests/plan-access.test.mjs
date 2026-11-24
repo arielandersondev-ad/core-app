@@ -47,7 +47,11 @@ test("Plan: la navegación y el shell filtran por plan", () => {
   assert.match(read("bottom-nav.tsx"), /navItemsForPlan\(plan\)/);
   assert.match(read("app-shell.tsx"), /<ModuleGate>/);
   const navigation = read("navigation.ts");
-  for (const module of ["dashboard", "patients", "agenda", "services", "treatments", "payments", "inventory"]) {
-    assert.match(navigation, new RegExp(`module: "${module}"`));
+  for (const code of ["dashboard", "patients", "agenda", "services", "inventory"]) {
+    assert.match(navigation, new RegExp(`module: "${code}"`));
+  }
+  // Tratamientos y pagos viven en la cuenta del paciente, no como secciones globales del menú.
+  for (const code of ["treatments", "payments"]) {
+    assert.doesNotMatch(navigation, new RegExp(`module: "${code}"`));
   }
 });
