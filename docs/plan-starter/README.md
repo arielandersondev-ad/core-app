@@ -136,7 +136,7 @@ El detalle está en [plan-paciente-historial-procedimiento.md](./plan-paciente-h
 
 ## 8. Plan estándar del cliente: presupuesto, abonos y saldo
 
-> Estado: implementado y commiteado (HAG-11 a HAG-19); migraciones sin aplicar y sin probar contra una base real. El detalle está en [plan-cobros-ortodoncia.md](../plan-cobros-ortodoncia.md).
+> Estado: implementado y commiteado (HAG-11 a HAG-19). Migraciones aplicadas a la base `dev` el 2026-11-24; falta el recorrido real con el backend y el frontend en marcha. El detalle está en [plan-cobros-ortodoncia.md](../plan-cobros-ortodoncia.md).
 
 Este README describe el plan Starter, pero el plan que usa el cliente es el **estándar**. Sus funciones reales son `files`, `payments`, `services`, `dashboard`, `appointments`, `procedureNotes` y `clinicalHistory`, con `inventory`, `odontogram`, `customForms` y `patientSelfService` en `false`. Para el cobro de ortodoncia se activa además `treatments: true` desde Core y se **reasigna** el plan a la organización (cada asignación conserva su copia).
 
@@ -152,4 +152,4 @@ Este README describe el plan Starter, pero el plan que usa el cliente es el **es
 
 **Permisos** (se dan de alta y se asignan desde Core, solo al propietario): `dentistry:payments:read|create|void`, `dentistry:treatments:read|create|update` y `dentistry:encounters:read|create|update|void`.
 
-**Antes de usarlo con datos reales:** aplicar en orden, desde `packages/db` y con `migration:status` antes, las migraciones `20261105T1833`, `20261123T1811` y `20261123T1857`. Nunca SQL directo contra Neon ni `db:update` contra la base compartida.
+**Migraciones:** `20261105T1833`, `20261123T1811` y `20261123T1857` ya están aplicadas en `dev`. Otro entorno (QA, producción) las recibe con `migration:status` y `migrate` desde `packages/db`, en orden. Nunca SQL directo contra Neon ni `db:update` contra la base compartida.
