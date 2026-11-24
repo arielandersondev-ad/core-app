@@ -6,6 +6,8 @@ import { RoleModule } from './modules/role/role.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { PlanModule } from './modules/plan/plan.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { DevAuthModule } from './modules/dev-auth/dev-auth.module.js';
+import { devTokenExchangeEnabled } from './modules/dev-auth/dev-token-exchange.config.js';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { HealthModule } from './modules/health/health.module.js';
     RoleModule,
     AuthModule,
     PlanModule,
+    // Solo en desarrollo y con DEV_TOKEN_EXCHANGE_SECRET: en otro entorno las rutas no existen.
+    ...(devTokenExchangeEnabled() ? [DevAuthModule] : []),
   ],
   controllers: [],
   providers: [],
