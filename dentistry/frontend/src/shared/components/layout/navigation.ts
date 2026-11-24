@@ -7,8 +7,6 @@ export type AppSection =
   | "pacientes"
   | "agenda"
   | "servicios"
-  | "tratamientos"
-  | "pagos"
   | "inventario";
 
 export const NAV_ITEMS: readonly {
@@ -52,22 +50,6 @@ export const NAV_ITEMS: readonly {
     showInBottomNav: false,
   },
   {
-    section: "tratamientos",
-    module: "treatments",
-    label: "Tratamientos",
-    href: "/treatments",
-    icon: Icons.treatments,
-    showInBottomNav: true,
-  },
-  {
-    section: "pagos",
-    module: "payments",
-    label: "Pagos",
-    href: "/payments",
-    icon: Icons.payments,
-    showInBottomNav: true,
-  },
-  {
     section: "inventario",
     module: "inventory",
     label: "Inventario",
@@ -87,7 +69,5 @@ export const SECTION_TITLES: Record<AppSection, string> = {
   pacientes: "Pacientes",
   agenda: "Agenda",
   servicios: "Servicios Odontológicos",
-  tratamientos: "Tratamientos",
-  pagos: "Pagos",
   inventario: "Inventario",
 };

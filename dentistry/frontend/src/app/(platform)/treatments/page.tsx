@@ -1,18 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-import Treatments from "@/modules/clinic/views/Treatments";
-
+// El prototipo global se retiró: la cuenta y los abonos viven en el paciente.
 export default function TreatmentsPage() {
-  const router = useRouter();
-
-  const handleNavigate = (view: string) => {
-    if (view === "agenda") {
-      router.push("/agenda");
-    } else if (view === "pacientes") {
-      router.push("/patients");
-    }
-  };
-
-  return <Treatments onNavigate={handleNavigate} />;
+  redirect("/patients");
 }

@@ -223,3 +223,13 @@ test("la atención rápida conserva el precio de cada procedimiento", () => {
   assert.equal("priceMinor" in free.input.procedures[0], false);
   assert.equal("currency" in free.input.procedures[0], false);
 });
+
+const { legacyBillingDestination } = load("src/features/billing/utils/legacy-routes.ts");
+
+test("las rutas globales retiradas llevan a la cuenta del paciente o a la lista", () => {
+  assert.equal(legacyBillingDestination(PATIENT), `/patients/${PATIENT}/account`);
+  assert.equal(legacyBillingDestination([PATIENT, "otro"]), `/patients/${PATIENT}/account`);
+  for (const invalid of [undefined, "", "no-es-uuid", "../../admin", `${PATIENT}/../x`]) {
+    assert.equal(legacyBillingDestination(invalid), "/patients", String(invalid));
+  }
+});
