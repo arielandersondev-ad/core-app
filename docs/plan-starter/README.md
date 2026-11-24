@@ -18,7 +18,7 @@ Es el primer plan comercial, de muy bajo costo.
 | Historial clínico | Perfil de salud y atenciones con sus procedimientos. El odontograma y lo demás queda para planes superiores. |
 | Agenda | Grilla por franjas horarias. Cada dentista ve solo sus citas; el propietario ve las de toda la organización y puede filtrar por profesional. |
 | Citas | Crear una cita y verla en la agenda, más un historial de citas con filtros y paginado. |
-| Procedimiento | Texto libre con observaciones, sin precios ni cobros. Se registra desde una cita, desde una atención o suelto desde el paciente, como "atención rápida". |
+| Procedimiento | Texto libre con observaciones. El precio nominal y los cobros solo existen si el plan incluye `payments` (ver sección 8). Se registra desde una cita, desde una atención o suelto desde el paciente, como "atención rápida". |
 | Inventario (opcional) | Herramientas (cantidad y estado) y materiales (stock, unidad, mínimo y movimientos manuales). No se relaciona con otros módulos. |
 
 Las pantallas de módulos que el plan no incluye se **ocultan según el plan de la organización**; no se borran.
@@ -131,5 +131,25 @@ El detalle está en [plan-paciente-historial-procedimiento.md](./plan-paciente-h
 ## 7. Fuera del plan Starter (siguiente etapa)
 
 - Precio y duración del plan, y los planes superiores.
-- Odontograma, tratamientos, pagos y adjuntos.
+- Odontograma y adjuntos. Los tratamientos y pagos se describen en la sección 8.
 - Despliegue, CI, backups y monitoreo.
+
+## 8. Plan estándar del cliente: presupuesto, abonos y saldo
+
+> Estado: implementado y commiteado (HAG-11 a HAG-19); migraciones sin aplicar y sin probar contra una base real. El detalle está en [plan-cobros-ortodoncia.md](../plan-cobros-ortodoncia.md).
+
+Este README describe el plan Starter, pero el plan que usa el cliente es el **estándar**. Sus funciones reales son `files`, `payments`, `services`, `dashboard`, `appointments`, `procedureNotes` y `clinicalHistory`, con `inventory`, `odontogram`, `customForms` y `patientSelfService` en `false`. Para el cobro de ortodoncia se activa además `treatments: true` desde Core y se **reasigna** el plan a la organización (cada asignación conserva su copia).
+
+| Qué | Cómo |
+|---|---|
+| Presupuesto | `Treatment.agreedPriceMinor` y `currency`; módulo `treatments` |
+| Anticipo y abonos | `Payment` ligado al tratamiento; módulo `payments` |
+| Abono de una atención | `Payment` ligado a la atención, 1:1; una atención sin pago es una prórroga |
+| Saldo | Derivado: presupuesto menos los pagos `COMPLETED` del tratamiento |
+| Propuesta de cobro | Suma de los precios de los procedimientos de la atención, acotada al saldo; recepción la confirma, edita u omite |
+
+**Dónde se usa:** `/patients/:id/account` (cuenta del paciente) y el panel "Cobro" de la atención. Las antiguas pantallas globales de tratamientos y pagos eran un prototipo y se retiraron del menú.
+
+**Permisos** (se dan de alta y se asignan desde Core, solo al propietario): `dentistry:payments:read|create|void`, `dentistry:treatments:read|create|update` y `dentistry:encounters:read|create|update|void`.
+
+**Antes de usarlo con datos reales:** aplicar en orden, desde `packages/db` y con `migration:status` antes, las migraciones `20261105T1833`, `20261123T1811` y `20261123T1857`. Nunca SQL directo contra Neon ni `db:update` contra la base compartida.

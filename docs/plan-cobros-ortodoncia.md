@@ -1,6 +1,6 @@
 # Plan de implementación — presupuesto, abonos y saldo (ortodoncia)
 
-> Fecha: 2026-11-23 · Estado: fase 1 preparada en local (sin commit ni migración aplicada)
+> Fecha: 2026-11-23 · Estado: implementado en local y commiteado (HAG-11 a HAG-19); migraciones sin aplicar a ninguna base y flujo sin probar contra una base real
 
 ## 1. Requerimiento del cliente
 
@@ -32,13 +32,13 @@ Se usa el plan estándar existente. Ya tiene `payments: true`; se activa `treatm
 
 | # | Fase | Contenido | Estado |
 |---|---|---|---|
-| 1 | Contrato `packages/db` | Precio en `ClinicalEncounterProcedure`; índice único parcial `payment_encounter_uidx`; migración `20261123T1811_encounter_procedure_price_and_payment_uniqueness` | Preparada en local; sin aplicar |
-| 2 | Core: plan y permisos | `treatments: true`, reasignación y permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` | Pendiente |
+| 1 | Contrato `packages/db` | Precio en `ClinicalEncounterProcedure`; índice único parcial `payment_encounter_uidx`; migración `20261123T1811_encounter_procedure_price_and_payment_uniqueness` (HAG-11) y `Treatment.title` con la migración `20261123T1857_treatment_title`, planificada con `--from` porque el planificador parte de la referencia `db` (HAG-13) | Commiteada; migraciones sin aplicar |
+| 2 | Core: plan y permisos | `treatments: true`, reasignación y permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` para el propietario | Pendiente: lo hace el responsable de datos desde Core, nunca con SQL directo |
 | 3 | Backend de tratamientos | Crear y editar con presupuesto y moneda; detalle con presupuesto, pagado y saldo; `@RequireModule('treatments')` | Implementada en `dentistry/backend/src/modules/treatment`; 104/104 pruebas |
 | 4 | Backend de pagos | Pago al tratamiento, pago del encuentro (1:1), anulación con motivo, estado de cuenta; saldo comprobado dentro de la transacción con bloqueo | Implementada en `dentistry/backend/src/modules/payment` (HAG-14); falta probarla contra una base real |
 | 5 | Integración con encuentros | Precio en el procedimiento; propuesta de pago al finalizar; no anular un encuentro con pago activo | Implementada (HAG-15): precio en procedimientos y `proceduresTotal` en la atención (`clinical-encounter`), `GET .../payment-proposal` (`payment`) y 409 `ENCOUNTER_HAS_PAYMENT` al anular; falta probarla contra una base real |
-| 6 | Frontend | Reemplazar mocks de `Treatments`, `Payments` y `RegisterPayment`; estado de cuenta en el paciente; paso de cobro; campo de precio | Parcial. HAG-16: BFF, `features/billing` y `/patients/:id/account` (presupuestos, abonos, saldo, anulación). HAG-17: precio en procedimientos (alta y atención rápida), total realizado y panel de cobro en la atención (propuesta al completar, prórroga, anulación del pago). Falta: los mocks globales `/treatments`, `/payments` y `/register-payment`, que no tienen endpoint global |
-| 7 | Cierre | Diccionario, `docs/plan-starter/README.md` (desactualizado) y prueba de punta a punta | Pendiente |
+| 6 | Frontend | Estado de cuenta en el paciente; paso de cobro; campo de precio; retirar los mocks globales | Implementada. HAG-16: BFF, `features/billing` y `/patients/:id/account` (presupuestos, abonos, saldo, anulación). HAG-17: precio en procedimientos (alta y atención rápida), total realizado y panel de cobro en la atención (propuesta al completar, prórroga, anulación del pago). HAG-18: se retiran del menú las pantallas globales `/treatments`, `/payments` y `/register-payment` (prototipo con datos de ejemplo; el backend es por paciente) y redirigen a la cuenta del paciente. Los componentes mock de `modules/clinic` siguen en el repositorio sin ruta propia |
+| 7 | Cierre | Diccionario, `docs/plan-starter/README.md` y prueba de punta a punta | Implementada (HAG-19): diccionario y plan Starter al día, y `billing-flow.test.mjs` recorre el caso del cliente a través de los tres módulos con persistencia en memoria. Falta la prueba contra una base real |
 
 ## 5. Decisiones abiertas (valor por defecto)
 
@@ -47,9 +47,9 @@ Se usa el plan estándar existente. Ya tiene `payments: true`; se activa `treatm
 3. Una sola moneda por tratamiento; pagos y precios deben coincidir.
 4. Se permite el cobro sin tratamiento (no afecta ningún saldo).
 5. Medios de pago: efectivo, transferencia, QR y tarjeta.
-6. Quién registra o anula pagos (recepción, dentista o propietario): **sin definir**; condiciona los permisos de la fase 2.
+6. Quién registra o anula pagos: **el propietario** (el cliente no tiene recepción). Los permisos `dentistry:payments:*`, `dentistry:treatments:*` y `dentistry:encounters:*` van solo a su rol.
 7. Recibo imprimible: fuera de la v1.
-8. IDs de ticket `HAG-XX` para los commits: **sin asignar**.
+8. Tickets: HAG-11 (contrato y este plan), HAG-12 (tratamientos), HAG-13 (título), HAG-14 (pagos), HAG-15 (integración con atenciones), HAG-16 y HAG-17 (frontend), HAG-18 (retiro de pantallas globales) y HAG-19 (cierre).
 
 ## 6. Restricciones del repositorio
 
