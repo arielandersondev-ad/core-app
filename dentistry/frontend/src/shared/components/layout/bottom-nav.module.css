@@ -1,0 +1,78 @@
+/*
+ * Barra inferior (bottom-nav.tsx): hueco en la barra y burbuja de la sección activa.
+ * Solo lo que no se puede expresar con utilidades de Tailwind; el color, el
+ * desenfoque y los bordes van como clases en el componente.
+ *
+ * Al cambiar de sección:
+ *   1. data-bubble="down": la burbuja se hunde en la barra y el hueco se cierra.
+ *   2. Con la página nueva lista, la burbuja salta (oculta) a su nueva posición.
+ *   3. data-bubble="up": el hueco se abre y la burbuja emerge.
+ */
+
+/* 0 = sin hueco, 1 = hueco abierto. Registrada para que el navegador pueda animarla. */
+@property --notch-open {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.nav {
+  /* Burbuja de 3.25rem con 0.375rem de separación con la barra. */
+  --bubble-size: 3.25rem;
+  --notch-radius: calc((var(--bubble-size) / 2 + 0.375rem) * var(--notch-open));
+  --notch-open: 0;
+  /* Cierre: empieza cuando la burbuja ya se está hundiendo. */
+  transition: --notch-open 200ms cubic-bezier(0.4, 0, 1, 1) 60ms;
+}
+
+.nav[data-bubble="up"] {
+  --notch-open: 1;
+  /* Apertura: el hueco se abre justo antes de que emerja la burbuja. */
+  transition: --notch-open 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* El hueco: un círculo transparente centrado en el borde superior de la barra. */
+.nav[data-notched="true"] .surface {
+  -webkit-mask-image: radial-gradient(
+    circle at var(--notch-x) 0,
+    transparent calc(var(--notch-radius) - 0.5px),
+    #000 var(--notch-radius)
+  );
+  mask-image: radial-gradient(
+    circle at var(--notch-x) 0,
+    transparent calc(var(--notch-radius) - 0.5px),
+    #000 var(--notch-radius)
+  );
+}
+
+.bubble {
+  position: absolute;
+  top: 0;
+  left: var(--notch-x);
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  /* Hundida: dentro de la barra, pequeña e invisible. */
+  opacity: 0;
+  transform: translate(-50%, 0%) scale(0.35);
+  transition:
+    transform 200ms cubic-bezier(0.4, 0, 1, 1),
+    opacity 150ms linear 50ms;
+}
+
+.nav[data-bubble="up"] .bubble {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  /* Emerge con un ligero rebote, tras abrirse el hueco. */
+  transition:
+    transform 340ms cubic-bezier(0.34, 1.45, 0.64, 1) 60ms,
+    opacity 120ms linear 60ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  .nav[data-bubble="up"],
+  .bubble,
+  .nav[data-bubble="up"] .bubble {
+    transition: none;
+  }
+}

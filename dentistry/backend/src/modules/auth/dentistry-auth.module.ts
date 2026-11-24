@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../common/infrastructure/prisma.module.js';
 import { PlanEntitlementsReader } from './application/ports/plan-entitlements.reader.js';
+import { SessionProfileReader } from './application/ports/session-profile.reader.js';
 import { DentistryTokenVerifier } from './infrastructure/jwt/dentistry-token.verifier.js';
 import { PrismaPlanEntitlementsReader } from './infrastructure/prisma-plan-entitlements.reader.js';
+import { PrismaSessionProfileReader } from './infrastructure/prisma-session-profile.reader.js';
 import { DentistryAuthController } from './presentation/http/dentistry-auth.controller.js';
 import { DentistryJwtGuard } from './presentation/http/guards/dentistry-jwt.guard.js';
 import { DentistryModuleGuard } from './presentation/http/guards/dentistry-module.guard.js';
@@ -17,6 +19,7 @@ import { DentistryPermissionGuard } from './presentation/http/guards/dentistry-p
     DentistryPermissionGuard,
     DentistryModuleGuard,
     { provide: PlanEntitlementsReader, useClass: PrismaPlanEntitlementsReader },
+    { provide: SessionProfileReader, useClass: PrismaSessionProfileReader },
   ],
   exports: [
     DentistryTokenVerifier,

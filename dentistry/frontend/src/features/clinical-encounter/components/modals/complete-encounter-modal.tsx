@@ -11,6 +11,7 @@ import type {
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import { nowDateValue, nowTimeValue, toDateInputValue, toTimeInputValue } from "@/features/clinical-encounter/utils/dates";
 import { buildCompleteInput } from "@/features/clinical-encounter/utils/encounter-detail";
+import { useTimeZone } from "@/shared/time/use-time-zone";
 
 export interface CompleteEncounterModalProps {
   open: boolean;
@@ -29,15 +30,17 @@ export function CompleteEncounterModal({
   submitting = false,
   error,
 }: CompleteEncounterModalProps) {
-  const [date, setDate] = useState(() => toDateInputValue(encounter.endedAt) || nowDateValue());
-  const [time, setTime] = useState(() => toTimeInputValue(encounter.endedAt) || nowTimeValue());
+  // Fecha y hora de pared de la sucursal de la atención.
+  const timeZone = useTimeZone(encounter.branchId);
+  const [date, setDate] = useState(() => toDateInputValue(encounter.endedAt, timeZone) || nowDateValue(timeZone));
+  const [time, setTime] = useState(() => toTimeInputValue(encounter.endedAt, timeZone) || nowTimeValue(timeZone));
   const [summary, setSummary] = useState(encounter.procedureSummary ?? "");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const visibleError = error ?? validationError;
 
   const handleConfirm = () => {
-    const input = buildCompleteInput(date, time, summary);
+    const input = buildCompleteInput(date, time, summary, timeZone);
     if (!input) {
       setValidationError("La fecha y la hora de fin no son válidas.");
       return;

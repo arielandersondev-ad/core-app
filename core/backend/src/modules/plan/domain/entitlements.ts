@@ -9,9 +9,12 @@ export type VersionedEntitlements = { [key: string]: JsonValue } & {
  * Well-known keys of a versioned snapshot (packages/db target-schema-dictionary §7.1):
  * - `features`: capability flags; only a `true` flag enables the capability.
  * - `limits`: positive integer quotas (`patients`, `members`, `branches`).
+ * - File quotas (`fileStorageBytes`, `filesPerPatient`): required only when
+ *   `features.files` is enabled; an absent quota is invalid, not unlimited.
  * Any other key is preserved untouched.
  */
 export const ENTITLEMENT_LIMIT_KEYS = ['patients', 'members', 'branches'] as const;
+export const FILE_LIMIT_KEYS = ['fileStorageBytes', 'filesPerPatient'] as const;
 export type EntitlementLimitKey = (typeof ENTITLEMENT_LIMIT_KEYS)[number];
 const FEATURE_CODE = /^[a-z][A-Za-z0-9]{0,49}$/;
 
@@ -40,7 +43,7 @@ function assertLimits(value: JsonValue | undefined): void {
   if (!isJsonObject(value)) {
     throw new BadRequestException('entitlements.limits debe ser un objeto JSON');
   }
-  for (const key of ENTITLEMENT_LIMIT_KEYS) {
+  for (const key of [...ENTITLEMENT_LIMIT_KEYS, ...FILE_LIMIT_KEYS]) {
     const limit = value[key];
     if (limit === undefined || limit === null) continue;
     if (typeof limit !== 'number' || !Number.isSafeInteger(limit) || limit < 1) {
@@ -82,7 +85,10 @@ export function normalizeCatalogEntitlements(value: unknown): VersionedEntitleme
     throw new BadRequestException('entitlements.features es obligatorio');
   }
   const limits = isJsonObject(entitlements.limits) ? entitlements.limits : {};
-  for (const key of ENTITLEMENT_LIMIT_KEYS) {
+  const required = entitlements.features.files === true
+    ? [...ENTITLEMENT_LIMIT_KEYS, ...FILE_LIMIT_KEYS]
+    : ENTITLEMENT_LIMIT_KEYS;
+  for (const key of required) {
     if (typeof limits[key] !== 'number') {
       throw new BadRequestException(`entitlements.limits.${key} es obligatorio`);
     }

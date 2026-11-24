@@ -15,10 +15,17 @@ type Props = {open: boolean; plan?: Plan | null; onClose: () => void};
 
 type LimitKey = keyof PlanEntitlementLimits;
 
+const BYTES_PER_MB = 1024 * 1024;
+
 function readLimit(plan: Plan | null | undefined, key: LimitKey): string {
   const limits = (plan?.entitlements as PlanEntitlements | undefined)?.limits;
   const value = limits?.[key];
   return typeof value === 'number' ? String(value) : '';
+}
+
+function readStorageMb(plan: Plan | null | undefined): string {
+  const bytes = (plan?.entitlements as PlanEntitlements | undefined)?.limits?.fileStorageBytes;
+  return typeof bytes === 'number' ? String(Math.floor(bytes / BYTES_PER_MB)) : '';
 }
 
 /** Solo una función marcada en `true` está habilitada. */
@@ -43,6 +50,8 @@ function toEntitlements(values: PlanFormValues, plan?: Plan | null): PlanEntitle
       patients: Number(values.patientsLimit),
       members: Number(values.membersLimit),
       branches: Number(values.branchesLimit),
+      ...(values.fileStorageMbLimit === '' ? {} : { fileStorageBytes: Number(values.fileStorageMbLimit) * BYTES_PER_MB }),
+      ...(values.filesPerPatientLimit === '' ? {} : { filesPerPatient: Number(values.filesPerPatientLimit) }),
     },
   };
 }
@@ -55,6 +64,7 @@ function defaults(plan?: Plan | null): PlanFormValues {
     currency: plan?.currency ?? 'BOB', isActive: plan?.isActive ?? true,
     features: readFeatures(plan),
     patientsLimit: readLimit(plan, 'patients'), membersLimit: readLimit(plan, 'members'), branchesLimit: readLimit(plan, 'branches'),
+    fileStorageMbLimit: readStorageMb(plan), filesPerPatientLimit: readLimit(plan, 'filesPerPatient'),
   };
 }
 
@@ -118,6 +128,10 @@ export function PlanFormDialog({ open, plan, onClose }: Props) {
             <Input id="plan-limit-patients" inputMode="numeric" label="Máx. pacientes" placeholder="300" error={form.formState.errors.patientsLimit?.message} {...form.register('patientsLimit')} />
             <Input id="plan-limit-members" inputMode="numeric" label="Máx. usuarios" placeholder="2" error={form.formState.errors.membersLimit?.message} {...form.register('membersLimit')} />
             <Input id="plan-limit-branches" inputMode="numeric" label="Máx. sucursales" placeholder="1" error={form.formState.errors.branchesLimit?.message} {...form.register('branchesLimit')} />
+          </div>
+          <div className="sm:col-span-2 grid gap-5 sm:grid-cols-2">
+            <Input id="plan-limit-file-storage" inputMode="numeric" label="Almacenamiento de archivos (MB)" placeholder="2048" error={form.formState.errors.fileStorageMbLimit?.message} {...form.register('fileStorageMbLimit')} />
+            <Input id="plan-limit-files-per-patient" inputMode="numeric" label="Máx. archivos por paciente" placeholder="50" error={form.formState.errors.filesPerPatientLimit?.message} {...form.register('filesPerPatientLimit')} />
           </div>
           {plan && <p className="sm:col-span-2 text-xs text-muted-foreground">Los cambios de funciones y límites aplican a nuevas asignaciones; las vigentes conservan su configuración hasta reasignarse.</p>}
           {plan && <label className="sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-4 text-sm"><input type="checkbox" className="size-4 accent-primary" {...form.register('isActive')} /> Disponible para nuevas asignaciones</label>}

@@ -6,12 +6,15 @@ import type {
   ClinicalEncounterProcedure,
   ClinicalEncounterProcedureDraft,
   ClinicalFile,
+  ClinicalFileQuota,
   CompleteClinicalEncounterInput,
   CreateClinicalEncounterInput,
   EncounterReferenceData,
   PatientHealthProfile,
   PatientHealthProfileInput,
+  UpdateClinicalFileInput,
   RegisterQuickProcedureInput,
+  SignedRequest,
   VoidClinicalEncounterInput,
 } from "@/features/clinical-encounter/types/clinical-encounter";
 import type { PaginatedResult } from "@/shared/types/pagination";
@@ -41,7 +44,14 @@ export interface ClinicalEncounterDataSource {
   saveHealthProfile(patientId: string, input: PatientHealthProfileInput): Promise<PatientHealthProfile>;
   listFiles(patientId: string, encounterId?: string): Promise<ClinicalFile[]>;
   addFile(patientId: string, input: AddClinicalFileInput): Promise<ClinicalFile>;
+  updateFile(patientId: string, fileId: string, input: UpdateClinicalFileInput): Promise<ClinicalFile>;
   removeFile(patientId: string, fileId: string): Promise<void>;
+  getFileAccessUrl(
+    patientId: string,
+    fileId: string,
+    disposition: "inline" | "attachment",
+  ): Promise<SignedRequest>;
+  getFileQuota(): Promise<ClinicalFileQuota>;
   getReferenceData(patientId: string): Promise<EncounterReferenceData>;
 }
 

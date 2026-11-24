@@ -52,7 +52,7 @@ const ROUTES: readonly ProxyRule[] = [
     method: "GET",
     pattern: new RegExp(`^patients/${UUID}/clinical-encounters$`),
     query: {
-      parameters: ["status", "practitionerMembershipId", "search", "page", "pageSize"],
+      parameters: ["status", "practitionerMembershipId", "appointmentId", "search", "page", "pageSize"],
       maxValueLength: 100,
       errorMessage: "Filtro de atenciones inválido.",
     },
@@ -95,6 +95,30 @@ const ROUTES: readonly ProxyRule[] = [
   { method: "GET", pattern: new RegExp(`^patients/${UUID}/clinical-encounters/${UUID}/payment-proposal$`) },
   { method: "GET", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
   { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/health-profile$`) },
+  // Archivos clínicos: solo metadatos y enlaces firmados; el binario va directo al bucket.
+  { method: "GET", pattern: /^clinical-files\/quota$/ },
+  {
+    method: "GET",
+    pattern: new RegExp(`^patients/${UUID}/clinical-files$`),
+    query: {
+      parameters: ["clinicalEncounterId", "category", "page", "pageSize"],
+      maxValueLength: 100,
+      errorMessage: "Filtro de archivos inválido.",
+    },
+  },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-files/uploads$`) },
+  { method: "POST", pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}/complete$`) },
+  {
+    method: "GET",
+    pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}/access-url$`),
+    query: {
+      parameters: ["disposition"],
+      maxValueLength: 20,
+      errorMessage: "Parámetros de archivo inválidos.",
+    },
+  },
+  { method: "PATCH", pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}$`) },
+  { method: "DELETE", pattern: new RegExp(`^patients/${UUID}/clinical-files/${UUID}$`) },
   {
     method: "GET",
     pattern: /^persons$/,

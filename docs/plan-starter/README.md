@@ -123,9 +123,12 @@ El detalle está en [plan-paciente-historial-procedimiento.md](./plan-paciente-h
 ## 6. Puntos de coordinación entre equipos
 
 - Agenda usa `CreatePatientModal` y `PatientDetail` de `modules/clinic`, que trabajan con datos ficticios. Reemplazarlos corresponde a **Agenda**; las versiones reales están en `features/patient`.
-- **Agenda** pone el botón "Iniciar atención" en el detalle de la cita, con un enlace a `/patients/:patientId/clinical-encounters/new?appointmentId=:id`. La ruta ya preselecciona la cita si sigue disponible (no cancelada y sin otra atención).
+- **Atender desde la agenda (F8, nuestro equipo).** La tarjeta expandida y el detalle de la cita muestran "Atender" (lleva a `/patients/:patientId/clinical-encounters/new?appointmentId=:id`) y "Registrar procedimiento" (atención rápida con la cita). Si la cita ya tiene una atención, solo "Ver atención" o "Continuar atención". No se muestran en citas canceladas o ausentes. Componente: `features/clinical-encounter/components/appointment-encounter-actions.tsx`.
+- **Estado de la cita sincronizado con la atención:** crear la atención pasa la cita a `IN_PROGRESS`; completarla o registrar una atención rápida, a `COMPLETED`; anularla no la toca; nunca se retrocede. Detalle en `dentistry/backend/src/modules/clinical-encounter/README.md`.
+- **Pendiente de Agenda:** los cambios manuales de estado (Finalizar, Cancelar, No asistió) no consideran la atención vinculada; por ejemplo, se puede cancelar una cita con una atención en curso.
 - La conversión de persona a paciente (`POST /persons/:id/convert`) se dispara desde la agenda. El backend ya aplica el tope, y la UI de Agenda solo debe mostrar el error `PLAN_LIMIT_REACHED`.
-- La agenda guarda la hora local de la cita como si fuera UTC (`CreateAppointmentModal`). En la nueva atención la cita aparece con 4 horas de diferencia hasta que **Agenda** lo corrija.
+- **Zona horaria (corregido).** Las fechas de calendario se leen y escriben en la zona de la **sucursal** (`core.Branch.timezone`), con la de la organización como respaldo. `GET /auth/me` devuelve `context.timeZone` y `context.branchTimeZones`; el frontend convierte con `shared/time/zoned-time.ts` y `useTimeZone(branchId)`. La API acepta fechas sin zona (`2026-11-22T09:00`) y las interpreta en la zona de la sucursal; `GET /appointments?date=` es el día de calendario de cada sucursal. Las citas creadas antes del cambio quedaron 4 h antes y no se migran (datos de prueba).
+- Pendiente fuera de Dentistry: el diálogo de asignar plan en Core usa UTC y la zona del navegador (ticket aparte).
 - `AppointmentController` y `PersonController` todavía no llevan `@RequireModule('appointments')`; corresponde a **Agenda**.
 
 ## 7. Fuera del plan Starter (siguiente etapa)

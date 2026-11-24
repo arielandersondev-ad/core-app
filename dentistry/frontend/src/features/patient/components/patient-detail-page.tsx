@@ -12,6 +12,7 @@ import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-ses
 import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
 import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
 import { QuickProcedureModal } from "@/features/clinical-encounter/components/modals/quick-procedure-modal";
+import { ClinicalFilesPanel } from "@/features/clinical-encounter/components/clinical-files-panel";
 import { isModuleEnabled } from "@/shared/plan/plan-access";
 
 function PatientField({ label, value }: { label: string; value: string | null }) {
@@ -139,6 +140,9 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
           <PatientField label="Notas" value={patient.notes} />
         </dl>
       </section>
+      <div className="mt-6">
+        <ClinicalFilesPanel patientId={patient.id} />
+      </div>
       <p className="mt-4 text-xs text-muted">Registrado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.createdAt))} · Actualizado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.updatedAt))}</p>
       {editing && <UpdatePatientDialog patient={patient} onClose={() => setEditing(false)} onUpdated={(updated) => { setUpdatedMessage(`${updated.fullName} se actualizó correctamente.`); }} />}
     </PageContainer>

@@ -7,6 +7,7 @@ import { PersonModule } from './modules/person/person.module.js';
 import { DentistryAuthModule } from './modules/auth/dentistry-auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { ClinicalEncounterModule } from './modules/clinical-encounter/clinical-encounter.module.js';
+import { ClinicalFileModule } from './modules/clinical-file/clinical-file.module.js';
 import { TreatmentModule } from './modules/treatment/treatment.module.js';
 import { PaymentModule } from './modules/payment/payment.module.js';
 
@@ -20,6 +21,7 @@ import { PaymentModule } from './modules/payment/payment.module.js';
     PatientModule,
     PersonModule,
     ClinicalEncounterModule,
+    ClinicalFileModule,
     TreatmentModule,
     PaymentModule,
   ],

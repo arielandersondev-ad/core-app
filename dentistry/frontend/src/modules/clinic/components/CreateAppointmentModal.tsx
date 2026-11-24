@@ -13,6 +13,8 @@ import {
   TimePicker,
 } from "@/shared/components/ui";
 import { formatCurrency } from "@app/ui";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
+import { todayIn, wallTimeToInstant } from "@/shared/time/zoned-time";
 import {
   fetchPatients,
   createPatient,
@@ -162,7 +164,9 @@ export function CreateAppointmentModal({
   );
   const [personMode, setPersonMode] = useState<"new" | "existing">("new");
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // Fecha y hora de pared de la sucursal de la cita (no la del navegador).
+  const timeZoneOf = useTimeZoneResolver();
+  const todayIso = todayIn(timeZoneOf(activeBranchId));
 
   const [form, setForm] = useState({
     patientId: initialPatientId || "",
@@ -356,6 +360,14 @@ export function CreateAppointmentModal({
 
     setIsSubmitting(true);
     const endTime = form.endTime || calcEnd(form.startTime) || "09:30";
+    const timeZone = timeZoneOf(activeBranchId);
+    const scheduledStartAt = wallTimeToInstant(form.date, form.startTime, timeZone);
+    const scheduledEndAt = wallTimeToInstant(form.date, endTime, timeZone);
+    if (!scheduledStartAt || !scheduledEndAt) {
+      setErrors({ startTime: "Indica una fecha y una hora válidas." });
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       let finalPatientId = form.patientId;
@@ -380,9 +392,6 @@ export function CreateAppointmentModal({
           finalPatientId = selectedPersonId;
         }
       }
-
-      const scheduledStartAt = `${form.date}T${form.startTime}:00.000Z`;
-      const scheduledEndAt = `${form.date}T${endTime}:00.000Z`;
 
       const newAppt = await createApptMutation.mutateAsync({
         branchId: activeBranchId,

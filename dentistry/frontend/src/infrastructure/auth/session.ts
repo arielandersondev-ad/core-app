@@ -8,8 +8,18 @@ export const REFRESH_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 export const REFRESH_LEEWAY_SECONDS = 60;
 
 export type CurrentSession = {
-  user: { id: string };
-  context: { membershipId: string; organizationId: string; branchIds: string[] };
+  /** Nombres solo para mostrar; null si Core no los tiene. */
+  user: { id: string; firstName?: string | null; lastName?: string | null };
+  context: {
+    membershipId: string;
+    organizationId: string;
+    organizationName?: string | null;
+    branchIds: string[];
+    /** Zona IANA de la organización; respaldo cuando la sucursal no tiene una. */
+    timeZone?: string;
+    /** Zona IANA de cada sucursal autorizada. */
+    branchTimeZones?: Record<string, string>;
+  };
   permissions: string[];
   /** Plan vigente de la organización; null cuando no hay ninguno. */
   plan: SessionPlan | null;

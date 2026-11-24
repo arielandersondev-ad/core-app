@@ -8,6 +8,11 @@ export interface FindAppointmentsFilters {
   practitionerMembershipId?: string;
   startDate?: Date;
   endDate?: Date;
+  /**
+   * Día de calendario `YYYY-MM-DD`: incluye las citas que empiezan ese día en
+   * la zona horaria de su sucursal.
+   */
+  civilDate?: string;
   status?: string;
 }
 

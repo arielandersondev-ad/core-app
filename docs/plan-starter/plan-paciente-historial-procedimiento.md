@@ -21,7 +21,7 @@ Los tickets están **implementados, verificados con tests y commiteados** (ver [
 - **Límite ausente:** crear o editar un plan sin alguno de los tres límites es un error. Los planes ya guardados sin la clave se leen sin aplicar ese cupo.
 - **Dónde se valida el cupo:** en el caso de uso, dentro de la transacción y bajo un bloqueo por organización. Un guard no cubre la conversión de persona a paciente ni evita que dos altas simultáneas pasen el tope.
 - **Qué cuenta contra el cupo:** todo paciente no eliminado. Inactivarlo no libera cupo.
-- **Atención rápida desde una cita:** la cita solo queda vinculada; su estado lo maneja Agenda.
+- **Atención desde una cita (2026-11-22):** la atención sincroniza el estado de la cita (alta → `IN_PROGRESS`; completar o atención rápida → `COMPLETED`; anular no la toca; nunca retrocede). Una cita completada se puede atender sin cambiar su estado. Cualquier usuario con permiso puede atender; la atención queda a nombre de quien la registra.
 
 ## Ticket 0 — F1 al formato del diccionario
 

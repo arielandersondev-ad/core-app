@@ -9,6 +9,7 @@ export const DENTISTRY_MODULES = [
   'services',
   'treatments',
   'payments',
+  'files',
 ] as const;
 
 export type DentistryModule = (typeof DENTISTRY_MODULES)[number];
@@ -28,12 +29,17 @@ export const MODULE_FEATURES: Readonly<Record<DentistryModule, string>> = {
   services: 'services',
   treatments: 'treatments',
   payments: 'payments',
+  files: 'files',
 };
 
 export type PlanLimits = {
   patients: number | null;
   members: number | null;
   branches: number | null;
+  /** Bytes totales de archivos clínicos de la organización (READY + reservas vigentes). */
+  fileStorageBytes: number | null;
+  /** Archivos clínicos por paciente (READY + reservas vigentes). */
+  filesPerPatient: number | null;
 };
 
 /**
@@ -80,6 +86,8 @@ export function parsePlanEntitlements(snapshot: unknown): PlanEntitlements {
       patients: readLimit(object.limits, 'patients'),
       members: readLimit(object.limits, 'members'),
       branches: readLimit(object.limits, 'branches'),
+      fileStorageBytes: readLimit(object.limits, 'fileStorageBytes'),
+      filesPerPatient: readLimit(object.limits, 'filesPerPatient'),
     },
   };
 }

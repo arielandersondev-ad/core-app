@@ -865,6 +865,8 @@ El expediente/historia clínica completo es una vista compuesta, no una tabla ad
 }
 ```
 
+Cupos de archivos clínicos (`features.files`): `limits.fileStorageBytes` (bytes totales de ClinicalFile de la organización) y `limits.filesPerPatient` (archivos por paciente). Ocupan cupo los READY y las reservas PENDING vigentes no eliminadas. Son obligatorios para subir cuando `files` está activo; ausentes, la subida se rechaza. El tamaño máximo por archivo es una regla del módulo, no del plan.
+
 `clinicalHistory` es el nombre de la capacidad comercial de expediente y no obliga a una tabla ClinicalHistory. Sin cupos ficticios ilimitados: un límite desconocido se considera inválido, no infinito. Una función inexistente o no implementada no se habilita solo por un booleano.
 
 Propuesta de conteo para 0.1: pacientes no eliminados, sucursales no eliminadas habilitadas y membresías ACTIVE/INVITED no eliminadas de la organización Dentistry. Inactivar un paciente no libera cupo. Invitaciones reservan plaza; eliminar datos clínicos para reciclar cupo no es una operación normal. Definir cobro/comportamiento de membresías suspendidas y futuras organizaciones con varias verticales antes de ampliar este conteo.

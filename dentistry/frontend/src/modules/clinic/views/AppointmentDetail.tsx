@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTimeZoneResolver } from "@/shared/time/use-time-zone";
 import {
   appointments,
   getPatientById,
@@ -78,6 +79,7 @@ export default function AppointmentDetail({
 }) {
   const mockApt = appointments.find((a) => a.id === citaId);
   const [apiAppointment, setApiAppointment] = useState<AppointmentDto | null>(null);
+  const timeZoneOf = useTimeZoneResolver();
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ message: string; notFound: boolean } | null>(null);
 
@@ -229,17 +231,19 @@ export default function AppointmentDetail({
   let dateFormatted = "";
   let timeRangeFormatted = "";
   if (apiAppointment?.scheduledStartAt) {
+    // Fechas en la zona de la sucursal de la cita.
+    const timeZone = timeZoneOf(apiAppointment.branchId);
     const startDt = new Date(apiAppointment.scheduledStartAt);
     const endDt = new Date(apiAppointment.scheduledEndAt);
     dateFormatted = Number.isNaN(startDt.getTime())
       ? apiAppointment.scheduledStartAt
-      : startDt.toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long" });
+      : startDt.toLocaleDateString("es-BO", { weekday: "long", day: "numeric", month: "long", timeZone });
     const startTimeStr = Number.isNaN(startDt.getTime())
       ? ""
-      : startDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
+      : startDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone });
     const endTimeStr = Number.isNaN(endDt.getTime())
       ? ""
-      : endDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit" });
+      : endDt.toLocaleTimeString("es-BO", { hour: "2-digit", minute: "2-digit", timeZone });
     timeRangeFormatted = `${startTimeStr} – ${endTimeStr}`;
   } else if (mockApt) {
     const dt = new Date(mockApt.date + "T12:00:00");

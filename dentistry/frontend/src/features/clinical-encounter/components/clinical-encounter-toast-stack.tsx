@@ -33,7 +33,7 @@ export function ClinicalEncounterToastStack({ toasts, onDismiss }: ClinicalEncou
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-20 z-[80] flex flex-col items-center gap-2 px-4 sm:bottom-4 sm:inset-x-auto sm:right-6 sm:items-end"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--shell-bottom,0px)+0.75rem)] z-[80] flex flex-col items-center gap-2 px-4 sm:inset-x-auto sm:right-6 sm:items-end"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       {toasts.map((toast) => (

@@ -17,6 +17,8 @@ export interface QuickProcedureFormValues {
   targetDescription: string;
   description: string;
   observations: string;
+  /** Cita desde la que se registra (agenda); queda vinculada y completada. */
+  appointmentId?: string;
   /** Precio nominal opcional del procedimiento. */
   price?: string;
   currency?: string;
@@ -36,11 +38,13 @@ const FUTURE_TOLERANCE_MS = 60_000;
 export function toQuickProcedureInput(
   values: QuickProcedureFormValues,
   now: Date = new Date(),
+  /** Zona de la sucursal; la fecha y la hora son las de pared de esa zona. */
+  timeZone?: string,
 ): QuickProcedureValidationResult {
   const branchId = values.branchId.trim();
   if (!branchId) return { error: "Selecciona una sucursal." };
 
-  const performedAt = buildInstant(values.date, values.time);
+  const performedAt = buildInstant(values.date, values.time, timeZone);
   if (!performedAt) return { error: "Indica una fecha y una hora válidas." };
   if (new Date(performedAt).getTime() > now.getTime() + FUTURE_TOLERANCE_MS) {
     return { error: "La fecha y la hora no pueden ser futuras." };
@@ -66,6 +70,7 @@ export function toQuickProcedureInput(
       input: {
         branchId,
         performedAt,
+        ...(values.appointmentId ? { appointmentId: values.appointmentId } : {}),
         procedureSummary: values.observations.trim() || null,
         procedures,
       },

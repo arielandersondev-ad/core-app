@@ -1,5 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/infrastructure/prisma.service.js';
+import { TimeZoneResolver } from '../../../common/infrastructure/time-zone.resolver.js';
+import { civilDateIn } from '../../../common/time/zoned-time.js';
 import { Appointment } from '../domain/entities/appointment.entity.js';
 import {
   AppointmentRepository,
@@ -14,7 +16,10 @@ import {
 
 @Injectable()
 export class PrismaAppointmentRepository extends AppointmentRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly timeZones: TimeZoneResolver,
+  ) {
     super();
   }
 
@@ -193,6 +198,13 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
       serviceMap.set(s.id, s.name);
     }
 
+    const zones = filters.civilDate
+      ? await this.timeZones.forBranches(
+          filters.organizationId,
+          (rows || []).map((row) => row.branchId),
+        )
+      : null;
+
     const servicesByAppointment = new Map<string, AppointmentServiceRow[]>();
     for (const link of links || []) {
       const services = servicesByAppointment.get(link.appointmentId) ?? [];
@@ -220,6 +232,14 @@ export class PrismaAppointmentRepository extends AppointmentRepository {
         if (filters.startDate && row.scheduledStartAt < filters.startDate)
           return false;
         if (filters.endDate && row.scheduledStartAt > filters.endDate)
+          return false;
+        if (
+          zones &&
+          civilDateIn(
+            row.scheduledStartAt,
+            zones.branches.get(row.branchId) ?? zones.organization,
+          ) !== filters.civilDate
+        )
           return false;
         return true;
       })

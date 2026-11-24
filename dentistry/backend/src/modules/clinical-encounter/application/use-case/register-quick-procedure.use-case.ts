@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { appointmentSyncFor } from '../../domain/appointment-sync.js';
 import type { ClinicalEncounter } from '../../domain/entities/clinical-encounter.entity.js';
 import {
   ClinicalEncounterRepository,
@@ -28,8 +29,8 @@ export type RegisterQuickProcedureCommand = EncounterScope & {
 
 /**
  * "Atención rápida": registra procedimientos sueltos del paciente en un paso,
- * como una atención ya completada. La cita, si se indica, solo queda vinculada;
- * su estado lo administra Agenda.
+ * como una atención ya completada. La cita, si se indica, queda vinculada y
+ * pasa a completada (salvo que ya lo estuviera).
  */
 @Injectable()
 export class RegisterQuickProcedureUseCase {
@@ -77,6 +78,7 @@ export class RegisterQuickProcedureUseCase {
         createdByMembershipId: command.actorMembershipId,
       },
       procedures,
+      appointmentSyncFor('COMPLETED', command.appointmentId),
     );
   }
 }

@@ -12,6 +12,7 @@ import { usePatientHealthProfile } from "@/features/clinical-encounter/hooks/use
 import { useSavePatientHealthProfile } from "@/features/clinical-encounter/hooks/use-clinical-encounter-mutations";
 import { useToasts } from "@/features/clinical-encounter/hooks/use-toasts";
 import { formatDateTimeShort } from "@/features/clinical-encounter/utils/dates";
+import { useTimeZone } from "@/shared/time/use-time-zone";
 import {
   HEALTH_PROFILE_FIELDS,
   canEditHealthProfile,
@@ -69,6 +70,7 @@ function PatientHealthProfileView({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const timeZone = useTimeZone();
   const query = usePatientHealthProfile(patient.id);
   const saveProfile = useSavePatientHealthProfile(patient.id);
   const { toasts, pushToast, dismissToast } = useToasts();
@@ -219,7 +221,7 @@ function PatientHealthProfileView({
 
           {profile.updatedAt && (
             <p className="text-xs text-muted">
-              Última actualización: {formatDateTimeShort(profile.updatedAt)}
+              Última actualización: {formatDateTimeShort(profile.updatedAt, timeZone)}
             </p>
           )}
         </>

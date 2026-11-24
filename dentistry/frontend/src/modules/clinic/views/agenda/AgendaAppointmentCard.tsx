@@ -7,6 +7,7 @@ import {
 } from "@/modules/clinic/__mocks__/data";
 import { Icons } from "@/shared/components/ui/Icons";
 import { normalizePhoneNumber } from "@/shared/utils/whatsapp-generator";
+import { AppointmentEncounterActions } from "@/features/clinical-encounter/components/appointment-encounter-actions";
 import {
   formatLocalPhone,
   getDoctorDisplay,
@@ -23,8 +24,10 @@ interface AgendaAppointmentCardProps {
   onOpenDetail: () => void;
   onOpenWhatsApp: () => void;
   onStatusChange: (newStatus: QuickStatus) => void;
+  onRegisterProcedure: () => void;
   nowDateStr: string;
   nowMinutes: number;
+  now?: Date;
 }
 
 export function AgendaAppointmentCard({
@@ -34,10 +37,12 @@ export function AgendaAppointmentCard({
   onOpenDetail,
   onOpenWhatsApp,
   onStatusChange,
+  onRegisterProcedure,
   nowDateStr,
   nowMinutes,
+  now,
 }: AgendaAppointmentCardProps) {
-  const isOverdue = isAppointmentOverdue(apt, nowDateStr, nowMinutes);
+  const isOverdue = isAppointmentOverdue(apt, nowDateStr, nowMinutes, now);
   const svc = getServiceById(apt.serviceId);
   const doctor = getDoctorDisplay(apt.professionalId);
   const isPerson = isPersonaAppointment(apt);
@@ -364,6 +369,16 @@ export function AgendaAppointmentCard({
               </div>
             )}
           </div>
+
+          {/* Atención clínica: crear desde la cita o ver la ya vinculada */}
+          {apt.patientId && apt.branchId && (
+            <AppointmentEncounterActions
+              patientId={apt.patientId}
+              appointmentId={apt.id}
+              appointmentStatus={apt.status}
+              onRegisterProcedure={onRegisterProcedure}
+            />
+          )}
 
           {/* Fila Inferior del Acordeón */}
           <div className="mt-3 pt-1 flex items-center justify-between text-xs text-[var(--muted)]">

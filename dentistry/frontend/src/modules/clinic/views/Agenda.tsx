@@ -7,8 +7,9 @@ import { MobileFloatingActionMenu, PullToRefresh } from "@/shared/components/ui"
 import { WhatsAppModal } from "@/shared/components/ui/WhatsAppModal";
 import { PaymentPromptModal } from "@/shared/components/ui/PaymentPromptModal";
 import { CreateAppointmentModal, CreatePatientModal, RegisterPaymentModal, AppointmentDetailSheet } from "@/modules/clinic/components";
+import { useAppointmentProcedureFlow } from "@/features/clinical-encounter/components/appointment-procedure-flow";
 import { DentalWhatsAppContext, WhatsAppTemplateKey } from "@/shared/utils/whatsapp-generator";
-import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay } from "./agenda/hooks/useAgendaAppointments";
+import { useAgendaAppointments, isAppointmentOverdue as checkIsAppointmentOverdue, getDoctorDisplay, toProcedureTarget } from "./agenda/hooks/useAgendaAppointments";
 import { AgendaHeader } from "./agenda/AgendaHeader";
 import { AgendaMetricsStrip } from "./agenda/AgendaMetricsStrip";
 import { AgendaTimeline } from "./agenda/AgendaTimeline";
@@ -20,6 +21,7 @@ export function isAppointmentOverdue(apt: Appointment, nowDateStr: string, nowMi
 export default function Agenda(props: { onNavigate?: (s: string, p?: Record<string, string>) => void }) {
   void props;
   const agenda = useAgendaAppointments();
+  const procedureFlow = useAppointmentProcedureFlow(() => void agenda.refetch());
   const [waContext, setWaContext] = useState<DentalWhatsAppContext | null>(null);
   const [waTemplate, setWaTemplate] = useState<WhatsAppTemplateKey>("confirmacion");
   const [isWaOpen, setIsWaOpen] = useState(false);
@@ -56,9 +58,11 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-4 pb-24 h-full">
       <AgendaHeader
-        date={agenda.date} onDateChange={agenda.changeDate} viewMode={agenda.viewMode} onViewModeChange={agenda.setViewMode}
+        date={agenda.date} today={agenda.today} onDateChange={agenda.changeDate} viewMode={agenda.viewMode} onViewModeChange={agenda.setViewMode}
         totalCount={agenda.counters.totalCount} onOpenCreateModal={() => setIsCreateApptOpen(true)}
       />
+
+      {procedureFlow.banner}
 
       <AgendaMetricsStrip
         statusFilter={agenda.statusFilter} onStatusFilterChange={agenda.setStatusFilter}
@@ -70,7 +74,7 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
         <AgendaTimeline
           viewMode={agenda.viewMode} isLoading={agenda.isLoading} isError={agenda.isError} onRetry={() => void agenda.refetch()}
           dayAppts={agenda.dayAppts} expandedId={agenda.expandedId} onToggleExpand={agenda.handleToggleExpand}
-          nowDateStr={agenda.nowDateStr} nowMinutes={agenda.nowMinutes} onOpenCreateModal={() => setIsCreateApptOpen(true)}
+          nowDateStr={agenda.nowDateStr} nowMinutes={agenda.nowMinutes} now={agenda.now} onOpenCreateModal={() => setIsCreateApptOpen(true)}
           onOpenDetail={(aptId) => {
             const apt = { id: aptId };
             setSelectedDetailCitaId(apt.id); setIsDetailSheetOpen(true);
@@ -79,6 +83,7 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
           onStatusChange={(id, status) => {
             agenda.handleQuickStatusChange(id, status, (completed) => setPaymentPromptAppointment(completed));
           }}
+          onRegisterProcedure={(apt) => { const target = toProcedureTarget(apt); if (target) procedureFlow.open(target); }}
         />
       </PullToRefresh>
 
@@ -131,7 +136,9 @@ export default function Agenda(props: { onNavigate?: (s: string, p?: Record<stri
           setWaTemplate("confirmacion");
           setIsWaOpen(true);
         }}
+        onRegisterProcedure={(target) => { setIsDetailSheetOpen(false); setSelectedDetailCitaId(null); procedureFlow.open(target, { afterSheetClose: true }); }}
       />
+      {procedureFlow.modal}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { keepPreviousData, mutationOptions, queryOptions, type QueryClient } from "@tanstack/react-query";
 import { patientQueryKeys } from "@/features/patient/api/query-options";
+import { appointmentQueryKeys } from "@/modules/clinic/hooks/use-appointments";
 import { ClinicalEncounterPartialCreateError } from "@/features/clinical-encounter/services/clinical-encounter.error";
 import { getClinicalEncounterDataSource } from "@/features/clinical-encounter/services/clinical-encounter.service";
 import { fetchCurrentSession } from "@/infrastructure/auth/client-session";
@@ -12,6 +13,7 @@ import type {
   CompleteClinicalEncounterVariables,
   CreateClinicalEncounterWithProceduresInput,
   PatientHealthProfileInput,
+  UpdateClinicalFileInput,
   RegisterQuickProcedureInput,
   VoidClinicalEncounterVariables,
 } from "@/features/clinical-encounter/types/clinical-encounter";
@@ -28,6 +30,9 @@ export const clinicalEncounterQueryKeys = {
   files: (patientId: string, encounterId?: string) =>
     [ROOT, patientId, "files", encounterId ?? "all"] as const,
   filesRoot: (patientId: string) => [ROOT, patientId, "files"] as const,
+  fileAccessUrl: (patientId: string, fileId: string, disposition: "inline" | "attachment") =>
+    [ROOT, patientId, "files", "access-url", fileId, disposition] as const,
+  fileQuota: () => [ROOT, "files-quota"] as const,
   referenceData: (patientId: string) => [ROOT, patientId, "reference-data"] as const,
 };
 
@@ -40,11 +45,31 @@ function invalidatePatientDetail(client: QueryClient, patientId: string) {
   return client.invalidateQueries({ queryKey: patientQueryKeys.detail(patientId) });
 }
 
+/** El backend avanza el estado de la cita vinculada junto con la atención. */
+function invalidateAppointments(client: QueryClient) {
+  return client.invalidateQueries({ queryKey: appointmentQueryKeys.all });
+}
+
 export function clinicalEncounterListOptions(patientId: string, filters?: ClinicalEncounterListFilters) {
   return queryOptions({
     queryKey: clinicalEncounterQueryKeys.list(patientId, filters),
     queryFn: () => getClinicalEncounterDataSource().list(patientId, filters),
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Atención vinculada a una cita, o null si todavía no tiene. Vive bajo las
+ * listas del paciente, así que se refresca con cada alta, cierre o anulación.
+ */
+export function appointmentEncounterOptions(patientId: string, appointmentId: string) {
+  const filters: ClinicalEncounterListFilters = { appointmentId, pageSize: 1 };
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.list(patientId, filters),
+    queryFn: async () => {
+      const page = await getClinicalEncounterDataSource().list(patientId, filters);
+      return page.items[0] ?? null;
+    },
   });
 }
 
@@ -70,6 +95,32 @@ export function clinicalFilesOptions(patientId: string, encounterId?: string) {
     queryFn: () => getClinicalEncounterDataSource().listFiles(patientId, encounterId),
     // Los archivos de una atención inexistente no deben reintentarse en vano.
     retry: false,
+  });
+}
+
+/**
+ * Enlace firmado de lectura (vigencia 2 min). Se renueva antes de vencer y no se
+ * conserva en caché al cerrar la vista previa.
+ */
+export function clinicalFileAccessUrlOptions(
+  patientId: string,
+  fileId: string,
+  disposition: "inline" | "attachment" = "inline",
+) {
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.fileAccessUrl(patientId, fileId, disposition),
+    queryFn: () => getClinicalEncounterDataSource().getFileAccessUrl(patientId, fileId, disposition),
+    staleTime: 60_000,
+    gcTime: 0,
+    retry: false,
+  });
+}
+
+export function clinicalFileQuotaOptions() {
+  return queryOptions({
+    queryKey: clinicalEncounterQueryKeys.fileQuota(),
+    queryFn: () => getClinicalEncounterDataSource().getFileQuota(),
+    staleTime: 30_000,
   });
 }
 
@@ -126,6 +177,7 @@ export function clinicalEncounterCreateOptions(client: QueryClient, session: Cur
           queryKey: clinicalEncounterQueryKeys.lists(encounter.patientId),
         }),
         invalidatePatientDetail(client, encounter.patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });
@@ -149,6 +201,7 @@ export function clinicalEncounterQuickProcedureOptions(
         // Una cita vinculada deja de estar disponible para otra atención.
         client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.referenceData(patientId) }),
         invalidatePatientDetail(client, patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });
@@ -165,7 +218,7 @@ export function clinicalEncounterCompleteOptions(
       return getClinicalEncounterDataSource().complete(patientId, encounterId, input);
     },
     retry: false,
-    onSuccess: async (_encounter, { encounterId }) => {
+    onSuccess: async (encounter, { encounterId }) => {
       await Promise.all([
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.detail(patientId, encounterId),
@@ -174,6 +227,7 @@ export function clinicalEncounterCompleteOptions(
           queryKey: clinicalEncounterQueryKeys.lists(patientId),
         }),
         invalidatePatientDetail(client, patientId),
+        ...(encounter.appointmentId ? [invalidateAppointments(client)] : []),
       ]);
     },
   });
@@ -264,8 +318,28 @@ export function clinicalFileAddOptions(
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
         }),
-        invalidatePatientDetail(client, patientId),
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.fileQuota() }),
       ]);
+    },
+  });
+}
+
+export function clinicalFileUpdateOptions(
+  client: QueryClient,
+  session: CurrentSession,
+  patientId: string,
+) {
+  return mutationOptions({
+    mutationFn: async ({ fileId, input }: { fileId: string; input: UpdateClinicalFileInput }) => {
+      await assertSessionUnchanged(session);
+      return getClinicalEncounterDataSource().updateFile(patientId, fileId, input);
+    },
+    retry: false,
+    // También tras un conflicto: así se edita sobre la versión vigente.
+    onSettled: async () => {
+      await client.invalidateQueries({
+        queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
+      });
     },
   });
 }
@@ -286,7 +360,7 @@ export function clinicalFileRemoveOptions(
         client.invalidateQueries({
           queryKey: clinicalEncounterQueryKeys.filesRoot(patientId),
         }),
-        invalidatePatientDetail(client, patientId),
+        client.invalidateQueries({ queryKey: clinicalEncounterQueryKeys.fileQuota() }),
       ]);
     },
   });

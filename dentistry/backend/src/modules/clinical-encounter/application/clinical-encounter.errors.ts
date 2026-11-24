@@ -45,6 +45,12 @@ export const ClinicalErrors = {
       'ENCOUNTER_APPOINTMENT_TAKEN',
       'Ya existe una atención para esta cita.',
     ),
+  appointmentChanged: () =>
+    new CodedHttpException(
+      HttpStatus.CONFLICT,
+      'APPOINTMENT_CHANGED',
+      'La cita cambió mientras se registraba la atención; vuelve a intentarlo.',
+    ),
   treatmentNotFound: () =>
     new CodedHttpException(
       HttpStatus.NOT_FOUND,

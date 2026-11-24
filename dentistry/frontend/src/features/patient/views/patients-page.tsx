@@ -34,6 +34,8 @@ import type {
 } from "@/features/patient/types/patient";
 import { CreatePatientButton } from "@/features/patient/components/create-patient-button";
 import { PatientLimitNotice, PatientQuotaCounter } from "@/features/patient/components/patient-quota";
+import { useTimeZone } from "@/shared/time/use-time-zone";
+import { civilDateIn, todayIn } from "@/shared/time/zoned-time";
 
 export default function PatientsPage() {
   const [createdMessage, setCreatedMessage] = useState("");
@@ -130,12 +132,14 @@ export default function PatientsPage() {
     return currentItems.filter((p) => p.status === "ACTIVE").length;
   }, [params.status, totalPatients, currentItems]);
 
+  // Mes en curso en la zona de la organización.
+  const timeZone = useTimeZone();
   const newThisMonth = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
-    return currentItems.filter((p) => p.createdAt?.startsWith(currentMonth))
-      .length;
-  }, [currentItems]);
+    const currentMonth = todayIn(timeZone).slice(0, 7); // YYYY-MM
+    return currentItems.filter(
+      (p) => p.createdAt && civilDateIn(p.createdAt, timeZone).startsWith(currentMonth),
+    ).length;
+  }, [currentItems, timeZone]);
 
   const compactMetrics: CompactStatItem[] = useMemo(
     () => [

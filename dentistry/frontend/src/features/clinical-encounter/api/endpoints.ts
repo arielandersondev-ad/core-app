@@ -10,8 +10,7 @@ function encountersCollection(patientId: string): string {
 
 /**
  * Rutas del contrato acordado con Dentistry Backend, servidas por el BFF
- * (`infrastructure/http/dentistry-proxy.ts`). `files` y `fileById` siguen sin
- * endpoint (entrega E6).
+ * (`infrastructure/http/dentistry-proxy.ts`).
  */
 export const CLINICAL_ENCOUNTER_ENDPOINTS = {
   collection: encountersCollection,
@@ -27,6 +26,12 @@ export const CLINICAL_ENCOUNTER_ENDPOINTS = {
   files: (patientId: string) => `${patientPath(patientId)}/clinical-files`,
   fileById: (patientId: string, fileId: string) =>
     `${patientPath(patientId)}/clinical-files/${encodeURIComponent(fileId)}`,
+  fileUploads: (patientId: string) => `${patientPath(patientId)}/clinical-files/uploads`,
+  fileComplete: (patientId: string, fileId: string) =>
+    `${patientPath(patientId)}/clinical-files/${encodeURIComponent(fileId)}/complete`,
+  fileAccessUrl: (patientId: string, fileId: string) =>
+    `${patientPath(patientId)}/clinical-files/${encodeURIComponent(fileId)}/access-url`,
+  fileQuota: "/api/dentistry/clinical-files/quota",
   referenceData: (patientId: string) => `${encountersCollection(patientId)}/reference-data`,
   quick: (patientId: string) => `${encountersCollection(patientId)}/quick`,
 } as const;
