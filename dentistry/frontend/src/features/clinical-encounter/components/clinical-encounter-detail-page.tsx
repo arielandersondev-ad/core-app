@@ -7,6 +7,9 @@ import type { PatientDto } from "@/features/patient/types/patient";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
+import { EncounterCollectionPanel } from "@/features/billing/components/encounter-collection-panel";
+import { isModuleEnabled } from "@/shared/plan/plan-access";
+import { formatMinorCurrency } from "@/shared/utils/formatters";
 import { Badge, Button, EmptyState, Icons } from "@/shared/components/ui";
 import { InfoRow } from "@/features/clinical-encounter/components/clinical-encounter-info-row";
 import { Panel } from "@/features/clinical-encounter/components/clinical-encounter-panel";
@@ -165,6 +168,8 @@ function EncounterDetailContent({
   const [voidOpen, setVoidOpen] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
   const [procedureOpen, setProcedureOpen] = useState(false);
+  // Tras completar, el cobro propuesto se abre solo (recepción lo confirma, edita u omite).
+  const [promptCollection, setPromptCollection] = useState(false);
   const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -242,6 +247,10 @@ function EncounterDetailContent({
     : "Sin tratamiento";
   const treatmentProcedures = referenceData?.treatmentProcedures ?? [];
   const procedureTally = summarizeProcedures(encounter.procedures);
+  const showPrices = isModuleEnabled(session.plan, "payments");
+  const pricedCurrency = encounter.procedures.find(
+    (procedure) => procedure.status !== "VOIDED" && procedure.currency,
+  )?.currency;
 
   const clinicalBlocks = [
     { label: "Motivo de consulta", value: encounter.chiefComplaint },
@@ -258,6 +267,7 @@ function EncounterDetailContent({
     try {
       await completeMutation.mutateAsync({ encounterId: encounter.id, input });
       setCompleteOpen(false);
+      setPromptCollection(true);
       pushToast("Atención completada.", "success");
     } catch (error) {
       setCompleteError(mutationErrorMessage(error));
@@ -446,6 +456,10 @@ function EncounterDetailContent({
               title="Procedimientos"
               description={`${procedureTally.recorded} registrado(s)${
                 procedureTally.voided ? ` · ${procedureTally.voided} anulado(s)` : ""
+              }${
+                showPrices && encounter.proceduresTotal
+                  ? ` · Realizado: ${formatMinorCurrency(encounter.proceduresTotal.amountMinor, encounter.proceduresTotal.currency)}`
+                  : ""
               }`}
               icon={Icons.tooth}
               action={
@@ -511,6 +525,9 @@ function EncounterDetailContent({
                           <p className="mt-0.5 text-xs text-muted">
                             {procedure.targetDescription ? `${procedure.targetDescription} · ` : ""}
                             {planLabel}
+                            {showPrices && procedure.priceMinor !== undefined && procedure.currency
+                              ? ` · ${formatMinorCurrency(procedure.priceMinor, procedure.currency)}`
+                              : ""}
                           </p>
                           {isVoided && procedure.voidReason && (
                             <p className="mt-1 text-xs text-warning">
@@ -527,6 +544,14 @@ function EncounterDetailContent({
                 </ul>
               )}
             </Panel>
+
+            <EncounterCollectionPanel
+              patientId={encounter.patientId}
+              encounterId={encounter.id}
+              status={encounter.status}
+              autoPrompt={promptCollection}
+              onNotice={(message) => pushToast(message, "success")}
+            />
           </div>
 
           <Panel
@@ -690,6 +715,8 @@ function EncounterDetailContent({
           treatmentProcedures={treatmentProcedures}
           defaultTreatmentId={encounter.treatmentId}
           submitting={addProceduresMutation.isPending}
+          showPrice={showPrices}
+          defaultCurrency={pricedCurrency}
         />
       )}
 

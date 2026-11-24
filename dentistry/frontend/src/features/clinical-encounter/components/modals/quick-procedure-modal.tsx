@@ -16,6 +16,7 @@ import {
   type QuickProcedureFormValues,
 } from "@/features/clinical-encounter/utils/quick-procedure";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
+import { isModuleEnabled } from "@/shared/plan/plan-access";
 
 export interface QuickProcedureModalProps {
   patientId: string;
@@ -30,6 +31,7 @@ export interface QuickProcedureModalProps {
 export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickProcedureModalProps) {
   const session = useAuthenticatedSession();
   const branchIds = session.context.branchIds;
+  const showPrice = isModuleEnabled(session.plan, "payments");
   const register = useRegisterQuickProcedure(patientId);
   // Los nombres de sucursal solo hacen falta si hay más de una para elegir.
   const reference = useQuery({
@@ -45,6 +47,8 @@ export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickP
     targetDescription: "",
     description: "",
     observations: "",
+    price: "",
+    currency: "BOB",
   }));
   const [error, setError] = useState<string | null>(null);
 
@@ -175,6 +179,26 @@ export function QuickProcedureModal({ patientId, onClose, onRegistered }: QuickP
           value={values.description}
           onChange={(event) => update("description", event.target.value)}
         />
+        {showPrice && (
+          <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
+            <Input
+              id="quick-proc-price"
+              label="Precio (opcional)"
+              placeholder="Ej. 150"
+              inputMode="decimal"
+              value={values.price ?? ""}
+              onChange={(event) => update("price", event.target.value)}
+              hint="Por fila. Después puedes registrar el cobro desde la atención."
+            />
+            <Input
+              id="quick-proc-currency"
+              label="Moneda"
+              maxLength={3}
+              value={values.currency ?? "BOB"}
+              onChange={(event) => update("currency", event.target.value.toUpperCase())}
+            />
+          </div>
+        )}
         <TextAreaField
           id="quick-proc-observations"
           label="Observaciones (opcional)"

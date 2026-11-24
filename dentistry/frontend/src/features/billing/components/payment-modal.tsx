@@ -23,6 +23,8 @@ export interface PaymentModalProps {
   initialAmountMinor?: number | null;
   /** Cobro sin tratamiento con presupuesto: se pide la moneda. */
   askCurrency?: boolean;
+  /** Moneda inicial cuando se pide (p. ej. la de los precios de la atención). */
+  defaultCurrency?: string;
   /** Sucursales a elegir cuando el usuario tiene varias y el cobro no hereda una. */
   branchOptions?: { value: string; label: string }[];
   /** Contenido previo a los campos (resumen, elección de tratamiento…). */
@@ -45,6 +47,7 @@ export function PaymentModal({
   maxMinor,
   initialAmountMinor,
   askCurrency = false,
+  defaultCurrency = DEFAULT_CURRENCY,
   branchOptions,
   header,
   submitting,
@@ -59,7 +62,7 @@ export function PaymentModal({
     reference: "",
     notes: "",
     branchId: "",
-    currency: DEFAULT_CURRENCY,
+    currency: defaultCurrency,
   }));
   const [validation, setValidation] = useState<string | null>(null);
 

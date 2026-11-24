@@ -176,3 +176,50 @@ test("los filtros de pagos y tratamientos son una lista cerrada", async (t) => {
   );
   assert.equal(stray.status, 400);
 });
+
+const { toProcedureDrafts } = load("src/features/clinical-encounter/utils/procedures.ts");
+const { toQuickProcedureInput } = load("src/features/clinical-encounter/utils/quick-procedure.ts");
+
+const procedureValues = (overrides = {}) => ({
+  targetType: "TOOTH",
+  toothNumber: "16, 17",
+  targetDescription: "",
+  description: "Control de ortodoncia",
+  treatmentProcedureId: "",
+  ...overrides,
+});
+
+test("el precio del procedimiento es opcional y viaja con su moneda en cada fila", () => {
+  const sinPrecio = toProcedureDrafts(procedureValues());
+  assert.ok(sinPrecio.every((row) => row.priceMinor === undefined && row.currency === undefined));
+
+  const conPrecio = toProcedureDrafts(procedureValues({ price: "150,50", currency: "bob" }));
+  assert.equal(conPrecio.length, 2, "una fila por pieza");
+  assert.ok(conPrecio.every((row) => row.priceMinor === 15_050 && row.currency === "BOB"));
+
+  const vacio = toProcedureDrafts(procedureValues({ price: "   ", currency: "BOB" }));
+  assert.ok(vacio.every((row) => row.priceMinor === undefined && row.currency === undefined));
+
+  assert.throws(() => toProcedureDrafts(procedureValues({ price: "mucho" })), /precio/);
+  assert.throws(() => toProcedureDrafts(procedureValues({ price: "10", currency: "BOLIVIANOS" })), /moneda/);
+});
+
+test("la atención rápida conserva el precio de cada procedimiento", () => {
+  const base = {
+    branchId: "branch-1",
+    date: "2026-11-16",
+    time: "10:30",
+    targetType: "WHOLE_MOUTH",
+    toothNumber: "",
+    targetDescription: "",
+    description: "Profilaxis",
+    observations: "",
+  };
+  const now = new Date(2026, 10, 16, 12, 0, 0);
+  const priced = toQuickProcedureInput({ ...base, price: "80", currency: "BOB" }, now);
+  assert.equal(priced.input.procedures[0].priceMinor, 8_000);
+  assert.equal(priced.input.procedures[0].currency, "BOB");
+  const free = toQuickProcedureInput(base, now);
+  assert.equal("priceMinor" in free.input.procedures[0], false);
+  assert.equal("currency" in free.input.procedures[0], false);
+});

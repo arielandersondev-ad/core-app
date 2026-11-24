@@ -17,6 +17,9 @@ export interface QuickProcedureFormValues {
   targetDescription: string;
   description: string;
   observations: string;
+  /** Precio nominal opcional del procedimiento. */
+  price?: string;
+  currency?: string;
 }
 
 export type QuickProcedureValidationResult =
@@ -50,11 +53,14 @@ export function toQuickProcedureInput(
       targetDescription: values.targetDescription,
       description: values.description,
       treatmentProcedureId: "",
-    }).map(({ targetType, toothNumber, targetDescription, description }) => ({
+      price: values.price,
+      currency: values.currency,
+    }).map(({ targetType, toothNumber, targetDescription, description, priceMinor, currency }) => ({
       targetType,
       ...(toothNumber ? { toothNumber } : {}),
       ...(targetDescription ? { targetDescription } : {}),
       description,
+      ...(priceMinor !== undefined && currency ? { priceMinor, currency } : {}),
     }));
     return {
       input: {

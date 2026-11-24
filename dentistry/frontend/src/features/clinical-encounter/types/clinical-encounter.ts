@@ -13,6 +13,9 @@ export interface ClinicalEncounterProcedure {
   targetDescription?: string;
   description: string;
   treatmentProcedureId?: string;
+  /** Precio nominal en unidades menores; va siempre con `currency`. */
+  priceMinor?: number;
+  currency?: string;
   status: ClinicalEncounterProcedureStatus;
   voidedAt?: string;
   voidedByMembershipId?: string;
@@ -25,6 +28,8 @@ export interface ClinicalEncounterProcedureDraft {
   targetDescription?: string;
   description: string;
   treatmentProcedureId?: string;
+  priceMinor?: number;
+  currency?: string;
 }
 export type ProcedureDraft = ClinicalEncounterProcedureDraft;
 
@@ -48,6 +53,8 @@ export interface ClinicalEncounter {
   appointmentId?: string;
   treatmentId?: string;
   procedures: ClinicalEncounterProcedure[];
+  /** Suma de los precios de los procedimientos vigentes: lo realizado, no lo cobrado. */
+  proceduresTotal?: { amountMinor: number; currency: string };
   completedAt?: string;
   completedByMembershipId?: string;
   completedByName?: string; // presentación
