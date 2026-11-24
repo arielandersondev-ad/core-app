@@ -96,6 +96,9 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
               <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className={buttonClassName({ variant: "outline" })}>Perfil de salud</Link>
             </>
           )}
+          {session.permissions.includes("dentistry:treatments:read") && isModuleEnabled(session.plan, "treatments") && (
+            <Link href={`/patients/${encodeURIComponent(patient.id)}/account`} className={buttonClassName({ variant: "outline" })}>Cuenta y abonos</Link>
+          )}
           {session.permissions.includes("dentistry:patients:update") && <Button variant="outline" onClick={() => setEditing(true)}>Editar paciente</Button>}
           {session.permissions.includes("dentistry:patients:delete") && <Button variant="danger" onClick={() => setConfirmingDelete(true)}>Eliminar paciente</Button>}
         </div>}
