@@ -256,3 +256,81 @@ test("el cobro propuesto se ofrece una sola vez tras completar la atención", as
   assert.equal((panel.match(/onPromptHandled\(\)/g) ?? []).length, 2, "al cerrar y al registrar");
   assert.match(page, /onPromptHandled=\{\(\) => setPromptCollection\(false\)\}/);
 });
+
+const { summarizeWallet, collectableTreatments } = load("src/features/billing/utils/wallet.ts");
+const { parsePatientTab, patientTabHref } = load("src/features/patient/utils/patient-tabs.ts");
+
+function treatment(overrides) {
+  return {
+    id: "t",
+    patientId: PATIENT,
+    title: "Ortodoncia",
+    serviceName: null,
+    status: "IN_PROGRESS",
+    agreedPriceMinor: 1_000_000,
+    currency: "BOB",
+    paidMinor: 20_000,
+    balanceMinor: 980_000,
+    diagnosisSummary: null,
+    notes: null,
+    createdAt: "2026-11-24T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+test("la cartera suma presupuesto, cobrado y saldo por moneda", () => {
+  const summary = summarizeWallet([
+    treatment({ id: "a" }),
+    treatment({ id: "b", title: "Limpieza", agreedPriceMinor: 30_000, paidMinor: 30_000, balanceMinor: 0 }),
+    treatment({ id: "c", currency: "USD", agreedPriceMinor: 10_000, paidMinor: 0, balanceMinor: 10_000 }),
+  ]);
+  assert.deepEqual(summary.totals, [
+    { currency: "BOB", agreedMinor: 1_030_000, paidMinor: 50_000, balanceMinor: 980_000, percentPaid: 4 },
+    { currency: "USD", agreedMinor: 10_000, paidMinor: 0, balanceMinor: 10_000, percentPaid: 0 },
+  ]);
+  assert.equal(summary.treatments.length, 3);
+});
+
+test("los tratamientos cancelados o rechazados no cuentan en la cartera", () => {
+  const summary = summarizeWallet([
+    treatment({ id: "a" }),
+    treatment({ id: "b", status: "CANCELED" }),
+    treatment({ id: "c", status: "DECLINED" }),
+  ]);
+  assert.equal(summary.excludedCount, 2);
+  assert.deepEqual(summary.treatments.map((item) => item.id), ["a"]);
+  assert.equal(summary.totals[0].agreedMinor, 1_000_000);
+});
+
+test("un tratamiento sin presupuesto no entra en los totales y la cartera vacía no falla", () => {
+  const summary = summarizeWallet([treatment({ agreedPriceMinor: null, currency: null, balanceMinor: null })]);
+  assert.deepEqual(summary.totals, []);
+  assert.equal(summary.treatments.length, 1);
+  assert.deepEqual(summarizeWallet([]), { treatments: [], totals: [], excludedCount: 0 });
+});
+
+test("el porcentaje cobrado nunca pasa de 100 ni usa decimales", () => {
+  assert.equal(summarizeWallet([treatment({ paidMinor: 1_000_000, balanceMinor: 0 })]).totals[0].percentPaid, 100);
+  assert.equal(summarizeWallet([treatment({ paidMinor: 1, balanceMinor: 999_999 })]).totals[0].percentPaid, 0);
+});
+
+test("solo se abona a tratamientos vigentes, con presupuesto y saldo pendiente", () => {
+  const items = [
+    treatment({ id: "ok" }),
+    treatment({ id: "pagado", paidMinor: 1_000_000, balanceMinor: 0 }),
+    treatment({ id: "sin-presupuesto", agreedPriceMinor: null, currency: null, balanceMinor: null }),
+    treatment({ id: "cancelado", status: "CANCELED" }),
+  ];
+  assert.deepEqual(collectableTreatments(items).map((item) => item.id), ["ok"]);
+});
+
+test("las pestañas del paciente apuntan a sus rutas y '?tab=' desconocido es el resumen", () => {
+  assert.equal(patientTabHref(PATIENT, "summary"), `/patients/${PATIENT}`);
+  assert.equal(patientTabHref(PATIENT, "files"), `/patients/${PATIENT}?tab=archivos`);
+  assert.equal(patientTabHref(PATIENT, "encounters"), `/patients/${PATIENT}/clinical-encounters`);
+  assert.equal(patientTabHref(PATIENT, "account"), `/patients/${PATIENT}/account`);
+  assert.equal(patientTabHref(PATIENT, "health"), `/patients/${PATIENT}/health-profile`);
+  assert.equal(parsePatientTab("archivos"), "files");
+  assert.equal(parsePatientTab(["archivos", "x"]), "files");
+  for (const value of [undefined, "", "otra", "ARCHIVOS"]) assert.equal(parsePatientTab(value), "summary");
+});

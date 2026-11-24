@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { encounterReferenceDataOptions } from "@/features/clinical-encounter/api/query-options";
 import { PatientContextBoundary } from "@/features/clinical-encounter/components/patient-context-boundary";
-import { PaymentModal } from "@/features/billing/components/payment-modal";
+import { PatientTabs } from "@/features/patient/components/patient-tabs";
 import { TreatmentModal } from "@/features/billing/components/treatment-modal";
+import { TreatmentPaymentDialog } from "@/features/billing/components/treatment-payment-dialog";
 import { VoidPaymentModal } from "@/features/billing/components/void-payment-modal";
-import { useRegisterTreatmentPayment, useTreatmentAccount, useTreatments } from "@/features/billing/hooks/use-billing";
+import { useTreatmentAccount, useTreatments } from "@/features/billing/hooks/use-billing";
 import type { AccountMovement, Payment, Treatment } from "@/features/billing/types/billing";
 import {
   paymentMethodLabels,
@@ -187,23 +186,13 @@ function PatientAccount({ patientId, patientName }: { patientId: string; patient
   const can = (permission: string) => session.permissions.includes(permission);
   const treatmentsEnabled = isModuleEnabled(session.plan, "treatments") && can("dentistry:treatments:read");
   const paymentsEnabled = isModuleEnabled(session.plan, "payments");
-  const branchIds = session.context.branchIds;
 
   const treatments = useTreatments(patientId, treatmentsEnabled);
-  const register = useRegisterTreatmentPayment(patientId);
-  // Los nombres de sucursal solo hacen falta si hay varias para elegir.
-  const reference = useQuery({ ...encounterReferenceDataOptions(patientId), enabled: branchIds.length > 1 });
 
   const [creating, setCreating] = useState(false);
   const [collecting, setCollecting] = useState<Treatment | null>(null);
   const [voiding, setVoiding] = useState<Payment | null>(null);
-  const [collectError, setCollectError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-
-  const branchOptions = branchIds.map((id, index) => ({
-    value: id,
-    label: reference.data?.branches.find((branch) => branch.id === id)?.label ?? `Sucursal ${index + 1}`,
-  }));
 
   return (
     <PageContainer>
@@ -228,6 +217,7 @@ function PatientAccount({ patientId, patientName }: { patientId: string; patient
           ) : undefined
         }
       />
+      <PatientTabs patientId={patientId} active="account" />
       {notice && <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">{notice}</p>}
 
       {!treatmentsEnabled ? (
@@ -259,10 +249,7 @@ function PatientAccount({ patientId, patientName }: { patientId: string; patient
               treatment={treatment}
               canCollect={paymentsEnabled && can("dentistry:payments:create")}
               canVoid={paymentsEnabled && can("dentistry:payments:void")}
-              onCollect={(selected) => {
-                setCollectError(null);
-                setCollecting(selected);
-              }}
+              onCollect={setCollecting}
               onVoid={setVoiding}
             />
           ))}
@@ -280,28 +267,14 @@ function PatientAccount({ patientId, patientName }: { patientId: string; patient
         />
       )}
       {collecting && (
-        <PaymentModal
-          title="Registrar abono"
-          description={`Abono a «${collecting.title ?? "tratamiento"}». Reduce el saldo del tratamiento.`}
-          currency={collecting.currency}
-          maxMinor={collecting.balanceMinor}
-          branchOptions={branchOptions}
-          submitting={register.isPending}
-          error={collectError}
+        <TreatmentPaymentDialog
+          patientId={patientId}
+          treatment={collecting}
           onClose={() => setCollecting(null)}
-          onSubmit={(input) =>
-            register.mutate(
-              { treatmentId: collecting.id, input },
-              {
-                onSuccess: (payment) => {
-                  setCollecting(null);
-                  setNotice(`Abono de ${formatMinorCurrency(payment.amountMinor, payment.currency)} registrado.`);
-                },
-                onError: (cause) =>
-                  setCollectError(cause instanceof Error ? cause.message : "No se pudo registrar el pago."),
-              },
-            )
-          }
+          onRegistered={(payment) => {
+            setCollecting(null);
+            setNotice(`Abono de ${formatMinorCurrency(payment.amountMinor, payment.currency)} registrado.`);
+          }}
         />
       )}
       {voiding && (

@@ -7,17 +7,25 @@ import { useRouter } from "next/navigation";
 import { patientDetailOptions } from "@/features/patient/api/query-options";
 import { ApiError } from "@/infrastructure/http/api-error";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
-import { Button, buttonClassName, Icons, StatusMessage } from "@/shared/components/ui";
+import { Badge, Button, buttonClassName, Icons, StatusMessage } from "@/shared/components/ui";
 import { useAuthenticatedSession } from "@/infrastructure/auth/authenticated-session";
 import { UpdatePatientDialog } from "@/features/patient/components/update-patient-dialog";
 import { DeletePatientConfirmation } from "@/features/patient/components/delete-patient-confirmation";
+import { ActionsMenu, MenuItem, MenuSeparator } from "@/features/patient/components/actions-menu";
+import { PatientTabs } from "@/features/patient/components/patient-tabs";
 import { QuickProcedureModal } from "@/features/clinical-encounter/components/modals/quick-procedure-modal";
 import { ClinicalFilesPanel } from "@/features/clinical-encounter/components/clinical-files-panel";
+import { PatientWalletCard } from "@/features/billing/components/patient-wallet-card";
+import { TreatmentPaymentDialog } from "@/features/billing/components/treatment-payment-dialog";
+import { useTreatments } from "@/features/billing/hooks/use-billing";
+import type { Treatment } from "@/features/billing/types/billing";
+import { collectableTreatments } from "@/features/billing/utils/wallet";
 import { isModuleEnabled } from "@/shared/plan/plan-access";
+import { formatMinorCurrency } from "@/shared/utils/formatters";
 
-function PatientField({ label, value }: { label: string; value: string | null }) {
+function PatientField({ label, value, wide = false }: { label: string; value: string | null; wide?: boolean }) {
   return (
-    <div className="space-y-1 border-b border-border py-4 last:border-b-0">
+    <div className={`space-y-1 border-b border-border py-3 ${wide ? "col-span-full" : ""}`}>
       <dt className="text-xs font-medium text-muted">{label}</dt>
       <dd className="text-sm text-foreground">{value || "No registrado"}</dd>
     </div>
@@ -30,7 +38,7 @@ function formatDate(value: string | null): string | null {
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(date);
 }
 
-export function PatientDetailPage({ patientId }: { patientId: string }) {
+export function PatientDetailPage({ patientId, tab = "summary" }: { patientId: string; tab?: "summary" | "files" }) {
   const query = useQuery(patientDetailOptions(patientId));
   const router = useRouter();
   const session = useAuthenticatedSession();
@@ -39,9 +47,18 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
   const [updatedMessage, setUpdatedMessage] = useState("");
   const [registeringProcedure, setRegisteringProcedure] = useState(false);
   const [quickEncounterId, setQuickEncounterId] = useState<string | null>(null);
+  const [collecting, setCollecting] = useState<Treatment | null>(null);
   const canRegisterProcedure =
     session.permissions.includes("dentistry:encounters:create") &&
     isModuleEnabled(session.plan, "procedures");
+  const canCollect =
+    session.permissions.includes("dentistry:payments:create") &&
+    session.permissions.includes("dentistry:treatments:read") &&
+    isModuleEnabled(session.plan, "payments") &&
+    isModuleEnabled(session.plan, "treatments");
+  // Misma consulta que la cartera: React Query la comparte, no se pide dos veces.
+  const treatments = useTreatments(patientId, canCollect);
+  const collectable = collectableTreatments(treatments.data?.items ?? []);
 
   if (query.isPending) {
     return <PageContainer><StatusMessage variant="loading" message="Cargando paciente…" /></PageContainer>;
@@ -70,14 +87,25 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
   }
 
   const patient = query.data;
+  const accountHref = `/patients/${encodeURIComponent(patient.id)}/account`;
+  const canUpdate = session.permissions.includes("dentistry:patients:update");
+  const canDelete = session.permissions.includes("dentistry:patients:delete");
+
+  // Con un solo tratamiento con saldo se abona aquí; con varios se elige en la cuenta.
+  const startPayment = () => {
+    if (collectable.length === 1) setCollecting(collectable[0]);
+    else router.push(accountHref);
+  };
+
   return (
     <PageContainer>
       <div className="mb-4 text-sm"><Link href="/patients" className="text-primary hover:underline">← Volver a pacientes</Link></div>
       <PageHeader
         title={patient.fullName}
-        description={`Paciente ${patient.status === "ACTIVE" ? "activo" : "inactivo"}`}
+        description={patient.phone ?? undefined}
+        badge={<Badge variant={patient.status === "ACTIVE" ? "success" : "neutral"} size="sm">{patient.status === "ACTIVE" ? "Activo" : "Inactivo"}</Badge>}
         breadcrumbs={[{ label: "Pacientes", href: "/patients" }, { label: patient.fullName }]}
-        action={<div className="flex flex-wrap gap-2">
+        action={<>
           {session.permissions.includes("dentistry:encounters:create") && (
             <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/new`} className={buttonClassName()}>
               <span className="flex shrink-0 items-center" aria-hidden="true">
@@ -86,27 +114,31 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
               Nueva atención
             </Link>
           )}
-          {canRegisterProcedure && (
-            <Button variant="outline" leftIcon={Icons.tooth} onClick={() => setRegisteringProcedure(true)}>
-              Registrar procedimiento
+          {canCollect && collectable.length > 0 && (
+            <Button variant="outline" leftIcon={Icons.payments} onClick={startPayment}>
+              Registrar abono
             </Button>
           )}
-          {session.permissions.includes("dentistry:encounters:read") && (
-            <>
-              <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters`} className={buttonClassName({ variant: "outline" })}>Atenciones clínicas</Link>
-              <Link href={`/patients/${encodeURIComponent(patient.id)}/health-profile`} className={buttonClassName({ variant: "outline" })}>Perfil de salud</Link>
-            </>
+          {(canRegisterProcedure || canUpdate || canDelete) && (
+            <ActionsMenu label="Más acciones del paciente">
+              {canRegisterProcedure && (
+                <MenuItem onSelect={() => setRegisteringProcedure(true)}>Registrar procedimiento</MenuItem>
+              )}
+              {canUpdate && <MenuItem onSelect={() => setEditing(true)}>Editar paciente</MenuItem>}
+              {canDelete && (
+                <>
+                  <MenuSeparator />
+                  <MenuItem danger onSelect={() => setConfirmingDelete(true)}>Eliminar paciente</MenuItem>
+                </>
+              )}
+            </ActionsMenu>
           )}
-          {session.permissions.includes("dentistry:treatments:read") && isModuleEnabled(session.plan, "treatments") && (
-            <Link href={`/patients/${encodeURIComponent(patient.id)}/account`} className={buttonClassName({ variant: "outline" })}>Cuenta y abonos</Link>
-          )}
-          {session.permissions.includes("dentistry:patients:update") && <Button variant="outline" onClick={() => setEditing(true)}>Editar paciente</Button>}
-          {session.permissions.includes("dentistry:patients:delete") && <Button variant="danger" onClick={() => setConfirmingDelete(true)}>Eliminar paciente</Button>}
-        </div>}
+        </>}
       />
-      {updatedMessage && <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">{updatedMessage}</p>}
+      <PatientTabs patientId={patient.id} active={tab} />
+      {updatedMessage && <p role="status" className="mb-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">{updatedMessage}</p>}
       {quickEncounterId && (
-        <p role="status" className="my-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">
+        <p role="status" className="mb-4 rounded-lg bg-success-subtle px-4 py-3 text-sm text-success">
           Procedimiento registrado.{" "}
           {session.permissions.includes("dentistry:encounters:read") && (
             <Link href={`/patients/${encodeURIComponent(patient.id)}/clinical-encounters/${encodeURIComponent(quickEncounterId)}`} className="font-medium underline">
@@ -125,25 +157,41 @@ export function PatientDetailPage({ patientId }: { patientId: string }) {
           }}
         />
       )}
+      {collecting && (
+        <TreatmentPaymentDialog
+          patientId={patient.id}
+          treatment={collecting}
+          onClose={() => setCollecting(null)}
+          onRegistered={(payment) => {
+            setCollecting(null);
+            setUpdatedMessage(`Abono de ${formatMinorCurrency(payment.amountMinor, payment.currency)} registrado.`);
+          }}
+        />
+      )}
       {confirmingDelete && <DeletePatientConfirmation patientId={patient.id} patientName={patient.fullName} onCancel={() => setConfirmingDelete(false)} onDeleted={() => router.replace("/patients")} />}
-      <section aria-labelledby="patient-contact-heading" className="rounded-xl border border-border bg-surface px-5">
-        <h2 id="patient-contact-heading" className="border-b border-border py-4 font-display text-base font-semibold text-foreground">Datos personales y de contacto</h2>
-        <dl className="grid gap-x-8 sm:grid-cols-2">
-          <PatientField label="Nombres" value={patient.firstName} />
-          <PatientField label="Apellidos" value={patient.lastName} />
-          <PatientField label="Documento" value={patient.documentNumber ? `${patient.documentType ?? "Documento"} ${patient.documentNumber}` : null} />
-          <PatientField label="Fecha de nacimiento" value={formatDate(patient.birthDate)} />
-          <PatientField label="Sexo" value={patient.sex} />
-          <PatientField label="Teléfono" value={patient.phone} />
-          <PatientField label="Correo electrónico" value={patient.email} />
-          <PatientField label="Dirección" value={patient.address} />
-          <PatientField label="Notas" value={patient.notes} />
-        </dl>
-      </section>
-      <div className="mt-6">
+
+      {tab === "files" ? (
         <ClinicalFilesPanel patientId={patient.id} />
-      </div>
-      <p className="mt-4 text-xs text-muted">Registrado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.createdAt))} · Actualizado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.updatedAt))}</p>
+      ) : (
+        <div className="space-y-6">
+          <section aria-labelledby="patient-contact-heading" className="rounded-xl border border-border bg-surface px-5">
+            <h2 id="patient-contact-heading" className="border-b border-border py-4 font-display text-base font-semibold text-foreground">Datos personales y de contacto</h2>
+            <dl className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+              <PatientField label="Nombres" value={patient.firstName} />
+              <PatientField label="Apellidos" value={patient.lastName} />
+              <PatientField label="Documento" value={patient.documentNumber ? `${patient.documentType ?? "Documento"} ${patient.documentNumber}` : null} />
+              <PatientField label="Fecha de nacimiento" value={formatDate(patient.birthDate)} />
+              <PatientField label="Sexo" value={patient.sex} />
+              <PatientField label="Teléfono" value={patient.phone} />
+              <PatientField label="Correo electrónico" value={patient.email} />
+              <PatientField label="Dirección" value={patient.address} />
+              <PatientField label="Notas" value={patient.notes} wide />
+            </dl>
+          </section>
+          <PatientWalletCard patientId={patient.id} onRegisterPayment={startPayment} />
+          <p className="text-xs text-muted">Registrado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.createdAt))} · Actualizado: {new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(patient.updatedAt))}</p>
+        </div>
+      )}
       {editing && <UpdatePatientDialog patient={patient} onClose={() => setEditing(false)} onUpdated={(updated) => { setUpdatedMessage(`${updated.fullName} se actualizó correctamente.`); }} />}
     </PageContainer>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PatientContextBoundary } from "@/features/clinical-encounter/components/patient-context-boundary";
+import { PatientTabs } from "@/features/patient/components/patient-tabs";
 import { ClinicalEncounterStatusBadge } from "@/features/clinical-encounter/components/clinical-encounter-status-badge";
 import { useClinicalEncounters } from "@/features/clinical-encounter/hooks/use-clinical-encounter-data";
 import type {
@@ -96,6 +97,7 @@ function ClinicalEncounterListContent({ patient }: { patient: PatientDto }) {
           ) : undefined
         }
       />
+      <PatientTabs patientId={patient.id} active="encounters" />
 
       {canRead ? (
         <>
